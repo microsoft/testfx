@@ -46,8 +46,8 @@ public sealed class GitHubActionsSlowTestReporterTests
 
         await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
         Assert.HasCount(1, outputDevice.Lines);
-        Assert.Contains("::notice", outputDevice.Lines[0]);
-        Assert.Contains("Ns.T1 still running after", outputDevice.Lines[0]);
+        Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(outputDevice.Data));
+        Assert.AreEqual("::notice title=Slow test%3A Ns.T1::Ns.T1 still running after 90s", outputDevice.Lines[0]);
     }
 
     [TestMethod]
@@ -65,6 +65,13 @@ public sealed class GitHubActionsSlowTestReporterTests
 
         await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(130), CancellationToken.None).ConfigureAwait(false);
         Assert.HasCount(2, outputDevice.Lines);
+        Assert.IsTrue(outputDevice.Data.All(data => data is GitHubActionsCommandOutputDeviceData));
+        Assert.AreSequenceEqual(
+            [
+                "::notice title=Slow test%3A Ns.T1::Ns.T1 still running after 70s",
+                "::notice title=Slow test%3A Ns.T1::Ns.T1 still running after 130s",
+            ],
+            outputDevice.Lines);
     }
 
     [TestMethod]
@@ -111,7 +118,8 @@ public sealed class GitHubActionsSlowTestReporterTests
         await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
 
         Assert.HasCount(1, outputDevice.Lines);
-        Assert.Contains("Ns.T1 still running after", outputDevice.Lines[0]);
+        Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(outputDevice.Data));
+        Assert.AreEqual("::notice title=Slow test%3A Ns.T1::Ns.T1 still running after 90s", outputDevice.Lines[0]);
     }
 
     [TestMethod]
@@ -124,6 +132,29 @@ public sealed class GitHubActionsSlowTestReporterTests
         await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
         await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(120), CancellationToken.None).ConfigureAwait(false);
 
+        Assert.IsEmpty(outputDevice.Lines);
+    }
+
+    [TestMethod]
+    [DataRow(false, null, DisplayName = "SlowNotices_MasterSwitchAbsent")]
+    [DataRow(true, "off", DisplayName = "SlowNotices_FeatureOff")]
+    public async Task ScanOnce_WhenReportingSwitchIsOff_DoesNotEmitAsync(bool reportGh, string? notices)
+    {
+        CapturingOutputDevice outputDevice = new();
+        Dictionary<string, string[]> options = [];
+        if (notices is not null)
+        {
+            options[GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices] = [notices];
+        }
+
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true, options, reportGh: reportGh);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(120), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.IsFalse(await reporter.IsEnabledAsync().ConfigureAwait(false));
+        Assert.IsEmpty(outputDevice.Data);
         Assert.IsEmpty(outputDevice.Lines);
     }
 
@@ -144,6 +175,8 @@ public sealed class GitHubActionsSlowTestReporterTests
 
         await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(3), CancellationToken.None).ConfigureAwait(false);
         Assert.HasCount(1, outputDevice.Lines);
+        Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(outputDevice.Data));
+        Assert.AreEqual("::notice title=Slow test%3A Ns.T1::Ns.T1 still running after 3s", outputDevice.Lines[0]);
     }
 
     [TestMethod]
@@ -161,7 +194,8 @@ public sealed class GitHubActionsSlowTestReporterTests
         await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
 
         Assert.HasCount(1, outputDevice.Lines);
-        Assert.Contains("::notice title=Slow test%3A Ns.T1", outputDevice.Lines[0]);
+        Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(outputDevice.Data));
+        Assert.AreEqual("::notice title=Slow test%3A Ns.T1::Ns.T1 still running after 90s", outputDevice.Lines[0]);
     }
 
     [TestMethod]
@@ -178,9 +212,13 @@ public sealed class GitHubActionsSlowTestReporterTests
         await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
 
         Assert.HasCount(2, outputDevice.Lines);
-        string joined = string.Join("\n", outputDevice.Lines);
-        Assert.Contains("Ns.T.M (net8.0) still running after", joined);
-        Assert.Contains("Ns.T.M (net9.0) still running after", joined);
+        Assert.IsTrue(outputDevice.Data.All(data => data is GitHubActionsCommandOutputDeviceData));
+        Assert.AreSequenceEqual(
+            [
+                "::notice title=Slow test%3A Ns.T.M (net8.0)::Ns.T.M (net8.0) still running after 90s",
+                "::notice title=Slow test%3A Ns.T.M (net9.0)::Ns.T.M (net9.0) still running after 90s",
+            ],
+            outputDevice.Lines.OrderBy(line => line, StringComparer.Ordinal));
     }
 
     [TestMethod]
@@ -209,17 +247,21 @@ public sealed class GitHubActionsSlowTestReporterTests
         Assert.AreEqual(0, task.RunLongRunningCallCount);
     }
 
-    private static GitHubActionsSlowTestReporter CreateReporter(CapturingOutputDevice outputDevice, bool githubActions, Dictionary<string, string[]>? options = null, NonRunningTask? task = null)
+    private static GitHubActionsSlowTestReporter CreateReporter(
+        CapturingOutputDevice outputDevice, bool githubActions, Dictionary<string, string[]>? options = null, NonRunningTask? task = null, bool reportGh = true)
     {
         Mock<IEnvironment> environmentMock = new();
         environmentMock.Setup(x => x.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions ? "true" : null);
 
         // The extension is enabled only when both the GITHUB_ACTIONS env var and the --report-gh master switch
-        // are set, so always seed the master switch here; these tests exercise the env/knob behavior on top of it.
+        // are set, so seed the master switch except when a test explicitly exercises its absence.
         Dictionary<string, string[]> commandLineOptions = options is null
             ? new(StringComparer.OrdinalIgnoreCase)
             : new(options, StringComparer.OrdinalIgnoreCase);
-        commandLineOptions[GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [];
+        if (reportGh)
+        {
+            commandLineOptions[GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [];
+        }
 
         return new GitHubActionsSlowTestReporter(
             new FakeCommandLineOptions(commandLineOptions),
@@ -275,10 +317,13 @@ public sealed class GitHubActionsSlowTestReporterTests
 
     private sealed class CapturingOutputDevice : IOutputDevice
     {
+        public List<IOutputDeviceData> Data { get; } = [];
+
         public List<string> Lines { get; } = [];
 
         public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
         {
+            Data.Add(data);
             Lines.Add(((TextOutputDeviceData)data).Text);
             return Task.CompletedTask;
         }

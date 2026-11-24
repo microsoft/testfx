@@ -287,7 +287,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -327,7 +327,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -371,7 +371,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -399,7 +399,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(code, code, useMSTestV4: true);
     }
 
     [TestMethod]

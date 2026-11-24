@@ -1,4 +1,6 @@
 ---
+tools:
+  cli-proxy: false
 name: "Re-review After Autofix"
 description: >-
   Re-runs the expert code review after new commits are pushed to a

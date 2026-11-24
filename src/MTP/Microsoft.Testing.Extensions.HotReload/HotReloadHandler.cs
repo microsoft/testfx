@@ -1,0 +1,148 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
+
+using Microsoft.Testing.Extensions.Hosting.Resources;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice;
+
+#if NETCOREAPP
+using System.Reflection.Metadata;
+
+using Microsoft.Testing.Extensions.Hosting;
+
+[assembly: MetadataUpdateHandler(typeof(HotReloadHandler))]
+#endif
+
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
+namespace Microsoft.Testing.Extensions.Hosting;
+
+internal sealed class HotReloadHandler
+{
+    private static readonly SemaphoreSlim SemaphoreSlim = new(1, 1);
+#pragma warning disable IDE0330 // Use 'System.Threading.Lock' - HotReload targets netstandard2.0.
+    private static readonly object Sync = new();
+#pragma warning restore IDE0330
+    private static bool s_shutdownProcess;
+    private readonly IConsole _console;
+    private readonly IOutputDevice _outputDevice;
+    private readonly IOutputDeviceDataProducer _outputDeviceDataProducer;
+
+    public HotReloadHandler(IConsole console, IOutputDevice outputDevice, IOutputDeviceDataProducer outputDeviceDataProducer)
+    {
+        _console = console;
+        _outputDevice = outputDevice;
+        _outputDeviceDataProducer = outputDeviceDataProducer;
+
+        if (!IsCancelKeyPressNotSupported())
+        {
+            _console.CancelKeyPress += (_, _) => RequestShutdown();
+        }
+    }
+
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("wasi")]
+    [SupportedOSPlatformGuard("browser")]
+    private static bool IsCancelKeyPressNotSupported()
+        => IsCancelKeyPressNotSupportedOnOperatingSystem(
+            OperatingSystem.IsAndroid(),
+            OperatingSystem.IsIOS(),
+            OperatingSystem.IsTvOS(),
+            OperatingSystem.IsWasi(),
+            OperatingSystem.IsBrowser());
+
+    private static bool IsCancelKeyPressNotSupportedOnOperatingSystem(
+        bool isAndroid,
+        bool isIOS,
+        bool isTvOS,
+        bool isWasi,
+        bool isBrowser)
+        => isAndroid | isIOS | isTvOS | isWasi | isBrowser;
+
+    // Called automatically by the runtime through the MetadataUpdateHandlerAttribute
+    public static void ClearCache(Type[]? _)
+    {
+    }
+
+    // Called automatically by the runtime through the MetadataUpdateHandlerAttribute
+    public static void UpdateApplication(Type[]? _) => SignalWaiter();
+
+    internal static void RequestShutdown()
+    {
+        lock (Sync)
+        {
+            if (!s_shutdownProcess)
+            {
+                s_shutdownProcess = true;
+                SignalWaiter();
+            }
+        }
+    }
+
+    private static void SignalWaiter()
+    {
+        lock (Sync)
+        {
+            if (SemaphoreSlim.CurrentCount == 0)
+            {
+                SemaphoreSlim.Release();
+            }
+        }
+    }
+
+#if !NET6_0_OR_GREATER
+    public Task<bool> ShouldRunAsync(Task? waitExecutionCompletion, CancellationToken cancellationToken)
+    {
+        // Avoid warnings about unused parameters and fields.
+        _ = _outputDevice;
+        _ = _outputDeviceDataProducer;
+        _ = waitExecutionCompletion;
+        _ = cancellationToken;
+        throw new NotSupportedException(ExtensionResources.HotReloadHandlerUnsupportedFrameworkErrorMessage);
+    }
+#else
+    public async Task<bool> ShouldRunAsync(Task? waitExecutionCompletion, CancellationToken cancellationToken)
+    {
+        if (s_shutdownProcess)
+        {
+            return false;
+        }
+
+        using CancellationTokenRegistration registration = cancellationToken.Register(RequestShutdown);
+
+        if (waitExecutionCompletion is not null)
+        {
+            await waitExecutionCompletion.ConfigureAwait(continueOnCapturedContext: default);
+            await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
+        }
+
+        await SemaphoreSlim.WaitAsync(CancellationToken.None).ConfigureAwait(continueOnCapturedContext: default);
+
+        if (!_console.IsOutputRedirected && !IsClearNotSupported())
+        {
+            _console.Clear();
+        }
+
+        await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted), cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
+
+        return !s_shutdownProcess;
+    }
+
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    private static bool IsClearNotSupported()
+        => IsClearNotSupportedOnOperatingSystem(
+            OperatingSystem.IsAndroid(),
+            OperatingSystem.IsIOS(),
+            OperatingSystem.IsTvOS());
+
+    private static bool IsClearNotSupportedOnOperatingSystem(bool isAndroid, bool isIOS, bool isTvOS)
+        => isAndroid | isIOS | isTvOS;
+#endif
+}

@@ -1,0 +1,235 @@
+<Project InitialTargets="NETStandardCompatError_MSTest_TestAdapter">
+
+    <Target Name="NETStandardCompatError_MSTest_TestAdapter"
+            Condition="'$(SuppressTfmSupportBuildWarnings)' == ''">
+        <Warning Condition="'$(TargetFrameworkIdentifier)' == '.NETStandard'"
+                 Text="MSTest.TestAdapter does not support the target framework '$(TargetFramework)' and has not been tested with it. Test libraries (projects that don't directly run tests) should not reference MSTest.TestAdapter or the MSTest metapackage. Instead, reference only MSTest.TestFramework. To suppress this warning and proceed at your own risk, add &lt;SuppressTfmSupportBuildWarnings&gt;true&lt;/SuppressTfmSupportBuildWarnings&gt; to your project file." />
+    </Target>
+
+  <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
+  <PropertyGroup>
+    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
+    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
+
+    <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <!--
+    WinUI and modern (.NET) UWP applications need the UI build of the adapter, which dispatches [UITestMethod] to the
+    application's UI thread. NuGet can only select one lib/<tfm> asset per target framework, so that build ships in
+    buildTransitive/net10.0/ui and replaces the adapter assemblies NuGet resolved from lib (see _MSTestSelectUIAdapterAssets).
+    The selection runs at execution time because UseWinUI, UseUwpTools and UseUwp may be set after package targets are
+    imported (for example in Directory.Build.targets).
+  -->
+  <Target Name="_MSTestComputeUIAdapterSelection">
+    <PropertyGroup>
+      <_MSTestUIAdapterSelected>false</_MSTestUIAdapterSelected>
+      <_MSTestUIAdapterSelected Condition=" '$(UsingMicrosoftNETSdk)' == 'true'
+                                            AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetPlatformIdentifier)' == 'Windows'
+                                            AND ('$(UseWinUI)' == 'true' OR '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '')) ">true</_MSTestUIAdapterSelected>
+      <_MSTestUIAdapterRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'net10.0', 'ui'))</_MSTestUIAdapterRoot>
+    </PropertyGroup>
+  </Target>
+
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'false' ">
+    <!-- Stable extension identity: entry-point generation registers MSTest last. -->
+    <TestingPlatformBuilderHook Include="031F8871-2660-4208-8F6B-FC142B40ABFF">
+      <DisplayName>MSTest</DisplayName>
+      <TypeFullName>Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+
+  <!--
+    Swaps the adapter assemblies NuGet resolved from lib/<tfm> for the UI build, in place. The NuGet metadata is kept, so
+    the asset policy below, deps.json generation, and publish still treat them as MSTest.TestAdapter package assets.
+    The UI build is compiled from the same resources, so the satellites resolved from lib/<tfm> are kept as they are.
+  -->
+  <Target Name="_MSTestSelectUIAdapterAssets"
+          AfterTargets="ResolvePackageAssets"
+          DependsOnTargets="_MSTestComputeUIAdapterSelection">
+    <ItemGroup Condition=" '$(_MSTestUIAdapterSelected)' == 'true' ">
+      <_MSTestUIAdapterCompileAsset Include="@(ResolvedCompileFileDefinitions)"
+                                    Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' == 'MSTest.TestAdapter'
+                                                AND ('%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices')
+                                                AND '%(Extension)' == '.dll' " />
+      <_MSTestUIAdapterRuntimeAsset Include="@(RuntimeCopyLocalItems)"
+                                    Condition=" '%(RuntimeCopyLocalItems.NuGetPackageId)' == 'MSTest.TestAdapter'
+                                                AND ('%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices')
+                                                AND '%(Extension)' == '.dll' " />
+
+      <ResolvedCompileFileDefinitions Remove="@(_MSTestUIAdapterCompileAsset)" />
+      <RuntimeCopyLocalItems Remove="@(_MSTestUIAdapterRuntimeAsset)" />
+      <ResolvedCompileFileDefinitions Include="@(_MSTestUIAdapterCompileAsset->'$(_MSTestUIAdapterRoot)%(Filename)%(Extension)')">
+        <HintPath>$(_MSTestUIAdapterRoot)%(Filename)%(Extension)</HintPath>
+      </ResolvedCompileFileDefinitions>
+      <RuntimeCopyLocalItems Include="@(_MSTestUIAdapterRuntimeAsset->'$(_MSTestUIAdapterRoot)%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Runtime-store publish re-resolves the files to publish from the assets file; select the UI build there as well. -->
+  <Target Name="_MSTestSelectUIAdapterPublishAssets"
+          AfterTargets="_ResolveCopyLocalAssetsForPublish"
+          DependsOnTargets="_MSTestComputeUIAdapterSelection">
+    <ItemGroup Condition=" '$(_MSTestUIAdapterSelected)' == 'true' ">
+      <_MSTestUIAdapterPublishAsset Include="@(_ResolvedCopyLocalPublishAssets)"
+                                    Condition=" '%(_ResolvedCopyLocalPublishAssets.NuGetPackageId)' == 'MSTest.TestAdapter'
+                                                AND ('%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices')
+                                                AND '%(Extension)' == '.dll' " />
+      <_ResolvedCopyLocalPublishAssets Remove="@(_MSTestUIAdapterPublishAsset)" />
+      <_ResolvedCopyLocalPublishAssets Include="@(_MSTestUIAdapterPublishAsset->'$(_MSTestUIAdapterRoot)%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Applies the MSTest.TestAdapter copy-local policy to the lib/<tfm> assets that NuGet resolves:
+    - non-test applications (IsTestApplication=false) reference the adapter without copying it;
+    - EnableMSTestV2CopyResources=false skips the localized satellites;
+    - under VSTest the UI language is the build-machine culture, so only that culture hierarchy is copied
+      (MTP selects the language at run time; native UWP tooling requires an explicit SatelliteResourceLanguages list).
+    The package's nuspec <references> keep the .NET Framework TestFramework sidecar out of compile and runtime assets.
+  -->
+  <Target Name="_MSTestComputeAdapterPackageAssetPolicyInputs">
+    <ItemGroup>
+      <_MSTestAdapterSatelliteResourceLanguage Include="$(SatelliteResourceLanguages)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_MSTestCopyAdapterResources>$(EnableMSTestV2CopyResources)</_MSTestCopyAdapterResources>
+      <_MSTestCopyAdapterResources Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseUwpTools)' == 'true' AND '$(SatelliteResourceLanguages)' == '' ">false</_MSTestCopyAdapterResources>
+      <_MSTestUICultureHierarchy>;$([System.Globalization.CultureInfo]::CurrentUICulture.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name);</_MSTestUICultureHierarchy>
+      <_MSTestUICultureHierarchy>$([System.String]::Copy('$(_MSTestUICultureHierarchy)').ToLowerInvariant())</_MSTestUICultureHierarchy>
+      <_MSTestAdapterSatelliteResourceLanguages Condition=" '$(SatelliteResourceLanguages)' != '' ">;@(_MSTestAdapterSatelliteResourceLanguage);</_MSTestAdapterSatelliteResourceLanguages>
+      <_MSTestAdapterSatelliteResourceLanguages>$([System.String]::Copy('$(_MSTestAdapterSatelliteResourceLanguages)').ToLowerInvariant())</_MSTestAdapterSatelliteResourceLanguages>
+      <_MSTestAdapterPackageLibRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'lib').ToLowerInvariant())</_MSTestAdapterPackageLibRoot>
+    </PropertyGroup>
+  </Target>
+
+  <!-- SDK projects: ResolvePackageAssets already honors SatelliteResourceLanguages, and its item lists also feed
+       deps.json and publish. -->
+  <Target Name="_MSTestApplyAdapterPackageAssetPolicy"
+          AfterTargets="ResolvePackageAssets"
+          DependsOnTargets="_MSTestComputeAdapterPackageAssetPolicyInputs"
+          Condition=" '$(UsingMicrosoftNETSdk)' == 'true' ">
+    <ItemGroup>
+      <_MSTestAdapterRuntimeAssetToRemove Include="@(RuntimeCopyLocalItems)"
+                                          Condition=" '$(IsTestApplication)' == 'false' AND '%(RuntimeCopyLocalItems.NuGetPackageId)' == 'MSTest.TestAdapter' " />
+      <_MSTestAdapterResourceAsset Include="@(ResourceCopyLocalItems)" Condition=" '%(ResourceCopyLocalItems.NuGetPackageId)' == 'MSTest.TestAdapter' " />
+      <_MSTestAdapterResourceAsset Update="@(_MSTestAdapterResourceAsset)">
+        <_MSTestCulture>$([System.String]::Copy('%(_MSTestAdapterResourceAsset.Culture)').ToLowerInvariant())</_MSTestCulture>
+      </_MSTestAdapterResourceAsset>
+      <_MSTestAdapterResourceAssetToRemove Include="@(_MSTestAdapterResourceAsset)"
+                                           Condition=" '$(IsTestApplication)' == 'false'
+                                                       OR '$(_MSTestCopyAdapterResources)' != 'true'
+                                                       OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterResourceAsset._MSTestCulture);'))) " />
+
+      <RuntimeCopyLocalItems Remove="@(_MSTestAdapterRuntimeAssetToRemove)" />
+      <ResourceCopyLocalItems Remove="@(_MSTestAdapterResourceAssetToRemove)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Runtime-store publish (PreserveStoreLayout or TargetManifestFiles) re-resolves the files to publish from the assets
+       file instead of reusing the filtered copy-local items, so apply the same policy to them. Otherwise this is a no-op.
+       The SDK filters SatelliteResourceLanguages afterwards. -->
+  <Target Name="_MSTestApplyAdapterPublishAssetPolicy"
+          AfterTargets="_ResolveCopyLocalAssetsForPublish"
+          DependsOnTargets="_MSTestComputeAdapterPackageAssetPolicyInputs"
+          Condition=" '$(UsingMicrosoftNETSdk)' == 'true' ">
+    <ItemGroup>
+      <_MSTestAdapterPublishAsset Include="@(_ResolvedCopyLocalPublishAssets)"
+                                  Condition=" '%(_ResolvedCopyLocalPublishAssets.NuGetPackageId)' == 'MSTest.TestAdapter' " />
+      <_MSTestAdapterPublishAsset Update="@(_MSTestAdapterPublishAsset)">
+        <_MSTestCulture>$([System.String]::Copy('%(_MSTestAdapterPublishAsset.Culture)').ToLowerInvariant())</_MSTestCulture>
+      </_MSTestAdapterPublishAsset>
+      <_MSTestAdapterPublishAssetToRemove Include="@(_MSTestAdapterPublishAsset)"
+                                          Condition=" '$(IsTestApplication)' == 'false'
+                                                      OR ('%(_MSTestAdapterPublishAsset._MSTestCulture)' != ''
+                                                          AND ('$(_MSTestCopyAdapterResources)' != 'true'
+                                                               OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterPublishAsset._MSTestCulture);'))))) " />
+
+      <_ResolvedCopyLocalPublishAssets Remove="@(_MSTestAdapterPublishAssetToRemove)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    packages.config projects: NuGet adds the lib/net462 references to the project file only on install. Projects upgraded
+    from a version that injected these references from this file (for example by bumping package versions in place) do
+    not have them, so add whichever adapter reference is missing. PackageReference projects are left to NuGet so that
+    IncludeAssets/ExcludeAssets are honored.
+  -->
+  <Target Name="_MSTestAddPackagesConfigAdapterReferences"
+          BeforeTargets="ResolveAssemblyReferences"
+          Condition=" '$(UsingMicrosoftNETSdk)' != 'true' AND '@(PackageReference)' == '' ">
+    <ItemGroup>
+      <_MSTestExistingReferenceKey Include="@(Reference)" />
+      <_MSTestExistingReferenceKey Include="%(Reference.HintPath)" Condition=" '%(Reference.HintPath)' != '' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_MSTestExistingReferenceKeys>;@(_MSTestExistingReferenceKey);</_MSTestExistingReferenceKeys>
+      <_MSTestExistingReferenceKeys>$(_MSTestExistingReferenceKeys.ToLowerInvariant().Replace('/', '\'))</_MSTestExistingReferenceKeys>
+      <_MSTestAdapterPackageLibNet462>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'lib', 'net462'))</_MSTestAdapterPackageLibNet462>
+    </PropertyGroup>
+    <ItemGroup>
+      <_MSTestExistingReferenceKey Remove="@(_MSTestExistingReferenceKey)" />
+      <Reference Include="MSTest.TestAdapter"
+                 Condition=" !$(_MSTestExistingReferenceKeys.Contains(';mstest.testadapter;')) AND !$(_MSTestExistingReferenceKeys.Contains(';mstest.testadapter,')) AND !$(_MSTestExistingReferenceKeys.Contains('\mstest.testadapter.dll;')) ">
+        <HintPath>$(_MSTestAdapterPackageLibNet462)MSTest.TestAdapter.dll</HintPath>
+      </Reference>
+      <Reference Include="MSTestAdapter.PlatformServices"
+                 Condition=" !$(_MSTestExistingReferenceKeys.Contains(';mstestadapter.platformservices;')) AND !$(_MSTestExistingReferenceKeys.Contains(';mstestadapter.platformservices,')) AND !$(_MSTestExistingReferenceKeys.Contains('\mstestadapter.platformservices.dll;')) ">
+        <HintPath>$(_MSTestAdapterPackageLibNet462)MSTestAdapter.PlatformServices.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Non-SDK projects: PackageReference (ResolveNuGetPackageAssets) and packages.config (HintPath references found by
+    ResolveAssemblyReferences) both copy every satellite found next to the adapter, regardless of
+    SatelliteResourceLanguages. Assets are identified by their location in this package's lib folder.
+  -->
+  <Target Name="_MSTestApplyAdapterNonSdkAssetPolicy"
+          AfterTargets="ResolveAssemblyReferences"
+          DependsOnTargets="_MSTestComputeAdapterPackageAssetPolicyInputs"
+          Condition=" '$(UsingMicrosoftNETSdk)' != 'true' ">
+    <ItemGroup>
+      <_MSTestAdapterCopyLocalAsset Include="@(ReferenceCopyLocalPaths)"
+                                    Condition=" $([System.String]::Copy('%(ReferenceCopyLocalPaths.FullPath)').ToLowerInvariant().StartsWith('$(_MSTestAdapterPackageLibRoot)')) " />
+      <_MSTestAdapterSatelliteAsset Include="@(ReferenceSatellitePaths)"
+                                    Condition=" $([System.String]::Copy('%(ReferenceSatellitePaths.FullPath)').ToLowerInvariant().StartsWith('$(_MSTestAdapterPackageLibRoot)')) " />
+      <_MSTestAdapterAsset Include="@(_MSTestAdapterCopyLocalAsset);@(_MSTestAdapterSatelliteAsset)" />
+      <_MSTestAdapterAsset Update="@(_MSTestAdapterAsset)">
+        <_MSTestCulture>$([System.String]::Copy('%(_MSTestAdapterAsset.DestinationSubDirectory)').TrimEnd('\').TrimEnd('/').ToLowerInvariant())</_MSTestCulture>
+      </_MSTestAdapterAsset>
+
+      <_MSTestAdapterAssetToRemove Include="@(_MSTestAdapterAsset)"
+                                   Condition=" '$(IsTestApplication)' == 'false'
+                                               OR ('%(_MSTestAdapterAsset._MSTestCulture)' != ''
+                                                   AND ('$(EnableMSTestV2CopyResources)' != 'true'
+                                                        OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterAsset._MSTestCulture);')))
+                                                        OR ('$(_MSTestAdapterSatelliteResourceLanguages)' != '' AND !$([System.String]::Copy('$(_MSTestAdapterSatelliteResourceLanguages)').Contains(';%(_MSTestAdapterAsset._MSTestCulture);'))))) " />
+
+      <ReferenceCopyLocalPaths Remove="@(_MSTestAdapterAssetToRemove)" />
+      <ReferenceSatellitePaths Remove="@(_MSTestAdapterAssetToRemove)" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
+    <!-- Surfaced so analyzers can warn about features that are unsupported under ahead-of-time
+         compilation (e.g. MSTEST0072 for [AssemblyFixtureProvider]): PublishAot (Native AOT) and
+         RunAOTCompilation (Blazor WebAssembly AOT). -->
+    <CompilerVisibleProperty Include="PublishAot" />
+    <CompilerVisibleProperty Include="RunAOTCompilation" />
+    <!-- Selects which MSTest source-generation strategy emits when a source generator is referenced:
+         'ReflectionFree' (default) materializes attributes and emits delegate-based invokers so the
+         adapter runs without runtime reflection (best for trimming/Native AOT); 'Rooting' only
+         registers types/methods and roots members for trimming/AOT while the adapter reflects the
+         rest. ReflectionFree is a superset of Rooting, so it is the safer default for the source-gen
+         (AOT/trim) audience that opts into a generator. -->
+    <CompilerVisibleProperty Include="MSTestSourceGenMode" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <MSTestSourceGenMode Condition=" '$(MSTestSourceGenMode)' == '' ">ReflectionFree</MSTestSourceGenMode>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)Parallelize.targets" />
+</Project>

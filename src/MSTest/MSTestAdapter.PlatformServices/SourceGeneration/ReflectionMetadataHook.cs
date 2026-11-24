@@ -1,0 +1,371 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.ComponentModel;
+
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
+
+/// <summary>
+/// <b>Infrastructure.</b> Entry point used by the MSTest source generator to register pre-computed
+/// reflection metadata for a test assembly. After a successful
+/// <see cref="Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/> call, MSTest's
+/// discovery and execution paths consult source-generated data first and retain reflection
+/// fallback for metadata the generator did not register.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>This type is not intended to be used directly from application code.</b> It is public only
+/// because the MSTest source generator emits a <c>[ModuleInitializer]</c> in the test assembly
+/// that needs to call it across the assembly boundary, and module initializers cannot use
+/// <c>internal</c> APIs from a different assembly. The signature and behaviour of this hook are
+/// implementation details that may evolve with the generator without a major version bump; do
+/// not hand-roll a call to <see cref="Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/> from your own code.
+/// </para>
+/// <para>
+/// Reflection-free generated registration pre-materializes complete supported type/method
+/// attributes and supplies direct constructor, method, and property-setter delegates. It still
+/// performs bounded startup reflection to resolve the <see cref="MethodInfo"/> and
+/// <see cref="PropertyInfo"/> dictionary keys required by existing adapter contracts. Rooting-mode
+/// registration uses the compatibility overload and leaves the rich dictionaries empty.
+/// </para>
+/// <para>
+/// <b>Discovery limitation.</b> The MSTest source generator only enumerates types that carry
+/// <c>[TestClass]</c> declared directly on the type. Test classes that inherit
+/// <c>[TestClass]</c> from a base class are <i>not</i> registered through this hook and will
+/// not be discovered when the source-generated provider is the active reflection backend.
+/// Apply <c>[TestClass]</c> directly to the derived class to opt it back into discovery.
+/// Analyzer <c>MSTEST0069</c> (shipped in the MSTest.SourceGeneration package) flags classes
+/// that hit this limitation.
+/// </para>
+/// </remarks>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class ReflectionMetadataHook
+{
+#if NET9_0_OR_GREATER
+    private static readonly Lock Lock = new();
+#else
+    private static readonly object Lock = new();
+#endif
+    private static readonly CompositeSourceGeneratedReflectionDataProvider Composite = new();
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes source-generated metadata for <paramref name="assembly"/>
+    /// to the MSTest adapter. Safe to call from multiple module initializers; later registrations
+    /// are merged with earlier ones.
+    /// </summary>
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
+    /// <param name="testMethods">
+    /// A map from each test class to its <c>[TestMethod]</c>-annotated <see cref="MethodInfo"/>
+    /// set. Ownership transfers to the adapter: the source generator hands over freshly-built
+    /// collections and must not mutate them after the call (see the remarks on the full overload).
+    /// </param>
+    /// <remarks>
+    /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
+    /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator. The signature is
+    /// not covered by API-stability guarantees.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(Assembly assembly, Type[] types, IReadOnlyDictionary<Type, MethodInfo[]> testMethods)
+        => Register(assembly, types, testMethods, EmptyTypeAttributes, []);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes source-generated metadata for <paramref name="assembly"/>
+    /// to the MSTest adapter, including pre-materialized type-level and assembly-level attributes
+    /// so the adapter serves them without runtime reflection. Safe to call from multiple module
+    /// initializers; later registrations are merged with earlier ones.
+    /// </summary>
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
+    /// <param name="testMethods">A map from each test class to its <c>[TestMethod]</c> set.</param>
+    /// <param name="typeAttributes">
+    /// A map from each test class to its pre-inflated <see cref="Attribute"/> instances. The adapter
+    /// returns these from <c>GetCustomAttributes(Type)</c> instead of reflecting at runtime.
+    /// </param>
+    /// <param name="assemblyAttributes">Pre-inflated assembly-level attribute instances.</param>
+    /// <remarks>
+    /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
+    /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes)
+        => Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, EmptyMethodInvokers, EmptyConstructorInvokers, EmptyPropertySetters);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes source-generated metadata for <paramref name="assembly"/>
+    /// to the MSTest adapter, including the delegate-based invokers that let the adapter run tests
+    /// without runtime reflection: per-method invokers (replacing <c>MethodInfo.Invoke</c>),
+    /// per-type constructor invokers (replacing <c>Activator.CreateInstance</c>), and per-property
+    /// setters (replacing <c>PropertyInfo.SetValue</c>). Safe to call from multiple module
+    /// initializers; later registrations are merged with earlier ones.
+    /// </summary>
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
+    /// <param name="testMethods">A map from each test class to its <c>[TestMethod]</c> set.</param>
+    /// <param name="typeAttributes">A map from each test class to its pre-inflated <see cref="Attribute"/> instances.</param>
+    /// <param name="assemblyAttributes">Pre-inflated assembly-level attribute instances.</param>
+    /// <param name="methodInvokers">
+    /// A map from each test/fixture <see cref="MethodInfo"/> to a delegate that invokes it directly.
+    /// The delegate returns a non-null <see cref="Task"/> representing the method's completion: the
+    /// source generator normalizes every shape to a <see cref="Task"/> (<c>void</c>/synchronous yield
+    /// <see cref="Task.CompletedTask"/>, a <c>ValueTask</c> is converted to a <see cref="Task"/>, and
+    /// any return value is discarded).
+    /// </param>
+    /// <param name="constructorInvokers">
+    /// A map from each test class to its constructor invokers. Each entry pairs the constructor's
+    /// parameter types with a delegate that constructs the instance from an argument array.
+    /// </param>
+    /// <param name="propertySetters">
+    /// A map from each settable property (today: the <c>TestContext</c> property) to a delegate that
+    /// assigns it directly.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
+    /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator.
+    /// </para>
+    /// <para>
+    /// <b>Ownership transfer.</b> The adapter treats every collection passed in
+    /// (the <paramref name="types"/> array, the <paramref name="assemblyAttributes"/> array, and
+    /// each dictionary with its value arrays) and stores them without cloning; the read-only
+    /// dictionaries are held as-is behind <see cref="IReadOnlyDictionary{TKey, TValue}"/>. The
+    /// adapter never mutates these collections, and callers MUST NOT mutate them after the call
+    /// returns. The source generator (the only intended caller) satisfies this by publishing
+    /// immutable generated metadata and fresh registration dictionaries. This is a contract about
+    /// ownership and mutation, not caller identity: it trades defensive copies for zero-copy
+    /// startup on the understanding that the inputs remain immutable.
+    /// </para>
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes,
+        IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
+        IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
+        IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters)
+        => Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, EmptyMethodAttributes, methodInvokers, constructorInvokers, propertySetters);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes richer source-generated metadata for
+    /// <paramref name="assembly"/>, including pre-materialized method attributes and direct
+    /// invocation delegates. Safe to call from multiple module initializers; later registrations
+    /// are merged with earlier ones.
+    /// </summary>
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
+    /// <param name="testMethods">A map from each test class to its <c>[TestMethod]</c> set.</param>
+    /// <param name="typeAttributes">A map from each test class to its complete pre-inflated attribute set.</param>
+    /// <param name="assemblyAttributes">Pre-inflated assembly-level attribute instances.</param>
+    /// <param name="methodAttributes">
+    /// A map from each successfully resolved method to its complete pre-inflated attribute set.
+    /// Presence is authoritative, including when the value is an empty array; unresolved methods
+    /// and methods whose attributes could not be completely materialized must be omitted.
+    /// </param>
+    /// <param name="methodInvokers">A map from each resolved method to its direct invocation delegate.</param>
+    /// <param name="constructorInvokers">A map from each test class to its constructor invokers.</param>
+    /// <param name="propertySetters">A map from each resolved settable property to its direct setter.</param>
+    /// <remarks>
+    /// Do not call this method from hand-written code. It is public only for generated
+    /// <c>[ModuleInitializer]</c> code and is not a supported application API. Ownership of all
+    /// supplied collections transfers to the adapter as described on the compatibility overload.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes,
+        IReadOnlyDictionary<MethodInfo, Attribute[]> methodAttributes,
+        IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
+        IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
+        IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters)
+        => Register(
+            assembly,
+            types,
+            testMethods,
+            typeAttributes,
+            assemblyAttributes,
+            methodAttributes,
+            methodInvokers,
+            constructorInvokers,
+            propertySetters,
+            EmptyDescriptorTestMethods,
+            []);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes reflection metadata and the deliberately constrained test
+    /// descriptors that native Microsoft.Testing.Platform discovery may consume directly.
+    /// </summary>
+    /// <remarks>
+    /// Descriptor methods must have complete, compatibility-safe metadata. A type listed in
+    /// <paramref name="descriptorCompleteTypes"/> declares that every test method on that type is
+    /// represented in <paramref name="descriptorTestMethods"/>; omitted types retain per-method
+    /// fallback to legacy discovery. This API is exclusively for generated code.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes,
+        IReadOnlyDictionary<MethodInfo, Attribute[]> methodAttributes,
+        IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
+        IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
+        IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters,
+        IReadOnlyDictionary<Type, MethodInfo[]> descriptorTestMethods,
+        Type[] descriptorCompleteTypes)
+    {
+        if (assembly is null)
+        {
+            throw new ArgumentNullException(nameof(assembly));
+        }
+
+        if (types is null)
+        {
+            throw new ArgumentNullException(nameof(types));
+        }
+
+        if (testMethods is null)
+        {
+            throw new ArgumentNullException(nameof(testMethods));
+        }
+
+        if (typeAttributes is null)
+        {
+            throw new ArgumentNullException(nameof(typeAttributes));
+        }
+
+        if (assemblyAttributes is null)
+        {
+            throw new ArgumentNullException(nameof(assemblyAttributes));
+        }
+
+        if (methodAttributes is null)
+        {
+            throw new ArgumentNullException(nameof(methodAttributes));
+        }
+
+        if (methodInvokers is null)
+        {
+            throw new ArgumentNullException(nameof(methodInvokers));
+        }
+
+        if (constructorInvokers is null)
+        {
+            throw new ArgumentNullException(nameof(constructorInvokers));
+        }
+
+        if (propertySetters is null)
+        {
+            throw new ArgumentNullException(nameof(propertySetters));
+        }
+
+        if (descriptorTestMethods is null)
+        {
+            throw new ArgumentNullException(nameof(descriptorTestMethods));
+        }
+
+        if (descriptorCompleteTypes is null)
+        {
+            throw new ArgumentNullException(nameof(descriptorCompleteTypes));
+        }
+
+        // Ownership transfer (see the remarks on this method): the source generator hands over
+        // freshly-built, throwaway collections and never mutates them after the call, so we store
+        // the passed arrays and read-only dictionaries directly instead of copying them.
+        //
+        // ConstructorInvokerInfo (public struct) still has to be projected onto the adapter's
+        // internal ConstructorInvoker type; this is a representation change, not a defensive copy,
+        // and the parameter-type arrays are taken by reference.
+        var constructorInvokersMap = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>(constructorInvokers.Count);
+        foreach (KeyValuePair<Type, ConstructorInvokerInfo[]> kvp in constructorInvokers)
+        {
+            var invokers = new SourceGeneratedReflectionDataProvider.ConstructorInvoker[kvp.Value.Length];
+            for (int i = 0; i < kvp.Value.Length; i++)
+            {
+                ConstructorInvokerInfo info = kvp.Value[i];
+                invokers[i] = new SourceGeneratedReflectionDataProvider.ConstructorInvoker
+                {
+                    Parameters = info.ParameterTypes,
+                    Invoker = info.Invoker,
+                };
+            }
+
+            constructorInvokersMap[kvp.Key] = invokers;
+        }
+
+        // TypesByName must always match Type.FullName at runtime (see comment in the source
+        // generator emitter): compute it on the runtime side from typeof(T).FullName so the
+        // generator emits less code and the same FullName conventions are honored for nested
+        // and generic types.
+        var typesByName = new Dictionary<string, Type>(types.Length, StringComparer.Ordinal);
+        foreach (Type type in types)
+        {
+            if (type.FullName is { } fullName)
+            {
+                typesByName[fullName] = type;
+            }
+        }
+
+        var descriptorCompleteTypeSet = new HashSet<Type>(descriptorCompleteTypes);
+        var descriptorCompleteness = new Dictionary<Type, bool>(descriptorTestMethods.Count);
+        foreach (Type type in descriptorTestMethods.Keys)
+        {
+            descriptorCompleteness[type] = descriptorCompleteTypeSet.Contains(type);
+        }
+
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            Assembly = assembly,
+            AssemblyName = assembly.GetName().Name ?? string.Empty,
+            Types = types,
+            TypesByName = typesByName,
+            TypeMethods = testMethods,
+            TypeAttributes = typeAttributes,
+            AssemblyAttributes = assemblyAttributes,
+            TypeMethodAttributes = methodAttributes,
+            TypeMethodInvokers = methodInvokers,
+            TypeConstructorsInvoker = constructorInvokersMap,
+            TypePropertySetters = propertySetters,
+            DescriptorTestMethods = descriptorTestMethods,
+            DescriptorCompleteTypes = descriptorCompleteness,
+        };
+
+        lock (Lock)
+        {
+            Composite.Add(provider);
+
+            var reflectionOperations = new SourceGeneratedReflectionOperations(Composite);
+            var fileOperations = new SourceGeneratedFileOperations(Composite);
+
+            if (PlatformServiceProvider.Instance is PlatformServiceProvider concreteProvider)
+            {
+                concreteProvider.SetSourceGeneratedOperations(reflectionOperations, fileOperations);
+            }
+        }
+    }
+
+    private static readonly Dictionary<Type, Attribute[]> EmptyTypeAttributes = [];
+
+    private static readonly Dictionary<MethodInfo, Attribute[]> EmptyMethodAttributes = [];
+
+    private static readonly Dictionary<MethodInfo, Func<object?, object?[]?, object?>> EmptyMethodInvokers = [];
+
+    private static readonly Dictionary<Type, ConstructorInvokerInfo[]> EmptyConstructorInvokers = [];
+
+    private static readonly Dictionary<PropertyInfo, Action<object?, object?>> EmptyPropertySetters = [];
+
+    private static readonly Dictionary<Type, MethodInfo[]> EmptyDescriptorTestMethods = [];
+}

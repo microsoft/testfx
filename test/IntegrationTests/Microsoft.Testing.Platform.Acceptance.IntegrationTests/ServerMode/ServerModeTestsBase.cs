@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : AcceptanceTestBase<TFixture>
-    where TFixture : TestAssetFixtureBase, new()
+    where TFixture : ITestAssetFixture, new()
 {
     private static readonly string Root = RootFinder.Find();
     private static readonly Dictionary<string, string?> DefaultEnvironmentVariables = new()
@@ -25,7 +25,11 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
     protected Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost)
         => StartAsServerAndConnectToTheClientAsync(testHost, additionalEnvironmentVariables: null);
 
-    protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost, IReadOnlyDictionary<string, string?>? additionalEnvironmentVariables)
+    protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(
+        TestHost testHost,
+        IReadOnlyDictionary<string, string?>? additionalEnvironmentVariables,
+        string? additionalArguments = null,
+        string? workingDirectory = null)
     {
         var environmentVariables = new Dictionary<string, string?>(DefaultEnvironmentVariables);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
@@ -63,7 +67,9 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
             OnErrorOutput = (_, output) => builder.AppendLine(CultureInfo.InvariantCulture, $"OnErrorOutput:\n{output}"),
             OnExit = (processHandle, exitCode) => builder.AppendLine(CultureInfo.InvariantCulture, $"OnExit: exit code '{exitCode}'"),
 
-            Arguments = $"--server --client-host localhost --client-port {((IPEndPoint)tcpListener.LocalEndpoint).Port} --diagnostic --diagnostic-verbosity trace",
+            Arguments = $"--server --client-host localhost --client-port {((IPEndPoint)tcpListener.LocalEndpoint).Port} --diagnostic --diagnostic-verbosity trace"
+                + (additionalArguments is null ? string.Empty : $" {additionalArguments}"),
+            WorkingDirectory = workingDirectory,
             EnvironmentVariables = environmentVariables,
         };
 
@@ -79,7 +85,11 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
         {
             throw new OperationCanceledException($"Timeout on connection for command line '{processConfig.FileName} {processConfig.Arguments}'\n{builder}", ex, cancellationTokenSource.Token);
         }
+        finally
+        {
+            tcpListener.Stop();
+        }
 
-        return new TestingPlatformClient(new(tcpClient.GetStream()), tcpClient, processHandler);
+        return new TestingPlatformClient(new(tcpClient.GetStream()), tcpClient, processHandler, processOutput: () => builder.ToString());
     }
 }

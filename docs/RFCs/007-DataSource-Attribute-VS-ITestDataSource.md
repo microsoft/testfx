@@ -1,5 +1,12 @@
 # RFC 007 - DataSource Attribute Vs ITestDataSource
 
+> **Current implementation note (2026-10-09):** The adapter still has a distinct
+> `DataSourceAttribute` branch and a platform-services `ITestDataSource` separate from the
+> framework interface. Its backing providers work only on .NET Framework; modern .NET
+> should use framework data-source arguments instead. Current executor calls are asynchronous,
+> and rows receive fresh contexts. See [MSTEST-009](../specifications/mstest.md#mstest-009--legacy-datasource-is-a-distinct-compatibility-path)
+> for source/test evidence; provider availability and all combination scenarios were not executed.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

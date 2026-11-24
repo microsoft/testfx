@@ -105,10 +105,10 @@ runs-on-slim: ubuntu-latest
 # the workspace holds `main`, so an agent asked to fix a PR file would patch the
 # wrong revision: `push-to-pull-request-branch` pushes the *file contents* of
 # the agent's tree onto the PR branch, so a fix authored against `main` would
-# silently revert anything else that changed in that file. `pr-checkout-ref` is
-# the PR's head branch for same-repo PRs (attached, so gh-aw can derive the push
-# target from `git rev-parse --abbrev-ref HEAD`) and `refs/pull/<n>/head` for
-# forks, which gh-aw refuses to push to anyway.
+# silently revert anything else that changed in that file. Check out the exact
+# validated head SHA: the branch can move or be deleted while activation runs.
+# The pre-agent step reattaches same-repo branches locally for incremental patch
+# generation; fork checkouts stay detached and cannot be pushed by gh-aw.
 #
 # Checking out the PR head does NOT execute PR code: this workflow never builds,
 # and the agent's bash allowlist contains no interpreters, package managers or
@@ -132,7 +132,7 @@ runs-on-slim: ubuntu-latest
 # rewrite the analyst's own instructions — `roles: all` lets every fork reach
 # this workflow.
 checkout:
-  - ref: ${{ needs.fetch-binlog.outputs.pr-checkout-ref }}
+  - ref: ${{ needs.fetch-binlog.outputs.pr-head-sha }}
   # The pull request's own base branch (resolved from the GitHub API by the
   # shared fetch job), not the repository default branch: a `rel/*` pull
   # request must be analyzed with the playbook and agent config that branch
@@ -162,6 +162,27 @@ checkout:
       .pi
 
 pre-agent-steps:
+  - name: Attach the verified analysis revision
+    shell: bash
+    env:
+      EXPECTED_HEAD_SHA: ${{ needs.fetch-binlog.outputs.pr-head-sha }}
+      ANALYSIS_CHECKOUT_REF: ${{ needs.fetch-binlog.outputs.pr-checkout-ref }}
+    run: |
+      set -euo pipefail
+      if [[ "$(git rev-parse HEAD)" != "${EXPECTED_HEAD_SHA}" ]]; then
+        echo "::error::The checkout does not match the revision validated with the build artifacts."
+        exit 1
+      fi
+      case "${ANALYSIS_CHECKOUT_REF}" in
+        refs/pull/*/head) ;;
+        *)
+          git check-ref-format --branch "${ANALYSIS_CHECKOUT_REF}"
+          # Preserve the pre-agent baseline without refetching a moving branch.
+          git update-ref "refs/remotes/origin/${ANALYSIS_CHECKOUT_REF}" "${EXPECTED_HEAD_SHA}"
+          git switch --create "${ANALYSIS_CHECKOUT_REF}" "${EXPECTED_HEAD_SHA}"
+          ;;
+      esac
+
   - name: Restore agent config from the base branch
     shell: bash
     env:
@@ -255,7 +276,7 @@ mcp-servers:
 # binlogs have been retrieved from the failed Azure DevOps build.
 steps:
   - name: Download analysis artifact
-    uses: actions/download-artifact@v8.0.1
+    uses: actions/download-artifact@v8.0.2
     with:
       name: build-failure-analysis-data
       path: /tmp/binlogs
@@ -271,33 +292,47 @@ steps:
       GH_AW_MISSING_LEGS_VALUE: ${{ needs.fetch-binlog.outputs.missing-legs }}
       GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
-      # The binlogs are mounted into the binlog-mcp container at
-      # `/data/binlogs`. Build the list of in-container binlog paths (one per
-      # build leg) that the agent should query. `GH_AW_BINLOG_PATH` is the
-      # first entry for tools/prompts that expect a single path.
-      BINLOG_DIR="/data/binlogs"
-      LIST=""
-      if [ "${GH_AW_BINLOG_FOUND_VALUE:-false}" = "true" ] && [ -d /tmp/binlogs ]; then
-        for f in /tmp/binlogs/*.binlog; do
-          [ -f "$f" ] || continue
-          LIST="${LIST}${BINLOG_DIR}/$(basename "$f")"$'\n'
-        done
-      fi
-      FIRST=$(printf '%s' "$LIST" | head -1)
-      {
-        echo "GH_AW_BUILD_OUTCOME=failure"
-        echo "GH_AW_BINLOG_DIR=${BINLOG_DIR}"
-        echo "GH_AW_BINLOG_PATH=${FIRST}"
-        echo "GH_AW_BINLOG_HOST_PATH=${GH_AW_ADO_BUILD_URL_VALUE}"
-        echo "GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}"
-        echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
-        echo "GH_AW_PR_MERGE_SHA=${GH_AW_PR_MERGE_SHA_VALUE}"
-        echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"
-        echo "GH_AW_MISSING_LEGS=${GH_AW_MISSING_LEGS_VALUE}"
-        echo "GH_AW_BINLOG_LIST<<GH_AW_EOF"
-        printf '%s' "$LIST"
-        echo "GH_AW_EOF"
-      } >> "$GITHUB_ENV"
+      python3 -I - <<'PY'
+      import json
+      import os
+      import pathlib
+      import re
+
+      number = os.environ["GH_AW_PR_NUMBER_VALUE"]
+      head = os.environ["GH_AW_PR_HEAD_SHA_VALUE"]
+      merge = os.environ["GH_AW_PR_MERGE_SHA_VALUE"]
+      binlogs = [
+          f"/data/binlogs/{path.name}"
+          for path in sorted(pathlib.Path("/tmp/binlogs").glob("*.binlog"))
+          if path.is_file()
+      ]
+      if (
+          os.environ["GH_AW_BINLOG_FOUND_VALUE"] != "true"
+          or not binlogs
+          or not re.fullmatch(r"[1-9][0-9]*", number)
+          or not re.fullmatch(r"[0-9a-fA-F]{40}", head)
+          or (merge and not re.fullmatch(r"[0-9a-fA-F]{40}", merge))
+      ):
+          raise SystemExit("Missing or invalid required build-analysis inputs.")
+
+      inputs = {
+          "schema_version": 1,
+          "repository": os.environ["GITHUB_REPOSITORY"],
+          "GH_AW_BUILD_OUTCOME": "failure",
+          "GH_AW_BINLOG_DIR": "/data/binlogs",
+          "GH_AW_BINLOG_LIST": binlogs,
+          "GH_AW_BINLOG_PATH": binlogs[0],
+          "GH_AW_BINLOG_HOST_PATH": os.environ["GH_AW_ADO_BUILD_URL_VALUE"],
+          "GH_AW_PR_NUMBER": int(number),
+          "GH_AW_PR_HEAD_SHA": head,
+          "GH_AW_PR_MERGE_SHA": merge,
+          "GH_AW_WORKSPACE": os.environ["GH_AW_GITHUB_WORKSPACE"],
+          "GH_AW_MISSING_LEGS": os.environ["GH_AW_MISSING_LEGS_VALUE"],
+      }
+      output = pathlib.Path("/tmp/gh-aw/build-failure-analysis/analysis-inputs.json")
+      output.parent.mkdir(parents=True, exist_ok=True)
+      output.write_text(json.dumps(inputs, indent=2) + "\n", encoding="utf-8")
+      PY
 
 tools:
   github:
@@ -335,8 +370,9 @@ tools:
     - "git commit:*"
 
 safe-outputs:
-  # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
-  # false positives and malformed result markers (#10821).
+  # Publisher checkouts consume the exact source identity from this job.
+  needs: [fetch-binlog]
+  # Threat detection inherits the workflow model; retain its prompt safeguards.
   threat-detection:
     # Avoid gh-aw v0.88.7's false agent_failure when no output or patch exists (#11263).
     enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
@@ -351,11 +387,10 @@ safe-outputs:
       by invoking the pre-provisioned `threat_detection_result` command exactly
       once. Do not print, echo, or manually format a `THREAT_DETECTION_RESULT`
       line.
-    model: detection
     engine:
       id: copilot
   messages:
-    footer: "> 🤖 **Automated content by GitHub Copilot.** Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})"
+    footer: "> 🤖 **Automated content by GitHub Copilot.** Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix}{history_link}"
   # `check_run` carries no native issue/PR context for gh-aw, so the agent must
   # target the resolved PR explicitly (`target: "*"`) using `GH_AW_PR_NUMBER`.
   report-failure-as-issue: false

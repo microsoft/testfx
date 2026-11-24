@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.UnitTests</RootNamespace>
     <UseMSTestFromSource>true</UseMSTestFromSource>
     <EnableMSTestRunner>true</EnableMSTestRunner>
@@ -19,10 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\TestFramework\TestFramework.csproj" />
     <!-- Reference the generator project as a regular library so that the generator class can be instantiated in tests. -->
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.SourceGeneration\MSTest.SourceGeneration.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.SourceGeneration\MSTest.SourceGeneration.csproj" />
   </ItemGroup>
 
 </Project>

@@ -299,7 +299,6 @@ public class UnitTestElementTests : TestContainer
         ((string[])testCase.GetPropertyValue(AdapterTestProperties.WorkItemIdsProperty)!).Should().Equal(["2312", "22332"]);
     }
 
-#if !WINDOWS_UWP && !WIN_UI
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
     {
         _unitTestElement.DeploymentItems = null;
@@ -317,7 +316,6 @@ public class UnitTestElementTests : TestContainer
 
         _unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(AdapterTestProperties.DeploymentItemsProperty) as KeyValuePair<string, string>[]).Should().BeTrue();
     }
-#endif
 
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
@@ -386,7 +384,7 @@ public class UnitTestElementTests : TestContainer
                     TestCaseIndex = 2,
                     DataType = DynamicDataType.ITestDataSource,
                 })
-            .ToTestCase()
+            .ToTestCase(),
         ];
 
         testCases.Select(tc => tc.Id.ToString()).Distinct().Count().Should().Be(testCases.Length);

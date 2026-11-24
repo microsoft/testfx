@@ -2,30 +2,29 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
 
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <RepoRoot>$(MSBuildThisFileDirectory)..\..\..\</RepoRoot>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(MicrosoftTestingExtensionsOpenTelemetryVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MTPVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTelemetry.Exporter.Console" VersionOverride="1.13.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.15" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.20.1" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectCapability Include="TestingPlatformServer" />
     <ProjectCapability Include="TestContainer" />
   </ItemGroup>
-
-  <!-- Import the capabilities for the Microsoft.Testing.Platform -->
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
 </Project>

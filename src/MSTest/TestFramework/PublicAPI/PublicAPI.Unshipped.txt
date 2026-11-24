@@ -1,0 +1,143 @@
+#nullable enable
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.DatarowIndex.get -> int
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.DatarowIndex.set -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.InnerResultsCount.get -> int
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.InnerResultsCount.set -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ReturnValue.get -> object?
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ReturnValue.set -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreUnique(System.Collections.ICollection? collection, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreUnique(System.Collections.ICollection? collection) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? notExpected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? notExpected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Equals(object? objA, object? objB) -> bool
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.ReferenceEquals(object? objA, object? objB) -> bool
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, System.StringComparison comparisonType, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, System.StringComparison comparisonType) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.DoesNotMatch(string? value, System.Text.RegularExpressions.Regex? pattern, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.DoesNotMatch(string? value, System.Text.RegularExpressions.Regex? pattern) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, System.StringComparison comparisonType, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, System.StringComparison comparisonType) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? objA, object? objB) -> bool
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals(object? objA, object? objB) -> bool
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, System.StringComparison comparisonType, string? message) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, System.StringComparison comparisonType) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo.PlannedTests.get -> System.Collections.Generic.IReadOnlyCollection<Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.AssemblyPath.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringFilePath.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringLineNumber.get -> int?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.FullyQualifiedTestClassName.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedMethodName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedTypeName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.PlannedTest(string! fullyQualifiedTestClassName, string! testName, string? testDisplayName, string! assemblyPath, string? managedTypeName, string? managedMethodName, string? declaringFilePath, int? declaringLineNumber, System.Collections.Generic.IReadOnlyCollection<string!>! testCategories, System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>! testProperties) -> void
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestCategories.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestDisplayName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestName.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestProperties.get -> System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestRun
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo!
+Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute.ExpectedDurationAttribute(int milliseconds) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute.Milliseconds.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Error = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly(System.Func<object?, bool>! predicate, System.Collections.IEnumerable? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestContext() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.get -> object?[]?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.get -> System.Exception?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.get -> int
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext?
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(string! fileName) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.Generic.IDictionary<string!, object?>!
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string! format, params object?[]! args) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string? message) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(string! format, params object?[]! args) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(string? message) -> void
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationTokenSource.get -> System.Threading.CancellationTokenSource!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationTokenSource.set -> void
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CurrentTestOutcome.get -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName.get -> string!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName.get -> string!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object? expected, System.Collections.IEnumerable! collection, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object? expected, System.Collections.IEnumerable? collection, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object? expected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object? expected, System.Collections.IEnumerable? collection, System.Collections.IEqualityComparer! comparer, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string? substring, string? value, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string? substring, string? value, System.StringComparison comparisonType, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(System.Func<object?, bool>! predicate, System.Collections.IEnumerable? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(T expected, System.Collections.Generic.IEnumerable<T>! collection, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(T expected, System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(T expected, System.Collections.Generic.IEnumerable<T>! collection, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(T expected, System.Collections.Generic.IEnumerable<T>? collection, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message = "", string! expectedExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? notExpected, System.Collections.IEnumerable! collection, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? notExpected, System.Collections.IEnumerable? collection, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? notExpected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? notExpected, System.Collections.IEnumerable? collection, System.Collections.IEqualityComparer! comparer, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string? substring, string? value, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value, System.StringComparison comparisonType, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string? substring, string? value, System.StringComparison comparisonType, string? message = "", string! substringExpression = "", string! valueExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(System.Func<object?, bool>! predicate, System.Collections.IEnumerable? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(T notExpected, System.Collections.Generic.IEnumerable<T>! collection, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(T notExpected, System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(T notExpected, System.Collections.Generic.IEnumerable<T>! collection, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(T notExpected, System.Collections.Generic.IEnumerable<T>? collection, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message = "", string! notExpectedExpression = "", string! collectionExpression = "") -> void

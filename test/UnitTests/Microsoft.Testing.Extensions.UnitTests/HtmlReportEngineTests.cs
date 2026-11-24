@@ -41,6 +41,106 @@ public class HtmlReportEngineTests
     private readonly Mock<IFileSystem> _fileSystem = new();
 
     [TestMethod]
+    public async Task GenerateReportAsync_ProjectsOptionalDiagnosticsTimingTraitsAndHtmlSafeControlText()
+    {
+        using var stream = new MemoryFileStream();
+        DateTimeOffset start = new(2026, 1, 2, 3, 4, 5, TimeSpan.Zero);
+        HtmlReportEngine engine = CreateEngine(stream, testStartTime: start);
+        _clockMock.SetupGet(value => value.UtcNow).Returns(start.AddSeconds(3));
+        const string diagnostics = "quote\" slash\\ back\b form\f newline\n return\r tab\t control\u0001 <>&'\u2028\u2029";
+        CapturedTestResult result = new()
+        {
+            Uid = "diagnostic",
+            DisplayName = "diagnostic test",
+            Outcome = "errored",
+            Duration = TimeSpan.FromTicks(123_456),
+            StartTime = start,
+            EndTime = start.AddSeconds(2),
+            ClassName = "Fixture.Class",
+            MethodName = "Method",
+            ErrorMessage = diagnostics,
+            ExceptionType = "Fixture.Exception",
+            StackTrace = "frame\\one\nframe two",
+            StandardOutput = "out\r\ntext",
+            StandardError = "err\ttext",
+            Traits = [new("first", "one"), new("second", "two")],
+        };
+
+        await engine.GenerateReportAsync([result]);
+
+        string json = HtmlReportEngine.ExtractReportJson(stream.GetUtf8Content());
+        JsonObject report = JsonNode.Parse(json)!.AsObject();
+        JsonObject actual = Assert.ContainsSingle(report["tests"]!.AsArray())!.AsObject();
+        Assert.AreEqual(0, (int)actual["rowKey"]!);
+        Assert.AreEqual(12.346d, (double)actual["durationMs"]!);
+        Assert.AreEqual(start.ToString("O", CultureInfo.InvariantCulture), (string?)actual["startTime"]);
+        Assert.AreEqual(start.AddSeconds(2).ToString("O", CultureInfo.InvariantCulture), (string?)actual["endTime"]);
+        Assert.AreEqual("Fixture.Class", (string?)actual["className"]);
+        Assert.AreEqual("Method", (string?)actual["methodName"]);
+        Assert.AreEqual("Fixture.Exception", (string?)actual["exceptionType"]);
+        Assert.AreEqual(diagnostics, (string?)actual["errorMessage"]);
+        Assert.AreEqual("frame\\one\nframe two", (string?)actual["stackTrace"]);
+        Assert.AreEqual("out\r\ntext", (string?)actual["standardOutput"]);
+        Assert.AreEqual("err\ttext", (string?)actual["standardError"]);
+        Assert.AreSequenceEqual(["first", "second"], actual["traits"]!.AsArray().Select(value => (string?)value!["key"]));
+        Assert.AreSequenceEqual(["one", "two"], actual["traits"]!.AsArray().Select(value => (string?)value!["value"]));
+        Assert.Contains("back\\b form\\f newline\\n return\\r tab\\t control\\u0001 \\u003C\\u003E\\u0026\\u0027\\u2028\\u2029", json);
+        Assert.AreEqual(1, (int)report["summary"]!["errored"]!);
+        Assert.AreEqual(1, (int)report["summary"]!["total"]!);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_PreservesEveryOutcomeAttemptAndActualWallClockDifference()
+    {
+        using var stream = new MemoryFileStream();
+        DateTimeOffset future = new(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        HtmlReportEngine engine = CreateEngine(stream, testStartTime: future);
+        _clockMock.SetupGet(value => value.UtcNow).Returns(future.AddSeconds(-5));
+        CapturedTestResult[] results =
+        [
+            Captured("same", "pass", "passed"),
+            Captured("same", "fail", "failed"),
+            Captured("skip", "skip", "skipped"),
+            Captured("timeout", "timeout", "timedOut"),
+            Captured("error", "error", "errored"),
+        ];
+
+        await engine.GenerateReportAsync(results);
+
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(stream.GetUtf8Content()))!.AsObject();
+        JsonArray rows = report["tests"]!.AsArray();
+        Assert.HasCount(5, rows);
+        Assert.AreSequenceEqual([0, 1, 2, 3, 4], rows.Select(value => (int)value!["rowKey"]!));
+        Assert.AreSequenceEqual(["passed", "failed", "skipped", "timedOut", "errored"], rows.Select(value => (string?)value!["outcome"]));
+        Assert.AreEqual(1, (int)rows[0]!["attemptIndex"]!);
+        Assert.AreEqual(2, (int)rows[1]!["attemptIndex"]!);
+        Assert.AreEqual(2, (int)rows[0]!["attemptOf"]!);
+        Assert.AreEqual(2, (int)rows[1]!["attemptOf"]!);
+        Assert.IsFalse(rows[2]!.AsObject().ContainsKey("attemptIndex"));
+        Assert.IsFalse(rows[2]!.AsObject().ContainsKey("attemptOf"));
+        Assert.IsFalse(rows[0]!.AsObject().ContainsKey("startTime"));
+        Assert.IsFalse(rows[0]!.AsObject().ContainsKey("traits"));
+        JsonObject summary = report["summary"]!.AsObject();
+        Assert.AreEqual(5, (int)summary["total"]!);
+        foreach (string outcome in new[] { "passed", "failed", "skipped", "timedOut", "errored" })
+        {
+            Assert.AreEqual(1, (int)summary[outcome]!);
+        }
+
+        Assert.AreEqual(-5_000d, (double)summary["totalDurationMs"]!);
+    }
+
+    [TestMethod]
+    [DataRow("<html>no data</html>")]
+    [DataRow("<script id=\"mtp-data\" type=\"application/json\">{}")]
+    public void ExtractReportJson_RejectsMissingOpeningOrClosingDataMarker(string html)
+    {
+        ArgumentException error = Assert.ThrowsExactly<ArgumentException>(() => HtmlReportEngine.ExtractReportJson(html));
+        Assert.AreEqual(nameof(html), error.ParamName);
+        Assert.Contains("valid", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
     public async Task GenerateReportAsync_WritesValidHtml_WithEmbeddedJson()
     {
         using var memoryStream = new MemoryFileStream();

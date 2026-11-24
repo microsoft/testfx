@@ -65,13 +65,13 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
 
             """;
 
-        await new VerifyCS.Test
+        await new VerifyCS.Test(useMSTestV4: true)
         {
             TestState = { Sources = { code } },
             ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
         }.RunAsync();
 
-        await new TestWithSuppressor
+        await new TestWithSuppressor(useMSTestV4: true)
         {
             TestState = { Sources = { code } },
             ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(true) },
@@ -206,6 +206,15 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
 
     internal sealed class TestWithSuppressor : VerifyCS.Test
     {
+        public TestWithSuppressor()
+        {
+        }
+
+        public TestWithSuppressor(bool useMSTestV4)
+            : base(useMSTestV4)
+        {
+        }
+
         protected override IEnumerable<DiagnosticAnalyzer> GetDiagnosticAnalyzers()
         {
             foreach (DiagnosticAnalyzer analyzer in base.GetDiagnosticAnalyzers())

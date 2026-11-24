@@ -15,7 +15,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class BuildInfoIncrementalCleanTests
 {
-    private const string TargetFramework = "net8.0";
+    private const string TargetFramework = "net10.0";
 
     public TestContext TestContext { get; set; } = null!;
 

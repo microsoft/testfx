@@ -1,5 +1,12 @@
 # RFC 010 - Map not runnable tests to failed via runsettings
 
+> **Current implementation note (2026-10-09):** The setting still defaults to true,
+> but discovery can reject invalid signatures before an execution outcome exists;
+> mapping does not guarantee every invalid method appears as a failed test.
+> `TreatDiscoveryWarningsAsErrors` now defaults to true independently.
+> See [MSTEST-015](../specifications/mstest.md#mstest-015--outcome-defaults-are-not-discovery-inclusion-rules).
+> The XML root below uses the current case-sensitive spelling; no tests were executed.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation
@@ -17,11 +24,11 @@ Make this setting configurable via MapNotRunnableToFailed tag which is part of t
 Here is a sample runsettings:
 
 ```xml
-<Runsettings> 
+<RunSettings>
   <MSTestV2> 
     <MapNotRunnableToFailed>true</MapNotRunnableToFailed>   
   </MSTestV2> 
-</Runsettings> 
+</RunSettings>
 ```
 
 ### Honoring the settings

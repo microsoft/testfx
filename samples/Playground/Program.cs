@@ -35,6 +35,7 @@ public class Program
 #endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+            testApplicationBuilder.AddAffectedTestsProvider();
 
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
@@ -140,7 +141,7 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
         try
         {
             IChatClient? chatClient = await _serviceProvider.GetChatClientAsync(context.CancellationToken);
-            if (chatClient != null)
+            if (chatClient is not null)
             {
                 ChatResponse response = await chatClient.GetResponseAsync(chatMessage: "Hello, world!", cancellationToken: context.CancellationToken);
             }

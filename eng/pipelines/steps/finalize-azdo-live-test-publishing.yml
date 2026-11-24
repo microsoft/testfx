@@ -112,7 +112,7 @@ steps:
         Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
       }
       else {
-        Write-Host 'Azure DevOps live test publishing was not configured. The PublishTestResults fallback will be used.'
+        Write-Host 'Azure DevOps live test publishing was not configured.'
         Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
       }
     }

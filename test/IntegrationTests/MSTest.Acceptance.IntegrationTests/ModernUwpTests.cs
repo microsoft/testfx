@@ -17,9 +17,50 @@ namespace MSTest.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public sealed class ModernUwpTests : AcceptanceTestBase
 {
+    private const string Net10TargetFramework = "net10.0-windows10.0.26100.0";
+    private const string Net11TargetFramework = "net11.0-windows10.0.26100.0";
+
+    [DataRow("x86")]
+    [DataRow("ARM64")]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Modern UWP builds are supported only on Windows.")]
+    public async Task ModernUwp_BuildsMtpPackageForArchitecture(string platform)
+    {
+        string uniqueSuffix = Guid.NewGuid().ToString("N");
+        string assetName = $"ModernUwp{uniqueSuffix[..12]}";
+        string sourceCode = ModernUwpSourceCode
+            .PatchCodeWithReplace("$AssetName$", assetName)
+            .PatchCodeWithReplace("$PackageIdentityName$", $"MSTestModernUwp{uniqueSuffix}")
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", Net10TargetFramework);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
+        WindowsApplicationModelTestTools.CopySampleAssets(testAsset.TargetAssetPath);
+        await EnsureGeneratedCSharpFilesHaveUtf8BomAsync(testAsset.TargetAssetPath, TestContext.CancellationToken);
+        VisualStudioTestTools tools = await WindowsApplicationModelTestTools.LocateModernUwpVisualStudioToolsAsync(TestContext.CancellationToken);
+
+        UwpBuildResult build = await WindowsApplicationModelTestTools.BuildUwpAssetAsync(
+            tools,
+            testAsset,
+            $"{assetName}.csproj",
+            TestContext.CancellationToken,
+            platform: platform);
+
+        Assert.IsTrue(Directory.Exists(build.PackageLayoutPath), build.BinlogPath);
+        _ = AssertApplicationResourcesPri(build);
+        WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+            Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt"),
+            WindowsApplicationModelAssetKind.ModernUwp,
+            Net10TargetFramework);
+    }
+
+    [DataRow(Net10TargetFramework, false, DisplayName = "ModernUwp_Net10")]
+    [DataRow(Net11TargetFramework, false, DisplayName = "ModernUwp_Net11")]
+    [DataRow(Net10TargetFramework, true, DisplayName = "ModernUwp_UnsupportedDeployment")]
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Modern UWP execution is supported only on Windows.")]
-    public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughVSTest()
+    public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughMtp(string targetFramework, bool unsupportedDeployment)
     {
         string uniqueSuffix = Guid.NewGuid().ToString("N");
         string assetName = $"ModernUwp{uniqueSuffix[..12]}";
@@ -28,56 +69,103 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$AssetName$", assetName)
             .PatchCodeWithReplace("$PackageIdentityName$", packageIdentityName)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$TestPlatformVersion$", MicrosoftNETTestSdkVersion);
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", targetFramework);
+        if (unsupportedDeployment)
+        {
+            sourceCode += UnsupportedDeploymentSource.PatchCodeWithReplace("$AssetName$", assetName);
+        }
 
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
-        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
-            testAsset,
-            packageIdentityName,
-            async () =>
+        string executionDirectory = Path.Combine(Path.GetTempPath(), nameof(ModernUwpTests), uniqueSuffix);
+        bool cleanupSucceeded = false;
+        try
+        {
+            await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+                testAsset,
+                packageIdentityName,
+                async () =>
+                {
+                    WindowsApplicationModelTestTools.CopySampleAssets(testAsset.TargetAssetPath);
+                    await EnsureGeneratedCSharpFilesHaveUtf8BomAsync(testAsset.TargetAssetPath, TestContext.CancellationToken);
+
+                    VisualStudioTestTools tools = await WindowsApplicationModelTestTools.LocateModernUwpVisualStudioToolsAsync(TestContext.CancellationToken);
+                    UwpBuildResult build = await WindowsApplicationModelTestTools.BuildUwpAssetAsync(
+                        tools,
+                        testAsset,
+                        $"{assetName}.csproj",
+                        TestContext.CancellationToken);
+
+                    string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
+                    WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+                        resolvedAssetsReport,
+                        WindowsApplicationModelAssetKind.ModernUwp,
+                        targetFramework);
+                    Assert.IsTrue(
+                        Directory.Exists(build.PackageLayoutPath),
+                        $"The Modern UWP package layout '{build.PackageLayoutPath}' does not exist. Binlog: '{build.BinlogPath}'.");
+                    string resourcesPriPath = AssertApplicationResourcesPri(build);
+
+                    // AppX resolves subst drives and junctions to their physical paths, so stage the recipe,
+                    // requested executable and its application resources in a short physical directory.
+                    Directory.CreateDirectory(executionDirectory);
+                    string stagedTargetPath = Path.Combine(executionDirectory, $"{assetName}.exe");
+                    File.Copy(Path.Combine(build.PackageLayoutPath, $"{assetName}.exe"), stagedTargetPath);
+                    File.Copy(
+                        Path.Combine(build.PackageLayoutPath, "AppxManifest.xml"),
+                        Path.Combine(executionDirectory, "AppxManifest.xml"));
+                    File.Copy(resourcesPriPath, Path.Join(executionDirectory, "resources.pri"));
+                    File.Copy(build.RecipePath, Path.Combine(executionDirectory, Path.GetFileName(build.RecipePath)));
+
+                    string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
+                    UwpRunResult run = await WindowsApplicationModelTestTools.RunMtpUwpProjectAsync(
+                        tools,
+                        build.ProjectPath,
+                        resultsDirectory,
+                        TestContext.CancellationToken,
+                        testingPlatformPackagedAppTargetPath: stagedTargetPath);
+                    string startupError = run.ExitCode == 0
+                        ? string.Empty
+                        : await WindowsApplicationModelTestTools.TryReadPackageLocalStateFileAsync(
+                            packageIdentityName,
+                            "mtp-startup-error.txt",
+                            TestContext.CancellationToken);
+                    string hostDiagnostics = run.ExitCode == 0
+                        ? string.Empty
+                        : await WindowsApplicationModelTestTools.TryReadPackageLocalStateDiagnosticsAsync(
+                            packageIdentityName,
+                            TestContext.CancellationToken);
+
+                    // InvokeTestingPlatform maps the host's failed-test exit (2) to an MSBuild failure (1).
+                    const int msbuildFailureExitCode = 1;
+                    Assert.AreEqual(
+                        unsupportedDeployment ? msbuildFailureExitCode : 0,
+                        run.ExitCode,
+                        $"MTP failed to execute the real Modern UWP project '{build.ProjectPath}'. TRX: '{run.TrxPath}'. " +
+                        $"Binlog: '{build.BinlogPath}'.{Environment.NewLine}Standard output:{Environment.NewLine}{run.StandardOutput}" +
+                        $"{Environment.NewLine}Standard error:{Environment.NewLine}{run.ErrorOutput}" +
+                        $"{Environment.NewLine}Activated host startup error:{Environment.NewLine}{startupError}" +
+                        $"{Environment.NewLine}Activated host diagnostics:{Environment.NewLine}{hostDiagnostics}");
+                    Assert.DoesNotContain(
+                        "No test is available",
+                        run.StandardOutput,
+                        $"MTP reported no discovered tests for '{build.ProjectPath}'.");
+                    Assert.DoesNotContain(
+                        "Total tests: 0",
+                        run.StandardOutput,
+                        $"MTP reported zero discovered tests for '{build.ProjectPath}'.");
+
+                    AssertModernUwpTrx(run.TrxPath, build, unsupportedDeployment);
+                });
+            cleanupSucceeded = true;
+        }
+        finally
+        {
+            if (cleanupSucceeded && Directory.Exists(executionDirectory))
             {
-                WindowsApplicationModelTestTools.CopySampleAssets(testAsset.TargetAssetPath);
-                await EnsureGeneratedCSharpFilesHaveUtf8BomAsync(testAsset.TargetAssetPath, TestContext.CancellationToken);
-
-                VisualStudioTestTools tools = await WindowsApplicationModelTestTools.LocateModernUwpVisualStudioToolsAsync(TestContext.CancellationToken);
-                UwpBuildResult build = await WindowsApplicationModelTestTools.BuildUwpAssetAsync(
-                    tools,
-                    testAsset,
-                    $"{assetName}.csproj",
-                    TestContext.CancellationToken);
-
-                string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
-                WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
-                    resolvedAssetsReport,
-                    WindowsApplicationModelAssetKind.ModernUwp);
-                Assert.IsTrue(
-                    Directory.Exists(build.PackageLayoutPath),
-                    $"The Modern UWP package layout '{build.PackageLayoutPath}' does not exist. Binlog: '{build.BinlogPath}'.");
-
-                string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
-                UwpRunResult run = await WindowsApplicationModelTestTools.RunUwpRecipeAsync(
-                    tools,
-                    build.RecipePath,
-                    resultsDirectory,
-                    TestContext.CancellationToken);
-
-                Assert.AreEqual(
-                    0,
-                    run.ExitCode,
-                    $"VSTest failed to execute the real Modern UWP recipe '{build.RecipePath}'. TRX: '{run.TrxPath}'. " +
-                    $"Binlog: '{build.BinlogPath}'.{Environment.NewLine}Standard output:{Environment.NewLine}{run.StandardOutput}" +
-                    $"{Environment.NewLine}Standard error:{Environment.NewLine}{run.ErrorOutput}");
-                Assert.DoesNotContain(
-                    "No test is available",
-                    run.StandardOutput,
-                    $"VSTest reported no discovered tests for '{build.RecipePath}'.");
-                Assert.DoesNotContain(
-                    "Total tests: 0",
-                    run.StandardOutput,
-                    $"VSTest reported zero discovered tests for '{build.RecipePath}'.");
-
-                AssertModernUwpTrx(run.TrxPath, build);
-            });
+                Directory.Delete(executionDirectory, recursive: true);
+            }
+        }
     }
 
     public TestContext TestContext { get; set; } = default!;
@@ -95,45 +183,70 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             await using FileStream stream = File.OpenRead(path);
             int bytesRead = await stream.ReadAsync(actualPreamble, cancellationToken);
             Assert.AreEqual(utf8Preamble.Length, bytesRead, $"Generated C# file '{path}' is shorter than the UTF-8 BOM.");
-            CollectionAssert.AreEqual(utf8Preamble, actualPreamble, $"Generated C# file '{path}' is not UTF-8 with BOM.");
+            Assert.AreSequenceEqual(utf8Preamble, actualPreamble, $"Generated C# file '{path}' is not UTF-8 with BOM.");
         }
     }
 
-    private static void AssertModernUwpTrx(string trxPath, UwpBuildResult build)
+    private static void AssertModernUwpTrx(string trxPath, UwpBuildResult build, bool unsupportedDeployment)
     {
         Assert.IsTrue(
             File.Exists(trxPath),
-            $"VSTest did not create the expected TRX '{trxPath}' for recipe '{build.RecipePath}'. Binlog: '{build.BinlogPath}'.");
+            $"MTP did not create the expected TRX '{trxPath}' for project '{build.ProjectPath}'. Binlog: '{build.BinlogPath}'.");
 
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         var trx = XDocument.Load(trxPath);
         XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
-        Assert.HasCount(2, results, $"Expected exactly the plain and UI Modern UWP tests in '{trxPath}'.");
-
-        string[] actualTestNames = results
-            .Select(result => (string?)result.Attribute("testName"))
-            .Where(name => name is not null)
-            .Cast<string>()
-            .Order(StringComparer.Ordinal)
-            .ToArray();
-        string[] expectedTestNames =
+        int failures = unsupportedDeployment ? 2 : 0;
+        string[] expectedResults = unsupportedDeployment
+            ?
+            [
+                "AdapterFailureMessages_AreLocalized_English:Passed",
+                "AdapterFailureMessages_UseNeutralFallbackForFrench:Passed",
+                "ApplicationResources_AreLocalized_English:Passed",
+                "ApplicationResources_AreLocalized_French:Passed",
+                "InheritedClassDeployment:Failed",
+                "InheritedMethodDeployment:Failed",
+                "PlainTestMethod_RunsInPackagedUwp:Passed",
+                "UITestMethod_RunsOnCoreWindowDispatcher:Passed",
+            ]
+            :
         [
-            "PlainTestMethod_RunsInPackagedUwp",
-            "UITestMethod_RunsOnCoreWindowDispatcher",
+            "AdapterFailureMessages_AreLocalized_English:Passed",
+            "AdapterFailureMessages_UseNeutralFallbackForFrench:Passed",
+            "ApplicationResources_AreLocalized_English:Passed",
+            "ApplicationResources_AreLocalized_French:Passed",
+            "PlainTestMethod_RunsInPackagedUwp:Passed",
+            "UITestMethod_RunsOnCoreWindowDispatcher:Passed",
         ];
-        CollectionAssert.AreEqual(expectedTestNames, actualTestNames, $"Unexpected test results were written to '{trxPath}'.");
-        Assert.IsTrue(
-            results.All(result => (string?)result.Attribute("outcome") == "Passed"),
-            $"Every Modern UWP result must pass. TRX: '{trxPath}'.");
+        Assert.AreSequenceEqual(
+            expectedResults,
+            results.Select(result => $"{result.Attribute("testName")!.Value}:{result.Attribute("outcome")!.Value}").Order(StringComparer.Ordinal),
+            $"Unexpected Modern UWP identities/outcomes in '{trxPath}'.");
+        foreach (XElement result in results.Where(result => (string?)result.Attribute("outcome") == "Failed"))
+        {
+            Assert.Contains(
+                "DeploymentItemAttribute is not supported by UWP or WinUI test hosts.",
+                result.Descendants(ns + "Message").Single().Value);
+            Assert.DoesNotContain("DEPLOYMENT_BODY_EXECUTED", result.Value);
+        }
 
         XElement counters = trx.Descendants(ns + "Counters").Single();
-        AssertCounter(counters, "total", 2, trxPath);
-        AssertCounter(counters, "executed", 2, trxPath);
-        AssertCounter(counters, "passed", 2, trxPath);
-        AssertCounter(counters, "failed", 0, trxPath);
+        AssertCounter(counters, "total", 6 + failures, trxPath);
+        AssertCounter(counters, "executed", 6 + failures, trxPath);
+        AssertCounter(counters, "passed", 6, trxPath);
+        AssertCounter(counters, "failed", failures, trxPath);
         AssertCounter(counters, "error", 0, trxPath);
         AssertCounter(counters, "inconclusive", 0, trxPath);
         AssertCounter(counters, "notExecuted", 0, trxPath);
+    }
+
+    private static string AssertApplicationResourcesPri(UwpBuildResult build)
+    {
+        string resourcesPriPath = Path.Join(build.PackageLayoutPath, "resources.pri");
+        Assert.IsTrue(
+            File.Exists(resourcesPriPath),
+            $"The Modern UWP layout must retain its application-owned resources '{resourcesPriPath}'. Binlog: '{build.BinlogPath}'.");
+        return resourcesPriPath;
     }
 
     private static void AssertCounter(XElement counters, string name, int expected, string trxPath)
@@ -142,13 +255,41 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             (string?)counters.Attribute(name),
             $"Unexpected '{name}' counter in '{trxPath}'.");
 
+    private const string UnsupportedDeploymentSource = """
+
+        #file UnsupportedDeploymentTests.cs
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        namespace $AssetName$;
+
+        public abstract class MethodDeploymentBase
+        {
+            [TestMethod]
+            [DeploymentItem("not-deployed.txt")]
+            public void InheritedMethodDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+        }
+
+        [TestClass]
+        public sealed class InheritedMethodDeploymentTests : MethodDeploymentBase;
+
+        [DeploymentItem("not-deployed.txt")]
+        public abstract class ClassDeploymentBase;
+
+        [TestClass]
+        public sealed class InheritedClassDeploymentTests : ClassDeploymentBase
+        {
+            [TestMethod]
+            public void InheritedClassDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+        }
+        """;
+
     private const string ModernUwpSourceCode = """
 #file $AssetName$.csproj
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
@@ -158,38 +299,24 @@ public sealed class ModernUwpTests : AcceptanceTestBase
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <MicrosoftTestingPlatformVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingExtensionsCommonVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingExtensionsCommonVersion>
+    <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectCapability Include="TestContainer" />
-    <SDKReference Include="TestPlatform.Universal, Version=$(VisualStudioVersion)" />
-    <RuntimeHostConfigurationOption Include="MSTest.EnableParentProcessQuery"
-                                    Value="false"
-                                    Trim="true" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$TestPlatformVersion$" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$TestPlatformVersion$" ExcludeAssets="build" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-  </ItemGroup>
-
-  <Target Name="UseNuGetTestPlatformRuntime" BeforeTargets="SDKRedistOutputGroup">
-    <ItemGroup>
-      <ResolvedRedistFiles Remove="$(MSBuildProgramFiles32)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\TestPlatform.Universal\$(VisualStudioVersion)\Redist\**\*" />
-    </ItemGroup>
-  </Target>
 
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
-      Lines="UseUwpTools=$(UseUwpTools)"
+      Lines="TargetFramework=$(TargetFramework);UseUwpTools=$(UseUwpTools);UseWinUI=$(UseWinUI);MSBuildRuntimeType=$(MSBuildRuntimeType);NETCoreSdkVersion=$(NETCoreSdkVersion);NuGetPackageRoot=$(NuGetPackageRoot)"
       Overwrite="true" />
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
       Lines="@(ReferencePath->'%(FullPath)')"
       Overwrite="false" />
+    <WriteLinesToFile
+      File="$(MSBuildProjectDirectory)\resolved-mstest-runtime-assets.txt"
+      Lines="@(ReferenceCopyLocalPaths->'%(DestinationSubDirectory)%(Filename)%(Extension)|%(FullPath)')"
+      Overwrite="true" />
   </Target>
 </Project>
 
@@ -216,8 +343,9 @@ public sealed class ModernUwpTests : AcceptanceTestBase
 
 #file App.xaml.cs
 using System;
-using Microsoft.VisualStudio.TestPlatform.TestExecutor;
+using Microsoft.Testing.Extensions;
 using Windows.ApplicationModel.Activation;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -228,7 +356,7 @@ public sealed partial class App : Application
 {
     public App() => InitializeComponent();
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         var rootFrame = Window.Current.Content as Frame;
         if (rootFrame is null)
@@ -238,9 +366,28 @@ public sealed partial class App : Application
             Window.Current.Content = rootFrame;
         }
 
-        UnitTestClient.CreateDefaultUI();
         Window.Current.Activate();
-        UnitTestClient.Run(args.Arguments);
+        try
+        {
+            string[] testArguments = PackagedAppExtensions.GetTestApplicationArguments(args.Arguments);
+            Environment.SetEnvironmentVariable(
+                "platformOptions__testHostControllersManager__namedPipeClient__connectTimeoutSeconds",
+                "5");
+            Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(
+                testArguments);
+        }
+        catch (Exception ex)
+        {
+            StorageFile errorFile = await ApplicationData.Current.LocalFolder.CreateFileAsync(
+                "mtp-startup-error.txt",
+                CreationCollisionOption.ReplaceExisting);
+            await FileIO.WriteTextAsync(errorFile, ex.ToString());
+            Environment.ExitCode = 1;
+        }
+        finally
+        {
+            Exit();
+        }
     }
 
     private static void OnNavigationFailed(object sender, NavigationFailedEventArgs args)
@@ -288,7 +435,7 @@ public sealed partial class MainPage : Page
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.18362.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
   <Resources>
     <Resource Language="x-generate" />
@@ -299,7 +446,7 @@ public sealed partial class MainPage : Page
         DisplayName="$AssetName$"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="MSTest Modern UWP acceptance asset"
+        Description="ms-resource:AppDescription"
         BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
@@ -313,9 +460,12 @@ public sealed partial class MainPage : Page
 </Package>
 
 #file UnitTests.cs
+using System;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Resources.Core;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 
@@ -324,11 +474,19 @@ namespace $AssetName$;
 [TestClass]
 public sealed class ModernUwpPackageTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void PlainTestMethod_RunsInPackagedUwp()
     {
         Assert.AreEqual("$PackageIdentityName$", Package.Current.Id.Name);
         Assert.IsFalse(string.IsNullOrWhiteSpace(Package.Current.Id.FamilyName));
+        string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];
+        foreach (string directory in directories)
+        {
+            TestContext.Properties[directory] = "not-a-ui-directory";
+            Assert.IsNull(typeof(TestContext).GetProperty(directory)!.GetValue(TestContext), directory);
+        }
     }
 
     [UITestMethod]
@@ -342,6 +500,82 @@ public sealed class ModernUwpPackageTests
         Assert.IsNotNull(grid.Dispatcher);
         Assert.IsTrue(grid.Dispatcher.HasThreadAccess);
     }
+
+    [TestMethod]
+    [DataRow("en-US", "The parameter should not be null or empty.", DisplayName = "AdapterFailureMessages_AreLocalized_English")]
+    [DataRow("fr-FR", "The parameter should not be null or empty.", DisplayName = "AdapterFailureMessages_UseNeutralFallbackForFrench")]
+    public void AdapterFailureMessages_RespectSatellitePolicy(string cultureName, string expectedMessage)
+    {
+        CultureInfo originalUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo(cultureName);
+
+            // Native UWP MTP suppresses adapter satellite copying; preserve its neutral fallback.
+            // This public API reads the adapter's real platform-services resources before any file I/O.
+            ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(() => TestContext.AddResultFile(string.Empty));
+            Assert.AreEqual("fileName", exception.ParamName);
+            Assert.StartsWith(expectedMessage, exception.Message);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalUICulture;
+        }
+    }
+
+    [TestMethod]
+    [DataRow("en-US", "MSTest modern UWP sample", DisplayName = "ApplicationResources_AreLocalized_English")]
+    [DataRow("fr-FR", "Exemple UWP moderne MSTest", DisplayName = "ApplicationResources_AreLocalized_French")]
+    public void ApplicationResources_AreLocalized(string language, string expectedDescription)
+    {
+        var context = new ResourceContext();
+        context.QualifierValues["Language"] = language;
+
+        string description = ResourceManager.Current.MainResourceMap
+            .GetValue("Resources/AppDescription", context).ValueAsString;
+
+        Assert.AreEqual(expectedDescription, description);
+    }
 }
+
+#file Strings/en-US/Resources.resw
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDescription" xml:space="preserve">
+    <value>MSTest modern UWP sample</value>
+  </data>
+</root>
+
+#file Strings/fr-FR/Resources.resw
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Exemple UWP moderne MSTest</value>
+  </data>
+</root>
 """;
 }

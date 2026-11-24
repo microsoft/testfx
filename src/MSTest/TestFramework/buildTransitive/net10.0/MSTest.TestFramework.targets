@@ -1,0 +1,83 @@
+<Project>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\MSTest.TestFramework.targets" />
+
+  <!--
+    WinUI and modern (.NET) UWP projects get the UI extension of the framework, which provides [UITestMethod] and the
+    UI-thread dispatching attributes. It only depends on MSTest.TestFramework, so shared test libraries get the UI
+    attributes without becoming test applications; MSTest.TestAdapter selects the matching adapter build for runners.
+    The extension ships outside lib/<tfm> because MSTest.WinUI and MSTest.Uwp both define UITestMethodAttribute and
+    NuGet can only select one set of lib assets per target framework.
+    The selection runs at execution time because UseWinUI, UseUwpTools and UseUwp may be set after package targets are
+    imported (for example in Directory.Build.targets). Use the resolved core assets, not PackageReference metadata:
+    NuGet has already applied direct and transitive compile/runtime exclusions independently.
+  -->
+  <Target Name="_MSTestSelectUIFrameworkAssets"
+          AfterTargets="ResolvePackageAssets"
+          Condition=" '$(UsingMicrosoftNETSdk)' == 'true'
+                      AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetPlatformIdentifier)' == 'Windows' ">
+    <PropertyGroup>
+      <_MSTestUIModel Condition=" '$(UseWinUI)' == 'true' ">winui</_MSTestUIModel>
+      <_MSTestUIModel Condition=" '$(UseWinUI)' != 'true'
+                                  AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '')) ">uwp</_MSTestUIModel>
+      <_MSTestUIName Condition=" '$(_MSTestUIModel)' == 'winui' ">MSTest.WinUI</_MSTestUIName>
+      <_MSTestUIName Condition=" '$(_MSTestUIModel)' == 'uwp' ">MSTest.Uwp</_MSTestUIName>
+      <_MSTestUIRoot>$(MSBuildThisFileDirectory)$(_MSTestUIModel)\</_MSTestUIRoot>
+      <_MSTestUIPackagePath>buildTransitive/net10.0/$(_MSTestUIModel)/</_MSTestUIPackagePath>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(_MSTestUIName)' != '' ">
+      <_MSTestCoreCompile Include="@(ResolvedCompileFileDefinitions->WithMetadataValue('NuGetPackageId', 'MSTest.TestFramework')->WithMetadataValue('Filename', 'MSTest.TestFramework'))" />
+      <ResolvedCompileFileDefinitions Include="@(_MSTestCoreCompile->'$(_MSTestUIRoot)$(_MSTestUIName).dll')">
+        <HintPath>$(_MSTestUIRoot)$(_MSTestUIName).dll</HintPath>
+        <PathInPackage>$(_MSTestUIPackagePath)$(_MSTestUIName).dll</PathInPackage>
+      </ResolvedCompileFileDefinitions>
+
+      <_MSTestCoreRuntime Include="@(RuntimeCopyLocalItems->WithMetadataValue('NuGetPackageId', 'MSTest.TestFramework')->WithMetadataValue('Filename', 'MSTest.TestFramework'))" />
+      <_MSTestUIRuntime Include="@(_MSTestCoreRuntime->'$(_MSTestUIRoot)$(_MSTestUIName).dll')">
+        <PathInPackage>$(_MSTestUIPackagePath)$(_MSTestUIName).dll</PathInPackage>
+        <DestinationSubPath>$(_MSTestUIName).dll</DestinationSubPath>
+      </_MSTestUIRuntime>
+      <RuntimeCopyLocalItems Include="@(_MSTestUIRuntime)" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '@(_MSTestCoreRuntime)' != '' ">
+      <_MSTestCoreSatellite Include="@(ResourceCopyLocalItems->WithMetadataValue('NuGetPackageId', 'MSTest.TestFramework')->WithMetadataValue('Filename', 'MSTest.TestFramework.resources'))"
+                            Condition=" '$(_MSTestUIModel)' == 'winui' " />
+      <_MSTestUISatellite Include="@(_MSTestCoreSatellite->'$(_MSTestUIRoot)%(Culture)\$(_MSTestUIName).resources.dll')">
+        <PathInPackage>$(_MSTestUIPackagePath)%(Culture)/$(_MSTestUIName).resources.dll</PathInPackage>
+        <DestinationSubPath>%(Culture)\$(_MSTestUIName).resources.dll</DestinationSubPath>
+      </_MSTestUISatellite>
+      <ResourceCopyLocalItems Include="@(_MSTestUISatellite)" />
+
+      <!-- PRI and documentation are copy-local companions, not managed assemblies in deps.json. -->
+      <_MSTestUISidecar Include="$(_MSTestUIRoot)$(_MSTestUIName).xml" />
+      <_MSTestUISidecar Include="$(_MSTestUIRoot)$(_MSTestUIName).pri" Condition=" '$(_MSTestUIModel)' == 'winui' " />
+      <_MSTestUISidecar Update="@(_MSTestUISidecar)">
+        <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
+        <PathInPackage>$(_MSTestUIPackagePath)%(Filename)%(Extension)</PathInPackage>
+        <CopyToPublishDirectory Condition=" '%(Extension)' == '.xml' AND '$(PublishReferencesDocumentationFiles)' != 'true' ">false</CopyToPublishDirectory>
+      </_MSTestUISidecar>
+      <_ResolvedCopyLocalBuildAssets Include="@(_MSTestUISidecar)" Condition=" '%(_MSTestCoreRuntime.CopyLocal)' == 'true' " />
+    </ItemGroup>
+  </Target>
+
+  <!-- Runtime-store publish resolves a fresh set of assets instead of using the build items. -->
+  <Target Name="_MSTestSelectUIFrameworkPublishAssets" AfterTargets="_ResolveCopyLocalAssetsForPublish"
+          Condition=" '@(_MSTestUIRuntime)' != '' AND ('$(PreserveStoreLayout)' == 'true' OR '@(RuntimeStorePackages)' != '') ">
+    <ItemGroup>
+      <_MSTestPublishedCore Include="@(_ResolvedCopyLocalPublishAssets->WithMetadataValue('NuGetPackageId', 'MSTest.TestFramework')->WithMetadataValue('Filename', 'MSTest.TestFramework'))" />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_MSTestPublishedCore)' != '' ">
+      <_MSTestUIPublish Include="@(_MSTestUIRuntime);@(_MSTestUISatellite)" />
+      <_MSTestUIPublish Include="@(_MSTestUISidecar)" Condition=" '%(_MSTestUISidecar.CopyToPublishDirectory)' != 'false' " />
+      <_MSTestUIPublish Update="@(_MSTestUIPublish)" Condition=" '$(PreserveStoreLayout)' == 'true' ">
+        <DestinationSubPath>$([MSBuild]::MakeRelative('$(MSBuildThisFileDirectory)..\..\..\..', '%(_MSTestUIPublish.FullPath)'))</DestinationSubPath>
+      </_MSTestUIPublish>
+      <_ResolvedCopyLocalPublishAssets Include="@(_MSTestUIPublish)">
+        <DestinationSubDirectory Condition=" '$(PreserveStoreLayout)' == 'true' ">$([System.IO.Path]::GetDirectoryName('%(_MSTestUIPublish.DestinationSubPath)'))\</DestinationSubDirectory>
+      </_ResolvedCopyLocalPublishAssets>
+    </ItemGroup>
+  </Target>
+
+</Project>

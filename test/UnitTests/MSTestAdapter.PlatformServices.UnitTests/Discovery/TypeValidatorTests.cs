@@ -44,6 +44,46 @@ public class TypeValidatorTests : TestContainer
         _typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings).Should().BeFalse();
     }
 
+    public void IsValidTestClassShouldNotInferCSharpContainersFromTestMethods()
+    {
+        var typeValidator = new TypeValidator(ReflectHelper.Instance);
+        typeValidator.IsValidTestClass(typeof(UnannotatedCSharpClass), _warnings).Should().BeFalse();
+        typeValidator.IsValidTestClass(typeof(UnannotatedCSharpModule), _warnings).Should().BeFalse();
+        _warnings.Should().BeEmpty();
+    }
+
+    public void IsValidTestClassShouldRejectAnnotatedCSharpStaticContainers()
+    {
+        var typeValidator = new TypeValidator(ReflectHelper.Instance);
+        typeValidator.IsValidTestClass(typeof(AnnotatedCSharpModule), _warnings).Should().BeFalse();
+        _warnings.Should().BeEmpty();
+    }
+
+    public class UnannotatedCSharpClass
+    {
+        [TestMethod]
+        public void Test()
+        {
+        }
+    }
+
+    public static class UnannotatedCSharpModule
+    {
+        [TestMethod]
+        public static void Test()
+        {
+        }
+    }
+
+    [TestClass]
+    public static class AnnotatedCSharpModule
+    {
+        [TestMethod]
+        public static void Test()
+        {
+        }
+    }
+
     public void IsValidTestClassShouldReturnTrueForClassesMarkedByAnAttributeDerivedFromTestClass()
     {
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(false);
@@ -259,13 +299,15 @@ public class TypeValidatorTests : TestContainer
             nameof(PublicClass3),
             nameof(PublicClass2.PublicNestedClassInPublicClass),
             nameof(PublicClass3.PublicClassNestedInPublicClass),
-            nameof(PublicClass3.PublicClassNestedInPublicClass.PublicClassNestedInPublicClassNestedInPublicClass)
+            nameof(PublicClass3.PublicClassNestedInPublicClass.PublicClassNestedInPublicClassNestedInPublicClass),
         ];
 
         bool discoverInternal = false;
-        string[] actualDiscoveredTypes = [.. allTypes
+        string[] actualDiscoveredTypes = [
+            .. allTypes
             .Where(t => TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name)];
+            .Select(t => t.Name),
+        ];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedDiscoveredTypes);
@@ -302,13 +344,15 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInPublicClass),
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass3
-            nameof(PrivateClassNames.PrivateClassNestedInInternalClass)
+            nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
         ];
 
         bool discoverInternal = false;
-        string[] actualDiscoveredTypes = [.. allTypes
+        string[] actualDiscoveredTypes = [
+            .. allTypes
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name)];
+            .Select(t => t.Name),
+        ];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedNonDiscoveredTypes);
@@ -337,13 +381,15 @@ public class TypeValidatorTests : TestContainer
             nameof(PublicClass3.InternalClassNestedInPublicClass.InternalClassNestedInInternalClassNestedInPublicClass),
             nameof(InternalClass2.InternalClassNestedInInternalClass),
             nameof(InternalClass2.InternalClassNestedInInternalClass.PublicClassNestedInInternalClassNestedInInternalClass),
-            nameof(InternalClass2.InternalClassNestedInInternalClass.InternalClassNestedInInternalClassNestedInInternalClass)
+            nameof(InternalClass2.InternalClassNestedInInternalClass.InternalClassNestedInInternalClassNestedInInternalClass),
         ];
 
         bool discoverInternal = true;
-        string[] actualDiscoveredTypes = [.. allTypes
+        string[] actualDiscoveredTypes = [
+            .. allTypes
             .Where(t => TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name)];
+            .Select(t => t.Name),
+        ];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedDiscoveredTypes);
@@ -367,13 +413,15 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInPublicClass),
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass3
-            nameof(PrivateClassNames.PrivateClassNestedInInternalClass)
+            nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
         ];
 
         bool discoverInternal = true;
-        string[] actualDiscoveredTypes = [.. allTypes
+        string[] actualDiscoveredTypes = [
+            .. allTypes
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name)];
+            .Select(t => t.Name),
+        ];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedNonDiscoveredTypes);

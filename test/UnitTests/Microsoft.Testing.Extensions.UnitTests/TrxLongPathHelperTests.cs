@@ -104,6 +104,30 @@ public class TrxLongPathHelperTests
             Directory.SetCurrentDirectory(originalCurrentDirectory);
         }
     }
+
+    [TestMethod]
+    public void GetPathForFileSystemAccess_WhenLegacyGetFullPathRejectsLongDrivePath_ReturnsExtendedLengthPath()
+    {
+        string path = @"C:\" + new string('d', MaxShortPathLength);
+
+        string result = TrxLongPathHelper.GetPathForFileSystemAccess(
+            path,
+            static _ => throw new PathTooLongException());
+
+        Assert.AreEqual(@"\\?\" + path, result);
+    }
+
+    [TestMethod]
+    public void GetPathForFileSystemAccess_WhenLegacyGetFullPathRejectsLongUncPath_ReturnsExtendedUncPath()
+    {
+        string path = @"\\server\share\" + new string('u', MaxShortPathLength);
+
+        string result = TrxLongPathHelper.GetPathForFileSystemAccess(
+            path,
+            static _ => throw new PathTooLongException());
+
+        Assert.AreEqual(@"\\?\UNC\server\share\" + new string('u', MaxShortPathLength), result);
+    }
 }
 
 #endif

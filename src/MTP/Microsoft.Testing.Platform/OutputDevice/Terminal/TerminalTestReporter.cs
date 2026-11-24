@@ -1,0 +1,221 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
+
+/// <summary>
+/// Terminal test reporter that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
+/// </summary>
+/// <remarks>
+/// The implementation is split across partials named for what they render or track: <c>Lifecycle</c> (run and
+/// assembly start/stop), <c>Messaging</c> (progress messages and in-progress tests), <c>TestCompletion</c> and
+/// <c>TestDiscovery</c> (per-test execution and discovery output), <c>Handshake</c> and <c>ErroredAssemblies</c>
+/// (orchestrator-only failure recaps, each owning its own record list), <c>Summary</c> (the post-run verdict and
+/// counter lines), <c>FlakyTests</c>, <c>SlowestTests</c> and <c>Coverage</c> (the sections appended below that
+/// summary), and <c>Formatting</c> plus <c>Formatting.ControlCharacters</c> (exceptions, stack traces, assembly
+/// links, durations and control-character escaping). This file holds the core shared state, the constants,
+/// construction and the collected artifacts.
+/// </remarks>
+[UnsupportedOSPlatform("browser")]
+[Embedded]
+internal sealed partial class TerminalTestReporter : IDisposable
+{
+    /// <summary>
+    /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
+    /// </summary>
+    private static readonly string[] NewLineStrings = ["\r\n", "\n"];
+
+    internal const string SingleIndentation = "  ";
+
+    internal const string DoubleIndentation = $"{SingleIndentation}{SingleIndentation}";
+
+    internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
+
+    internal event EventHandler OnProgressStartUpdate
+    {
+        add => _terminalWithProgress.OnProgressStartUpdate += value;
+        remove => _terminalWithProgress.OnProgressStartUpdate -= value;
+    }
+
+    internal event EventHandler OnProgressStopUpdate
+    {
+        add => _terminalWithProgress.OnProgressStopUpdate += value;
+        remove => _terminalWithProgress.OnProgressStopUpdate -= value;
+    }
+
+    private readonly Func<bool> _isCancellationRequested;
+
+    private readonly List<TestRunArtifact> _artifacts = [];
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _unselectedAssembliesLock = new();
+#else
+    private readonly object _unselectedAssembliesLock = new();
+#endif
+    private readonly List<(string Assembly, string? TargetFramework, string? Architecture)> _unselectedAssemblies = [];
+
+    private readonly TerminalTestReporterOptions _options;
+
+    private readonly bool _useCompactSummary;
+
+    private readonly TestProgressStateAwareTerminal _terminalWithProgress;
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
+
+    private readonly uint? _originalConsoleMode;
+
+    /// <summary>
+    /// Per-assembly run state, keyed by the caller-provided execution id. The in-process Microsoft.Testing.Platform
+    /// host registers a single assembly; the <c>dotnet test</c> orchestrator registers one entry per child test
+    /// assembly. Progress rendering already supports N workers (slots), so this only generalizes the bookkeeping.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, TestProgressState> _assemblies = new();
+
+    private bool _isDiscovery;
+    private DateTimeOffset? _testExecutionStartTime;
+
+    private DateTimeOffset? _testExecutionEndTime;
+
+    /// <summary>Gets the total number of tests across all registered assemblies.</summary>
+    public int TotalTests => _assemblies.Values.Sum(static a => a.TotalTests);
+
+    private bool WasCancelled
+    {
+        get => field || _isCancellationRequested();
+        set;
+    }
+
+    private int _counter;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class for orchestrator callers that
+    /// drive cancellation out-of-band (via <see cref="StartCancelling"/>) rather than through a cancellation token.
+    /// </summary>
+    public TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
+        : this(console, static () => false, options)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
+    /// </summary>
+    public TerminalTestReporter(
+        IConsole console,
+        Func<bool> isCancellationRequested,
+        TerminalTestReporterOptions options)
+        : this(console, isCancellationRequested, options, new NopLogger())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with cancellation state, reporter options,
+    /// and a logger for low-noise diagnostics of unexpected progress rendering/erase failures.
+    /// </summary>
+    public TerminalTestReporter(
+        IConsole console,
+        Func<bool> isCancellationRequested,
+        TerminalTestReporterOptions options,
+        ILogger logger)
+    {
+        _isCancellationRequested = isCancellationRequested;
+        _options = options;
+
+        Func<bool?> showProgress = options.ShowProgress;
+        ITerminal terminal;
+        bool useCursorRenderer;
+        if (_options.AnsiMode == AnsiMode.SimpleAnsi)
+        {
+            // We are told externally that we are in CI, use simplified ANSI mode.
+            terminal = new SimpleAnsiTerminal(console);
+            useCursorRenderer = false;
+        }
+        else
+        {
+            // We are not in CI, or in CI non-compatible with simple ANSI, autodetect terminal capabilities
+            (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
+            _originalConsoleMode = originalConsoleMode;
+            bool useAnsi = _options.AnsiMode switch
+            {
+                AnsiMode.ForceAnsi => true,
+                AnsiMode.NoAnsi => false,
+                AnsiMode.AnsiIfPossible => consoleAcceptsAnsiCodes,
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            terminal = useAnsi ? new AnsiTerminal(console) : new NonAnsiTerminal(console);
+
+            // Only cursor-capable ANSI terminals can redraw progress in place. Anything that resolved to a
+            // non-ANSI terminal (explicit NoAnsi, or AnsiIfPossible on a console that can't do ANSI) uses
+            // the silence-driven heartbeat renderer instead, so it still gets a progress signal in CI / piped
+            // / redirected runs without spamming a fixed-cadence summary.
+            useCursorRenderer = useAnsi;
+        }
+
+        _useCompactSummary = !useCursorRenderer;
+        IProgressRenderer renderer = useCursorRenderer
+            ? new CursorProgressRenderer()
+            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch(), () => _assemblies.Values, _options.ContextualModuleOutput, _options.ModuleDisplayName);
+
+        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer, logger);
+    }
+
+    public void PrintOutOfProcessArtifacts()
+    {
+        if (_artifacts.Count == 0)
+        {
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.AppendLine($"{SingleIndentation}{TerminalResources.OutOfProcessArtifactsProduced} {_artifacts.Count}");
+
+            foreach (TestRunArtifact artifact in _artifacts)
+            {
+                terminal.Append(DoubleIndentation);
+                terminal.Append("- ");
+                terminal.AppendLink(artifact.Path, lineNumber: null);
+                terminal.AppendLine();
+            }
+
+            terminal.AppendLine();
+        });
+    }
+
+    public void Dispose()
+    {
+        _terminalWithProgress.Dispose();
+
+        // Restore the console mode that we may have changed when enabling ANSI output. If
+        // TestExecutionCompleted already ran, the saved mode was consumed there; if it did not
+        // (e.g. on an abnormal teardown path where Dispose is the only thing called), this is the
+        // last chance to leave the user's terminal in the state we found it in.
+        NativeMethods.RestoreConsoleMode(_originalConsoleMode);
+    }
+
+    public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? executionId, string? testName, string path)
+        => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, executionId, testName, path));
+
+    /// <summary>
+    /// Let the user know that cancellation was triggered.
+    /// </summary>
+    public void StartCancelling()
+    {
+        WasCancelled = true;
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.AppendLine();
+            terminal.AppendLine(TerminalResources.CancellingTestSession);
+            terminal.AppendLine(TerminalResources.PressCtrlCAgainToForceExit);
+            terminal.AppendLine();
+        });
+    }
+}

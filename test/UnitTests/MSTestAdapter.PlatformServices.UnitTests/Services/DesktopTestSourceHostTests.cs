@@ -226,6 +226,27 @@ public class DesktopTestSourceHostTests : TestContainer
             testSourceHost.Object.Dispose();
         }
     }
+
+    public void DisposeShouldUnloadChildAppDomain()
+    {
+        using TestSourceHost sourceHost = new(typeof(DesktopTestSourceHostTests).Assembly.Location, null);
+        sourceHost.SetupHost();
+
+        sourceHost.AppDomain.Should().NotBeNull();
+        AppDomain childDomain = sourceHost.AppDomain!;
+        var proxy = (DummyClass)sourceHost.CreateInstanceForType(typeof(DummyClass), null)!;
+        childDomain.Id.Should().NotBe(AppDomain.CurrentDomain.Id);
+        proxy.AppDomainId.Should().Be(childDomain.Id);
+
+        sourceHost.Dispose();
+
+        sourceHost.AppDomain.Should().BeNull();
+        // A cleared property alone does not prove that the real domain was unloaded.
+        Action queryUnloadedDomain = () => childDomain.GetAssemblies();
+        queryUnloadedDomain.Should().Throw<AppDomainUnloadedException>();
+        Action useUnloadedProxy = () => _ = proxy.AppDomainId;
+        useUnloadedProxy.Should().Throw<AppDomainUnloadedException>();
+    }
 }
 
 public class DummyClass : MarshalByRefObject

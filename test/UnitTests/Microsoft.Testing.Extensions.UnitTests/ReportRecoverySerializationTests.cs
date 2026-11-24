@@ -103,7 +103,7 @@ public sealed class ReportRecoverySerializationTests
         object handler = CreateHandler(typeof(CtrfReportEngine), fileSystem.Object, out _, out _);
 
         MethodInfo readJournal = handler.GetType().GetMethod("ReadJournal", BindingFlags.Instance | BindingFlags.NonPublic)!;
-        object recovered = readJournal.Invoke(handler, [path, new TestHostProcessInformation(314, 1, hasExitedGracefully: false)])!;
+        object recovered = readJournal.Invoke(handler, [path, new TestHostProcessInformation(314, 1, completionMessageReceived: false)])!;
         var results = (System.Collections.IEnumerable)recovered.GetType().GetProperty("Results")!.GetValue(recovered)!;
         object[] recoveredResults = [.. results.Cast<object>()];
 
@@ -138,7 +138,7 @@ public sealed class ReportRecoverySerializationTests
         object handler = CreateHandler(typeof(CtrfReportEngine), fileSystem.Object, out _, out _);
 
         MethodInfo readJournal = handler.GetType().GetMethod("ReadJournal", BindingFlags.Instance | BindingFlags.NonPublic)!;
-        object recovered = readJournal.Invoke(handler, [path, new TestHostProcessInformation(314, 1, hasExitedGracefully: false)])!;
+        object recovered = readJournal.Invoke(handler, [path, new TestHostProcessInformation(314, 1, completionMessageReceived: false)])!;
         var results = (System.Collections.IEnumerable)recovered.GetType().GetProperty("Results")!.GetValue(recovered)!;
 
         Assert.HasCount(1, results.Cast<object>());
@@ -171,7 +171,7 @@ public sealed class ReportRecoverySerializationTests
             out Mock<IOutputDevice> outputDevice);
 
         await ((ITestHostProcessLifetimeHandler)handler).OnTestHostProcessExitedAsync(
-            new TestHostProcessInformation(314, 1, hasExitedGracefully: false),
+            new TestHostProcessInformation(314, 1, completionMessageReceived: false),
             CancellationToken.None);
 
         messageBus.Verify(
@@ -202,7 +202,7 @@ public sealed class ReportRecoverySerializationTests
         object handler = CreateHandler(typeof(CtrfReportEngine), fileSystem.Object, out Mock<IMessageBus> messageBus, out _);
 
         await ((ITestHostProcessLifetimeHandler)handler).OnTestHostProcessExitedAsync(
-            new TestHostProcessInformation(314, 0, hasExitedGracefully: true),
+            new TestHostProcessInformation(314, 0, completionMessageReceived: true),
             CancellationToken.None);
 
         fileSystem.Verify(fs => fs.DeleteFile(It.IsAny<string>()), Times.Once);
@@ -287,13 +287,13 @@ public sealed class ReportRecoverySerializationTests
             deserializer)!;
     }
 
-    private sealed class TestHostProcessInformation(int pid, int exitCode, bool hasExitedGracefully) : ITestHostProcessInformation
+    private sealed class TestHostProcessInformation(int pid, int exitCode, bool completionMessageReceived) : ITestHostProcessInformation
     {
         public int PID { get; } = pid;
 
         public int ExitCode { get; } = exitCode;
 
-        public bool HasExitedGracefully { get; } = hasExitedGracefully;
+        public bool HasReceivedTestHostCompletedMessage { get; } = completionMessageReceived;
     }
 
     private sealed class MemoryFileStream(string content) : IFileStream

@@ -1,0 +1,405 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+/// <summary>
+/// A collection of helper classes to test various conditions within
+/// unit tests. If the condition being tested is not met, an exception
+/// is thrown.
+/// </summary>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+public sealed partial class Assert
+{
+    #region AreAllDistinct
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) and throws an exception if any two elements in the
+    /// collection are equal.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">
+    /// The collection in which to search for duplicate elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/> contains
+    /// at least one duplicate element. The message is shown in test results.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
+    /// </exception>
+    public static void AreAllDistinct<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        AreAllDistinctImpl(collection, EqualityComparer<T>.Default, comparerTypeName: null, message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) using the supplied <paramref name="comparer"/> and throws
+    /// an exception if any two elements in the collection are equal.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">
+    /// The collection in which to search for duplicate elements.
+    /// </param>
+    /// <param name="comparer">
+    /// The equality comparer to use when comparing elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/> contains
+    /// at least one duplicate element. The message is shown in test results.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
+    /// </exception>
+    public static void AreAllDistinct<T>([NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
+        AreAllDistinctImpl(collection, comparer, comparerTypeName: comparer.GetType().Name, message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) and throws an exception if any two elements in the
+    /// collection are equal.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for duplicate elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/> contains
+    /// at least one duplicate element. The message is shown in test results.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
+    /// </exception>
+    public static void AreAllDistinct([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        AreAllDistinctImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, comparerTypeName: null, message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) using the supplied <paramref name="comparer"/> and throws
+    /// an exception if any two elements in the collection are equal.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for duplicate elements.
+    /// </param>
+    /// <param name="comparer">
+    /// The equality comparer to use when comparing elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/> contains
+    /// at least one duplicate element. The message is shown in test results.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
+    /// </exception>
+    public static void AreAllDistinct([NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
+        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparerTypeName: comparer.GetType().Name, message, collectionExpression);
+    }
+
+#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
+    private static void AreAllDistinctImpl<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, string? comparerTypeName, string? message, string collectionExpression)
+    {
+        List<T> snapshot = collection is List<T> list ? list : [.. collection];
+
+#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
+        var seen = new HashSet<T>(comparer);
+#pragma warning restore IDE0028
+
+        bool seenNull = false;
+        List<T>? duplicates = null;
+        HashSet<T>? duplicatesSeen = null;
+        bool nullDuplicateRecorded = false;
+
+        foreach (T item in snapshot)
+        {
+            if (item is null)
+            {
+                if (!seenNull)
+                {
+                    seenNull = true;
+                    continue;
+                }
+
+                if (!nullDuplicateRecorded)
+                {
+                    duplicates ??= [];
+                    duplicates.Add(default!);
+                    nullDuplicateRecorded = true;
+                }
+
+                continue;
+            }
+
+            if (!seen.Add(item))
+            {
+#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
+                duplicatesSeen ??= new(comparer);
+#pragma warning restore IDE0028
+                if (duplicatesSeen.Add(item))
+                {
+                    duplicates ??= [];
+                    duplicates.Add(item);
+                }
+            }
+        }
+
+        if (duplicates is not null)
+        {
+            ReportAssertAreAllDistinctFailed(snapshot, duplicates, comparerTypeName, message, collectionExpression);
+        }
+    }
+#pragma warning restore CS8714
+
+    [DoesNotReturn]
+    private static void ReportAssertAreAllDistinctFailed<T>(IEnumerable<T> collection, List<T> duplicates, string? comparerTypeName, string? message, string collectionExpression)
+    {
+        string collectionText = AssertionValueRenderer.RenderValue(collection);
+        string duplicatesText = AssertionValueRenderer.RenderValue(duplicates);
+
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("duplicates:", duplicatesText)
+            .AddLine("collection:", collectionText);
+
+        if (comparerTypeName is not null)
+        {
+            evidence.AddLine("comparer:", comparerTypeName);
+        }
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreAllDistinctFailedSummary);
+        structured.WithUserMessage(message);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
+        structured.WithCallSiteExpression(BuildCallSiteWithComparerForCollection("Assert.AreAllDistinct", collectionExpression, comparerTypeName is not null));
+
+        ReportAssertFailed(structured);
+    }
+
+    private static string? BuildCallSiteWithComparerForCollection(string assertionMethodName, string collectionExpression, bool hasComparer)
+    {
+        string? callSite = FormatCallSiteExpression(assertionMethodName, collectionExpression, "<collection>");
+        if (callSite is null || !hasComparer)
+        {
+            return callSite;
+        }
+
+        // FormatCallSiteExpression has no overload accepting a third argument expression; insert
+        // the <comparer> placeholder so the rendered call-site reflects the overload that was actually invoked.
+        // Stryker disable once all: This Debug.Assert only checks an invariant of the shared call-site formatter and does not change assertion behavior.
+        Debug.Assert(callSite.Length > 0 && callSite[callSite.Length - 1] == ')', "FormatCallSiteExpression contract: rendered call-site must end with ')'.");
+        return string.Concat(callSite.Remove(callSite.Length - 1), ", <comparer>)");
+    }
+
+    #endregion // AreAllDistinct
+
+#if NETCOREAPP3_1_OR_GREATER
+
+    #region AreAllDistinct span/memory
+
+    /// <summary>
+    /// Tests whether all elements in the specified array are distinct and throws an exception if any two elements are equal.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="collection">The array whose elements must all be distinct.</param>
+    /// <param name="message">The message to include in the exception when two equal elements are found.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if any two elements in <paramref name="collection"/> are equal.</exception>
+    public static void AreAllDistinct<T>([NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct((IEnumerable<T>?)collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified array are distinct using the specified equality comparer
+    /// and throws an exception if any two elements are equal.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="collection">The array whose elements must all be distinct.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when two equal elements are found.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if any two elements in <paramref name="collection"/> are equal.</exception>
+    public static void AreAllDistinct<T>([NotNull] T[]? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct((IEnumerable<T>?)collection, comparer, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are distinct using the specified equality comparer
+    /// and throws an exception if any two elements are equal.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection elements.</typeparam>
+    /// <typeparam name="TCollection">The concrete type of the collection.</typeparam>
+    /// <param name="collection">The collection whose elements must all be distinct.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when two equal elements are found.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">Thrown if any two elements in <paramref name="collection"/> are equal.</exception>
+    public static void AreAllDistinct<T, TCollection>([NotNull] TCollection? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        where TCollection : IEnumerable<T>
+        => AreAllDistinct((IEnumerable<T>?)collection, comparer, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified span are distinct (no two elements are equal).
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span in which to search for duplicate elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
+        AreAllDistinctImpl(collection.ToArray(), EqualityComparer<T>.Default, comparerTypeName: null, message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether all items in the specified span are distinct (no two elements are equal) using the supplied <paramref name="comparer"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span in which to search for duplicate elements.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(ReadOnlySpan<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
+        CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
+        AreAllDistinctImpl(collection.ToArray(), comparer, comparerTypeName: comparer.GetType().Name, message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether all items in the specified span are distinct (no two elements are equal).
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span in which to search for duplicate elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct((ReadOnlySpan<T>)collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified span are distinct (no two elements are equal) using the supplied <paramref name="comparer"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span in which to search for duplicate elements.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(Span<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct((ReadOnlySpan<T>)collection, comparer, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified memory are distinct (no two elements are equal).
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory in which to search for duplicate elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(ReadOnlyMemory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct(collection.Span, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified memory are distinct (no two elements are equal) using the supplied <paramref name="comparer"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory in which to search for duplicate elements.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(ReadOnlyMemory<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct(collection.Span, comparer, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified memory are distinct (no two elements are equal).
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory in which to search for duplicate elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct(collection.Span, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified memory are distinct (no two elements are equal) using the supplied <paramref name="comparer"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory in which to search for duplicate elements.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllDistinct<T>(Memory<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct(collection.Span, comparer, message, collectionExpression);
+
+    #endregion // AreAllDistinct span/memory
+
+#endif
+
+    // Adapts a non-generic IEqualityComparer to IEqualityComparer<object?> for assertion helpers.
+    [StackTraceHidden]
+    private sealed class NonGenericEqualityComparerAdapter : IEqualityComparer<object?>
+    {
+        private readonly IEqualityComparer _comparer;
+
+        public NonGenericEqualityComparerAdapter(IEqualityComparer comparer)
+            => _comparer = comparer;
+
+        bool IEqualityComparer<object?>.Equals(object? x, object? y) => _comparer.Equals(x, y);
+
+        // Stryker disable once all: AreAllDistinctImpl skips null elements before adding values to a HashSet, so this adapter never hashes null.
+        int IEqualityComparer<object?>.GetHashCode(object? obj) => obj is null ? 0 : _comparer.GetHashCode(obj);
+    }
+}

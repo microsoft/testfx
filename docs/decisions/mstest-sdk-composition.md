@@ -1,0 +1,836 @@
+# MSTest SDK composition: layer 3
+
+> **Status (2026-11-20):** `MSTestApplicationModel` and the `MSTest.Uwp` /
+> `MSTest.WinUI` packages were removed before shipping. `MSTest.Sdk` now injects
+> only `MSTest.TestFramework` and `MSTest.TestAdapter`, whose `buildTransitive`
+> targets select the UI payloads from `UseWinUI`, `UseUwpTools` or `UseUwp`.
+> See [core packages only](mstest-adapter-lib-assets.md#core-packages-only-2026-11-20).
+> UWP and WinUI helpers now get their UI APIs from `MSTest.TestFramework` and no
+> longer receive a private adapter reference; helpers still receive one only for
+> source generation. The hook contract below still applies; the package
+> selection rules are history.
+
+## Problem and contract
+
+This layer replaces the SDK/helper/composition portion of
+[#12435](https://github.com/microsoft/testfx/pull/12435), following
+[#7225](https://github.com/microsoft/testfx/issues/7225),
+[#12412](https://github.com/microsoft/testfx/pull/12412),
+[#12428](https://github.com/microsoft/testfx/pull/12428), the
+[shared-core layer](shared-core-ui-contract.md), and the
+[explicit-package layer](explicit-mstest-packages.md).
+
+`MSTestApplicationModel` accepts `Default`, `Uwp`, or `WinUI`. An empty value
+preserves automatic inference, including early UWP inference and explicit
+`UseUwpTools=false`. Selection is recomputed for each inner target framework;
+the public property is never filled with an inferred outer-build value.
+The override selects packages, not UI tooling. Invalid or conflicting choices
+fail explicitly. ClassicEngine, NativeAOT, VSTest, helpers, and central package
+management use the same selected composition.
+
+Helpers retain required compile-time UI APIs and generated runtime hooks, but
+their adapter references are private, exclude runtime assets, suppress manual
+copy-local payloads and satellites, and do not register the MSTest application
+builder hook. The stable hook GUID/order and unrelated MTP dependency hooks
+remain intact. Applications own their selected runtime payload.
+
+Adapter validation uses `ResolvePackageAssets` and `PackageDependencies` for
+the current inner TFM, including ProjectReference-transitive packages whose
+build assets were excluded. Non-SDK projects retain imported-marker checks.
+All three conflicting pairs fail; separate ordinary/UI inner TFMs remain valid.
+Exact UI/core ranges and package/runtime ownership belong to lower layers and
+are unchanged here.
+
+The producers are the aligned Release `MSTest.Sdk`, `MSTest.TestAdapter`,
+`MSTest.Uwp`, and `MSTest.WinUI` packages. Generated SDK and direct-package
+consumers exercise their real packed imports, resolved assemblies, copied
+payloads, and helper nuspecs. MTP launch/activation, handshake/no-handshake,
+cancellation, fallback, exit aggregation, and disposal responsibilities do not
+change. Native/Bazel parity and real app activation are explicitly outside this
+layer. The series coordinator owns rollout and release-branch/backport decisions;
+this layer does not enable a downstream or servicing release.
+
+## Research and decision
+
+2026-11-13: the clean parent is
+`f9708f5edbd37215b7e53cef840ef1e29ddf3f93`. The frozen source ref and live #12435
+head are `00428d48c212cf3630dcf6fa31d131c5ae745c98`; the carving input is
+`8dd78e1347417e400c3ef8d786059a8bb346162f...refs/pr-stack/source/12435`.
+Reconcile that bounded slice with the parent rather than replacing whole files.
+
+No change would retain leaking source-generated helper dependencies and allow
+ambiguous adapter packages. Checking only imported markers is simpler, but misses
+excluded build assets and transitive packages. Scanning every assets target
+would falsely reject valid multi-targeting. The chosen package-task output
+already models the current inner target and avoids a new assets parser.
+Moving only MSTest's hook registration from props to targets lets the project
+body's `IsTestApplication=false` participate without removing dependency hooks.
+
+## Validation and demonstration
+
+| Requirement | Automated evidence | Surface / limitation |
+| --- | --- | --- |
+| Explicit, inferred, invalid, and conflicting models | `MSTestSdk_ExplicitApplicationModel_SelectsCompositionBeforeLateToolingImports`, `MSTestSdk_UwpToolingOptOut_RespectsExplicitApplicationModel`, `MSTestSdk_ApplicationModel_RejectsInvalidOrConflictingChoices` | Real packed SDK imports and resolved package/reference identity |
+| Every injection path and CPM | `MSTestSdk_AdapterInjection_UsesSelectedCompositionWithCentralPackageManagement`, `MSTestSdk_SourceGenerationOptIn_LibraryBuilds`, `MSTestSdk_SourceGenerationOptIn_NativeAotLibraryBuilds`, `MSTestSdk_SourceGenerationOptIn_VSTestTakesPrecedenceOverNativeAot` | Package selection, generated hooks, and real ordinary execution |
+| Helpers do not contaminate applications | `MSTestSdk_Helper_KeepsOnlyRequiredCompileTimeComposition`, `MSTestSdk_UiApplication_WithOrdinarySourceGeneratedHelper_DoesNotResolveOrdinaryAdapter`, `MSTestSdk_SourceGenerationOptIn_DoesNotFlowTransitively` | Compile, copy-local/output inspection, copied hash identity, helper nuspec |
+| Conflicts and valid multi-TFM closure | `ExplicitPackages_RejectConflictingAdaptersBeforeCompilation`, `MSTestSdk_MixedOrdinaryAndUiTargetFrameworks_SelectOneCompositionPerInnerFramework` | Direct/excluded/ProjectReference-transitive pairs and independent inner closures |
+| Classic UWP and ordinary net462 compatibility | `RunTests_With_VSTest`, `RunTests_With_MSTestRunner_Standalone`, `RunTests_With_CentralPackageManagement_Standalone`, `MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition` | Six Debug/Release multi-TFM cases run net11.0, net10.0, and net462; classic composition uses desktop MSBuild, not activation |
+| Non-SDK imported-marker fallback | Six packed-import `non-sdk-composition.proj` probes | All three single compositions exit 0; all three conflicting pairs exit 1 without SDK package-task outputs |
+
+The acceptance assembly uses method-level, CPU-count parallelization. Every new
+case generates a fresh asset directory; shared package inputs are immutable
+during a run and the assembly fixture chooses an isolated cache. No test
+scheduling declarations change. This build-policy layer is nonvisual; diagnostic
+and resolved-asset transcripts are more useful than screenshots.
+
+### Revision, toolchain, and package identity
+
+Executed on 2026-11-13 in this layer's worktree. The tested shipping/test source
+checkpoint is `17b8abac7c8959e73413e01f2c92b0998b590551`, built from the parent
+plus retained patch SHA-256
+`979C1B1DA2D38DFD63592CBC24D64FCAF44D9E18B8A41F967C4358C9079192BE`
+before committing that checkpoint. Later evidence-only changes do not change
+shipping files or tests. Historical unsplit-source runs are not counted.
+
+The pinned SDK is `12.0.100-alpha.1.26556.115`; desktop MSBuild reports
+`18.13.0.52701`, and SDK MSBuild reports `18.14.0-1.26556.115`.
+The outer acceptance host targets `net12.0`; generated consumers retain their
+declared net10.0/net11.0/net12.0, Windows, net462, and classic UAP targets.
+The build script bootstrapped a task-owned `.dotnet`; the borrowed worktree and
+its outputs were not modified. Producer dependencies reuse
+`Q:\.tools\.nuget\packages` without copying or clearing it. Consumers use fresh
+marked, task-owned caches, not that shared same-version SDK cache.
+
+All four compared packages are `5.0.0-dev`; the MTP platform/reporting family
+uses `3.0.0-dev`.
+Cached archives matched the corresponding packed archives byte-for-byte:
+
+| Package | Parent SHA-256 | Current SHA-256 |
+| --- | --- | --- |
+| MSTest.Sdk | `242229B6802F52613D60B6D69B9292F1436265BEFFB0FED25897B29DFF147A08` | `6C6411E3C2C8CF7B2B181EBABF3C3517F2796CC75679DE2685BE7B07780C8A91` |
+| MSTest.TestAdapter | `424DC27A56BD9A990F077A07E92E1F631D80141030F73EDDD7A418F0AF15866E` | `00362CA19A3C7EDC3A216CE3361E0145BE46FA8DACDB3BCD41BDBE145D694B6F` |
+| MSTest.Uwp | `DEDE4E3FAD8CA3EE2A216168F502440A2D538841F32F151760C068BF30F3B086` | `43E0E9809DF14A6F231C2CA31DF421393DF507C1A8F9898C406C8156A468A496` |
+| MSTest.WinUI | `5A3D2FC98C4567A56D26354DD3534D5EF53828CF984AD0A1600457D33D47E99F` | `C06756B10CCF8044A6337287E2378BAAFAA4F6AA9752B577757FE85643B4C1F3` |
+
+Current cached core and source-generator archive hashes are
+`1A7AFD797D0D81AC1127F0AED3872BA83C96A21D2E0CFB405265D6B4DBD53C72`
+and `C817DDFDF1A76464C3F025C608EBBD1DB9986098AF5984EF8E29AB644C1C4EF7`.
+Physical UI nuspecs retain `[5.0.0-dev]` core dependencies for both UWP groups
+and WinUI, with no ordinary/other-UI adapter dependency.
+
+The 73 generated main-run assets files resolve to `cache-green-main`.
+Six actual net462 SDK consumers copied 18 core/adapter/services DLLs matching
+the current cache hashes. UI-with-helper cases independently compare both copied
+adapter/services DLLs with the selected UI package. Adapter-referencing helpers
+retain the unrelated
+`8214564B-6107-422D-8A82-462F97602287` and
+`98058041-B5B6-4A75-9834-58E6DF796A22` hooks while omitting MSTest's GUID.
+
+### Commands and execution results
+
+The pack filters contain actual `TestFx.slnx` source entries, not `src\**`:
+42 source projects for the parent; the same entries plus
+`test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj`
+for current source and its test owner. Both commands exited **0**, with
+**0 warnings and 0 errors**, and passed package-content/metadata verification:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-pack.slnf -bl
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+```
+
+The focused selector is reproducible without selecting the unrelated SDK suite:
+
+```powershell
+$env:DOTNET_ROOT = Join-Path $PWD '.dotnet'
+$env:PATH = "$env:DOTNET_ROOT;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32;C:\Windows;C:\Program Files\Git\cmd"
+$env:NUGET_PACKAGES = 'Q:\.tools\.nuget\packages'
+$env:MSBUILDDISABLENODEREUSE = '1'
+$env:MSBUILDUSESERVER = '0'
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$selected = @(
+  'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_'
+  'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.SdkTests.ExplicitPackages_'
+  'FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.SettingIsTestApplicationToFalseReducesAddedExtensionsAndMakesProjectNotExecutable'
+  'FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.TestApplicationRunsTestsFromReferencedMSTestSdkTestLibrary'
+  'FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_CentralPackageManagement_Standalone'
+  'FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_VSTest'
+  'FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_Standalone'
+  'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.SourceGenerationNonAotTests.MSTestSdk_SourceGenerationOptIn_'
+)
+$filter = '(' + ($selected -join '|') + ')&FullyQualifiedName!~MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition'
+$results = Join-Path $PWD 'artifacts\validation\green-main'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' -bl:artifacts\validation\focused-discovery-json.binlog
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+Discovery exited **0**, selecting the independently source-counted **76** cases.
+Execution exited **0**: **76 executed/passed, 0 failed, 0 skipped**.
+TRX, JUnit, and CTRF each contain the same 76 cases. The classic build-only case
+was then selected alone, with `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1` scoped to
+that command; it does not activate or register an application:
+
+```powershell
+$filter = 'FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition'
+$results = Join-Path $PWD 'artifacts\validation\green-classic'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' "-bl:$results\discovery.binlog"
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+Both classic commands exited **0**; **1 executed/passed, 0 failed/skipped**.
+The total is **77 distinct passed cases**, not a sum including repeated runs.
+The existing execution verifier independently reconciled expected names, fresh
+start times, results/counters, and exits for every green run:
+
+```powershell
+python .github\skills\testfx-acceptance-validation\scripts\verify_execution.py --trx $trx --expected-tests $expected --started-after $started --process-exit-code 0
+```
+
+### Test-value evidence
+
+Retain the same acceptance DLL and test bytes while switching only the four
+owned package archives between the separately packed parent/current variants.
+Use a fresh cache per variant; restore current archives in `finally`.
+No shared cache or source file is modified. The retained acceptance DLL SHA-256
+is `06C75172A043C7CC33D372D4BE48B7E98E07E5729A8351DF460BDA0A8DC01283`;
+`SdkTests.Composition.cs` is
+`6D791487469B9964947013325B3603196530E7EB860C3C498283133437346202`,
+and `SourceGenerationNonAotTests.cs` is
+`424479BCBF65B6CEC3F74DDF6189711DAE1C30F5B181863F68C0AAFD33307343`.
+All remained unchanged through the paired runs.
+
+| Contract / exact case | Parent packages | Current packages | Evidence |
+| --- | --- | --- | --- |
+| `ExplicitPackages_RejectConflictingAdaptersBeforeCompilation`: all three pairs, each direct/excluded/ProjectReference-transitive | 9 executed failures | Same 9 passed | Successful child restore/prepare exits 0 instead of required 1; not compiler/setup failure |
+| `MSTestSdk_Helper_KeepsOnlyRequiredCompileTimeComposition` (`Default`, true, `MSTest.TestAdapter`) | Executed failure | Passed | `Assert.DoesNotContain(IsMSTestApplicationPayload, copyLocal)` detects copied adapter DLL |
+| `MSTestSdk_SourceGenerationOptIn_DoesNotFlowTransitively` | Executed failure | Passed | `Assert.DoesNotContain("MSTest.TestAdapter", dependencyIds)` detects the helper nuspec leak |
+| `MSTestSdk_ExplicitApplicationModel_SelectsCompositionBeforeLateToolingImports`: three models with/without CPM | 6 executed failures | Same 6 passed | Resolved package composition differs from the independent expected package |
+| `MSTestSdk_MixedOrdinaryAndUiTargetFrameworks_SelectOneCompositionPerInnerFramework`: Uwp/WinUI with/without CPM | 4 executed failures | Same 4 passed | Parent builds successfully but lacks the model-report contract; current also verifies both inner package closures and reference identities |
+| `RunTests_With_VSTest`, `RunTests_With_MSTestRunner_Standalone`, `RunTests_With_CentralPackageManagement_Standalone`: Debug/Release, net11.0/net10.0/net462 | 6 passed | Same 6 passed | Green/green preservation; real selected tests execute in every child TFM |
+
+The first red/green cohort selected these exact 11 discovered UIDs:
+
+```powershell
+$uids = @(
+  '17668ca7-783b-83c3-b529-ac85934e07e2', '19a9953e-2c93-8cf5-b659-5e692539ef3d',
+  '14c52600-0d9c-81d4-ab4c-bb0e8702e6ff', '1423aa72-f6ee-8347-a8a9-3f59c4c59d09',
+  '1228346b-3f3a-8da2-bc8a-60f3867b17c4', '1a780178-0a66-828c-b405-3c105865a756',
+  '17005f89-c56d-89ef-854d-8efcd63b2f03', '14040bf7-34a6-8a49-b4ee-105846b6e0f1',
+  '1c63aad6-a924-8f4c-9f8b-6e9a8c60c7e6', '1730c601-a215-8f51-99d3-f729b8cb4a16',
+  '18d95242-f2c4-8e6b-8b98-b04cedc389c8'
+)
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter-uid @uids -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+With `$results` set to `red-parent`, outer exit **2** with **11 intended failed
+assertions, 0 passed/skipped**. At `green-sensitivity`, exit **0**, **11 passed**.
+The second red/green cohort uses the identical command with these ten UIDs:
+
+```powershell
+$uids = @(
+  '14c2cf97-6c42-835f-af0c-7270c819ab74', '1a368880-1396-83e3-9568-270d21684cb0',
+  '1f7126c2-4c4e-8445-b29b-c1dfd2d37d70', '1636c572-30c2-8537-b0b9-4a3950965bd9',
+  '15497b59-635d-8cd3-bce2-4f9430ca2d36', '16720a6f-2a87-8ae6-9643-42d11a36403e',
+  '19f60bac-9af5-88ad-acec-a29cd7b2c020', '1cb252d1-21a7-8021-8101-5968f7b9846f',
+  '1a06de47-710d-8f42-9387-0c36ad072bc6', '1e1d0a65-01ba-857c-ad94-a93029268516'
+)
+```
+
+At `red-models`, exit **2**, **10 intended failed assertions, 0 passed/skipped**.
+At `green-models`, exit **0**, **10 passed**. Parent WinUI model cases do not
+resolve `MSTest.WinUI`, as expected for the ignored override.
+The compatibility command is:
+
+```powershell
+$filter = 'FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_CentralPackageManagement_Standalone|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_Standalone|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_VSTest'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+Both `compat-parent` and
+`compat-current` exited **0**, **6 passed, 0 failed/skipped**. This is
+**21 executed detections plus 6 green/green preservation cases**, not mutation
+coverage for every possible diagnostic or fault.
+
+Six additional desktop-MSBuild packed-import probes used
+`non-sdk-composition.proj -t:CheckComposition -nologo -nr:false
+-p:FirstId=<package> -p:FirstTfm=<packed TFM> -bl:<case>.binlog`, adding
+`SecondId`/`SecondTfm` for pairs. UsingMicrosoftNETSdk and PackageDependencies
+are empty: all three valid singles exit **0**, all three pairs exit **1** at
+the imported-marker diagnostic, including the classic UWP target.
+
+Local `artifacts\validation` retains pack logs/binlogs, each named run's TRX and
+commands, expected/discovered identities, hashes, per-run caches, and assertion
+excerpts. The current feed was restored byte-for-byte after every comparison.
+The versioned transcript and hashes above are reviewer-accessible evidence;
+raw local logs are not published CI artifacts. An initial discovery invocation
+omitted SDK 12's explicit `json`/`text` argument and failed before tests;
+it was corrected and is not red-phase proof. Provenance probes were corrected
+to use NuGet's actual `net462` target key and to expect absent WinUI in the
+parent-model cache; these were verification-script issues, not product failures.
+
+## Open questions
+
+CI execution and release-branch validation are not established by these local
+runs. Actual UWP/WinUI activation remains layer 2's contract; native/Bazel parity
+remains layer 4's. No global developer-mode/registration settings were changed.
+No separately installed/shared packages were removed. The unrelated native
+net462 System.Reflection.Metadata baseline remains untouched.
+
+## Review follow-up: append-only test paths
+
+2026-11-16: the ten path-construction review threads concern paths beneath each
+test's generated asset directory. Their appended components are fixed filenames,
+repository-defined target frameworks, and the two explicitly enumerated adapter
+assembly names, not external input. Use `Path.Join` consistently in the new
+composition test file to state the append-only intent without silently discarding
+the asset root. Do not truncate target-framework values with `Path.GetFileName`.
+The owning acceptance project targets `$(NetCurrent)`, not its generated
+consumers' classic UAP or net462 frameworks; `Path.Join` is supported there and
+already used by sibling acceptance tests.
+
+This preserves the existing inputs, assertions, generated consumers, and
+method-level scheduling. Each case still owns a separate `TestAsset`; the
+assembly-scoped package cache remains immutable during execution. No new
+framework-behavior test, scheduling exclusion, package policy, or public API is
+needed for this construction-only change. The execution results above remain
+historical evidence for their explicitly identified revisions, not validation
+of a later rebase.
+
+### Incoming binary-compatibility facade
+
+The incoming explicit-package repair retains current main's non-UI type
+forwarders in `MSTest.TestFramework.Extensions.dll`, bundled beside core in
+`MSTest.TestFramework`, without restoring the retired extensions package owner
+or UI implementation. Inspected parent contract
+`a9406f988adb7cab787bddda02431ddfc232f948` contains a nonpackable
+`TestFramework.Compatibility` project and core-package DLL/XML mappings for each
+ordinary TFM. Its package tests check that the facade defines only `<Module>`
+and forwards the expected types to core.
+
+SDK composition assertions must therefore distinguish that facade from the
+removed implementation/package. Require one facade reference beside the single
+core reference, continue rejecting a separate extensions package in the resolved
+composition closure, and keep UI/adapter isolation assertions. Reconcile the
+ordinary-helper and UWP-tooling-opt-out expectations with the same parent repair;
+do not remove the facade or duplicate producer changes in this layer.
+
+## Rebased validation: 2026-11-16
+
+The tested source is `1c1e120fa04496e32c5bd4fdadb74f1f60944aec`, replayed
+onto the coordinator-verified package tip
+`c2afb4ae801c8961bc459edd297668c6fd705ff4`. That parent contains shared-core
+`3af2ff923500f02dba67400a5a52f6d995d32097` and frozen main
+`c094c9cfc610ed31cdb4d22877ad7ce26cd881a5`. Only the four SDK-layer commits
+were replayed; the one conflict was a helper comment, resolved in favor of the
+incoming forwarding facade. The producer's compatibility project, package
+ownership, and classic-UWP runtime allowlist are unchanged by this layer.
+
+The pinned SDK is now `12.0.100-alpha.1.26562.108`, desktop MSBuild
+`18.13.0.52701`, outer host `net12.0`. Generated consumers still exercise
+net10.0/net11.0, their Windows variants, net462, netstandard2.0, and classic UAP.
+The source filter contains the exact 43 `src/` entries in `TestFx.slnx`,
+including `TestFramework.Compatibility`, plus the MSTest acceptance owner.
+From this worktree:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+python .github\scripts\check_action_pins.py
+```
+
+Pack/build **exit 0, 0 warnings, 0 errors**, including package-content and
+metadata validation. The action-pin audit **exit 0**, checking 2,769 references
+in 60 files. These are fresh results, not the failed old-head pipeline.
+
+The focused selector is the earlier eight-clause `$selected` array plus
+`FullyQualifiedName=MSTest.Acceptance.IntegrationTests.CoreFrameworkAssemblyTests.PackedExtensionsForwardMovedTypesToCore`,
+with the same classic-UWP exclusion. `TESTFX_COLLECTION_NUGET_CACHE` points to
+the marked, task-owned `artifacts\validation\cache-current`, and
+`Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup=0` retains generated
+consumers for provenance. Both overrides are local to the command process.
+The remaining environment and `$project` match the earlier command block.
+
+```powershell
+$results = Join-Path $PWD 'artifacts\validation\green-current'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' "-bl:$results\discovery.binlog"
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+The source/data-row plan independently reconciles **80 distinct discovered
+cases**: the same 76 bounded SDK cases plus four packed-facade metadata cases.
+Discovery and execution both **exit 0**; **80 executed/passed, 0 failed/skipped**.
+The named classic-UWP filter above was then run alone with
+`TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1` and
+`$results=artifacts\validation\green-classic`: discovery and execution
+**exit 0**, **1 executed/passed, 0 failed/skipped**. This only evaluates the
+real packed classic composition with desktop MSBuild; it does not activate or
+register an app. Total: **81 distinct passed cases**.
+
+Fresh TRX/JUnit/CTRF exports account for all 80 and 1 cases respectively. Both
+TRX files pass `verify_execution.py` with the independently reconciled expected
+names, captured start time, and actual exit 0. One initial verifier invocation
+converted its JSON timestamp to PowerShell's locale display string; preserving
+the ISO string with `ConvertFrom-Json -DateKind String` fixed that evidence-only
+invocation without changing or rerunning the product.
+
+All 74 generated `project.assets.json` files use the owned current cache.
+The following archives match their physical cached copies byte-for-byte:
+
+| Package | Version | Packed and cached SHA-256 |
+| --- | --- | --- |
+| MSTest.TestFramework | 5.0.0-dev | `7604F60D56A986AF0298D7455752CE2B7F12012DB40487BF2BC42697150F106C` |
+| MSTest.Sdk | 5.0.0-dev | `394F7C284C7E2774BA9C54FC1680ED8DFD244A0BB733856FFC234CACF4E06935` |
+| MSTest.TestAdapter | 5.0.0-dev | `72089E45E2AAB4B65EC4ED2476B6779753CFC5D7AA0714961FB70F068E18D460` |
+| MSTest.Uwp | 5.0.0-dev | `80CAC5B437498343B02B3E6E70FCCE2D6F1F84551E2847A37588AA9786296042` |
+| MSTest.WinUI | 5.0.0-dev | `E73DAA750205C10C7A90A1072FDEEEFA6F098D032977BD850CFEC7E4D81B1C8B` |
+| MSTest.SourceGeneration | 5.0.0-dev | `0F4CEFBE54ECC46CD4E8DC9F8142F2243BD80FFE0DB627228E609FF73B997E2C` |
+| Microsoft.Testing.Platform | 3.0.0-dev | `08237DC421DBA1770533B5D57497F367B63BF7F60DDA53D23561546C581CB9C2` |
+| Microsoft.Testing.Platform.MSBuild | 3.0.0-dev | `F048C82F94A12C4F02DAAF20AA216C2072D5A47A2B3F0CF779F4AD89F9625723` |
+| Microsoft.Testing.Extensions.PackagedApp.MSBuild | 3.0.0-dev | `2E501725365983D0180789BFB42D05870AC24C983CAF6D93F4A9AE7EECB6E099` |
+
+The six ordinary VSTest/standalone/CPM Debug/Release multi-TFM cases run actual
+net462 consumers; all 24 copied core/facade/adapter/services payloads match
+their selected cache assets. UI-with-helper cases also retain copied
+adapter/services hash comparisons. Composition checks require the facade beside
+the one core reference while rejecting a separate extensions package. The four
+metadata cases prove that each ordinary facade contains no implementation
+type definitions beyond `<Module>` and forwards the exact expected types.
+
+### Test-value evidence for the follow-up
+
+**Executed: preservation passed** for all 81 cases on the rebased source.
+The path-construction change preserves the trusted relative inputs and
+assertions; the facade-aware adjustment follows the preserved incoming package
+contract. No runtime/package behavior was added by these follow-up fixes.
+The historical paired 21-detection/6-preservation experiment above remains
+bound to its original revisions and was not rerun as a new counterfactual for
+this rebase. Fresh counterfactual sensitivity is therefore **unverified**, not
+inferred from this green run. Actual UI activation/native compilation remain
+the adjacent layers' responsibilities; whole-stack CI and release-branch
+validation are not established by these local results.
+
+## Review follow-up: late helper opt-in and packed hook contract
+
+The 2026-11-16 review identified two paths outside the earlier selection.
+`PackedMSTestUwp_PropsRegisterMSTestBuilderHook` still inspected the props asset
+after hook registration moved to targets. Keep the relocation and point the
+renamed package-contract test at the actual packed targets.
+
+The helper adapter decision also prematurely captured
+`EnableMSTestSourceGeneration` during property evaluation, before
+`Directory.Build.targets` is imported. Source-generator package items see that
+late opt-in, but the cached helper boolean does not. Restore item-evaluation
+conditions for helper package selection. Resource suppression depends only on
+being a helper, not on whether the generator was selected early, so apply it to
+all SDK helpers without caching the generator-dependent decision. Moving the
+boolean below the bottom SDK import would not also handle callers that layer
+MSTest.Sdk before a separately imported Web SDK.
+
+Retain the six helper scenarios and add late opt-in with and without CPM.
+For each new scenario, resolve and report the real packaged composition before
+compilation and assert the adapter package is present. This yields a meaningful
+outer assertion if the adapter is missing, rather than counting a generated-code
+compiler failure as counterfactual proof. The correct variant must then compile,
+emit the three generated sources, omit the MSTest application hook, and copy no
+adapter/UI payloads. Keep identical tests for the packed wrong/correct variants,
+separate their effective caches, and retain method-level scheduling.
+
+### Executed review regression evidence
+
+The wrong production state is
+`48df01a9820c77d2c514237d468158d863005d3c` plus retained-test patch SHA-256
+`1DCB84807307035B5DA875899C899D86A2013326577792C7BE7E4BF7A31FF6FE`.
+The correct state adds only SDK policy patch SHA-256
+`6931C0854E84E7EF6EC7B6F1CCA5C30EF16B14205245D25881870ABE2D9E3F57`.
+Both states were freshly built/packed with the same pinned toolchain and
+43-source-plus-owner filter, **exit 0, 0 warnings/errors**:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+```
+
+Each variant first discovers the eight source-declared helper rows using
+`--list-tests json` and the helper method's fully qualified filter. The two
+late-opt-in rows, with and without CPM, have identical selected UIDs in both
+variants:
+
+```powershell
+$uids = @(
+  '113f6bd7-9b59-8fba-9d37-9ecdcf938bbf'
+  '1b0a5108-fe73-8583-b0c6-cca4003c2c2f'
+)
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter-uid @uids -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+Use the marked `cache-late-red` / `cache-late-green` collection caches and
+`red-late` / `green-late` result directories under `artifacts\validation`.
+The acceptance DLL is identical in both runs:
+`C3885C66CAFD37A63782124A6C35450D9879A1805D8C5DCB1001D224FD2E6A19`.
+The retained composition-test source is also identical:
+`00FDC767A585270142CA5C9DF70D9991C585DDAFD42A96871EB0C1284BE603DA`.
+Physical SDK `5.0.0-dev` archives equal their respective cached copies:
+
+| Variant | SDK archive SHA-256 | Executed result |
+| --- | --- | --- |
+| Wrong early snapshot | `3593B8D1BF9B40F316686D17D0F895E4F24EFDF09FF8C3C0F8F4AC3963CA6A1E` | Exit 2; 2 executed failures, 0 skipped |
+| Correct item-phase selection | `554A15F28F7F6B372B589B33BD8D4E018DFD6FEC54FC84F4B26D452D4ADADEF7` | Exit 0; same 2 executed/passed, 0 skipped |
+
+Both red children successfully complete restore/`ResolveReferences` before
+the intended outer sequence assertion: expected core plus
+`MSTest.TestAdapter/5.0.0-dev`, actual core only. Neither compiler errors nor
+setup failures are counted. The green cases subsequently compile generated
+hooks and retain the payload, application-hook, generated-source-count, and
+reference-isolation assertions. Fresh green TRX passes `verify_execution.py`.
+This is **executed: detected** for the reported late-opt-in defect.
+
+Separately, the original packed-UWP props test was reproduced on the published
+package: **1 executed assertion failure, exit 2**, because the GUID is absent
+from props. The renamed targets test preserves the exact GUID/type assertions
+and passes: **1 executed, exit 0**. A preservation selection of all eight
+helper rows, all eight existing source-generation opt-in cases, and that
+renamed package contract passes: **17 executed/passed, 0 failed/skipped,
+exit 0**. Publication remains held for the coordinator's ordered lower repair
+wave; these local results do not supersede any failing remote check.
+
+### Host-specific UI package prerequisites
+
+The original-head Linux run, Azure build `1683255`, log `130`, reports 27
+composition failures because `NonWindowsTests.slnf` does not pack `MSTest.Uwp`
+or `MSTest.WinUI`. A `WindowsApplicationModel` category routes the dedicated
+Windows job but does not exclude regular Linux acceptance execution.
+
+Keep all UI cases executing on Windows, where their real packages are built.
+For mixed ordinary/UI data sources, use `TestDataRow.IgnoreMessage` only on the
+UI-package rows on other hosts; ordinary/default and late-helper CPM/non-CPM
+rows must remain runnable there. UI-only package consumers use the existing
+`OSCondition` convention. Do not ignore the whole SDK class, disable Linux
+acceptance, manufacture UI packages, or count these intentional non-Windows
+skips as executed package validation. Fresh Windows execution and the final
+Linux CI results must be reported separately.
+
+On `20f41894676a00f06f58e1b411c4e097b5db82ae` plus test-selection patch
+`54B0C94BC8ECF64BD53B0AC8BF9A9763D8E33F2699459417C0BE99A674872A49`,
+the pinned Release build/pack passes with **0 warnings/errors, exit 0**.
+The same focused selector, extended with the relocated UWP contract, discovers
+and executes **83 Windows cases: all passed, 0 skipped, exit 0**. Separate
+classic discovery/execution also passes **1 case, 0 skipped, exit 0**.
+Both use fresh marked `cache-platform` restores and `green-platform` /
+`green-platform-classic` results. TRX/JUnit/CTRF account for the selected cases;
+the main TRX passes the execution gate, and all nine physical cached shipping
+archives match the fresh pack. Windows coverage is therefore preserved at
+**84 distinct executed cases**, not replaced by ignores. Actual non-Windows
+execution remains for the final rebased CI revision.
+
+## Final released-parent validation
+
+Tested source `1a6465dbd8210914c235e416e03a28ed44e1f96e` replays exactly
+the eight SDK-layer commits onto package
+`8ea111255a978a37df350221fa9ed4b244a32c32`. Its verified base snapshot is
+`0e22cd431656c944906bdb547648d84369471c95`; frozen rebase anchor
+`94711f3b4db336920e628039fdd54437458ae441` is an ancestor. No moving-main
+rebase or lower-layer producer fix is added here. SDK
+`12.0.100-alpha.1.26562.108` and desktop MSBuild `18.13.0.52701` remain pinned.
+
+The exact 43-source-plus-acceptance filter is unchanged. The final selector is
+the original eight-clause selection plus the four forwarding metadata rows
+and `PackedMSTestUwp_TargetsRegisterMSTestBuilderHook`; it excludes classic UWP
+for its separate run. `HelperCompositionData` now supplies eight rows.
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' "-bl:$results\discovery.binlog"
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+python .github\scripts\check_action_pins.py
+```
+
+Final build/pack **exit 0, 0 warnings/errors**, including content/metadata
+validation. Main discovery/execution **exit 0**, **83 selected/executed/passed,
+0 failed/skipped**. Separate classic discovery/execution **exit 0**, **1
+selected/executed/passed, 0 failed/skipped**. Both fresh report triplets and
+execution gates reconcile all **84 distinct cases**. The marked
+`cache-final-wave` backs `green-final-wave` / `green-final-wave-classic`;
+all 76 newly generated assets files use that exact cache. All 24 copied
+core/facade/adapter/services payloads in the six real net462 compatibility
+consumers match their selected cache assets. The pin audit passes all 2,769
+references in 60 files.
+
+| Final shipping package | Version | Packed and cached SHA-256 |
+| --- | --- | --- |
+| MSTest.TestFramework | 5.0.0-dev | `D52EF11D0BB46BF7F5DFDAEA6F983B853F0E9780031EE3A63384C34AEAA14ED6` |
+| MSTest.Sdk | 5.0.0-dev | `B92DEC7F376DC95F342C6F542E6AF8B7C6BDCA80DF450EFE5B2012870065908A` |
+| MSTest.TestAdapter | 5.0.0-dev | `EFD4DB311CE24552E148010C730BD870A72958D1B2618377D7BC100E39A35A01` |
+| MSTest.Uwp | 5.0.0-dev | `6C64B7D953142088158F3ED862D1916EC18D060ADA280D65AA2189C560FFEC74` |
+| MSTest.WinUI | 5.0.0-dev | `CDAA78ECCDA386330C957A2A9423EE21679DCFC7D72696123B6675F4596BB184` |
+| MSTest.SourceGeneration | 5.0.0-dev | `1DAA99AB82885A5A3CD1C7CC9831CF374805D38113EC955E6985E0B42D3DA486` |
+| Microsoft.Testing.Platform | 3.0.0-dev | `3E13D55F6CCDE0B189F5743738F4EA6427CB4425C8FBC5E1A53C7BC313C92DDE` |
+| Microsoft.Testing.Platform.MSBuild | 3.0.0-dev | `456F5D76CA4B19DBAFC4B9F76A5C6152AB13BA205DD59BE0F1F8ADCB38BEB0B0` |
+| Microsoft.Testing.Extensions.PackagedApp.MSBuild | 3.0.0-dev | `483A1F68F88E8C726AD7AF8CFBF1615DCF8477CE70EEC0CD5C3DEF793DE48ED1` |
+
+### Same-final-test late-helper counterfactual
+
+The final tested acceptance DLL is
+`DBFE4718471B05822EDFD93C2A359E467EA85EAACBCBA4D1EA78C06F356679DE`;
+the final composition-test source is
+`C856E44E155BD8957DA9E4D7D73A61F36E0DAB4EA6F8D96B8C579E8B88B9BFFB`.
+Both stay byte-identical across the paired runs, using the same two UIDs listed
+above. This rebinds the proof after the platform-selection changes; it does not
+reuse the earlier `C388...` assembly.
+
+Create a task-owned detached comparison at that exact final source and restore
+only the defective helper snapshot in `Sdk.targets`: patch SHA-256
+`049666D1EBB69D88B793372267AF5845DCDD5C61AD89DDEB0292D839652B02BD`.
+Repack through the same complete 43-source entry point, **exit 0, 0
+warnings/errors**. An initial SDK-only pack failed the repository's expected
+package-inventory guard because the other required packages were absent;
+that setup attempt is not red proof. No guard was bypassed; the full filtered
+pack satisfies it.
+
+Compare all ten SDK props/targets assets: only `Sdk/Sdk.targets` differs.
+Use the final original-worktree acceptance DLL, changing only the owned
+shipping feed's SDK archive, never its other packages or source. Restore the
+good archive in `finally`; its exact hash is verified after restoration.
+Run the identical UID command above with separate
+`cache-late-red-final` / `cache-late-green-final` caches and
+`red-late-final` / `green-late-final` results:
+
+| Contract | Wrong SDK | Correct final SDK |
+| --- | --- | --- |
+| Late helper opt-in without CPM | Intended outer package-sequence assertion after successful restore/ResolveReferences | Passed; then compiled and checked generated hooks/payload isolation |
+| Same late opt-in with CPM | Same intended assertion | Passed with aligned implicit PackageVersion |
+| Outer execution | Exit 2; 2 executed failures, 0 skipped | Exit 0; same 2 executed/passed, 0 skipped |
+| SDK archive/cache SHA-256 | `C91364EDF4A4026A3B9D5995A7329B1BBEB6682BF814D637F20365588403B8F2` | `B92DEC7F376DC95F342C6F542E6AF8B7C6BDCA80DF450EFE5B2012870065908A` |
+
+Both red assertions require adapter plus core but observe core only.
+Compiler/setup failures and skipped tests are not counted. Fresh paired
+TRX/JUnit/CTRF exports account for both cases; the final green execution gate
+passes. **Test-value evidence: executed, detected on the final tested revision.**
+The final Linux CI outcome, remote checks, native publication, and real UI
+activation remain separate evidence; no whole-stack green claim follows from
+these local results.
+
+## Packaged-controller fixture composition follow-up
+
+Azure build `1683623`, Windows Release log `150`, exposed six existing
+`PackagedAppIntegrationTests` failures. The generated projects pair
+`MSTest.TestAdapter` with `UseWinUI=true`; normal Rebuild and the incompatible
+platform probe now correctly reach the adapter-composition guard before their
+intended assertions. Property-only targets had concealed the same invalid
+setup because they do not compile. A fresh local selection reproduces all six
+failures with the unchanged fixture source
+`6079CAE07FDD913A1A4ED95F306462C77BED8D809D6C2A38E264AFE642665BB1`.
+
+The class contains two distinct contracts. UI-property, launcher-generation,
+and Rebuild fixtures must name an actual extracted UI package and compatible
+Windows TFM. The explicitly documented forced-loose sidecar tests instead
+build ordinary console hosts and exercise controller process routing without
+OS registration; keep their ordinary adapter/metapackage controls intact.
+This changes no production validation, package policy, public switch, or
+activation boundary.
+
+| Fixture input / callers | Correct shipping composition | Assertions retained |
+| --- | --- | --- |
+| Generated `UseWinUI=true` property/launcher/Rebuild projects | `MSTest.WinUI`, `net10.0-windows10.0.26100.0`; derive actual output and recipe paths from that TFM | Caller edits, copied launchers, incremental timestamps, Clean/Rebuild ownership, and exact launcher program/arguments |
+| Generated UWP model policy rows | `MSTest.Uwp`, compatible modern Windows TFM | Controller/helper selection and aligned package closure |
+| Ordinary/default and explicit UWP-tooling opt-out controls | `MSTest` or `MSTest.TestAdapter` plus shared core, ordinary net10.0 / net11.0 | Console custom-executable/environment controls, forced-loose sidecar results, cancellation and aggregate exits |
+| Deliberate MSBuild `OS=Unix` UI-policy row | Windows host with real UI package; not an actual Unix-host package test | Empty controller/extensions and the unchanged modeled-OS contract |
+| Incompatible platform assets | Valid WinUI composition plus the intentional `Microsoft.Testing.Platform.MSBuild` 1.0.0 pin | The exact existing version-alignment diagnostic, not restore/composition failure |
+
+Use explicit package identities in the policy data rather than silently mapping
+an ordinary package label to a UI package. Replace duplicate nonshipping
+ordinary-plus-UI rows with the corresponding actual UI composition while
+retaining every policy branch and ordinary control. UI-package rows alone
+carry the Windows-pack prerequisite. Preserve all six reported test identities
+and assertions for the fresh-cache wrong-fixture/correct-fixture comparison,
+then run the full class with normal assembly parallelism.
+
+### Executed fixture-correction evidence
+
+The final executable delta is based on
+`26aac9ff0e9b78ab2d0aebbd3eb66a30c9f6c652`, with fixture-source SHA-256
+`14CA8B2FC76AAB9118F95DE5FDC65949046AA710EB6C8236FFD0E206BFE641F5`
+and saved fixture-patch SHA-256
+`54A5292A51756BEE5ABCF932A01C470DF18CBFA940DC85B0ECC2AEC608B1FB1C`.
+Production, SDK policy/composition tests, lower package inputs, and main are
+unchanged. An initial build rejected `var` with IDE0008; it is corrected, not
+counted as red evidence. The final pinned 43-source pack and acceptance build
+passed with zero warnings/errors:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+```
+
+The generated filter contains the 43 source projects from the actual mutation
+catalog plus the owning acceptance project; it does not bypass the complete
+package-content validator. The outer host is net12.0, using SDK
+`12.0.100-alpha.1.26562.108` and desktop MSBuild `18.13.0.52701`.
+MSTest packages are `5.0.0-dev`; controller/platform packages are `3.0.0-dev`,
+except for the intentional incompatible MSBuild `1.0.0` pin.
+
+**Test-value evidence:** the unchanged six reported UIDs/assertions first
+reproduce the wrong-fixture failure (six executed/failed, zero skipped, exit 2).
+This is a fixture-failure baseline, not a production fault injection. After
+correcting only fixture inputs, the same six pass, and the final full-class
+selection executes all 68 cases successfully, zero skipped, exit 0. Both
+24-row policy matrices now contain 14 honest package/model combinations;
+duplicate invalid ordinary-plus-UI inputs are removed, every policy branch
+and ordinary control remains, and a real WinUI custom-executable row is added
+(87 total cases become 68).
+
+| Requirement | Executed evidence |
+| --- | --- |
+| Caller launcher ownership through Rebuild | `TestExplorer_PreservesCallerLauncherIncludingAnEditedGeneratedFile` retains all seven rows, including the three failing Rebuild sequences; `TestExplorer_RebuildPreservesSourceCopiedCallerLaunchers` retains both bool rows. All pass. |
+| Intended incompatible-platform failure is not masked | `ExplicitConsumer_IncompatiblePlatformCannotSilentlyRun` passes its unchanged exact version-alignment assertion. A direct rebuild of the retained generated WinUI project exits 1 with that diagnostic, zero warnings, and no restore/composition error. |
+| Existing policy and ordinary runtime controls survive | Both 14-row policy methods, all three `ExplicitConsumer_PreservesCustomExecutableAndEnvironment` rows, ordinary custom-executable/runtime-result cases, suppressed launcher, cancellation marker, and all three mixed-TFM aggregation cases pass. |
+
+Final discovery is independently reconciled against 19 source-declared method
+groups before execution. Normal method-level CPU-count parallelism remains;
+each generated asset owns its random directory, child environment overrides
+stay child-local, and no locks/serialization or shared package eviction is added.
+The final run started at `2026-11-16T18:11:50.884436Z`:
+
+```powershell
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$filter = 'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.PackagedAppIntegrationTests'
+$results = Join-Path $PWD 'artifacts\validation\packaged-full-final'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+The TRX execution gate verifies 68 planned/selected/executed/passed, zero
+failed/skipped. JUnit and CTRF exports independently contain all 68 passing
+cases. Ten current Shipping archives match their physical fresh-cache archives,
+including WinUI
+`BECB49AC34F68A5064B39DD49D7B75F3C26FF6E83A90FEED422995AEDB933290`,
+UWP `D9F061C454F2E7E41DB26EBBDD7252820CCA0E0F4CD19704D238C284ED091216`,
+and ordinary adapter
+`003EA040EE62C081B39F6478BA0E7BF514F4CABC6772FABD82742E074AF3D87A`.
+Resolved assets, launchers, reports, commands, and complete identities/hashes
+are retained under `artifacts\validation\packaged-*`.
+
+The rebuilt final acceptance DLL SHA-256 is
+`2CBE0CC51408FEB4631553F597F7D3B890E0DADCDF6403C7AE04560E37AFB87E`.
+To avoid describing the older DBFE DLL as final, both late helper cases are
+also rebound to this DLL with separate fresh caches. The archived independently
+repacked counterfactual SDK (`C91364ED...`) has exactly the same ten `Sdk/`
+payloads as the newly packed SDK except for `Sdk/Sdk.targets`. With only the
+defective helper selection restored, the same two UIDs execute and fail the
+intended adapter/core-closure assertion before compilation (exit 2); the current
+packed SDK
+`6118DD776CDEAD72FA1F68C1876AEE98304E4DCFEFFB255FA829C753501B8591`
+passes both (exit 0, zero skipped). The SDK source and composition-test source
+remain unchanged; the historical 84-case/DBFE results retain their original
+revision attribution.
+
+```powershell
+$lateUids = '113f6bd7-9b59-8fba-9d37-9ecdcf938bbf', '1b0a5108-fe73-8583-b0c6-cca4003c2c2f'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter-uid $lateUids -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+This correction validates MSBuild/launcher composition and forced-loose process
+contracts, not new real UI activation or rendered IDE behavior. Exact new-head
+remote CI remains required; the old Windows Release failure and external top
+layer brownout/merge-ref blockers are not silently reclassified as green.
+
+## 2026-11-17 conflict and review follow-up
+
+The remote PR head was rewritten to
+`0afc810d4d0369a157c1461158fd6aab713825a7` after this workspace last ran.
+The clean local tip was preserved before aligning with that authoritative
+head. Merge the current intended package-layer base,
+`d5829b074608323d4e53f6bdce3da20a8154793c`, without a force-push.
+Retain this layer's composition checks, private helper references, late
+source-generation opt-in, and target-time hook registration. Preserve the
+base's RID-specific controller layouts, architecture/runtime-root tests, and
+retry-fixture rendezvous changes. Newly inherited UI-property fixtures must
+use `MSTest.WinUI` and its Windows TFM, just like this layer's existing fixtures;
+the forced-loose ordinary controls remain ordinary.
+
+Four remaining review comments concern append-only paths in
+`PackagedAppIntegrationTests`. Use the existing `Path.Join` convention for
+the reviewed output/helper paths; do not introduce redundant validation for
+constant filenames or the closed TFM mapping. The previously addressed packed
+hook test and late-helper regression stay intact and are selected again.
+Validation will use a fresh current pack, short task-owned consumer caches,
+the existing assembly parallelism, paired green-before/green-after path cases,
+and focused packaged/SDK regression cases. No new test framework, shipping API,
+UI activation behavior, or unrelated native work is introduced.
+
+The first current-pack selection passed 129 of 131 cases. Both new cross-volume
+controller rows failed to load a runtime assembly through a 261-character
+junction path after adopting the required Windows TFM. The actual SDK file
+exists and the host trace identifies the long app-relative path. Remove only
+the descriptive prefix from the per-case GUID temporary-directory name,
+retaining unique ownership and all runtime-root, launch-profile, incrementality,
+opt-out, and cleanup assertions. This is a fixture path-budget correction,
+not a production change or regression-sensitivity failure.
+
+### Executed review validation
+
+The resolved merge is `1b851be53b35c880ddf41a9ba7a60cbe95c8fdff`.
+The common/UWP adapter targets, SDK targets, and platform props retain the exact
+`0afc810d4d0369a157c1461158fd6aab713825a7` bytes. The retry fixture equals the
+new parent, not an SDK-layer modification. The final fixture patch SHA-256 is
+`6CD402FF9509332EB313E48D400B6C5D8F51479308116D378FF6C168A4E86EFE`;
+fixture source is `07D0D982C74580999639032554782F3124288A21B64A1260C1DB9869F6D82CDA`
+and the rebuilt acceptance DLL is
+`B1C9842DE9CFF21641CB244F01D42C244E3EC8B12CBBF51F857C469E32544453`.
+
+Both merged-state and reviewed-state packs use SDK
+`12.0.100-alpha.1.26562.108`, Release, desktop MSBuild, and the 43 actual source
+entries in `TestFx.slnx` plus the exact acceptance owner. Each pack exits **0**,
+with **0 warnings/errors**, and passes package-content/metadata validation:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\review-20261117\pack.slnf -bl
+```
+
+After shortening only the fixture's temporary path, rebuild the owning project;
+no shipping input or packed archive changes:
+
+```powershell
+.\build.cmd -c Release -msbuildEngine vs -projects test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -bl
+```
+
+That build also exits **0**, **0 warnings/errors**. The final source-plan and
+independent JSON discovery agree on **131 distinct cases**: the full packaged
+class's 88 cases plus 43 focused SDK/package/compatibility cases. Execute with
+normal method-level CPU-count parallelism and a fresh short marked cache,
+`artifacts\rv17d`. Only the selected build-only classic UWP case needs the
+command-local `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1`; no application registration
+or activation is performed.
+
+```powershell
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$filter = 'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.PackagedAppIntegrationTests|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_ExplicitApplicationModel_SelectsCompositionBeforeLateToolingImports|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.ExplicitPackages_RejectConflictingAdaptersBeforeCompilation|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_Helper_KeepsOnlyRequiredCompileTimeComposition|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_MixedOrdinaryAndUiTargetFrameworks_SelectOneCompositionPerInnerFramework|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SourceGenerationNonAotTests.MSTestSdk_SourceGenerationOptIn_DoesNotFlowTransitively|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.WindowsApplicationModelPackageTests.PackedMSTestUwp_TargetsRegisterMSTestBuilderHook|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.WindowsApplicationModelPackageTests.PackedIntegration_AppModelControllerContainsCompleteMtpOnlyRuntime|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.WindowsApplicationModelPackageTests.PackedPackages_TargetOnlySupportedNetFrameworks|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_VSTest|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_Standalone|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_CentralPackageManagement_Standalone'
+$results = Join-Path $PWD 'artifacts\validation\review-20261117\focused-rerun'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' "-bl:$results\discovery.binlog"
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+Discovery and execution exit **0**; **131 executed/passed, 0 failed/skipped**.
+The existing execution gate reconciles fresh TRX identities/times/counters, and
+JUnit/CTRF independently contain the same 131 passing cases. The earlier failed
+131-case run remains separate and is not relabeled green.
+
+| Requirement | Evidence |
+| --- | --- |
+| Four path comments and matching inherited path site | Identical selectors/assertions for `ComputeRunArguments_SelectsSidecarOnlyForPackagedMtpApplication` (14), `ComputeRunArguments_PreservesExplicitOverrides` (2), `TestExplorer_PreservesExplicitLauncherOptOuts` (3), and `ExplicitConsumer_SelectsAndStagesControllerForRequestedArchitecture` (6): **25 green before / 25 green after**, repeated against the final DLL; all exits 0, no skips. |
+| Preserve merged architecture/runtime-root behavior | All 88 `PackagedAppIntegrationTests` cases pass, including the four `DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments` rows, cross-volume junction cleanup, caller launchers, cancellation, failure/empty results, and mixed-TFM aggregation. |
+| Keep prior review fixes and composition contracts | The 43 selected helper/late-CPM/model/conflict/inner-TFM/classic/packed-hook/package-layout/ordinary-runner cases pass; exact names are in the selector above. |
+
+**Test-value evidence:** path construction is behavior-preserving; green/green
+is the appropriate comparison, not a fabricated failing production mutation.
+The new-base fixture path correction keeps every existing assertion and both
+cross-volume rows enabled. Local Windows proof is not final-head Linux or CI
+proof, real UI activation, or native/Bazel validation.
+
+All ten selected current package archives match the effective `rv17d` cache.
+Examples: SDK `45BB940B7669D920CBC8BD2F7208E2F898FD2B39FC0FE47B2227B420470032D4`,
+WinUI `1E3C26E8E5DB11422D26D11FCD00D1594AAEE583321A86008577BA7726FA0A3C`,
+and controller integration
+`B42DAFFA466D5CC7DC08FAF86A87C16A303DA3EA8973FECF2EB7233E4591D082`.
+MSTest is `5.0.0-dev`; platform/controller packages are `3.0.0-dev`.
+The 126 generated assets files use that exact cache; all 18 copied net462
+core/adapter/services DLLs match current packages. Four successful app-relative
+runtime trace markers are retained, and the cross-volume GUID intermediates
+are removed. Logs, binlogs, reports, plans, hashes, and resolved identities stay
+under `artifacts\validation\review-20261117`; they are local, not published CI
+artifacts. Shared dependency caches and borrowed SDKs remain untouched.

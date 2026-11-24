@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -15,7 +16,7 @@ public sealed class ResponseFileHelperTests
         // Guarantee the path does not exist (avoid collisions / leftover temp files).
         string path = Path.GetTempFileName();
         File.Delete(path);
-        Assert.IsFalse(File.Exists(path));
+        Assert.FileDoesNotExist(path);
 
         var errors = new List<string>();
 
@@ -483,6 +484,84 @@ public sealed class ResponseFileHelperTests
         Assert.HasCount(2, result);
         Assert.AreEqual("one", result[0]);
         Assert.AreEqual("two", result[1]);
+    }
+
+    [TestMethod]
+    public void SplitCommandLine_QuoteInsideWord_KeepsWhitespaceInsideQuotedSection()
+    {
+        string[] result = [.. ResponseFileHelper.SplitCommandLine("ab\"c d\"e f")];
+
+        Assert.AreSequenceEqual(["abc de", "f"], result);
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_UnclosedQuote_ReportsExactLineNumber()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(path, ["--verbose", "--other", "--filter \"unclosed"]);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains(string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("CommandLineParserUnclosedQuoteInResponseFile"), 3), errors[0]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_FileIncludingItself_ReportsRecursion()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"self {Guid.NewGuid():N}.rsp");
+        try
+        {
+            File.WriteAllText(path, $"\"@{path}\"");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains(PlatformResources.CommandLineParserRecursiveResponseFile, errors[0]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_SameNestedFileIncludedTwice_IsNotRecursionAndIsExpandedTwice()
+    {
+        string outerPath = Path.GetTempFileName();
+        string nestedPath = Path.Combine(Path.GetTempPath(), $"nested {Guid.NewGuid():N}.rsp");
+        try
+        {
+            File.WriteAllText(nestedPath, "--nested c");
+            string include = $"\"@{nestedPath}\"";
+            File.WriteAllLines(outerPath, [include, "--between", include]);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsTrue(result);
+            Assert.IsEmpty(errors);
+            Assert.IsNotNull(args);
+            Assert.AreSequenceEqual(["--nested", "c", "--between", "--nested", "c"], args);
+        }
+        finally
+        {
+            File.Delete(nestedPath);
+            File.Delete(outerPath);
+        }
     }
 
     [TestMethod]

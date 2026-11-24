@@ -16,6 +16,10 @@ public sealed class TargetFrameworkParserTests
     [DataRow(".NET Framework 4.7.0", "net47")]
     [DataRow(".NET Framework 4.8.0", "net48")]
 
+    // TargetFrameworkAttribute display names omit a zero patch
+    [DataRow(".NET Framework 4.7", "net47")]
+    [DataRow(".NET Framework 4.8", "net48")]
+
     // known 3 digit versions
     [DataRow(".NET Framework 4.6.2", "net462")]
     [DataRow(".NET Framework 4.7.1", "net471")]
@@ -36,6 +40,7 @@ public sealed class TargetFrameworkParserTests
 
     [DataRow(".NET 6.0.0", "net6.0")]
     [DataRow(".NET 8.0.0", "net8.0")]
+    [DataRow(".NET 8.0.24", "net8.0")]
     [DataRow(".NET 10.0.0", "net10.0")]
     [TestMethod]
     public void ParseNET(string longName, string expectedShortName)
@@ -69,7 +74,55 @@ public sealed class TargetFrameworkParserTests
     public void GetTargetPlatformName_WithNullAssembly_ReturnsNull()
         => Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(null));
 
+    [TestMethod]
+    public void GetTargetFrameworkFromAssembly_WithNullAssembly_DoesNotInventRuntimeTarget()
+        => Assert.IsNull(TargetFrameworkParser.GetTargetFrameworkFromAssembly(null));
+
 #if NET
+    [TestMethod]
+    [DataRow(".NETFramework,Version=v4.7.2", null, null, "net472", DisplayName = "FrameworkWithoutDisplayName")]
+    [DataRow(".NETFramework,Version=v4.7.2", "", null, "net472", DisplayName = "FrameworkWithEmptyDisplayName")]
+    [DataRow(".NETFramework,Version=v4.7.2", ".NET Framework 4.8.1", null, "net472", DisplayName = "FrameworkNameIsAuthoritative")]
+    [DataRow(".NETFramework,Version=v4.8", null, null, "net48", DisplayName = "TwoComponentFrameworkVersion")]
+    [DataRow(".NETFramework,Version=v4.8.1", null, null, "net481", DisplayName = "Framework481")]
+    [DataRow(".NETCoreApp,Version=v3.1", null, null, "netcoreapp3.1", DisplayName = "NetCore")]
+    [DataRow(".NETCoreApp,Version=v8.0", " ", "Windows10.0.19041.0", "net8.0-windows10.0.19041.0", DisplayName = "PlatformWithoutDisplayName")]
+    [DataRow(".NETCoreApp,Version=v8.0", null, "BrowserWasm1.0", "net8.0-browserwasm1.0", DisplayName = "CustomPlatform")]
+    [DataRow(".NETCoreApp,Version=v10.0", null, null, "net10.0", DisplayName = "TwoDigitModernVersion")]
+    [DataRow(".NETStandard,Version=v2.0", null, null, "netstandard2.0", DisplayName = "NetStandard")]
+    [DataRow("Custom,Version=v8.0", ".NET 8.0", null, null, DisplayName = "UnknownIdentifier")]
+    [DataRow(".NETCoreApp,Version=unknown", null, null, null, DisplayName = "MalformedVersion")]
+    public void GetTargetFrameworkFromAssembly_UsesDeclaredMetadataRatherThanRuntimeOrDisplayName(
+        string frameworkName, string? frameworkDisplayName, string? platformName, string? expected)
+    {
+        Assembly assembly = CreateAssemblyWithTargetFramework(frameworkName, frameworkDisplayName, platformName);
+
+        Assert.AreEqual(expected, TargetFrameworkParser.GetTargetFrameworkFromAssembly(assembly));
+    }
+
+    // CI summary fragments name the module with GetShortTargetFrameworkIncludingPlatform while dotnet test records
+    // GetTargetFrameworkFromAssembly; a mismatch makes the Azure DevOps summary post-processor reject the fragment.
+    [TestMethod]
+    [DataRow(".NETFramework,Version=v4.8", ".NET Framework 4.8", "net48")]
+    [DataRow(".NETFramework,Version=v4.6.2", ".NET Framework 4.6.2", "net462")]
+    [DataRow(".NETFramework,Version=v4.8.1", ".NET Framework 4.8.1", "net481")]
+    public void GetShortTargetFrameworkIncludingPlatform_WithSdkFrameworkDisplayName_MatchesDeclaredTarget(
+        string frameworkName, string frameworkDisplayName, string expected)
+    {
+        Assembly assembly = CreateAssemblyWithTargetFramework(frameworkName, frameworkDisplayName, platformName: null);
+
+        Assert.AreEqual(expected, TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(assembly));
+        Assert.AreEqual(expected, TargetFrameworkParser.GetTargetFrameworkFromAssembly(assembly));
+    }
+
+    [TestMethod]
+    public void GetTargetFrameworkFromAssembly_WithoutTargetMetadata_DoesNotInventRuntimeTarget()
+    {
+        Assembly assembly = CreateAssemblyWithTargetPlatform("Windows10.0.19041.0");
+
+        Assert.IsNull(TargetFrameworkParser.GetTargetFrameworkFromAssembly(assembly));
+    }
+
     [TestMethod]
     public void GetTargetPlatformName_WithTargetPlatformAttribute_ReturnsPlatformName()
     {
@@ -166,6 +219,23 @@ public sealed class TargetFrameworkParserTests
     {
         var name = new AssemblyName($"TestAssembly_{Guid.NewGuid():N}");
         return AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
+    }
+
+    private static Assembly CreateAssemblyWithTargetFramework(string frameworkName, string? frameworkDisplayName, string? platformName)
+    {
+        var builder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"DeclaredTarget_{Guid.NewGuid():N}"), AssemblyBuilderAccess.RunAndCollect);
+        ConstructorInfo frameworkConstructor = typeof(TargetFrameworkAttribute).GetConstructor([typeof(string)])!;
+        PropertyInfo displayNameProperty = typeof(TargetFrameworkAttribute).GetProperty(nameof(TargetFrameworkAttribute.FrameworkDisplayName))!;
+        builder.SetCustomAttribute(frameworkDisplayName is null
+            ? new CustomAttributeBuilder(frameworkConstructor, [frameworkName])
+            : new CustomAttributeBuilder(frameworkConstructor, [frameworkName], [displayNameProperty], [frameworkDisplayName]));
+        if (platformName is not null)
+        {
+            ConstructorInfo platformConstructor = typeof(System.Runtime.Versioning.TargetPlatformAttribute).GetConstructor([typeof(string)])!;
+            builder.SetCustomAttribute(new CustomAttributeBuilder(platformConstructor, [platformName]));
+        }
+
+        return builder;
     }
 #endif
 }

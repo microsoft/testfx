@@ -3,6 +3,7 @@
 
 #if NETFRAMEWORK
 using System.Runtime.Remoting;
+using System.Text;
 
 using AwesomeAssertions;
 
@@ -192,12 +193,83 @@ public class AssemblyResolverTests : TestContainer
         isAssemblyReflectionOnlyLoaded.Should().BeTrue();
     }
 
-    public void OnResolveShouldIgnoreTraceLoggerFailures()
+    public async Task OnResolveShouldIgnoreTraceLoggerFailures()
     {
+        const string childVariable = "TESTFX_ASSEMBLY_RESOLVER_TRACE_FAILURE_CHILD";
+        if (Environment.GetEnvironmentVariable(childVariable) is not "1")
+        {
+            // The resolver bypasses Console.Error, so capture the intentional failure in an isolated host.
+            var startInfo = new ProcessStartInfo(typeof(AssemblyResolverTests).Assembly.Location)
+            {
+                Arguments = $"--filter-uid {typeof(AssemblyResolverTests).FullName}.{nameof(OnResolveShouldIgnoreTraceLoggerFailures)} --ansi off --progress off",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
+            };
+            startInfo.EnvironmentVariables[childVariable] = "1";
+            startInfo.EnvironmentVariables["TESTINGPLATFORM_UI_LANGUAGE"] = "en-US";
+            startInfo.EnvironmentVariables["TESTINGPLATFORM_AZDO_OUTPUT"] = "off";
+
+            // Exercise retry isolation even when the parent is running its first attempt.
+            startInfo.EnvironmentVariables["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2";
+            foreach (string variable in new[]
+            {
+                "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
+                "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
+                "MTP_AFFECTED_TESTS_CHILD_PROCESS",
+                "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_ID",
+                "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH",
+                "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER",
+                "TESTINGPLATFORM_EXITCODE_IGNORE",
+            })
+            {
+                startInfo.EnvironmentVariables.Remove(variable);
+            }
+
+            using var child = new Process { StartInfo = startInfo };
+            child.Start().Should().BeTrue();
+            Task<string> standardOutput = child.StandardOutput.ReadToEndAsync();
+            Task<string> standardError = child.StandardError.ReadToEndAsync();
+            var completion = Task.WhenAll(Task.Run(child.WaitForExit), standardOutput, standardError);
+            try
+            {
+                await WaitForChildCompletionAsync(completion, TimeSpan.FromMinutes(1));
+                string output = await standardOutput;
+                string error = await standardError;
+                child.ExitCode.Should().Be(0, "the isolated resolver test must pass, output: {0}{1}", output, error);
+                output.Replace("\r\n", "\n").Should().Contain(
+                    """
+                      total: 1
+                      failed: 0
+                      succeeded: 1
+                      skipped: 0
+                    """.Replace("\r\n", "\n"));
+                string[] errorLines = error.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+                errorLines.Should().StartWith(
+                    "[MSTest.AssemblyResolver] Trace logging failed while resolving 'DummyTestDllForTest'. Exception: System.Runtime.Remoting.RemotingException: Expected test logger failure.");
+                errorLines.Skip(1).Should().NotBeEmpty()
+                    .And.OnlyContain(line => line.StartsWith("   at ", StringComparison.Ordinal));
+            }
+            finally
+            {
+                if (!child.HasExited)
+                {
+                    child.Kill();
+                }
+
+                await WaitForChildCompletionAsync(completion, TimeSpan.FromSeconds(30));
+            }
+
+            return;
+        }
+
         var platformServiceProvider = new TestablePlatformServiceProvider();
         platformServiceProvider.MockTraceLogger
             .Setup(logger => logger.IsInfoEnabled)
-            .Throws(new RemotingException());
+            .Throws(new RemotingException("Expected test logger failure."));
         PlatformServiceProvider.Instance = platformServiceProvider;
 
         try
@@ -215,6 +287,14 @@ public class AssemblyResolverTests : TestContainer
         {
             PlatformServiceProvider.Instance = null;
         }
+    }
+
+    private static async Task WaitForChildCompletionAsync(Task completion, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource(timeout);
+        Task completed = await Task.WhenAny(completion, Task.Delay(Timeout.Infinite, cts.Token));
+        completed.Should().BeSameAs(completion, "the owned resolver child and its output readers must finish");
+        await completion;
     }
 }
 
@@ -241,10 +321,10 @@ internal class TestableAssemblyResolver : AssemblyResolver
         => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
     protected override string[] GetDirectories(string path)
-        => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
+        => GetDirectoriesSetter is null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
     protected override Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
-        => SearchAssemblySetter == null
+        => SearchAssemblySetter is null
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
 
@@ -252,10 +332,10 @@ internal class TestableAssemblyResolver : AssemblyResolver
         => DoesFileExistSetter?.Invoke(filePath) ?? base.DoesFileExist(filePath);
 
     protected override Assembly LoadAssemblyFrom(string path)
-        => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
+        => LoadAssemblyFromSetter is null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
 
     protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
-        => ReflectionOnlyLoadAssemblyFromSetter == null
+        => ReflectionOnlyLoadAssemblyFromSetter is null
             ? base.ReflectionOnlyLoadAssemblyFrom(path)
             : ReflectionOnlyLoadAssemblyFromSetter(path);
 }

@@ -2,10 +2,12 @@
   <Configurations>
     <Platform Name="x64" />
     <Platform Name="x86" />
+    <Platform Name="ARM64" />
   </Configurations>
   <Project Path="WinUIMtpPackagedApp.csproj">
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Deploy />
   </Project>
 </Solution>

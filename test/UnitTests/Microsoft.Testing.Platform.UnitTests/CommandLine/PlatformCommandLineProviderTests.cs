@@ -12,6 +12,69 @@ namespace Microsoft.Testing.Platform.UnitTests.CommandLine;
 public sealed class PlatformCommandLineProviderTests
 {
     [TestMethod]
+    [DataRow("0", true)]
+    [DataRow("80", true)]
+    [DataRow("79.995", true)]
+    [DataRow("100", true)]
+    [DataRow("-1", false)]
+    [DataRow("100.01", false)]
+    [DataRow("80,5", false)]
+    [DataRow("NaN", false)]
+    [DataRow("Infinity", false)]
+    [DataRow("1e2", false)]
+    [DataRow("", false)]
+    public async Task CoverageThreshold_ValidatesPercentageForBothMetrics(string argument, bool isValid)
+    {
+        PlatformCommandLineProvider provider = new();
+        foreach (string optionName in new[] { PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.CoverageThresholdBranchOptionKey })
+        {
+            CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+            Assert.AreEqual(isValid, result.IsValid);
+            if (!isValid)
+            {
+                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCoverageThresholdInvalid, optionName), result.ErrorMessage);
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey)]
+    public async Task CoverageThreshold_RequiresExactlyOneArgument(string optionName)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, [])).IsValid);
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, ["80", "90"])).IsValid);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, "retry-failed-tests")]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, "retry-failed-tests")]
+    public async Task CoverageThreshold_RejectsDiscoveryAndProcessRetries(string thresholdOption, string incompatibleOption)
+    {
+        TestCommandLineOptions options = new(new()
+        {
+            [thresholdOption] = ["80"],
+            [incompatibleOption] = [],
+        });
+
+        ValidationResult result = await new PlatformCommandLineProvider().ValidateCommandLineOptionsAsync(options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            incompatibleOption == PlatformCommandLineProvider.DiscoverTestsOptionKey
+                ? PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests
+                : PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleRetries,
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("Trace")]
     [DataRow("Debug")]
     [DataRow("Information")]
@@ -24,8 +87,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DiagnosticVerbosityOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [dumpType]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -50,8 +112,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ZeroTestsPolicyOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [policy]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -75,8 +136,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ClientPortOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [clientPort]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -101,8 +161,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ExitOnProcessExitOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["32"]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -130,8 +189,7 @@ public sealed class PlatformCommandLineProviderTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -140,8 +198,7 @@ public sealed class PlatformCommandLineProviderTests
         var provider = new PlatformCommandLineProvider();
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([])).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow(PlatformCommandLineProvider.DiagnosticOutputDirectoryOptionKey)]
@@ -180,8 +237,7 @@ public sealed class PlatformCommandLineProviderTests
         }
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -586,8 +642,7 @@ public sealed class PlatformCommandLineProviderTests
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
                 ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]);
-                Assert.IsTrue(validateOptionsResult.IsValid, $"Failed with culture {cultureName} and timeout {timeout}");
-                Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+                validateOptionsResult.AssertIsValid($"Failed with culture {cultureName} and timeout {timeout}");
             }
         }
         finally
@@ -654,6 +709,295 @@ public sealed class PlatformCommandLineProviderTests
         {
             // Restore original culture
             CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [TestMethod]
+    [DataRow("pipe", true)]
+    [DataRow("PiPe", true)]
+    [DataRow("http", true)]
+    [DataRow("HTTP", true)]
+    [DataRow("udp", false)]
+    public async Task TransportValidation_KnownModesAndUnknownModeUseExactContract(string argument, bool valid)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-transport");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-transport' received unexpected value 'udp'. Supported values are: 'pipe', 'http'.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("https", true)]
+    [DataRow("http-loopback", true)]
+    [DataRow("http-localhost", true)]
+    [DataRow("http-nonlocal", false)]
+    [DataRow("relative", false)]
+    [DataRow("ftp", false)]
+    [DataRow("userinfo", false)]
+    [DataRow("query", false)]
+    [DataRow("fragment", false)]
+    [DataRow("missing-host", false)]
+    public async Task HttpEndpointValidation_IndependentUriPartitionsPreserveDiagnostics(string kind, bool valid)
+    {
+        string value = kind switch
+        {
+            "https" => "https://127.0.0.1/resource",
+            "http-loopback" => "http://127.0.0.1/resource",
+            "http-localhost" => "http://localhost/resource",
+            "http-nonlocal" => "http://192.0.2.1/resource",
+            "relative" => "relative/resource",
+            "ftp" => "ftp://localhost/resource",
+            "userinfo" => "https://user:fixture@localhost/resource",
+            "query" => "https://localhost/resource?query=value",
+            "fragment" => "https://localhost/resource#fragment",
+            "missing-host" => "https://",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-http-endpoint");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("ordinary", true)]
+    [DataRow("punctuation", true)]
+    [DataRow("empty", false)]
+    [DataRow("whitespace", false)]
+    [DataRow("embedded-space", false)]
+    [DataRow("nul", false)]
+    [DataRow("crlf", false)]
+    public async Task HttpTokenValidation_ControlWhitespaceAndCurrentPunctuationBehavior(string kind, bool valid)
+    {
+        string value = kind switch
+        {
+            "ordinary" => "ABcd12-._~+/=",
+            "punctuation" => ";",
+            "empty" => string.Empty,
+            "whitespace" => " \t",
+            "embedded-space" => "before after",
+            "nul" => "before\0after",
+            "crlf" => "before\r\nafter",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-http-token");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ZeroTestPolicy_UnexpectedLiteralProducesExactSupportedValues()
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "zero-tests-policy");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["sometimes"]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("Invalid value 'sometimes' for '--zero-tests-policy'. Valid values are 'strict', 'allow-skipped'.", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ConfigFile_MissingRelativeFile_ErrorMessageContainsFullPath()
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == PlatformCommandLineProvider.ConfigFileOptionKey);
+        string relative = "definitely-missing-config-file.json";
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [relative]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(Path.GetFullPath(relative), result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ListTests_InvalidArgumentListsSupportedValues()
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == PlatformCommandLineProvider.DiscoverTestsOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["xml"]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("'text', 'json'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.HelpOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticOutputDirectoryOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey)]
+    [DataRow(PlatformCommandLineProvider.TimeoutOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    public void VisibleOptions_AreNotHidden(string optionName)
+    {
+        PlatformCommandLineProvider provider = new();
+
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == optionName);
+
+        Assert.IsFalse(option.IsHidden);
+    }
+
+    [TestMethod]
+    [DataRow("1s", true)]
+    [DataRow("1ms", true)]
+    [DataRow("0s", false)]
+    [DataRow("0ms", false)]
+    [DataRow("-1s", false)]
+    [DataRow("4294967294ms", true)]
+    [DataRow("4294967295ms", false)]
+    [DataRow("abc", false)]
+    [DataRow("5", false)]
+    public async Task Timeout_AcceptsOnlyPositiveDurationsUpToMaximumSupportedTimeout(string argument, bool isValid)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == PlatformCommandLineProvider.TimeoutOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+        Assert.AreEqual(isValid, result.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow(new string[0], 0)]
+    [DataRow(new[] { "abc" }, 0)]
+    [DataRow(new[] { "0" }, 0)]
+    [DataRow(new[] { "-5" }, 0)]
+    [DataRow(new[] { "1", "2" }, 0)]
+    [DataRow(new[] { "5" }, 5)]
+    public void GetMinimumExpectedTests_ReturnsZeroForInvalidArgumentsAndTheValueOtherwise(string[] arguments, int expected)
+    {
+        var options = new TestCommandLineOptions(new() { [PlatformCommandLineProvider.MinimumExpectedTestsOptionKey] = arguments });
+
+        Assert.AreEqual(expected, PlatformCommandLineProvider.GetMinimumExpectedTests(options));
+    }
+
+    [TestMethod]
+    public void GetMinimumExpectedTests_WhenOptionIsNotSet_ReturnsZero()
+        => Assert.AreEqual(0, PlatformCommandLineProvider.GetMinimumExpectedTests(new TestCommandLineOptions([])));
+
+    [TestMethod]
+    [DataRow(new[] { "strict" }, true)]
+    [DataRow(new[] { "STRICT" }, true)]
+    [DataRow(new[] { "allow-skipped" }, false)]
+    [DataRow(new string[0], false)]
+    [DataRow(new[] { "strict", "other" }, false)]
+    public void GetZeroTestsPolicy_OnlyASingleStrictArgumentSelectsStrict(string[] arguments, bool expectedStrict)
+    {
+        var options = new TestCommandLineOptions(new() { [PlatformCommandLineProvider.ZeroTestsPolicyOptionKey] = arguments });
+
+        Assert.AreEqual(expectedStrict, PlatformCommandLineProvider.GetZeroTestsPolicy(options) == ZeroTestsPolicy.Strict);
+    }
+
+    [TestMethod]
+    public void GetZeroTestsPolicy_WhenOptionIsNotSet_AllowsSkipped()
+        => Assert.AreNotEqual(ZeroTestsPolicy.Strict, PlatformCommandLineProvider.GetZeroTestsPolicy(new TestCommandLineOptions([])));
+
+    [TestMethod]
+    [DataRow("retry-failed-tests")]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey)]
+    [DataRow(PlatformCommandLineProvider.FilterUidOptionKey)]
+    [DataRow(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DotNetTestPipeOptionKey)]
+    public async Task ValidateCommandLineOptions_OptionFromAnIncompatiblePairIsValidOnItsOwn(string optionName)
+    {
+        PlatformCommandLineProvider provider = new();
+        var options = new TestCommandLineOptions(new() { [optionName] = ["1"] });
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(options);
+
+        result.AssertIsValid();
+    }
+
+    [TestMethod]
+    [DataRow("retry-failed-tests", PlatformCommandLineProvider.CoverageThresholdLineOptionKey)]
+    [DataRow("retry-failed-tests", PlatformCommandLineProvider.CoverageThresholdBranchOptionKey)]
+    public async Task ValidateCommandLineOptions_RetryWithCoverageThresholdIsRejected(string first, string second)
+    {
+        PlatformCommandLineProvider provider = new();
+        var options = new TestCommandLineOptions(new() { [first] = ["1"], [second] = ["80"] });
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleRetries, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptions_FilterUidWithTreeNodeFilterIsRejected()
+    {
+        PlatformCommandLineProvider provider = new();
+        var options = new TestCommandLineOptions(new() { [PlatformCommandLineProvider.FilterUidOptionKey] = ["a"], [TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter] = ["/a"] });
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.OnlyOneFilterSupported, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(new string[0])]
+    [DataRow(new[] { "http", "http" })]
+    [DataRow(new[] { "http", "pipe" })]
+    public async Task ValidateCommandLineOptions_TransportWithoutExactlyOneArgumentIsIgnored(string[] transportArguments)
+    {
+        PlatformCommandLineProvider provider = new();
+        var options = new TestCommandLineOptions(new() { [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = transportArguments });
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(options);
+
+        result.AssertIsValid();
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.DotNetTestTransportOptionKey, "http")]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey, "http://localhost:1")]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey, "token")]
+    public async Task ValidateCommandLineOptions_PipeWithHttpTransportOptionIsRejectedAsConflict(string httpOption, string value)
+    {
+        PlatformCommandLineProvider provider = new();
+        var options = new TestCommandLineOptions(new() { [PlatformCommandLineProvider.DotNetTestPipeOptionKey] = ["pipe"], [httpOption] = [value] });
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestTransportConflict, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void ValidateCommandLineOptions_ExitOnProcessExitWithoutArgumentListFailsTheStateGuard()
+    {
+        PlatformCommandLineProvider provider = new();
+        var options = new ExitOnProcessExitWithoutArgumentsOptions();
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => { _ = provider.ValidateCommandLineOptionsAsync(options); });
+    }
+
+    private sealed class ExitOnProcessExitWithoutArgumentsOptions : ICommandLineOptions
+    {
+        public bool IsOptionSet(string optionName) => optionName == PlatformCommandLineProvider.ExitOnProcessExitOptionKey;
+
+        public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
+        {
+            arguments = null;
+            return false;
         }
     }
 }

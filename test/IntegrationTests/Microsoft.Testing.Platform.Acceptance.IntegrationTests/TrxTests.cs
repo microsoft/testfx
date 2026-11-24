@@ -19,8 +19,8 @@ public class TrxTests : AcceptanceTestBase<TrxTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = """
-Out of process file artifacts produced:
-- .+?\.trx
+  Out of process file artifacts produced: \d+
+    - .+?\.trx
 """;
         testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
     }
@@ -39,9 +39,16 @@ Out of process file artifacts produced:
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
     }
 
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public static IEnumerable<(string TargetFramework, string ControllerOptions, int ProcessCount)> TrxModeDefaultsData =>
+        TargetFrameworks.All.SelectMany(tfm => new[]
+        {
+            (tfm, string.Empty, 1),
+            (tfm, "--hangdump", 2),
+        });
+
+    [DynamicData(nameof(TrxModeDefaultsData))]
     [TestMethod]
-    public async Task Trx_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm)
+    public async Task Trx_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm, string controllerOptions, int processCount)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         using TempDirectory clone = new();
@@ -52,52 +59,205 @@ Out of process file artifacts produced:
             """
             {
               "commandLineOptionDefaults": {
-                "report-trx-filename": "configured-{asm}.trx"
+                "report-trx-filename": "configured-{asm}.trx",
+                "trx-mode": "in-process"
               }
             }
             """,
             TestContext.CancellationToken);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            controllerOptions,
+            new() { ["TRACE_TRX_STARTUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.HasCount(processCount, Regex.Matches(testHostResult.StandardOutput, @"TRX startup pid: (\d+)"), testHostResult.StandardOutput);
+        testHostResult.AssertOutputDoesNotContain("Out of process file artifacts produced:");
         Assert.IsEmpty(Directory.GetFiles(testHost.DirectoryName, "configured-*.trx", SearchOption.AllDirectories));
 
         string defaultResultsPath = Path.Combine(testHost.DirectoryName, "default-results");
         testHostResult = await testHost.ExecuteAsync(
-            $"--report-trx --results-directory \"{defaultResultsPath}\"",
+            $"--report-trx --results-directory \"{defaultResultsPath}\" {controllerOptions}",
+            new() { ["TRACE_TRX_STARTUP"] = "1" },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.HasCount(processCount, Regex.Matches(testHostResult.StandardOutput, @"TRX startup pid: (\d+)"), testHostResult.StandardOutput);
+        testHostResult.AssertOutputDoesNotContain("Out of process file artifacts produced:");
         Assert.IsTrue(File.Exists(Path.Combine(defaultResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
 
         string explicitResultsPath = Path.Combine(testHost.DirectoryName, "explicit-results");
         testHostResult = await testHost.ExecuteAsync(
-            $"--report-trx --report-trx-filename explicit.trx --results-directory \"{explicitResultsPath}\"",
+            $"--report-trx --report-trx-filename explicit.trx --trx-mode out-of-process --results-directory \"{explicitResultsPath}\" {controllerOptions}",
+            new() { ["TRACE_TRX_STARTUP"] = "1" },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.HasCount(2, Regex.Matches(testHostResult.StandardOutput, @"TRX startup pid: (\d+)"), testHostResult.StandardOutput);
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
         Assert.IsTrue(File.Exists(Path.Combine(explicitResultsPath, "explicit.trx")));
         Assert.IsFalse(File.Exists(Path.Combine(explicitResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
     }
 
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public static IEnumerable<(string TargetFramework, string Options, int ProcessCount, bool ControllerReportsTrx)> TrxModeData =>
+        TargetFrameworks.All.SelectMany(tfm => new[]
+        {
+            (tfm, string.Empty, 2, true),
+            (tfm, "--trx-mode:in-process", 1, false),
+            (tfm, "--trx-mode out-of-process", 2, true),
+            (tfm, "--trx-mode=in-process --hangdump", 2, false),
+        });
+
+    public static IEnumerable<(string TargetFramework, string Tool)> TrxToolDefaultData =>
+        TargetFrameworks.All.SelectMany(tfm => new[] { (tfm, "merge-trx"), (tfm, "ms-trxcompare") });
+
     [TestMethod]
-    public async Task Trx_WhenOnlyReportTrxIsSpecified_UsesControllerBackedRecoveryByDefault(string tfm)
+    [DynamicData(nameof(TrxToolDefaultData))]
+    public async Task Trx_ToolsAcceptPassiveModeDefault(string tfm, string tool)
     {
-        // Plain --report-trx (no --crashdump, no --timeout, no other extension requiring isolation) must
-        // be controller-backed by default on this platform. The "Out of process" heading is only emitted
-        // when the surviving controller (rather than the test host itself) reports the TRX file artifact,
-        // so its presence here is direct proof that a bare --report-trx run went through the controller.
+        var originalHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        TestInfrastructure.TestHost testHost = await CloneTestHostAsync(originalHost, clone, TestAssetFixture.AssetName);
+        await File.WriteAllTextAsync(
+            Path.Combine(testHost.DirectoryName, $"{TestAssetFixture.AssetName}.testconfig.json"),
+            """
+            {
+              "commandLineOptionDefaults": {
+                "trx-mode": "in-process"
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+        string first = Path.Combine(clone.Path, "first.trx");
+        string second = Path.Combine(clone.Path, "second.trx");
+        foreach (string reportPath in new[] { first, second })
+        {
+            TestHostResult run = await testHost.ExecuteAsync(
+                $"--report-trx --report-trx-filename \"{reportPath}\"",
+                cancellationToken: TestContext.CancellationToken);
+            run.AssertExitCodeIs(ExitCode.Success);
+        }
+
+        string merged = Path.Combine(clone.Path, "merged.trx");
+        string arguments = tool == "merge-trx"
+            ? $"--input \"{first}\" \"{second}\" --output-trx \"{merged}\""
+            : $"--baseline-trx \"{first}\" --trx-to-compare \"{first}\"";
+        TestHostResult result = await testHost.ExecuteAsync(arguments, cancellationToken: TestContext.CancellationToken, toolName: tool);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        if (tool == "merge-trx")
+        {
+            var report = XDocument.Load(merged);
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            Assert.AreEqual("2", report.Descendants(ns + "Counters").Single().Attribute("total")?.Value);
+            Assert.HasCount(2, report.Descendants(ns + "UnitTestResult"));
+        }
+        else
+        {
+            Assert.Contains(
+                """
+                --- Comparing TRX files ---
+                Comparison check succeeded!
+                """.ReplaceLineEndings(),
+                result.StandardOutput.ReplaceLineEndings());
+        }
+    }
+
+    [DynamicData(nameof(TrxModeData))]
+    [TestMethod]
+    public async Task Trx_ModeControlsProcessIsolationAndReportGeneration(string tfm, string options, int processCount, bool controllerReportsTrx)
+    {
         string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename {fileName}.trx {options}",
+            new() { ["TRACE_TRX_STARTUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+        MatchCollection startups = Regex.Matches(testHostResult.StandardOutput, @"TRX startup pid: (\d+)");
+        Assert.HasCount(processCount, startups, testHostResult.StandardOutput);
+        Assert.HasCount(processCount, startups.Select(match => match.Groups[1].Value).Distinct().ToArray(), testHostResult.StandardOutput);
+        Assert.AreEqual(controllerReportsTrx, testHostResult.StandardOutput.Contains("Out of process file artifacts produced:", StringComparison.Ordinal), testHostResult.StandardOutput);
 
         string[] trxFiles = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories);
         Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+        var trx = XDocument.Load(trxFiles[0]);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement result = trx.Descendants(ns + "UnitTestResult").Single();
+        XElement definition = trx.Descendants(ns + "UnitTest").Single();
+        Assert.AreEqual("Test", result.Attribute("testName")?.Value);
+        Assert.AreEqual("Passed", result.Attribute("outcome")?.Value);
+        Assert.AreEqual(definition.Attribute("id")?.Value, result.Attribute("testId")?.Value);
+        XElement counters = trx.Descendants(ns + "Counters").Single();
+        Assert.AreEqual("1", counters.Attribute("total")?.Value);
+        Assert.AreEqual("1", counters.Attribute("passed")?.Value);
+    }
+
+    public static IEnumerable<(string TargetFramework, string ControllerOptions)> RelativeResultsDirectoryData =>
+        TargetFrameworks.All.Select(tfm => (tfm, string.Empty))
+            .Concat(TargetFrameworks.Net.Select(tfm => (tfm, "--crashdump --hangdump --hangdump-timeout 48m")));
+
+    [TestMethod]
+    [DynamicData(nameof(RelativeResultsDirectoryData))]
+    public async Task Trx_WhenRelativeResultsDirectoryAndTestChangesCurrentDirectory_TemporaryDirectoryCanBeDeleted(string tfm, string controllerOptions)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string testRoot = Path.Combine(clone.Path, "test-owned");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--results-directory .{Path.DirectorySeparatorChar} --report-trx --report-trx-filename result.trx {controllerOptions}",
+            new() { ["CHANGE_CURRENT_DIRECTORY"] = testRoot },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+        testHostResult.AssertOutputContains($"TRX sidecar directory: {clone.Path}");
+        Assert.IsFalse(Directory.Exists(testRoot), testHostResult.ToString());
+        Assert.IsEmpty(Directory.GetFiles(clone.Path, "trx-stream-*.bin", SearchOption.AllDirectories));
+
+        var trxDocument = XDocument.Load(Path.Combine(clone.Path, "result.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement counters = trxDocument.Descendants(ns + "Counters").Single();
+        Assert.AreEqual("2", counters.Attribute("total")?.Value, trxDocument.ToString());
+        Assert.AreEqual("2", counters.Attribute("passed")?.Value, trxDocument.ToString());
+        Assert.AreEqual("Completed", trxDocument.Descendants(ns + "ResultSummary").Single().Attribute("outcome")?.Value);
+        Assert.AreEqual(
+            "CleanupAfterChangedDirectory,ResultDuringChangedDirectory",
+            string.Join(",", trxDocument.Descendants(ns + "UnitTestResult").Select(result => result.Attribute("testName")!.Value).OrderBy(name => name, StringComparer.Ordinal)));
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task Trx_WhenRelativeResultsDirectoryAndTestCrashesAfterChangingCurrentDirectory_RecoversCompletedResult(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string testRoot = Path.Combine(clone.Path, "test-owned");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--results-directory .{Path.DirectorySeparatorChar} --report-trx --report-trx-filename result.trx",
+            new() { ["CHANGE_CURRENT_DIRECTORY"] = testRoot, ["CRASH_AFTER_CWD_CHANGE"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertOutputContains($"TRX sidecar directory: {clone.Path}");
+        Assert.IsFalse(Directory.Exists(testRoot), testHostResult.ToString());
+        Assert.IsEmpty(Directory.GetFiles(clone.Path, "trx-stream-*.bin", SearchOption.AllDirectories));
+
+        var trxDocument = XDocument.Load(Path.Combine(clone.Path, "result.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        Assert.AreEqual("Failed", trxDocument.Descendants(ns + "ResultSummary").Single().Attribute("outcome")?.Value);
+        XElement counters = trxDocument.Descendants(ns + "Counters").Single();
+        Assert.AreEqual("1", counters.Attribute("total")?.Value, trxDocument.ToString());
+        Assert.AreEqual("1", counters.Attribute("passed")?.Value, trxDocument.ToString());
+        XElement result = Assert.ContainsSingle(trxDocument.Descendants(ns + "UnitTestResult"));
+        Assert.AreEqual("ResultDuringChangedDirectory", result.Attribute("testName")?.Value);
+        Assert.AreEqual("Passed", result.Attribute("outcome")?.Value);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -414,7 +574,7 @@ Out of process file artifacts produced:
         // Plain --report-trx is controller-backed by default on this platform: the TRX artifact is
         // reported by the surviving controller process, not the test host, hence "Out of process".
         string outputPattern = $"""
-  Out of process file artifacts produced:
+  Out of process file artifacts produced: 1
     - {trxPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -452,6 +612,7 @@ Out of process file artifacts produced:
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
@@ -470,11 +631,18 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        if (Environment.GetEnvironmentVariable("TRACE_TRX_STARTUP") == "1")
+        {
+            using var process = System.Diagnostics.Process.GetCurrentProcess();
+            Console.WriteLine($"TRX startup pid: {process.Id}");
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(new TrxReportCapability()),
             (_,__) => new DummyTestFramework());
         builder.AddCrashDumpProvider();
+        builder.AddHangDumpProvider();
         builder.AddTrxReportProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
@@ -524,6 +692,49 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             return;
         }
 
+        if (Environment.GetEnvironmentVariable("CHANGE_CURRENT_DIRECTORY") is { } testRoot)
+        {
+            string startupDirectory = Directory.GetCurrentDirectory();
+            string temporaryDirectory = Path.Combine(testRoot, "spawn");
+            Directory.CreateDirectory(temporaryDirectory);
+            try
+            {
+                Directory.SetCurrentDirectory(temporaryDirectory);
+                await PublishPassedTestAsync(context, "ResultDuringChangedDirectory");
+
+                // Wait for an actual flushed result, not a delay: cleanup must run while the
+                // streaming writer still owns its handle, and crash recovery needs durable data.
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken);
+                timeout.CancelAfter(TimeSpan.FromSeconds(60));
+                while (true)
+                {
+                    string[] sidecars = Directory.GetFiles(startupDirectory, "trx-stream-*.bin")
+                        .Concat(Directory.GetFiles(temporaryDirectory, "trx-stream-*.bin")).ToArray();
+                    if (sidecars.Any(path => new FileInfo(path).Length > 0))
+                    {
+                        Console.WriteLine($"TRX sidecar directory: {Path.GetDirectoryName(sidecars.Single())}");
+                        break;
+                    }
+
+                    await Task.Delay(10, timeout.Token);
+                }
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(startupDirectory);
+                Directory.Delete(testRoot, recursive: true);
+            }
+
+            if (Environment.GetEnvironmentVariable("CRASH_AFTER_CWD_CHANGE") == "1")
+            {
+                Environment.FailFast("CRASH_AFTER_CWD_CHANGE");
+            }
+
+            await PublishPassedTestAsync(context, "CleanupAfterChangedDirectory");
+            context.Complete();
+            return;
+        }
+
         var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);
         PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance, testMethodIdentifier);
         // WITH_ARTIFACT carries the file name rather than a flag: the working directory is the test
@@ -552,6 +763,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         }
 
         context.Complete();
+    }
+
+    private async Task PublishPassedTestAsync(ExecuteRequestContext context, string name)
+    {
+        var identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", name, 0, Array.Empty<string>(), string.Empty);
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = name, DisplayName = name, Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, identifier) }));
     }
 }
 """;

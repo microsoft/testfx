@@ -11,29 +11,30 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
 
 public class TestRunDirectoriesTests : TestContainer
 {
-    private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp", @"C:\temp\asm.dll", isAppDomainCreationDisabled: false);
+    private static readonly string TestRoot = Path.GetFullPath("run");
+    private readonly TestRunDirectories _testRunDirectories = new(TestRoot, Path.Combine(TestRoot, "asm.dll"), isAppDomainCreationDisabled: false);
 
     public void InDirectoryShouldReturnCorrectDirectory()
-        => _testRunDirectories.InDirectory.Should().Be(@"C:\temp\In");
+        => _testRunDirectories.InDirectory.Should().Be(Path.Combine(TestRoot, "In"));
 
     public void OutDirectoryShouldReturnCorrectDirectory()
-        => _testRunDirectories.OutDirectory.Should().Be(@"C:\temp\Out");
+        => _testRunDirectories.OutDirectory.Should().Be(Path.Combine(TestRoot, "Out"));
 
     public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
-        => _testRunDirectories.InMachineNameDirectory.Should().Be(Path.Combine(@"C:\temp\In", Environment.MachineName));
+        => _testRunDirectories.InMachineNameDirectory.Should().Be(Path.Combine(TestRoot, "In", Environment.MachineName));
 
     public void OutDirectoryShouldFallBackWhenFirstTestSourceIsEmpty()
     {
         // Simulates Android CoreCLR where Assembly.Location returns "" (before synthetic path).
-        var directories = new TestRunDirectories(@"C:\temp", firstTestSource: string.Empty, isAppDomainCreationDisabled: true);
-        directories.OutDirectory.Should().Be(@"C:\temp\Out");
+        var directories = new TestRunDirectories(TestRoot, firstTestSource: string.Empty, isAppDomainCreationDisabled: true);
+        directories.OutDirectory.Should().Be(Path.Combine(TestRoot, "Out"));
     }
 
     public void OutDirectoryShouldFallBackWhenFirstTestSourceIsRelativePath()
     {
         // Simulates Android MonoVM / CoreCLR after PR #7772 where Assembly.Location
         // is a relative filename like "MyTests.dll" with no directory component.
-        var directories = new TestRunDirectories(@"C:\temp", firstTestSource: "MyTests.dll", isAppDomainCreationDisabled: true);
-        directories.OutDirectory.Should().Be(@"C:\temp\Out");
+        var directories = new TestRunDirectories(TestRoot, firstTestSource: "MyTests.dll", isAppDomainCreationDisabled: true);
+        directories.OutDirectory.Should().Be(Path.Combine(TestRoot, "Out"));
     }
 }

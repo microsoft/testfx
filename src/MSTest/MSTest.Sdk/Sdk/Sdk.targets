@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <!-- If the project targets .NET Standard, it's not supposed to be a test application. So, we default to false. -->
+    <IsTestApplication Condition=" '$(IsTestApplication)' == '' AND '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard' ">false</IsTestApplication>
+    <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
+
+    <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
+    <!--
+      Desktop UWP imports can set UseUwpTools after this SDK evaluates, so UseUwp without an explicit
+      tooling opt-out also selects the UWP application model. MSTest.TestFramework and
+      MSTest.TestAdapter select their UWP or WinUI assemblies from the same properties.
+    -->
+    <_MSTestUwpApplicationModel>false</_MSTestUwpApplicationModel>
+    <_MSTestUwpApplicationModel Condition=" '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap')) ">true</_MSTestUwpApplicationModel>
+    <_MSTestWinUIApplicationModel>false</_MSTestWinUIApplicationModel>
+    <_MSTestWinUIApplicationModel Condition=" '$(UseWinUI)' == 'true' ">true</_MSTestWinUIApplicationModel>
+
+    <!-- A helper compiles against UI APIs/runtime hooks supplied by its eventual test application. -->
+    <EnableMSTestV2CopyResources Condition=" '$(IsTestApplication)' != 'true' ">false</EnableMSTestV2CopyResources>
+  </PropertyGroup>
+
+  <!-- Import Runner.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)Runner/Runner.targets" Condition=" '$(UseVSTest)' == 'false' " />
+
+  <!-- Import VSTest.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
+
+  <Target Name="_MSTestSDKValidateWindowsApplicationModel"
+          BeforeTargets="CollectPackageReferences;PrepareForBuild"
+          Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
+    <!-- Read the raw properties at execution time so models set by imports after this SDK (such as Directory.Build.targets) are also checked. -->
+    <Error Condition=" '$(UseWinUI)' == 'true' AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap'))) "
+           Text="A test project cannot use both WinUI and UWP application models." />
+  </Target>
+
+  <Target Name="_MSTestSDKValidateSourceGeneration"
+          BeforeTargets="PrepareForBuild"
+          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard'
+                      and ( '$(EnableMSTestSourceGeneration)' == 'true'
+                            or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
+    <Error Text="MSTest source generation is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable." />
+  </Target>
+
+  <!-- Source generation is automatic for NativeAOT and opt-in for all other configurations. -->
+  <ItemGroup Condition=" '$(EnableMSTestSourceGeneration)' == 'true'
+                         and ( '$(UseVSTest)' == 'true' or '$(PublishAot)' != 'true' )
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
+    <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
+
+  <!-- Item evaluation observes source-generation opt-ins from Directory.Build.targets. -->
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'true'
+                         AND '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
+                         AND ('$(EnableMSTestSourceGeneration)' == 'true'
+                              OR ('$(UseVSTest)' == 'false' AND '$(PublishAot)' == 'true')) ">
+    <!-- Helpers need only MSTest.TestFramework (including its UWP/WinUI APIs), except when generated code requires the adapter's runtime hooks. -->
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
+
+  <!--
+    Implicit bottom import.
+
+    Only import the base .NET SDK targets when MSTest.Sdk was the SDK that imported the base .NET
+    SDK props (see the detailed comment in Sdk.props). When MSTest.Sdk is layered on top of another
+    base SDK, that outer SDK imports the base targets itself, so importing them here would emit
+    MSB4011 duplicate-import warnings.
+  -->
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(_MSTestSdkImportsMicrosoftNETSdk)' == 'true' " />
+</Project>

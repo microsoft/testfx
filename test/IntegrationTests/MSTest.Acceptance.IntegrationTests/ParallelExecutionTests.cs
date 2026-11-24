@@ -95,6 +95,24 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         Assert.Contains("succeeded: 5", result.StandardOutput);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ParallelizationBannerIsHiddenWithMinimalOutput(string tfm)
+    {
+        const string BannerPrefix = "Test Parallelization enabled for ";
+        TestHost testHost = AssetFixture.GetTestHost(DoNotParallelizeOrderingProjectName, tfm);
+
+        TestHostResult normalResult = await testHost.ExecuteAsync("--output normal", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, normalResult.ExitCode, normalResult.StandardOutput);
+        Assert.Contains(BannerPrefix, normalResult.StandardOutput);
+
+        TestHostResult minimalResult = await testHost.ExecuteAsync("--output minimal", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, minimalResult.ExitCode, minimalResult.StandardOutput);
+        Assert.DoesNotContain(BannerPrefix, minimalResult.StandardOutput);
+    }
+
     public sealed class TestAssetFixture : ITestAssetFixture
     {
         private readonly TempDirectory _tempDirectory = new();

@@ -17,6 +17,7 @@ trigger:
       # official pipeline for samples-only changes.
       - samples/**
       - eng/build-samples.ps1
+      - eng/test-samples.ps1
 
 parameters:
 - name: isRTM
@@ -44,6 +45,9 @@ parameters:
 variables:
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
   # Cannot use key:value syntax in root defined variables
+  # Include desktop MSBuild and direct dotnet build/test steps, not only Arcade's dotnet builds.
+  - name: MSBUILDENABLEMULTITHREADED
+    value: '1'
   - name: _TeamName
     value: MSTest
   - name: _RunAsInternal
@@ -94,7 +98,13 @@ extends:
         # and nothing in it ships. Scanning it surfaces alerts for components we cannot service, such as
         # the npm packages vendored inside Microsoft.NET.Runtime.Emscripten.*.Sdk/tools/emscripten/node_modules,
         # which are owned by dotnet/runtime and pinned by the SDK pack.
-        ignoreDirectories: $(Build.SourcesDirectory)/.dotnet
+        #
+        # eng/bazel/ holds the Paket-locked inputs of the separate, non-shipping Bazel dogfood pipeline
+        # (azure-pipelines-bazel.yml), which this pipeline never runs or restores. Component Detection's
+        # paket.lock parser also matches every `- restriction:` clause such as `(>= net8.0)` as a package
+        # with an empty name, logging ~1,700 spurious "Failed to parse paket.lock component" warnings in
+        # each Component Governance run.
+        ignoreDirectories: $(Build.SourcesDirectory)/.dotnet,$(Build.SourcesDirectory)/eng/bazel
     featureFlags:
       autoBaseline: true
     pool:
@@ -102,7 +112,7 @@ extends:
       image: windows.vs2026preview.scout.amd64
       os: windows
     settings:
-      networkIsolationPolicy: Permissive,CFSClean
+      networkIsolationPolicy: DefaultDeny,CFSClean
     customBuildTags:
     - ES365AIMigrationTooling
     stages:
@@ -124,9 +134,12 @@ extends:
           jobs:
           - job: Windows
             enablePublishing: true
-            timeoutInMinutes: 90
+            # Leave room for the expanded framework matrix and signing/artifact publication after tests.
+            timeoutInMinutes: 180
             pool:
               name: $(DncEngInternalBuildPool)
+              # Keep the scout image: global.json requires Visual Studio 18.12 with the Universal
+              # workload, which the GA windows.vs2026.amd64 image does not provide (vswhere fails).
               image: windows.vs2026preview.scout.amd64
               os: windows
             steps:
@@ -151,6 +164,9 @@ extends:
                 DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: Test.cmd
                   -configuration $(_BuildConfig)
@@ -304,6 +320,9 @@ extends:
               displayName: Build
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: |
                   chmod +x ./test.sh

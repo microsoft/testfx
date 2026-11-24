@@ -50,6 +50,36 @@ This will update your fork with the latest from `microsoft/testfx` on your machi
 
 ## Building
 
+An [experimental native Bazel build](bazel.md) is available for the portable
+.NET 8-11 development graph, selected test suites, and native MTP/TRX package
+consumers. It does not replace the MSBuild/Arcade shipping build or its complete
+framework/workload and acceptance matrix.
+
+An [experimental BuildXL build](decisions/buildxl-build.md) can schedule and
+cache the existing MSBuild projects on Windows x64. Its default entry point is
+`TestFx.slnx`, preserving project-specific target frameworks except classic UAP,
+which requires desktop MSBuild. Separate Debug and Release pipeline legs build
+the solution and retain engine counters and project binlogs for later analysis.
+After a successful build, each leg also runs the same 13 net10.0 unit suites that
+the Bazel dogfood workload runs, from the BuildXL outputs, and retains restore,
+build and test timings plus per-suite test-identity hashes so the Bazel and
+BuildXL phases can be compared; see
+[running the matched unit suites](decisions/buildxl-build.md#2026-11-17-run-the-bazel-matched-unit-suites-on-buildxl-outputs).
+Outputs are isolated; the Arcade build remains the shipping authority.
+The driver enables tracked shared compilation, sizes concurrency to the available
+CPUs, and automatically falls back to full input hashing when change journals
+are unavailable without modifying local volume settings. It never rewrites the
+checked-in XLF files, and `-Pack` (opt-in, not used by CI) also packs the 33
+NuGet packages in the same graph; see
+[opt-in pack](decisions/buildxl-build.md#2026-11-17-xlf-parity-and-opt-in-pack-on-buildxl).
+CI initializes the
+checkout volume's change journal before restoring the action cache between
+compatible runs; existing journals are preserved, and initialization failures
+fail the job. The Windows CI agent must run elevated.
+The [BuildXL performance comparison](decisions/buildxl-build.md#comparing-build-performance)
+remains an explicit local experiment for matched cold, changed-input, and no-op
+TRX builds. CI runs real solution builds, not repeated benchmark samples.
+
 The easiest and recommended solution is to build the repository with the provided scripts at the repo root.
 
 For Windows:
@@ -82,7 +112,22 @@ For Linux and macOS:
 
 Another common flag is `-pack` which will produce the NuGet packages of MSTest. These packages are required for the acceptance tests (see [testing section](#testing)).
 
+On Windows, `-pack` also runs `eng/verify-nupkgs.ps1`, which checks package metadata and compares the files of each MSTest package against its expected shape in `eng/package-shapes/<PackageId>.txt`. A missing or unexpected file fails the build and is listed in the error. When a package layout change is intentional, regenerate the expected shapes after packing and commit them with your change:
+
+```powershell
+.\eng\verify-nupkgs.ps1 -configuration Debug -updateBaselines
+```
+
 For more information about all the different options available, supply the argument `-help|-h` when invoking the build script. On Unix-like systems, non-abbreviated arguments can be passed in with a single `-` or double hyphen `--`.
+
+Repository builds use MSBuild's experimental multithreaded mode by default,
+including desktop MSBuild on Windows and public/official CI. Windows builds
+require Visual Studio 2026 18.12 or newer. To diagnose a build without
+multithreading, use `build.cmd -mt:0` on Windows or
+`./build.sh --mt false` on Linux/macOS. Direct MSBuild invocations can use
+`/mt:false` to override the inherited `MSBUILDENABLEMULTITHREADED` default.
+Compatibility tests that deliberately opt out and BuildXL's separate native
+scheduler retain their existing behavior.
 
 ### Build layout
 
@@ -162,9 +207,121 @@ For Linux and macOS:
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
+### Retained OpenTelemetry traces
+
+The Windows, Linux and macOS CI test jobs save existing MTP activities under
+`artifacts/TestResults/<Configuration>/OpenTelemetry`. Download the corresponding
+`TestResults_<OS>_<configuration or collection kind>_Attempt<job attempt>` build
+artifact to retrieve them. Failed jobs publish partial traces too. Availability
+follows the build's Azure Pipelines retention policy; no guaranteed number of days
+is configured in this repository.
+
+The Windows app-model job includes the same directory inside
+`Windows_App_Model_Diagnostics_Attempt<job attempt>/artifacts/TestResults/<Configuration>/OpenTelemetry`.
+
+Local collection is opt-in. After building the desired test host with the
+repository scripts, set `TESTFX_OTEL_TRACE_DIRECTORY` to an absolute directory
+before running it. For example, in PowerShell:
+
+```powershell
+$previous = $env:TESTFX_OTEL_TRACE_DIRECTORY
+try {
+    $env:TESTFX_OTEL_TRACE_DIRECTORY = Join-Path $PWD 'artifacts\TestResults\Debug\OpenTelemetry'
+    & .\artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net10.0\Microsoft.Testing.Extensions.UnitTests.exe --filter 'FullyQualifiedName~TestFxOpenTelemetryTests'
+} finally {
+    $env:TESTFX_OTEL_TRACE_DIRECTORY = $previous
+}
+```
+
+`OTEL_SDK_DISABLED=true` disables collection. Without the directory variable the
+existing instrumentation-only dogfooding remains active without writing files.
+The helper does not configure or contact an OTLP endpoint. The existing Native
+AOT exclusion remains unchanged.
+
+Each uniquely named `.jsonl` file is a UTF-8 **TestFx archive**, not an OTLP request:
+
+- The first `resource` record declares `format: "testfx-otel-jsonl"`,
+  `schemaVersion: 1`, a unique archive `runId`, and resource `attributes`.
+- Each `span` record preserves IDs/parents, trace state/flags, source, name/kind,
+  exact UTC start/end, `durationTicks` (100 ns ticks), status, attributes, events
+  and links. Attribute lists contain `{ "key": ..., "value": ... }` entries;
+  JSON strings, booleans, numbers and arrays retain their value types. Readers
+  must preserve 64-bit integers. Non-finite floats and unsupported attribute
+  types are represented as invariant strings.
+- The last `completion` record contains `status`, `spanCount` and `failedExports`.
+  Require `status: "complete"` and zero failures before treating a file as a
+  complete export. A crash/forced termination can leave no completion and a
+  partial last line; earlier complete lines remain useful, but are not a full run.
+
+Completion describes archive delivery, **not test-session success**. For example,
+`--help` and `--info` produce complete archives with an informative
+`TestHostBuilder` operation (`HostType: InformativeCommandLineHost`) but no test
+results or `test.run.exit_code` verdict. Do not count those as healthy execution
+samples. Likewise, a complete archive can describe a failed or zero-result run.
+
+CI checks completion with `eng/verify-test-traces.ps1` before the existing artifact
+upload. Incomplete files fail that check on successful jobs and remain diagnostic
+warnings on failed/canceled jobs. Empty selection or explicit disablement is not
+proof that traces were collected.
+
+Module version/binary MVID, build/SDK/TFM, machine/OS/runtime/CPU, CI/source, logical
+execution and supplied retry/job-attempt provenance are retained on the resource.
+Do not mix different attempts or use an absent phase duration as zero. Existing `test.step.*` attributes
+are preserved; canonical span elapsed time and reported result durations are not
+interchangeable, and fixture intervals may overlap.
+
+The sink omits captured stdout/stderr attributes, but names, parameter values,
+paths, metadata and exceptions can still contain sensitive information. Treat
+these files like the other test artifacts; do not upload them to a new destination
+without reviewing their contents. Synchronous span flushing adds collection
+overhead and uses no dropping batch queue. See the
+[research, contract and validation record](decisions/otel-trace-retention.md).
+
+#### Inspect the value of the retained data
+
+Generate an offline cost/coverage snapshot from downloaded test-artifact ZIPs,
+directories or individual JSONL archives (Python 3.12+, no additional packages):
+
+```powershell
+python .github\scripts\report_test_traces.py `
+    --input C:\evidence\TestResults_Windows_Release_Attempt1.zip `
+    --input C:\evidence\TestResults_Linux_Release_Attempt1.zip `
+    --output C:\evidence\report\test-traces
+```
+
+The command writes an HTML report, Markdown and JSON with the same filename
+prefix. It reads trace members in ZIPs without extracting or running artifact
+code. Failed/incomplete/unsupported archives are named and excluded; the command
+returns exit 2 when input was rejected or no executing workers were found.
+Root CTRF reports are selected consistently from an unwrapped artifact or a
+single common artifact wrapper, in ZIPs and extracted directories; child and
+merged reports are not included. A damaged trace member does not discard healthy
+members. Artifact labels remain literal in both Markdown and HTML output.
+
+The snapshot ranks existing fixture invocations and test-occurrence elapsed
+times, preserves TestContainer step timings, and shows the observation cohorts.
+Controllers and non-executing operations do not inflate test counts. Host protocol
+types are shown separately, but either protocol can be used by a test-launched
+subprocess; compare execution occurrences with the independent root CTRF counts.
+Shared fixture work and its overlapping interval union are distinct measures,
+neither CPU time nor time that can be subtracted to obtain native method-body
+duration.
+
+This is not yet a weekly regression detector. One build can expose expensive
+setup, but cannot distinguish a regression from machine load. Binary MVIDs keep
+platform-specific variants separate when their exported TFM labels are identical;
+those identifiers are not stable cross-build cohort keys. See the
+[first-report research and evidence](decisions/test-trace-report.md).
+
+### Code coverage
+
+Code coverage is enabled by default for repository tests. Each test project's generated `coverage.config` includes only its directly referenced production assemblies, excluding shared test-host infrastructure, NuGet package sources, and generated artifacts. `Microsoft.Testing.TestInfrastructure` is explicitly excluded at both the assembly and source levels.
+
+Compatibility shims in `Polyfills` directories are excluded from coverage. `Ensure.cs` and `ProcessExtensions.cs` remain included because their argument validation and process-lifetime behavior are repository-owned logic worth testing. Coverage exclusions do not change which tests execute.
+
 ### Mutation testing
 
-The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the server-mode client sources with their unit tests in `MutationTesting.slnx`. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) for mutation testing. The checked-in `MutationTesting.slnx` provides a focused local run for the server-mode client sources, while the weekly workflow generates isolated solutions for every enabled module in `eng/mutation-testing/modules.json`. Unsupported targets are explicitly listed with a reason rather than silently omitted. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
 
 On Windows PowerShell:
 
@@ -221,9 +378,13 @@ On Linux and macOS:
 )
 ```
 
-The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.
+The opt-in property runs unit-test projects on `net10.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing. Native MSTest hosts also consume the adapter/framework from source in this mode; a shipped Microsoft-key adapter cannot access the open-key friend declarations in the locally built platform and would fail before test discovery.
 
-The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) also runs daily (so the mutation-test-improver workflow always has fresh data) and can be started manually; it publishes the mutation score and a killed/survived/timeout breakdown to the run's job summary, and uploads the full HTML/JSON report as the `mutation-testing-report` artifact.
+The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) runs weekly and can be started manually. It reads the enabled modules from [`eng/mutation-testing/modules.json`](../eng/mutation-testing/modules.json), runs each production/test-project mapping on an isolated runner, and uploads its detailed Stryker report. Every `Microsoft.Testing.Extensions.*` project must have an enabled module or an explicit `excludedProjects` entry with a reason, so newly added extensions cannot silently skip mutation testing. The Windows-only PackagedApp controller and build-only PackagedApp.MSBuild package are excluded from the Ubuntu/net10.0 Stryker shards, not from their acceptance tests.
+
+Generated shard solutions must be passed to Arcade's `--projects` option using an absolute path; relative paths resolve under Arcade's toolset directory, not the repository root. Shards retain module failure metadata and build-console logs even when the build fails before Stryker starts. An aggregate job verifies that every enabled module used the same source revision, computes the weighted enabled-module score from the mutant counts, reports onboarding coverage and exclusion reasons against the known mutation targets, and uploads the `mutation-testing-full-report` artifact with a Markdown summary, an HTML index, aggregate JSON, logs, and all module reports. If any expected module is missing or failed, the aggregate is explicitly marked partial and the workflow fails after publishing the available diagnostics.
+
+The [Mutation Test Improver](../.github/workflows/mutation-test-improver.md) remains scoped to the ServerMode client report. Its trusted pre-agent step resolves the upstream run and downloads the binary artifact before the sandbox's text-only CLI proxy starts. It stages validated report data and run identity under `/tmp/gh-aw/mutation-input`; missing/expired reports and download/validation failures still reach monthly reporting as unavailable evidence, never a fresh zero score. Failed aggregates are usable only when their ServerMode module metadata proves success at the upstream source commit.
 
 ## Working with Visual Studio
 
@@ -276,4 +437,8 @@ Because an `<Import>` cannot specify the SDK version in the same way as `<Projec
 
 ## Visual Studio version requirement
 
-If working with Visual Studio, this repository uses the new, modern, XML-based slnx solution file format (`TestFx.slnx`). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher. Opening the TestFx.slnx directly with a different version of Visual Studio installed other than Visual Studio 2022 17.13 or higher will just open the slnx file in a raw solution XML format.
+Windows command-line builds require Visual Studio 2026 18.12 or newer for
+multithreaded desktop MSBuild, as specified by `tools.vs.version` in
+`global.json`. The repository uses the XML-based `TestFx.slnx` solution format,
+which these versions also support. The command-line multithreading default does
+not change Visual Studio's in-process IDE build scheduling.

@@ -12,6 +12,16 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 public sealed class TestRunParameterCommandLineOptionsProviderTests
 {
     [TestMethod]
+    public void TestRunParameterOption_IsVisible()
+    {
+        var provider = new TestRunParametersCommandLineOptionsProvider(new TestExtension());
+
+        CommandLineOption option = provider.GetCommandLineOptions().Single();
+
+        Assert.IsFalse(option.IsHidden);
+    }
+
+    [TestMethod]
     public async Task TestRunParameterOption_WhenArgumentDoesNotContainEqual_IsNotValid()
     {
         // Arrange

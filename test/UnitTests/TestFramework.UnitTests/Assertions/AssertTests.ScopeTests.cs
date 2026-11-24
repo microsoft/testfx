@@ -71,6 +71,38 @@ public partial class AssertTests
             """);
     }
 
+    public void Scope_AreSequenceEqual_ExpectedNull_CollectsFollowingFailure()
+    {
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                IEnumerable<int>? expected = null;
+                Assert.AreSequenceEqual(expected, [1], SequenceOrder.InAnyOrder, "collection mismatch");
+                Assert.AreEqual(1, 2);
+            }
+        };
+
+        AggregateException innerException = action.Should().Throw<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>()
+            .Which;
+
+        innerException.InnerExceptions.Should().HaveCount(2);
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected sequences to be equal (in any order).
+            one side is null, the other is not.
+            collection mismatch
+
+            expected: null
+            actual:   [1]
+
+            Assert.AreSequenceEqual(expected, [1], <order>)
+            """);
+        innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
+    }
+
     public void Scope_AfterDispose_AssertionsThrowNormally()
     {
         // Completing a scope should restore normal behavior.

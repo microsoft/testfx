@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "description": "Implementation-neutral Windows package identity and application-model vectors intended for reuse by testfx, WinApp CLI, and other Windows app tooling.",
   "references": [
-    "https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.PackagedApp",
+    "https://github.com/microsoft/testfx/tree/main/src/MTP/Microsoft.Testing.Extensions.PackagedApp",
     "https://github.com/microsoft/WinAppCli/blob/main/src/winapp-CLI/WinApp.Cli/Services/AppLauncherService.cs"
   ],
   "vectors": [

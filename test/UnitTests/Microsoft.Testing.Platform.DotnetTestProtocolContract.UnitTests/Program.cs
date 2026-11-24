@@ -1,10 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
-
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
@@ -14,6 +11,7 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
@@ -34,9 +32,7 @@ builder.AddJUnitReportProvider();
 builder.AddAzureDevOpsProvider();
 builder.AddCtrfReportProvider();
 
-builder.AddOpenTelemetryProvider(
-    tracing => tracing.AddTestingPlatformInstrumentation(),
-    metrics => metrics.AddTestingPlatformInstrumentation());
+using IDisposable? telemetry = builder.AddTestFxOpenTelemetry();
 
-ITestApplication app = await builder.BuildAsync();
+using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

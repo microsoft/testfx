@@ -1,0 +1,44 @@
+source https://api.nuget.org/v3/index.json
+framework: >= net8.0
+storage: none
+strategy: min
+
+// Align full test-host implementations with the source graph's shared abstractions.
+nuget Microsoft.Extensions.Configuration == 10.0.13
+nuget Microsoft.Extensions.Hosting == 10.0.13
+nuget OpenTelemetry.Exporter.Console == 1.13.1
+nuget OpenTelemetry.Extensions.Hosting == 1.13.1
+
+group analyzers
+    source https://api.nuget.org/v3/index.json
+    source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+
+    // Match MicrosoftCodeAnalysisVersionForTests and MicrosoftCodeAnalysisAnalyzerTestingVersion.
+    nuget Microsoft.CodeAnalysis == 4.14.0
+    nuget Microsoft.CodeAnalysis.Common == 4.14.0
+    nuget Microsoft.CodeAnalysis.CSharp.Workspaces == 4.14.0
+    nuget Microsoft.CodeAnalysis.CSharp.Analyzer.Testing == 1.1.4
+    nuget Microsoft.CodeAnalysis.CSharp.CodeFix.Testing == 1.1.4
+    nuget Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing == 1.1.4
+
+group benchmarks
+    source https://api.nuget.org/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+
+    nuget BenchmarkDotNet == 0.15.8
+
+// Third-party test frameworks used only by the build-only TestFx.slnx samples.
+group samples
+    source https://api.nuget.org/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+
+    nuget NUnit == 5.0.0
+    nuget NUnit3TestAdapter == 6.3.1
+    nuget xunit.v3.mtp-v2 == 4.0.3

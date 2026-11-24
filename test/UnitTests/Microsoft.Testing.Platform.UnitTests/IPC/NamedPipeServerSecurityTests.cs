@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable SA1121 // Keep IntPtr for older target frameworks sharing this file.
+
 using System.ComponentModel;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
@@ -210,16 +212,13 @@ public sealed class NamedPipeServerSecurityTests
     /// actually uses: the pipe must still be created with a DACL that names only the owner and the validated
     /// package.
     /// </summary>
-    /// <remarks>
-    /// Reading the descriptor back by name connects a client and consumes this single-instance pipe, so this
-    /// test deliberately never calls <c>WaitConnectionAsync</c> and performs exactly one such read.
-    /// </remarks>
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [SupportedOSPlatform("windows")]
     public void NamedPipeServer_WithASequenceThatChangesBetweenEnumerations_DoesNotWidenTheDacl()
     {
         PipeNameDescription pipeName = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        var shapeShifting = new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD");
 
         using var server = new NamedPipeServer(
             pipeName,
@@ -228,12 +227,14 @@ public sealed class NamedPipeServerSecurityTests
             new Mock<ILogger>().Object,
             new SystemTask(),
             maxNumberOfServerInstances: 1,
-            new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD"),
+            shapeShifting,
             CancellationToken.None);
 
-        string sddl = WindowsSecurity.ConnectAndGetSecurityDescriptorSddl(server.PipeName.Name);
+        string sddl = WindowsSecurity.GetSecurityDescriptorSddl(server.GetServerStream().SafePipeHandle);
 
+        Assert.AreEqual(1, shapeShifting.ReadCount);
         Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
+        Assert.Contains($"(A;;0x12019b;;;{PackageSid})", sddl);
         Assert.IsFalse(sddl.Contains(";;;WD)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
         Assert.IsFalse(sddl.Contains(";;;S-1-1-0)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
     }
@@ -449,9 +450,18 @@ public sealed class NamedPipeServerSecurityTests
 
         try
         {
+            // OpenThreadToken cannot open an anonymous token (ERROR_CANT_OPEN_ANONYMOUS).
+            // The impersonation-level guard applies only to duplicated AppContainer tokens.
             using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.None);
 
-            Assert.ThrowsExactly<UnauthorizedAccessException>(() => client.Connect(timeout: 5_000));
+            const int BadImpersonationLevelHResult = unchecked((int)0x80070542); // HRESULT_FROM_WIN32(ERROR_BAD_IMPERSONATION_LEVEL)
+            Exception exception = Assert.Throws<Exception>(() => client.Connect(timeout: 5_000));
+            if (exception is IOException && exception.HResult == BadImpersonationLevelHResult)
+            {
+                Assert.Inconclusive("Windows rejected the pipe connection with ERROR_BAD_IMPERSONATION_LEVEL (1346); anonymous impersonation is unavailable, so the pipe's access check could not be verified.");
+            }
+
+            Assert.AreEqual(typeof(UnauthorizedAccessException), exception.GetType());
         }
         finally
         {
@@ -460,14 +470,15 @@ public sealed class NamedPipeServerSecurityTests
     }
 
     /// <summary>
-    /// End-to-end through <see cref="NamedPipeServer"/> itself: the hardened pipe is created from a raw
-    /// handle rather than by the <see cref="NamedPipeServerStream"/> name constructor, so the whole
-    /// connect / request / reply / dispose cycle has to keep working on it.
+    /// Verifies that <see cref="NamedPipeServer"/> publishes the AppContainer-local name that the packaged
+    /// child must use. A desktop process cannot resolve another package's <c>LOCAL\</c> namespace; the
+    /// live AppContainer acceptance tests cover the request/reply path, while
+    /// <see cref="CreateServerStream_TheCurrentUserCanStillConnect"/> covers the owner DACL entry.
     /// </summary>
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [SupportedOSPlatform("windows")]
-    public async Task NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip()
+    public void NamedPipeServer_WithAuthorizedPackage_PublishesAppContainerLocalPipeName()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
@@ -480,23 +491,28 @@ public sealed class NamedPipeServerSecurityTests
             maxNumberOfServerInstances: 1,
             [PackageSid],
             CancellationToken.None);
-        server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        server.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
 
         Assert.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, server.PipeName.Name);
-        using var client = new NamedPipeClient(server.PipeName.Name);
-        client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        client.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
+    }
 
-        Task waitConnection = server.WaitConnectionAsync(CancellationToken.None);
-        await client.ConnectAsync(CancellationToken.None);
-        await waitConnection;
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void NamedPipeServer_WithMultipleAuthorizedPackages_FailsBeforePublishingAnUnreachableLocalPipe()
+    {
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
-        VoidResponse response = await client.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
-            new TestHostCompletedRequest(returnCode: 0),
-            CancellationToken.None);
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => new NamedPipeServer(
+            pipeNameDescription,
+            static _ => Task.FromResult<IResponse>(VoidResponse.CachedInstance),
+            new SystemEnvironment(),
+            new Mock<ILogger>().Object,
+            new SystemTask(),
+            maxNumberOfServerInstances: 1,
+            [PackageSid, OtherPackageSid],
+            CancellationToken.None));
 
-        Assert.IsNotNull(response);
+        Assert.Contains("exactly one authorized package SID", exception.Message);
     }
 
     /// <summary>
@@ -514,10 +530,9 @@ public sealed class NamedPipeServerSecurityTests
     /// Token impersonation does not place the desktop test process inside the AppContainer named-object
     /// namespace: trying to resolve <c>LOCAL\</c> under impersonation returns
     /// <c>ERROR_FILE_NOT_FOUND</c>. This test therefore isolates the restricted-token/DACL check on a bare
-    /// pipe name. <see cref="NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip"/>
-    /// separately proves the product publishes and connects through the Windows-required <c>LOCAL\</c>
-    /// namespace. A real package-activated process remains the only way to exercise both constraints in one
-    /// process boundary.
+    /// pipe name. <see cref="NamedPipeServer_WithAuthorizedPackage_PublishesAppContainerLocalPipeName"/>
+    /// separately proves the product publishes the Windows-required <c>LOCAL\</c> name. A real
+    /// package-activated process remains the only way to exercise both constraints in one process boundary.
     /// </para>
     /// <para>
     /// Candidates are filtered to the shape a real test host has. An AppContainer at <em>untrusted</em>
@@ -541,6 +556,7 @@ public sealed class NamedPipeServerSecurityTests
             return;
         }
 
+        int downgradedCandidates = 0;
         try
         {
             foreach ((SafeHandle token, string sid) in candidates)
@@ -548,6 +564,12 @@ public sealed class NamedPipeServerSecurityTests
                 Assert.IsTrue(
                     NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(sid),
                     $"A live AppContainer SID must satisfy the platform's authorization policy, but '{sid}' did not.");
+
+                if (!WindowsSecurity.CanImpersonateUsably(token))
+                {
+                    downgradedCandidates++;
+                    continue;
+                }
 
                 // Establish that this token is a viable low-integrity AppContainer with the granular
                 // kernel open first. The managed-client assertion below is the behavior under test and must
@@ -569,6 +591,11 @@ public sealed class NamedPipeServerSecurityTests
                     TryConnectAsAppContainer(token, []),
                     "An AppContainer must not reach a pipe that authorizes no package at all.");
                 return;
+            }
+
+            if (downgradedCandidates == candidates.Count)
+            {
+                Assert.Inconclusive(WindowsSecurity.DowngradedImpersonationMessage);
             }
 
             Assert.Fail(
@@ -624,6 +651,9 @@ public sealed class NamedPipeServerSecurityTests
     /// </summary>
     private static class WindowsSecurity
     {
+        public const string DowngradedImpersonationMessage =
+            "Windows downgraded the impersonation to identification level because the test process lacks SeImpersonatePrivilege (for example a non-elevated shell); no access check can be observed.";
+
         private const int SeKernelObject = 6;
         private const int OwnerSecurityInformation = 1;
         private const int GroupSecurityInformation = 2;
@@ -642,6 +672,7 @@ public sealed class NamedPipeServerSecurityTests
         private const int TokenIsAppContainerClass = 29;
         private const int TokenAppContainerSidClass = 31;
         private const int TokenIntegrityLevelClass = 25;
+        private const int TokenImpersonationLevelClass = 9;
         private const string LowIntegritySid = "S-1-16-4096";
         private const uint OpenExisting = 3;
         private const int ErrorAccessDenied = 5;
@@ -823,6 +854,51 @@ public sealed class NamedPipeServerSecurityTests
         public static void RevertToSelf() => RevertToSelfCore();
 
         /// <summary>
+        /// Impersonation APIs succeed even when Windows downgrades the thread token to identification level
+        /// (for instance when the caller lacks <c>SeImpersonatePrivilege</c>); every later open then fails
+        /// with <c>ERROR_BAD_IMPERSONATION_LEVEL</c> before the pipe's DACL is consulted.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        public static bool IsCurrentThreadImpersonationUsable()
+        {
+            if (!OpenThreadToken(GetCurrentThread(), TokenQuery, openAsSelf: true, out IntPtr token))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            IntPtr buffer = Marshal.AllocHGlobal(sizeof(int));
+            try
+            {
+                return !GetTokenInformation(token, TokenImpersonationLevelClass, buffer, sizeof(int), out _)
+                    ? throw new Win32Exception(Marshal.GetLastWin32Error())
+                    : Marshal.ReadInt32(buffer) >= SecurityImpersonation;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+                CloseHandle(token);
+            }
+        }
+
+        [SupportedOSPlatform("windows")]
+        public static bool CanImpersonateUsably(SafeHandle impersonationToken)
+        {
+            if (!ImpersonateLoggedOnUser(impersonationToken))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            try
+            {
+                return IsCurrentThreadImpersonationUsable();
+            }
+            finally
+            {
+                RevertToSelfCore();
+            }
+        }
+
+        /// <summary>
         /// Duplicates the token of every live <em>low-integrity</em> AppContainer process whose token can be
         /// opened. Requiring <c>S-1-16-4096</c> keeps the test on the exact integrity level of an ordinary
         /// UWP/WinUI host: a medium-integrity container could hide a MIC regression, while an untrusted
@@ -934,6 +1010,12 @@ public sealed class NamedPipeServerSecurityTests
         [SupportedOSPlatform("windows")]
         public static bool TryConnectManagedClientAs(SafeHandle impersonationToken, string pipeName)
         {
+#if NET
+            // CurrentUserOnly loads these assemblies lazily; the AppContainer token cannot read the
+            // desktop runtime installation when collection runs this test in a fresh process.
+            _ = typeof(System.Security.AccessControl.GenericSecurityDescriptor).Assembly;
+            _ = typeof(System.Security.Principal.WindowsIdentity).Assembly;
+#endif
             if (!ImpersonateLoggedOnUser(impersonationToken))
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -1151,6 +1233,14 @@ public sealed class NamedPipeServerSecurityTests
 
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool OpenThreadToken(
+            IntPtr threadHandle,
+            uint desiredAccess,
+            [MarshalAs(UnmanagedType.Bool)] bool openAsSelf,
+            out IntPtr tokenHandle);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetTokenInformation(
             IntPtr tokenHandle,
             int tokenInformationClass,
@@ -1194,5 +1284,24 @@ public sealed class NamedPipeServerSecurityTests
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr LocalFree(IntPtr memory);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void CreateServerStream_MalformedDescriptorAndInvalidPackageSidPreserveWin32Error()
+    {
+        string pipe = "testingplatform.coverage.bad-descriptor." + Guid.NewGuid().ToString("N");
+        Win32Exception descriptor = Assert.ThrowsExactly<Win32Exception>(() =>
+        {
+            using NamedPipeServerStream stream = NamedPipeServerSecurity.CreateServerStreamWithExplicitSecurityDescriptor(pipe, 1, "not-sddl");
+        });
+        Assert.AreEqual($"Failed to build the security descriptor for the named pipe '\\\\.\\pipe\\{pipe}'.", descriptor.Message);
+        Assert.AreNotEqual(0, descriptor.NativeErrorCode);
+
+        Win32Exception sid = Assert.ThrowsExactly<Win32Exception>(
+            () => NamedPipeServerSecurity.GetNativePipePath(@"LOCAL\owned-invalid-package", ["not-a-sid"]));
+        Assert.AreEqual("Failed to parse the AppContainer SID 'not-a-sid'.", sid.Message);
+        Assert.AreEqual(1337, sid.NativeErrorCode);
     }
 }

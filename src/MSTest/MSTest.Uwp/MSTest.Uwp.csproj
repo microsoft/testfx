@@ -1,0 +1,37 @@
+<Project>
+
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+
+  <!--
+    MSTest.TestFramework packs MSTest.Uwp.dll in lib/$(UwpMinimum) for classic UWP and
+    buildTransitive/net10.0/uwp for modern UWP.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>$(ModernUwpMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(UwpMinimum)' != '' ">$(UwpMinimum);$(TargetFrameworks)</TargetFrameworks>
+    <AssemblyName>MSTest.Uwp</AssemblyName>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <DefineConstants>$(DefineConstants);TRACE;EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL;WINDOWS_UWP</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\MSTest\TestFramework\TestFramework.csproj" />
+    <Compile Include="$(RepoRoot)src\Polyfills\**\*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" />
+    <EmbeddedResource Update="Properties\MSTest.Uwp.rd.xml" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+
+</Project>

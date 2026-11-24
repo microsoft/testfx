@@ -116,8 +116,7 @@ public sealed class HangDumpTests
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, [dumpType]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -149,21 +148,24 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
-    [DataRow("hang.dmp", "hang_%p.dmp")]
-    [DataRow("hang", "hang_%p")]
-    [DataRow("subdirectory/hang.dmp", "subdirectory/hang_%p.dmp")]
-    [DataRow("hang_%p.dmp", "hang_%p.dmp")]
-    [DataRow("hang_{pid}.dmp", "hang_{pid}.dmp")]
+    [DataRow("hang.dmp", "hang_{pid}.dmp", DisplayName = "Filename gets PID suffix")]
+    [DataRow("hang", "hang_{pid}", DisplayName = "Extensionless filename gets PID suffix")]
+    [DataRow("subdirectory/hang.dmp", "subdirectory/hang_{pid}.dmp", DisplayName = "Subdirectory is preserved")]
+    [DataRow("hang_%p.dmp", "hang_%p_{pid}.dmp", DisplayName = "Literal percent-p does not supply uniqueness")]
+    [DataRow("hang_{pid}.dmp", "hang_{pid}.dmp", DisplayName = "Existing PID placeholder is preserved")]
+    [DataRow("subdirectory with spaces/hang dump_%p.dmp", "subdirectory with spaces/hang dump_%p_{pid}.dmp", DisplayName = "Spaces and literal percent-p are preserved")]
     public void EnsureProcessIdPlaceholder_MakesCustomDumpPathUnique(string pattern, string expected)
         => Assert.AreEqual(
             expected.Replace('/', Path.DirectorySeparatorChar),
             HangDumpProcessLifetimeHandler.EnsureProcessIdPlaceholder(pattern));
 
     [TestMethod]
-    [DataRow(null, "testhost", 123, 123, "testhost_%p_hang.dmp")]
-    [DataRow("hang.dmp", "testhost", 123, 123, "hang.dmp")]
-    [DataRow("hang.dmp", "child", 456, 123, "hang_%p.dmp")]
-    [DataRow("hang_%p.dmp", "child", 456, 123, "hang_%p.dmp")]
+    [DataRow(null, "testhost", 123, 123, "testhost_{pid}_hang.dmp", DisplayName = "Default name uses PID template")]
+    [DataRow("hang.dmp", "testhost", 123, 123, "hang.dmp", DisplayName = "Configured root name is preserved")]
+    [DataRow("hang.dmp", "child", 456, 123, "hang_{pid}.dmp", DisplayName = "Child name gets PID suffix")]
+    [DataRow("hang_%p.dmp", "child", 456, 123, "hang_%p_{pid}.dmp", DisplayName = "Child literal percent-p gets PID suffix")]
+    [DataRow("hang_%p.dmp", "testhost", 123, 123, "hang_%p.dmp", DisplayName = "Root literal percent-p is preserved")]
+    [DataRow("hang_{pid}.dmp", "child", 456, 123, "hang_{pid}.dmp", DisplayName = "Child PID template is preserved")]
     public void GetDumpFileNamePattern_PreservesRootNameAndMakesChildNamesUnique(
         string? configuredPattern,
         string processName,
@@ -214,8 +216,7 @@ public sealed class HangDumpTests
         };
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options));
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -228,6 +229,19 @@ public sealed class HangDumpTests
 
         Assert.AreEqual($"\"{dumpFileName}\"", dumpFileNames.WriteDumpFileName);
         Assert.AreEqual(dumpFileName, dumpFileNames.ArtifactDumpFileName);
+    }
+
+    [TestMethod]
+    [DataRow("literal_%p.dmp", "literal_%%p.dmp", DisplayName = "Native dump writer preserves literal percent-p")]
+    [DataRow("directory %p with spaces/literal_%%_%p.dmp", "directory %%p with spaces/literal_%%%%_%%p.dmp", DisplayName = "Native dump writer preserves percent path segments and spaces")]
+    public void GetDumpFileNames_PercentCharactersAreLiteralInTheArtifactPath(string path, string escapedPath)
+    {
+        HangDumpProcessLifetimeHandler.DumpFileNames dumpFileNames = HangDumpProcessLifetimeHandler.GetDumpFileNames(path);
+
+        Assert.AreEqual(
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && path.Contains(' ') ? $"\"{escapedPath}\"" : escapedPath,
+            dumpFileNames.WriteDumpFileName);
+        Assert.AreEqual(path, dumpFileNames.ArtifactDumpFileName);
     }
 
     [TestMethod]
@@ -289,7 +303,7 @@ public sealed class HangDumpTests
     {
         IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
         TaskCompletionSource<bool> allDumpsStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        using ManualResetEventSlim releaseDumps = new();
+        TaskCompletionSource<bool> releaseDumps = new(TaskCreationOptions.RunContinuationsAsynchronously);
         int startedDumpCount = 0;
 
         Task dumpTreeTask = HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
@@ -303,8 +317,7 @@ public sealed class HangDumpTests
                     allDumpsStarted.TrySetResult(true);
                 }
 
-                releaseDumps.Wait(TestContext.CancellationToken);
-                return Task.CompletedTask;
+                return releaseDumps.Task;
             },
             CancellationToken.None);
 
@@ -316,10 +329,9 @@ public sealed class HangDumpTests
         }
         finally
         {
-            releaseDumps.Set();
+            releaseDumps.SetResult(true);
+            await dumpTreeTask;
         }
-
-        await dumpTreeTask;
 
         Assert.AreEqual(bottomUpTree.Length, startedDumpCount);
     }
@@ -358,6 +370,46 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenTimeoutElapses_CancelsTheRequestToken()
+    {
+        CancellationToken requestCancellationToken = default;
+        CancellationTokenRegistration cancellationRegistration = default;
+        TaskCompletionSource<bool> requestCanceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<(string, int)[]> requestCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Exception? loggedFailure = null;
+
+        try
+        {
+            (string, int)[] result = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+                queryCancellationToken =>
+                {
+                    requestCancellationToken = queryCancellationToken;
+                    cancellationRegistration = queryCancellationToken.Register(() => requestCanceled.TrySetResult(true));
+                    return requestCompletion.Task;
+                },
+                TimeSpan.FromMilliseconds(200),
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
+                CancellationToken.None);
+
+            // Best-effort cancellation can still be queued on the thread pool when the bounded query returns.
+            await requestCanceled.Task.TimeoutAfterAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+
+            Assert.IsTrue(requestCancellationToken.IsCancellationRequested);
+            Assert.IsEmpty(result);
+            Assert.IsNotNull(loggedFailure);
+        }
+        finally
+        {
+            requestCompletion.TrySetResult([]);
+            cancellationRegistration.Dispose();
+        }
+    }
+
+    [TestMethod]
     public async Task QueryInProgressTestsWithTimeout_WhenTheReplyIgnoresCancellation_ReturnsEmptyList()
     {
         TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -387,6 +439,50 @@ public sealed class HangDumpTests
         finally
         {
             neverCompletes.TrySetResult(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenCancellationCallbackBlocks_ReturnsEmptyList()
+    {
+        using ManualResetEventSlim cancellationCallbackEntered = new();
+        using ManualResetEventSlim releaseCancellationCallback = new();
+        TaskCompletionSource<(string, int)[]> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenRegistration cancellationRegistration = default;
+        Exception? loggedFailure = null;
+
+        try
+        {
+            Task<(string, int)[]> query = HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+                queryCancellationToken =>
+                {
+                    cancellationRegistration = queryCancellationToken.Register(
+                        () =>
+                        {
+                            cancellationCallbackEntered.Set();
+                            releaseCancellationCallback.Wait(TestContext.CancellationToken);
+                        });
+                    return neverCompletes.Task;
+                },
+                TimeSpan.FromMilliseconds(50),
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
+                CancellationToken.None);
+
+            Assert.IsTrue(cancellationCallbackEntered.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Task completed = await Task.WhenAny(query, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Assert.AreSame(query, completed, "A blocking cancellation callback blocked the dump.");
+            Assert.IsEmpty(await query);
+            Assert.IsNotNull(loggedFailure);
+        }
+        finally
+        {
+            releaseCancellationCallback.Set();
+            cancellationRegistration.Dispose();
+            neverCompletes.TrySetResult([]);
         }
     }
 
@@ -439,6 +535,7 @@ public sealed class HangDumpTests
     {
         TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
         IProcess rootProcess = Mock.Of<IProcess>();
+        Exception? loggedFailure = null;
 
         try
         {
@@ -449,12 +546,17 @@ public sealed class HangDumpTests
                     return [];
                 },
                 TimeSpan.FromMilliseconds(50),
-                _ => Task.CompletedTask,
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
                 rootProcess,
                 TestContext.CancellationToken);
 
             Assert.HasCount(1, processTree);
             Assert.AreSame(rootProcess, processTree[0].Process);
+            Assert.IsNotNull(loggedFailure);
         }
         finally
         {
@@ -474,8 +576,7 @@ public sealed class HangDumpTests
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeIfSupportedOptionName);
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, [dumpType]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -522,8 +623,7 @@ public sealed class HangDumpTests
         };
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -593,6 +693,40 @@ public sealed class HangDumpTests
 
         Assert.AreSame(disposeTask, completed);
         await disposeTask;
+    }
+
+    [TestMethod]
+    public void ActivityTimer_DueTimeBeyondTheTimerLimit_WaitsInSeveralPeriodsInsteadOfFailingOrDumping()
+    {
+        // The largest timeout the parser accepts plus the signal interval exceeds the longest period a Timer accepts.
+        TimeSpan dueTime = HangDumpOptions.GetInactivityTimerDueTime(TimeSpan.FromMilliseconds(uint.MaxValue - 1));
+        using var activityTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        HangDumpProcessLifetimeHandler handler = CreateHandler();
+        SetHandlerField<TimeSpan?>(handler, "_activityTimerDueTime", dueTime);
+        SetHandlerField(handler, "_activityTimer", activityTimer);
+
+        InvokeHandlerMethod(handler, "ArmActivityTimer");
+        Assert.AreEqual(TimeSpan.FromSeconds(1), GetHandlerField<TimeSpan>(handler, "_activityTimerRemainingDueTime"));
+
+        InvokeHandlerMethod(handler, "OnActivityTimerElapsed", CancellationToken.None);
+        Assert.AreEqual(0, GetHandlerField<int>(handler, "_dumpTaken"), "The first period elapsing is not inactivity for the whole timeout.");
+        Assert.AreEqual(TimeSpan.Zero, GetHandlerField<TimeSpan>(handler, "_activityTimerRemainingDueTime"));
+
+        SetHandlerField(handler, "_activityTimer", (Timer?)null);
+        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+        handler.Dispose();
+    }
+
+    [TestMethod]
+    [DataRow(1000L, 1000L, 0L, DisplayName = "Short due time is one period")]
+    [DataRow(4294967294L, 4294967294L, 0L, DisplayName = "Maximum period is one period")]
+    [DataRow(4294968294L, 4294967294L, 1000L, DisplayName = "Longer due time waits for the rest after the period")]
+    public void GetTimerPeriod_SplitsDueTimesBeyondTheTimerLimit(long dueTimeMilliseconds, long expectedPeriodMilliseconds, long expectedRemainingMilliseconds)
+    {
+        TimeSpan period = HangDumpOptions.GetTimerPeriod(TimeSpan.FromMilliseconds(dueTimeMilliseconds), out TimeSpan remaining);
+
+        Assert.AreEqual(TimeSpan.FromMilliseconds(expectedPeriodMilliseconds), period);
+        Assert.AreEqual(TimeSpan.FromMilliseconds(expectedRemainingMilliseconds), remaining);
     }
 
     [TestMethod]
@@ -832,6 +966,11 @@ public sealed class HangDumpTests
         await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
             () => (Task)operation.Invoke(pipe, [cancellationToken])!);
     }
+
+    private static void InvokeHandlerMethod(HangDumpProcessLifetimeHandler handler, string methodName, params object?[] arguments)
+        => typeof(HangDumpProcessLifetimeHandler)
+            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(handler, arguments);
 
     private static void SetHandlerField<T>(HangDumpProcessLifetimeHandler handler, string fieldName, T value)
         => typeof(HangDumpProcessLifetimeHandler)

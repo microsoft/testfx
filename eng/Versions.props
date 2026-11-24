@@ -1,16 +1,17 @@
 <Project>
   <PropertyGroup Label="Version settings">
     <!-- MSTest version -->
-    <VersionPrefix>4.5.0</VersionPrefix>
+    <VersionPrefix>5.0.0</VersionPrefix>
     <!-- Testing Platform version -->
-    <TestingPlatformVersionPrefix>2.5.0</TestingPlatformVersionPrefix>
+    <TestingPlatformVersionPrefix>3.0.0</TestingPlatformVersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>12.0.0-beta.26473.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>18.12.0-preview.26473.3</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>12.0.0-beta.26569.6</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>18.14.0-preview.26570.4</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsAffectedTestsVersion>18.14.0-preview.26573.4</MicrosoftTestingExtensionsAffectedTestsVersion>
     <!-- empty line to avoid merge conflicts for darc PRs to update CC and MSTest+MTP -->
-    <MSTestVersion>4.5.0-preview.26473.10</MSTestVersion>
-    <MicrosoftTestingPlatformVersion>2.5.0-preview.26473.10</MicrosoftTestingPlatformVersion>
+    <MSTestVersion>5.0.0-preview.26573.9</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>3.0.0-preview.26573.9</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
 </Project>

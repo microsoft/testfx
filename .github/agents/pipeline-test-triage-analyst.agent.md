@@ -112,9 +112,18 @@ Every pull-request comment must:
 
 Every created issue must:
 
-- provide a unique `temporary_id` and
-  `fields: [{"name": "Type", "value": "Bug"}]` in the `create_issue` call so
-  the native GitHub issue type is assigned atomically with issue creation;
+- provide a unique `temporary_id` in the `create_issue` call, then queue
+  `set_issue_type` with `issue_type: "Bug"` and `issue_number` set to that
+  same temporary ID, including its `#aw_` prefix. For example, creation with
+  `temporary_id: "aw_triage123"` is followed by
+  `set_issue_type({"issue_number": "#aw_triage123", "issue_type": "Bug"})`;
+- do not send `fields: [{"name": "Type", "value": "Bug"}]`: `fields` sets
+  custom issue fields, not the native GitHub Issue Type. Creation and type
+  assignment are separate queued operations; the publisher resolves the
+  temporary ID only after successful creation. Do not guess or poll for a
+  newly created issue number during this agent run. If the creation tool
+  reports a duplicate, do not queue type assignment for it. Queue at most one
+  type request; the publisher owns any deferred retry;
 - add exactly one relevant allowed label when applicable:
   `type/regression`, `type/flaky-test`, `area/dump`, or `area/performance`;
 - explain category and confidence, why the signal is actionable, first/last

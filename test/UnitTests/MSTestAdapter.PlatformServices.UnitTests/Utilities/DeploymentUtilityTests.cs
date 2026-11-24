@@ -21,7 +21,7 @@ public class DeploymentUtilityTests : TestContainer
 {
     private const string TestRunDirectory = "C:\\temp\\testRunDirectory";
     private const string RootDeploymentDirectory = "C:\\temp\\testRunDirectory\\Deploy";
-    private const string DefaultDeploymentItemPath = @"c:\temp";
+    private static readonly string DefaultDeploymentItemPath = Path.GetFullPath("deploymentSource");
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
     private readonly Mock<IReflectionOperations> _mockReflectionOperations;
@@ -201,8 +201,8 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldNotDeployIfOutputDirectoryIsInvalid()
     {
-        string deploymentItemPath = "C:\\temp\\sample.dll";
-        string deploymentItemOutputDirectory = "..\\..\\out";
+        string deploymentItemPath = Path.Combine(DefaultDeploymentItemPath, "sample.dll");
+        string deploymentItemOutputDirectory = Path.Combine("..", "..", "out");
 
         UnitTestElement testCase = GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
 
@@ -463,7 +463,7 @@ public class DeploymentUtilityTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 deploymentItemPath,
-                defaultDeploymentItemOutputDirectoryOut)
+                defaultDeploymentItemOutputDirectoryOut),
         ];
         testCase.DeploymentItems = kvpArray;
         string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;

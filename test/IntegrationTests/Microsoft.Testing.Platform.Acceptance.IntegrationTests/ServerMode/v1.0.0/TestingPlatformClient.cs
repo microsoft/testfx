@@ -15,14 +15,16 @@ public sealed class TestingPlatformClient : IDisposable
 {
     private readonly TcpClient _tcpClient = new();
     private readonly IProcessHandle _processHandler;
+    private readonly Func<string>? _processOutput;
     private readonly TargetHandler _targetHandler = new();
     private readonly StringBuilder _disconnectionReason = new();
 
-    public TestingPlatformClient(JsonRpc jsonRpc, TcpClient tcpClient, IProcessHandle processHandler, bool enableDiagnostic = false)
+    public TestingPlatformClient(JsonRpc jsonRpc, TcpClient tcpClient, IProcessHandle processHandler, bool enableDiagnostic = false, Func<string>? processOutput = null)
     {
         JsonRpcClient = jsonRpc;
         _tcpClient = tcpClient;
         _processHandler = processHandler;
+        _processOutput = processOutput;
         JsonRpcClient.AddLocalRpcTarget(
             _targetHandler,
             new JsonRpcTargetOptions
@@ -50,6 +52,8 @@ public sealed class TestingPlatformClient : IDisposable
 
     public int ExitCode => _processHandler.ExitCode;
 
+    public string ProcessOutput => _processOutput?.Invoke() ?? throw new InvalidOperationException("Process output capture was not configured.");
+
     public async Task<int> WaitServerProcessExit(CancellationToken cancellationToken)
     {
         await _processHandler.WaitForExitAsync(cancellationToken);
@@ -57,6 +61,14 @@ public sealed class TestingPlatformClient : IDisposable
     }
 
     public JsonRpc JsonRpcClient { get; }
+
+    // Call only between completed RPC requests: this literal wire injection bypasses JsonRpc's write lock.
+    public async Task SendUncorrelatedErrorAsync(CancellationToken cancellationToken)
+    {
+        const string Body = """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"JSON parse error"}}""";
+        byte[] frame = Encoding.UTF8.GetBytes($"Content-Length: {Encoding.UTF8.GetByteCount(Body)}\r\n\r\n{Body}");
+        await _tcpClient.GetStream().WriteAsync(frame, cancellationToken);
+    }
 
     private async Task CheckedInvoke(Func<Task> func)
     {

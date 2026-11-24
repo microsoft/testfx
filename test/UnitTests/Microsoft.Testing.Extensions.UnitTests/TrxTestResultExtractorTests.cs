@@ -48,6 +48,76 @@ public class TrxTestResultExtractorTests
     }
 
     [TestMethod]
+    public void Extract_StateProperties_MapToExpectedOutcomes()
+    {
+        Assert.AreEqual(TrxTestOutcome.Passed, ExtractResult(new PassedTestNodeStateProperty()).Outcome);
+        Assert.AreEqual(TrxTestOutcome.Skipped, ExtractResult(new SkippedTestNodeStateProperty()).Outcome);
+        Assert.AreEqual(TrxTestOutcome.Timeout, ExtractResult(new TimeoutTestNodeStateProperty()).Outcome);
+        Assert.AreEqual(TrxTestOutcome.Failed, ExtractResult(new FailedTestNodeStateProperty()).Outcome);
+        Assert.AreEqual(TrxTestOutcome.Failed, ExtractResult(new ErrorTestNodeStateProperty()).Outcome);
+    }
+
+    [TestMethod]
+    public void Extract_InProgressState_ThrowsUnreachableException()
+    {
+        // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so asserting on the
+        // generic type parameter would compare against this test assembly's copy and fail due to type identity.
+        Exception exception = Assert.Throws<Exception>(() => ExtractResult(new InProgressTestNodeStateProperty()));
+
+        Assert.AreEqual(typeof(UnreachableException).FullName, exception.GetType().FullName);
+    }
+
+    [TestMethod]
+    public void Extract_IdentityAndTimingProperties_ProjectsValues()
+    {
+        DateTimeOffset startTime = new(2026, 9, 27, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset endTime = startTime.AddSeconds(12);
+        var duration = TimeSpan.FromSeconds(10);
+
+        TrxTestResult result = ExtractResult(
+            new PassedTestNodeStateProperty(),
+            new TimingProperty(new TimingInfo(startTime, endTime, duration)),
+            new TrxFullyQualifiedTypeNameProperty("My.Namespace.MyType"),
+            new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void"),
+            new TrxTestDefinitionName("My test definition"));
+
+        Assert.AreEqual(startTime, result.StartTime);
+        Assert.AreEqual(endTime, result.EndTime);
+        Assert.AreEqual(duration, result.Duration);
+        Assert.AreEqual("My.Namespace.MyType", result.TrxFullyQualifiedTypeName);
+        Assert.AreEqual("My test definition", result.TrxTestDefinitionName);
+        Assert.IsNotNull(result.TestMethodIdentifier);
+        Assert.AreEqual("My.Namespace", result.TestMethodIdentifier.Namespace);
+        Assert.AreEqual("MyType", result.TestMethodIdentifier.TypeName);
+        Assert.AreEqual("MyMethod", result.TestMethodIdentifier.MethodName);
+    }
+
+    [TestMethod]
+    public void Extract_MultipleMetadataAndArtifacts_EnumeratesInReverseInsertionOrder()
+    {
+        var firstArtifact = new FileInfo("first.txt");
+        var secondArtifact = new FileInfo("second.txt");
+
+        TrxTestResult result = ExtractResult(
+            new PassedTestNodeStateProperty(),
+            new TestMetadataProperty("first-key", "first-value"),
+            new TestMetadataProperty("second-key", "second-value"),
+            new FileArtifactProperty(firstArtifact, "first"),
+            new FileArtifactProperty(secondArtifact, "second"));
+
+        Assert.IsNotNull(result.Metadata);
+        Assert.HasCount(2, result.Metadata);
+        Assert.AreEqual("second-key", result.Metadata[0].Key);
+        Assert.AreEqual("second-value", result.Metadata[0].Value);
+        Assert.AreEqual("first-key", result.Metadata[1].Key);
+        Assert.AreEqual("first-value", result.Metadata[1].Value);
+        Assert.IsNotNull(result.FileArtifacts);
+        Assert.HasCount(2, result.FileArtifacts);
+        Assert.AreEqual(secondArtifact.FullName, result.FileArtifacts[0].FullPath);
+        Assert.AreEqual(firstArtifact.FullName, result.FileArtifacts[1].FullPath);
+    }
+
+    [TestMethod]
     public void Extract_WorkItems_CopiesIds()
     {
         string[] workItemIds = ["123", "456"];
@@ -62,6 +132,20 @@ public class TrxTestResultExtractorTests
         Assert.IsNotNull(result.WorkItemIds);
         Assert.AreSequenceEqual(workItemIds, result.WorkItemIds.ToArray());
         Assert.AreNotSame(workItemIds, result.WorkItemIds);
+    }
+
+    [TestMethod]
+    public void Extract_Categories_CopiesValues()
+    {
+        string[] categories = ["unit", "fast"];
+
+        TrxTestResult result = ExtractResult(
+            new PassedTestNodeStateProperty(),
+            new TrxCategoriesProperty(categories));
+
+        Assert.IsNotNull(result.Categories);
+        Assert.AreSequenceEqual(categories, result.Categories.ToArray());
+        Assert.AreNotSame(categories, result.Categories);
     }
 
     [TestMethod]
@@ -82,6 +166,28 @@ public class TrxTestResultExtractorTests
         Assert.IsNotNull(result.Messages[0].Message);
         Assert.IsLessThan(huge.Length, result.Messages[0].Message!.Length);
         Assert.AreEqual("short", result.Messages[1].Message);
+    }
+
+    [TestMethod]
+    public void Extract_Messages_MapsKinds()
+    {
+        TrxTestResult result = ExtractResult(
+            new PassedTestNodeStateProperty(),
+            new TrxMessagesProperty(
+            [
+                new StandardOutputTrxMessage("standard output"),
+                new StandardErrorTrxMessage("standard error"),
+                new DebugOrTraceTrxMessage("debug"),
+            ]));
+
+        Assert.IsNotNull(result.Messages);
+        Assert.HasCount(3, result.Messages);
+        Assert.AreEqual(TrxStreamMessageKind.StandardOutput, result.Messages[0].Kind);
+        Assert.AreEqual("standard output", result.Messages[0].Message);
+        Assert.AreEqual(TrxStreamMessageKind.StandardError, result.Messages[1].Kind);
+        Assert.AreEqual("standard error", result.Messages[1].Message);
+        Assert.AreEqual(TrxStreamMessageKind.DebugOrTrace, result.Messages[2].Kind);
+        Assert.AreEqual("debug", result.Messages[2].Message);
     }
 
     [TestMethod]
@@ -113,6 +219,7 @@ public class TrxTestResultExtractorTests
         string truncated = result.ExceptionMessage;
         int suffixStart = truncated.IndexOf("\n... [truncated", StringComparison.Ordinal);
         Assert.IsGreaterThan(0, suffixStart);
+        Assert.AreEqual(MaxCapturedFieldChars - 1, suffixStart, "The entire pair must be dropped rather than exceeding the capture limit.");
         char lastPrefixChar = truncated[suffixStart - 1];
         Assert.IsFalse(char.IsHighSurrogate(lastPrefixChar), "Truncation must not leave a dangling high surrogate.");
     }
@@ -137,4 +244,66 @@ public class TrxTestResultExtractorTests
 
         Assert.Contains(nameof(TimingProperty), ex.Message);
     }
+
+    [TestMethod]
+    public void ExtractAndValidate_DuplicateSingletonProperties_KeepsOneValueAndReportsSortedCounts()
+    {
+        var bag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TrxExceptionProperty("first", null),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)),
+            new TrxExceptionProperty("second", null),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)),
+            new TrxExceptionProperty("third", null),
+            new TestMetadataProperty("key", "a"),
+            new TestMetadataProperty("key", "b"));
+
+        (TrxTestResult result, _, IReadOnlyList<(string PropertyType, int Count)>? duplicates) = TrxTestResultExtractor.ExtractAndValidate(
+            new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = "u", DisplayName = "d", Properties = bag }));
+
+        Assert.Contains(result.ExceptionMessage, new[] { "first", "second", "third" });
+        Assert.IsNotNull(duplicates);
+        Assert.AreSequenceEqual(
+            [(typeof(TrxExceptionProperty).FullName!, 3), (typeof(TimingProperty).FullName!, 2)],
+            duplicates);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Duplicate timing first")]
+    [DataRow(false, DisplayName = "Duplicate exception first")]
+    public void Extract_MultipleDuplicateProperties_ReportsFirstOrdinalTypeRegardlessOfInputOrder(bool timingFirst)
+    {
+        var firstTiming = new TimingProperty(new TimingInfo(default, default, TimeSpan.Zero));
+        var secondTiming = new TimingProperty(new TimingInfo(default, default, TimeSpan.FromSeconds(1)));
+        var firstException = new TrxExceptionProperty("first", null);
+        var secondException = new TrxExceptionProperty("second", null);
+        PropertyBag bag = timingFirst
+            ? new PropertyBag(PassedTestNodeStateProperty.CachedInstance, firstTiming, secondTiming, firstException, secondException)
+            : new PropertyBag(PassedTestNodeStateProperty.CachedInstance, firstException, secondException, firstTiming, secondTiming);
+        var message = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = "u", DisplayName = "d", Properties = bag });
+
+        InvalidOperationException error = Assert.ThrowsExactly<InvalidOperationException>(() => TrxTestResultExtractor.Extract(message));
+
+        Assert.AreEqual($"Found multiple properties of type '{typeof(TrxExceptionProperty).FullName}'.", error.Message);
+    }
+
+    [TestMethod]
+    public void ExtractAndValidate_RepeatableProperties_ReportsNoDuplicates()
+    {
+        (_, _, IReadOnlyList<(string PropertyType, int Count)>? duplicates) = TrxTestResultExtractor.ExtractAndValidate(new TestNodeUpdateMessage(
+            new SessionUid("1"),
+            new TestNode
+            {
+                Uid = "u",
+                DisplayName = "d",
+                Properties = new PropertyBag(new PassedTestNodeStateProperty(), new TestMetadataProperty("key", "a"), new TestMetadataProperty("key", "b")),
+            }));
+
+        Assert.IsNull(duplicates);
+    }
+
+    private static TrxTestResult ExtractResult(params IProperty[] properties)
+        => TrxTestResultExtractor.Extract(new TestNodeUpdateMessage(
+            new SessionUid("1"),
+            new TestNode { Uid = "u", DisplayName = "d", Properties = new PropertyBag(properties) })).Result;
 }

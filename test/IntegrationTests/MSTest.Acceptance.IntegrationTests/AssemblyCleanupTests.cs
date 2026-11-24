@@ -34,7 +34,7 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
         private const string SourceCode = """

@@ -71,7 +71,7 @@ public sealed class TestApplicationResultTests : IDisposable
             CancellationToken.None);
 
         firstActivity.Verify(activity => activity.Dispose(), Times.Once);
-        firstActivity.Verify(activity => activity.SetTag("test.result", It.IsAny<object?>()), Times.Never);
+        firstActivity.Verify(activity => activity.SetTag("test.case.result.status", It.IsAny<object?>()), Times.Never);
         secondActivity.Verify(activity => activity.Dispose(), Times.Never);
 
         await testApplicationResult.ConsumeAsync(
@@ -79,8 +79,130 @@ public sealed class TestApplicationResultTests : IDisposable
             new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance)),
             CancellationToken.None);
 
-        secondActivity.Verify(activity => activity.SetTag("test.result", "passed"), Times.Once);
+        secondActivity.Verify(activity => activity.SetTag("test.case.result.status", "pass"), Times.Once);
         secondActivity.Verify(activity => activity.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_CompletesAttemptSpanWithoutChangingRunStatistics()
+    {
+        var activity = new Mock<IPlatformActivity>();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(TestNodeStateProperty state) => new()
+        {
+            Uid = "retry-test",
+            DisplayName = "Retry test",
+            Properties = new PropertyBag(
+                state,
+                new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true)),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty())),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Statistics statistics = testApplicationResult.GetStatistics();
+        Assert.AreEqual(0, statistics.TotalRanTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_PreservesUnnumberedSpanForFinalResult()
+    {
+        var activity = new Mock<IPlatformActivity>();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(TestNodeStateProperty state, RetryAttemptProperty? retryAttempt = null) => new()
+        {
+            Uid = "retry-test",
+            DisplayName = "Retry test",
+            Properties = retryAttempt is null
+                ? new PropertyBag(state)
+                : new PropertyBag(state, retryAttempt),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                CreateNode(
+                    new FailedTestNodeStateProperty(),
+                    new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Never);
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                CreateNode(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Statistics statistics = testApplicationResult.GetStatistics();
+        Assert.AreEqual(1, statistics.TotalRanTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
     }
 
     [TestMethod]
@@ -618,6 +740,36 @@ public sealed class TestApplicationResultTests : IDisposable
         }
     }
 
+    [TestMethod]
+    [DataRow(null, 0, DisplayName = "Absent environment falls back to CLI")]
+    [DataRow("", 0, DisplayName = "Empty environment falls back to CLI")]
+    [DataRow("8", 0, DisplayName = "Matching environment ignore list")]
+    [DataRow("16", 8, DisplayName = "Nonmatching environment overrides CLI")]
+    [DataRow("invalid", 8, DisplayName = "Invalid environment does not fall back")]
+    [DataRow(" ", 8, DisplayName = "Whitespace environment is not absent")]
+    public void ExitCodeIgnorePolicy_EnvironmentPrecedenceIsPreservedEvenWhenValueDoesNotMatch(string? environmentValue, int expectedExitCode)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE)).Returns(environmentValue);
+        ICommandLineOptions options = new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, ["8"]);
+
+        Assert.AreEqual(expectedExitCode, ExitCodeIgnorePolicy.Apply(8, options, environment.Object));
+    }
+
+    [TestMethod]
+    [DataRow(int.MinValue, "-2147483648", 0, DisplayName = "Exact minimum integer")]
+    [DataRow(int.MinValue, "-2147483649", int.MinValue, DisplayName = "Immediately below minimum")]
+    [DataRow(int.MaxValue, "2147483647", 0, DisplayName = "Exact maximum integer")]
+    [DataRow(int.MaxValue, "2147483648", int.MaxValue, DisplayName = "Immediately above maximum")]
+    [DataRow(8, ";not-a-number;+8;", 0, DisplayName = "Valid interior signed segment")]
+    [DataRow(8, "-+8;8x;999999999999999999999999", 8, DisplayName = "Invalid signs characters and overflow")]
+    public void ExitCodeIgnorePolicy_ExactIntegerLimitsAndInvalidAdjacentValuesDoNotWrap(int inputExitCode, string ignoreList, int expectedExitCode)
+    {
+        ICommandLineOptions options = new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, [ignoreList]);
+
+        Assert.AreEqual(expectedExitCode, ExitCodeIgnorePolicy.Apply(inputExitCode, options, Mock.Of<IEnvironment>()));
+    }
+
     private static TestApplicationResult CreateTestApplicationResult(
         IStopPoliciesService policiesService,
         ICommandLineOptions? commandLineOptions = null,
@@ -634,9 +786,6 @@ public sealed class TestApplicationResultTests : IDisposable
     {
         yield return [new FailedTestNodeStateProperty()];
         yield return [new ErrorTestNodeStateProperty()];
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-        yield return [new CancelledTestNodeStateProperty()];
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         yield return [new TimeoutTestNodeStateProperty()];
     }
 

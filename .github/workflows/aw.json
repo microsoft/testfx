@@ -1,0 +1,5 @@
+{
+  "action_pins": {
+    "actions/upload-artifact@v7.0.1": "actions/upload-artifact@v7.0.2"
+  }
+}

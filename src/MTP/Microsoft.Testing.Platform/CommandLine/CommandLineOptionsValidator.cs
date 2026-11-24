@@ -1,0 +1,148 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Tools;
+
+namespace Microsoft.Testing.Platform.CommandLine;
+
+internal static partial class CommandLineOptionsValidator
+{
+    // Options whose values are read directly from CommandLineParseResult during platform
+    // bootstrap, before IConfiguration (and therefore testconfig.json) is built. Setting them
+    // under "commandLineOptions" in testconfig.json would silently have no effect — fail fast
+    // with a clear error instead. Keep this list in sync with the call sites that pull values
+    // out of CommandLineParseResult before configuration is built (see TestApplication.cs and
+    // JsonConfigurationProvider.cs).
+    private static readonly HashSet<string> BootstrapOnlyOptions = new(
+        [
+            PlatformCommandLineProvider.ConfigFileOptionKey,
+            PlatformCommandLineProvider.DiagnosticOptionKey,
+            PlatformCommandLineProvider.DiagnosticOutputDirectoryOptionKey,
+            PlatformCommandLineProvider.DiagnosticOutputFilePrefixOptionKey,
+            PlatformCommandLineProvider.DiagnosticVerbosityOptionKey,
+            PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey,
+
+            // Consumed during CreateBuilderAsync, before testconfig.json has been read, so a JSON entry would
+            // be accepted by validation and then silently ignored, leaving the author to conclude the feature
+            // is broken. Failing the run instead says which channel actually works.
+            PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey,
+        ],
+        StringComparer.OrdinalIgnoreCase);
+
+    public static async Task<ValidationResult> ValidateAsync(
+        CommandLineParseResult commandLineParseResult,
+        IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
+        IEnumerable<ICommandLineOptionsProvider> extensionCommandLineOptionsProviders,
+        ICommandLineOptions commandLineOptions,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions = null,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptionDefaults = null)
+    {
+        if (commandLineParseResult.HasError)
+        {
+            StringBuilder stringBuilder = new();
+            stringBuilder.AppendLine(PlatformResources.InvalidCommandLineArguments);
+            foreach (string error in commandLineParseResult.Errors)
+            {
+                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
+            }
+
+            return InvalidWithCommandLine(commandLineParseResult, stringBuilder.ToTrimmedString());
+        }
+
+        ICommandLineOptionsProvider[]? providersForDefaults = null;
+        if (commandLineParseResult.HasTool && jsonCommandLineOptionDefaults is { Count: > 0 })
+        {
+            providersForDefaults = [.. extensionCommandLineOptionsProviders];
+            extensionCommandLineOptionsProviders = providersForDefaults;
+        }
+
+        extensionCommandLineOptionsProviders = commandLineParseResult.ToolName is string toolName
+            ? extensionCommandLineOptionsProviders
+                .OfType<IToolCommandLineOptionsProvider>()
+                .Where(provider => provider.ToolName == toolName)
+            : extensionCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider);
+
+        var extensionOptionsByProvider = extensionCommandLineOptionsProviders.ToDictionary(p => p, p => p.GetCommandLineOptions());
+        if (ValidateExtensionOptionsDoNotContainReservedPrefix(extensionOptionsByProvider) is { IsValid: false } result)
+        {
+            return result;
+        }
+
+        var systemOptionsByProvider = systemCommandLineOptionsProviders.ToDictionary(p => p, p => p.GetCommandLineOptions());
+        if (ValidateExtensionOptionsDoNotContainReservedOptions(extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result2)
+        {
+            return result2;
+        }
+
+        if (ValidateOptionsAreNotDuplicated(extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result3)
+        {
+            return result3;
+        }
+
+        HashSet<string>? registeredDefaultOptionNames = providersForDefaults is null
+            ? null
+            : new(providersForDefaults.SelectMany(provider => provider.GetCommandLineOptions()).Select(option => option.Name), StringComparer.OrdinalIgnoreCase);
+        if (ValidateNoUnknownOptions(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, extensionOptionsByProvider, systemOptionsByProvider, registeredDefaultOptionNames) is { IsValid: false } result4)
+        {
+            return AddCommandLine(commandLineParseResult, result4);
+        }
+
+        if (ValidateNoBootstrapOnlyOptionsInJson(jsonCommandLineOptions, jsonCommandLineOptionDefaults) is { IsValid: false } resultBootstrap)
+        {
+            return AddCommandLine(commandLineParseResult, resultBootstrap);
+        }
+
+        // Option names from the platform side are unique (validated above) and lookups against this
+        // dictionary may be triggered from the CLI parse result (case-sensitive) or from JSON
+        // (testconfig.json is case-insensitive everywhere else). Use OrdinalIgnoreCase so a JSON
+        // entry such as "Timeout": "30s" resolves to the same provider/option metadata as
+        // "--timeout 30s" on the command line.
+        var providerAndOptionByOptionName = new Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)>(StringComparer.OrdinalIgnoreCase);
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider.Concat(systemOptionsByProvider))
+        {
+            foreach (CommandLineOption option in provider.Value)
+            {
+                providerAndOptionByOptionName.Add(option.Name, (provider.Key, option));
+            }
+        }
+
+        if (ValidateOptionsArgumentArity(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, providerAndOptionByOptionName) is { IsValid: false } result5)
+        {
+            return AddCommandLine(commandLineParseResult, result5);
+        }
+
+        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
+        {
+            return AddCommandLine(commandLineParseResult, result6);
+        }
+
+        // Last validation step
+        return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions).ConfigureAwait(false);
+    }
+
+    private static string FormatJsonValidationError(string sectionName, string error)
+        => sectionName == PlatformConfigurationConstants.CommandLineOptionsSectionName
+            ? string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, error)
+            : string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionDefaultsValidationErrorPrefix, error);
+
+    internal static ValidationResult ValidateToolProviders(
+        IEnumerable<IToolCommandLineOptionsProvider> toolProviders,
+        IEnumerable<ICommandLineOptionsProvider> systemProviders)
+    {
+        var toolOptionsByProvider =
+            toolProviders.ToDictionary(provider => (ICommandLineOptionsProvider)provider, provider => provider.GetCommandLineOptions());
+        var systemOptionsByProvider =
+            systemProviders.ToDictionary(provider => provider, provider => provider.GetCommandLineOptions());
+
+        ValidationResult reservedPrefixResult = ValidateExtensionOptionsDoNotContainReservedPrefix(toolOptionsByProvider);
+        return !reservedPrefixResult.IsValid
+            ? reservedPrefixResult
+            : ValidateExtensionOptionsDoNotContainReservedOptions(toolOptionsByProvider, systemOptionsByProvider) is { IsValid: false } reservedOptionResult
+                ? reservedOptionResult
+                : ValidateOptionsAreNotDuplicated(toolOptionsByProvider, systemOptionsByProvider);
+    }
+}

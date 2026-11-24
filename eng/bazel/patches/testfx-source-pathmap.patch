@@ -1,0 +1,48 @@
+diff --git a/dotnet/private/compiler_wrapper.bat b/dotnet/private/compiler_wrapper.bat
+--- a/dotnet/private/compiler_wrapper.bat
++++ b/dotnet/private/compiler_wrapper.bat
+@@ -18,7 +18,7 @@
+ :: Needed because unfortunately the F# compiler uses a different flag name
+ if %COMPILER_BASENAME% == fsc.dll set PATHMAP_FLAG=--pathmap
+ 
+-set PATHMAP=%PATHMAP_FLAG%:"%cd%=."
++set PATHMAP=%PATHMAP_FLAG%:"%cd%=/_/"
+ 
+ shift
+ set args=%1
+diff --git a/dotnet/private/compiler_wrapper.sh b/dotnet/private/compiler_wrapper.sh
+--- a/dotnet/private/compiler_wrapper.sh
++++ b/dotnet/private/compiler_wrapper.sh
+@@ -20,7 +20,7 @@
+ if [[ $(basename "$COMPILER") == "fsc.dll" ]]; then
+   PATHMAP_FLAG="--pathmap"
+ fi
+-PATHMAP="$PATHMAP_FLAG:$PWD=."
++PATHMAP="$PATHMAP_FLAG:$PWD=/_/"
+ 
+ # shellcheck disable=SC2145
+ ./"$@" "$PATHMAP"
+diff --git a/dotnet/private/tools/worker/Worker.cs b/dotnet/private/tools/worker/Worker.cs
+--- a/dotnet/private/tools/worker/Worker.cs
++++ b/dotnet/private/tools/worker/Worker.cs
+@@ -164,7 +164,7 @@
+             var responseFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".rsp");
+             File.WriteAllLines(responseFile, arguments, Utf8WithBom);
+             startInfo.ArgumentList.Add("@" + responseFile);
+-            startInfo.ArgumentList.Add(pathMapFlag + Directory.GetCurrentDirectory() + "=.");
++            startInfo.ArgumentList.Add(pathMapFlag + Directory.GetCurrentDirectory() + "=/_/");
+ 
+             try
+             {
+diff --git a/dotnet/private/tools/fsharp_compiler_worker/Program.cs b/dotnet/private/tools/fsharp_compiler_worker/Program.cs
+--- a/dotnet/private/tools/fsharp_compiler_worker/Program.cs
++++ b/dotnet/private/tools/fsharp_compiler_worker/Program.cs
+@@ -247,7 +247,7 @@
+ 
+             // fsc embeds absolute paths into its output, and the execution root is
+             // not known at analysis time, so the pathmap is built here.
+-            args.Add("--pathmap:" + Directory.GetCurrentDirectory() + "=.");
++            args.Add("--pathmap:" + Directory.GetCurrentDirectory() + "=/_/");
+ 
+             var writer = new StringWriter();
+ 

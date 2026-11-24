@@ -1,0 +1,60 @@
+--- a/dotnet/private/paket/extension.bzl
++++ b/dotnet/private/paket/extension.bzl
+@@ -57,6 +57,13 @@
+ serve that metadata yield no hash and their packages are pinned by version
+ alone.""",
+             default = True,
++        ),
++        "integrity_file": attr.label(
++            doc = """Explicit SHA-512 digests for feeds without usable catalog hashes.
++
++A JSON object keyed by lower-case `<package id>/<normalized version>`.
++Every entry must belong to this lock file. Generate it from the exact package
++bytes and review changes alongside the lock file.""",
+         ),
+     },
+ )
+@@ -145,6 +152,20 @@
+                     groups,
+                 )
+ 
++            overrides = json.decode(module_ctx.read(tag.integrity_file)) if tag.integrity_file else {}
++            if type(overrides) != "dict":
++                fail("integrity_file must contain a JSON object: {}".format(tag.integrity_file))
++            locked = {
++                package.id.lower() + "/" + package.version.lower(): True
++                for group in groups.values()
++                for package in group.packages
++            }
++            for key, digest in overrides.items():
++                if key not in locked:
++                    fail("Integrity entry {} is not in {}".format(key, tag.lock))
++                if type(digest) != "string" or not digest.startswith("sha512-") or len(digest) != 95:
++                    fail("Integrity entry {} must be a SHA-512 SRI digest".format(key))
++
+             for group in _select_groups(tag, groups):
+                 repo = tag.repo_prefix + group.name.lower()
+ 
+@@ -165,6 +186,7 @@
+                     netrc = tag.netrc,
+                     repo = repo,
+                     verify_integrity = tag.verify_integrity,
++                    integrity_overrides = overrides,
+                 ))
+ 
+     return requests
+@@ -177,6 +199,14 @@
+     for request in requests:
+         if not request.verify_integrity:
+             continue
++
++        for package in request.group.packages:
++            digest = request.integrity_overrides.get(package.id.lower() + "/" + package.version.lower())
++            if digest:
++                key = integrity_fact_key(package.id, package.version)
++                if key in resolved and resolved[key] != digest:
++                    fail("Conflicting integrity digests for {}".format(key))
++                resolved[key] = digest
+ 
+         resolve_integrity_cached(
+             module_ctx,

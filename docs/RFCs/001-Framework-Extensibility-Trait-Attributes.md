@@ -1,5 +1,12 @@
 # RFC 001 - Framework Extensibility for Trait Attributes
 
+> **Current implementation note (2026-10-09):** This is the historical V2 proposal.
+> `TestPropertyAttribute` now supports classes as well as methods, and both adapter filter paths
+> look up non-built-in property names in traits. These parts of the unresolved questions have
+> implementation evidence; assembly-level application and VS/TRX end-to-end fidelity are not
+> established by this audit. See [MSTEST-003](../specifications/mstest.md#mstest-003--traits-are-extensible-metadata)
+> for inspected sources/tests, not executed conformance.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

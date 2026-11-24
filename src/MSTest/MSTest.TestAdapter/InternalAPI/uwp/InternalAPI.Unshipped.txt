@@ -1,0 +1,17 @@
+#nullable enable
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.PartitionOptionName = "partition" -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.MSTestPartitionCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.DisableEnvironmentVariable = "MSTEST_DISABLE_DISCOVERY_CACHE" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.EnableEnvironmentVariable = "MSTEST_EXPERIMENTAL_DISCOVERY_CACHE" -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.CreateDiscoverer(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! sourceHandler, System.Reflection.Assembly![]! assemblies, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]! selectedUids, System.Threading.CancellationToken cancellationToken) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.UnitTestDiscoverer!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.Dispose() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.MSTestDiscoveryCache() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.SetSources(string![]! sources) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.DiscoveryCache.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache?
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.DiscoveryCache.set -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.IsSupported(System.Reflection.Assembly! assembly) -> bool
+static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.DeploymentItemsProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!

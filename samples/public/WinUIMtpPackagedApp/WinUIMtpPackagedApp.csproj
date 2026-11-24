@@ -1,28 +1,23 @@
 <Project Sdk="MSTest.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>WinUIMtpPackagedApp</RootNamespace>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <Platform>x64</Platform>
     <Platforms>x64;x86;ARM64</Platforms>
-    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">x64</PlatformTarget>
-    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'">ARM64</PlatformTarget>
-    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">x86</PlatformTarget>
-    <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">win-x64</RuntimeIdentifier>
-    <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'">win-arm64</RuntimeIdentifier>
-    <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
-    <PublishProfile Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">win-x64.pubxml</PublishProfile>
-    <PublishProfile Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'">win-arm64.pubxml</PublishProfile>
-    <PublishProfile Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">win-x86.pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
+    <MicrosoftTestingPlatformVersion Condition="'$(MicrosoftTestingExtensionsPackagedAppVersion)' != ''">$(MicrosoftTestingExtensionsPackagedAppVersion)</MicrosoftTestingPlatformVersion>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <WinUIDSKReferences>false</WinUIDSKReferences>
+    <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+    <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
+    <EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>
+    <EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>
+    <EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>
   </PropertyGroup>
 
   <ItemGroup>

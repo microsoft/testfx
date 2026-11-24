@@ -39,8 +39,7 @@ public sealed class CrashDumpTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [crashDumpType]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -62,8 +61,7 @@ public sealed class CrashDumpTests
         var provider = new CrashDumpCommandLineProvider();
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([])).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -97,8 +95,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -149,8 +146,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -164,8 +160,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -180,8 +175,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -225,8 +219,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -240,8 +233,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -257,8 +249,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -292,8 +283,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -463,7 +453,7 @@ public sealed class CrashDumpTests
                 new CrashDumpConfiguration { SequenceFileName = sequenceFile });
 
             await handler.OnTestHostProcessExitedAsync(
-                new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false),
+                new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false),
                 CancellationToken.None).ConfigureAwait(false);
 
             Assert.IsTrue(File.Exists(sequenceFile));
@@ -492,7 +482,7 @@ public sealed class CrashDumpTests
                 new CrashDumpConfiguration { SequenceFileName = sequenceFile });
 
             await handler.OnTestHostProcessExitedAsync(
-                new TestHostProcessInformation(pid: 123, exitCode: 0, hasExitedGracefully: true),
+                new TestHostProcessInformation(pid: 123, exitCode: 0, completionMessageReceived: true),
                 CancellationToken.None).ConfigureAwait(false);
 
             Assert.IsFalse(File.Exists(sequenceFile));
@@ -524,7 +514,7 @@ public sealed class CrashDumpTests
                 new CrashDumpConfiguration { SequenceFileName = sequenceFile });
 
             await handler.OnTestHostProcessExitedAsync(
-                new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false),
+                new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false),
                 CancellationToken.None).ConfigureAwait(false);
 
             Assert.IsFalse(File.Exists(sequenceFile));
@@ -556,7 +546,7 @@ public sealed class CrashDumpTests
             cancellationTokenSource.Cancel();
 
             await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => handler.OnTestHostProcessExitedAsync(
-                new TestHostProcessInformation(pid: 123, exitCode: 0, hasExitedGracefully: true),
+                new TestHostProcessInformation(pid: 123, exitCode: 0, completionMessageReceived: true),
                 cancellationTokenSource.Token));
 
             Assert.IsTrue(File.Exists(sequenceFile));
@@ -708,7 +698,7 @@ public sealed class CrashDumpTests
             var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
 
             // Snapshot the directory; both stale dumps must be considered pre-existing.
-            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             // Simulate the runtime writing two new dumps during the run: one for the testhost and one
             // for a child process that crashed too. The expected testhost dump is also created on disk
@@ -718,7 +708,7 @@ public sealed class CrashDumpTests
             File.WriteAllText(fresh1, "fresh");
             File.WriteAllText(fresh2, "fresh");
 
-            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             string[] publishedDumps = messageBus.Published
                 .OfType<FileArtifact>()
@@ -762,7 +752,7 @@ public sealed class CrashDumpTests
             var outputDevice = new CapturingOutputDevice();
             var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
 
-            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             // Runtime expands %e to "testhost" and %p to the actual PID. The resulting filename is
             // matched by the testhost-specific regex even though the literal-%p substitution would
@@ -770,7 +760,7 @@ public sealed class CrashDumpTests
             string testhostDump = Path.Combine(dumpDirectory, "Dump_testhost_123.dmp");
             File.WriteAllText(testhostDump, "fresh");
 
-            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             string[] publishedDumps = messageBus.Published
                 .OfType<FileArtifact>()
@@ -816,12 +806,12 @@ public sealed class CrashDumpTests
             var outputDevice = new CapturingOutputDevice();
             var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
 
-            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 555, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 555, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             string testhostDump = Path.Combine(dumpDirectory, "dump_555_backup_555.dmp");
             File.WriteAllText(testhostDump, "fresh");
 
-            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 555, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 555, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             string[] publishedDumps = messageBus.Published
                 .OfType<FileArtifact>()
@@ -864,14 +854,14 @@ public sealed class CrashDumpTests
             var outputDevice = new CapturingOutputDevice();
             var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
 
-            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             string testhostDump = Path.Combine(dumpDirectory, "Dump_testhost_123.dmp");
             string childDump = Path.Combine(dumpDirectory, "Dump_child_456.dmp");
             File.WriteAllText(testhostDump, "fresh");
             File.WriteAllText(childDump, "fresh");
 
-            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             string[] publishedDumps = messageBus.Published
                 .OfType<FileArtifact>()
@@ -918,7 +908,7 @@ public sealed class CrashDumpTests
             var outputDevice = new CapturingOutputDevice();
             var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
 
-            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             // Simulate the runtime writing the testhost dump and its companion crash report with
             // `%e` expanded to "testhost". A naive File.Exists check on the literal-%p-substituted
@@ -932,7 +922,7 @@ public sealed class CrashDumpTests
             File.WriteAllText(childDump, "fresh");
             File.WriteAllText(childCrashReport, "{}");
 
-            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, completionMessageReceived: false), CancellationToken.None);
 
             string[] publishedFiles = messageBus.Published
                 .OfType<FileArtifact>()
@@ -1064,17 +1054,17 @@ public sealed class CrashDumpTests
 
     private sealed class TestHostProcessInformation : ITestHostProcessInformation
     {
-        public TestHostProcessInformation(int pid, int exitCode, bool hasExitedGracefully)
+        public TestHostProcessInformation(int pid, int exitCode, bool completionMessageReceived)
         {
             PID = pid;
             ExitCode = exitCode;
-            HasExitedGracefully = hasExitedGracefully;
+            HasReceivedTestHostCompletedMessage = completionMessageReceived;
         }
 
         public int PID { get; }
 
         public int ExitCode { get; }
 
-        public bool HasExitedGracefully { get; }
+        public bool HasReceivedTestHostCompletedMessage { get; }
     }
 }

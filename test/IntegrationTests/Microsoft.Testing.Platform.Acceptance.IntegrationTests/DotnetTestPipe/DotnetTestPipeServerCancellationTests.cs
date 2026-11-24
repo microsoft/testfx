@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
@@ -51,7 +51,7 @@ public sealed class DotnetTestPipeServerCancellationTests : AcceptanceTestBase<D
             .. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.TestSessionEvent)
                 .Select(m => DotnetTestPipeProtocol.DecodeTestSessionEventBody(m.Body).SessionType)
                 .Where(t => t.HasValue)
-                .Select(t => t!.Value)
+                .Select(t => t!.Value),
         ];
 
         Assert.Contains(

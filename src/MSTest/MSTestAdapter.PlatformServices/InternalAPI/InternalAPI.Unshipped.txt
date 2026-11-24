@@ -1,0 +1,53 @@
+#nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.DiscoverReferencedAssemblyFixtureProviders.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel.GetCurrentPackagePath() -> string?
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel.IsPackagedProcess() -> bool
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DeploymentDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ResultsDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunResultsDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestResultsDirectory.get -> string?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.TryResolveClassDependency(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.HashSet<string!>!>! methodsByClass, out string? dependentClassName, out string? prerequisiteClassName) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.Count.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.Index.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.SelectTests(System.Collections.Generic.ICollection<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>! tests, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration![]? configuredDependencies) -> System.Collections.Generic.ICollection<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.TestPartition(int index, int count) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.TryParse(string! value, out Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition? partition) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.UnitTestDiscoverer.UnitTestDiscoverer(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! testSourceHandler, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition? partition, System.Action<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>? unpartitionedTestObserver = null) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.Partition.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.Partition.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.ShowParallelizationBanner.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.ShowParallelizationBanner.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodRunner.ReportExpectedDurationWarnings(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.GetDataParameterCount(System.Reflection.ParameterInfo![]! parameters) -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerator.EnumerateAssembly(string! assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors, System.Type![]? types, System.Action<System.Type!, System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?>? typeObserver) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerationResult!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.UnitTestDiscovererFactory.get -> System.Func<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler!, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.UnitTestDiscoverer!>?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.UnitTestDiscovererFactory.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.AddDiscoveryAttributeCounts(System.Collections.Generic.IReadOnlyDictionary<string!, long>! counts) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.GetDiscoveryAttributeCounts() -> System.Collections.Generic.Dictionary<string!, long>!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumeratorWrapper.GetTests(string? assemblyFileName, string? settingsXml, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! testSourceHandler, bool isMTP, System.Type![]? types, System.Action<System.Type!, System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?>? typeObserver, out System.Collections.Generic.List<string!>! warnings) -> System.Collections.Generic.ICollection<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?
+virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.UnitTestDiscoverer.GetTestElements(string! source, string? settingsXml, bool isMTP, out System.Collections.Generic.List<string!>! warnings, out int discoveredTestCount) -> System.Collections.Generic.ICollection<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.Constructor.get -> System.Reflection.ConstructorInfo!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.TestClassInfo(System.Type! type, System.Reflection.ConstructorInfo! constructor, bool isParameterlessConstructor, Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute! classAttribute, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo! parent) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.Constructor.get -> System.Reflection.ConstructorInfo?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.IsFSharpModule.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.TestClassInfo(System.Type! type, System.Reflection.ConstructorInfo? constructor, bool isParameterlessConstructor, Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute! classAttribute, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo! parent) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TypeExtensions
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TypeExtensions.IsFSharpModule(this System.Type! type) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.IsUIAppModel.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsAssertionFailureDiagnostics.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsDeployment.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsDiscoveryCache.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsTelemetry.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.Cleanup() -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.Deploy(System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>! testElements, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.DeploymentContext! deploymentContext, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! messageLogger) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.GetDeploymentDirectory() -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.GetDeploymentItems(System.Reflection.MethodInfo! method, System.Type! type, System.Collections.Generic.ICollection<string!>! warnings) -> System.Collections.Generic.KeyValuePair<string!, string!>[]?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.UnsupportedTestDeployment() -> void

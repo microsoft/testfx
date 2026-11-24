@@ -1,0 +1,88 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Collections.Immutable;
+
+using Analyzer.Utilities.Extensions;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
+
+using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
+
+namespace MSTest.Analyzers;
+
+/// <summary>
+/// MSTEST0023: <inheritdoc cref="Resources.DoNotNegateBooleanAssertionTitle"/>.
+/// </summary>
+[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
+public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
+{
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.DoNotNegateBooleanAssertionTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DoNotNegateBooleanAssertionMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.DoNotNegateBooleanAssertionDescription), Resources.ResourceManager, typeof(Resources));
+
+    internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
+
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.DoNotNegateBooleanAssertionRuleId,
+        Title,
+        MessageFormat,
+        Description,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    /// <inheritdoc />
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
+        = [Rule];
+
+    /// <inheritdoc />
+    public override void Initialize(AnalysisContext context)
+    {
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+
+        context.RegisterCompilationStartAction(context =>
+        {
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
+            {
+                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
+            }
+        });
+    }
+
+    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
+    {
+        var invocationOperation = (IInvocationOperation)context.Operation;
+        if (invocationOperation.TargetMethod.Name is not "IsTrue" and not "IsFalse"
+            || !SymbolEqualityComparer.Default.Equals(invocationOperation.TargetMethod.ContainingType, assertSymbol))
+        {
+            return;
+        }
+
+        IArgumentOperation? conditionArgument = invocationOperation.Arguments.FirstOrDefault(x => x.Parameter?.Name == "condition");
+        if (conditionArgument is not null
+            && conditionArgument.Value.WalkDownConversion() is IUnaryOperation { OperatorKind: UnaryOperatorKind.Not })
+        {
+            // Determine the proper assert method name (swap IsTrue <-> IsFalse)
+            string currentMethodName = invocationOperation.TargetMethod.Name;
+            string properAssertMethodName = currentMethodName == "IsTrue" ? "IsFalse" : "IsTrue";
+
+            // Add the proper method name to diagnostic properties for the code fix
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethodName);
+
+            Location? conditionArgumentLocation = conditionArgument.Syntax.GetLocation();
+            var additionalLocations = ImmutableArray.Create(conditionArgumentLocation);
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                 Rule,
+                 invocationOperation.Syntax.GetLocation(),
+                 additionalLocations: additionalLocations,
+                 properties: properties.ToImmutable()));
+        }
+    }
+}

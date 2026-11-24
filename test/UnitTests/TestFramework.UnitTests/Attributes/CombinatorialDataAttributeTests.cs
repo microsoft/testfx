@@ -25,6 +25,66 @@ public class CombinatorialDataAttributeTests : TestContainer
             ]);
     }
 
+    public void GetDataExcludesTrailingCancellationTokenFromCombinations()
+    {
+        object?[][] rows = GetData(nameof(BooleanAndIntegerWithToken));
+
+        AssertRows(
+            rows,
+            [
+                [true, 3],
+                [true, 5],
+                [false, 3],
+                [false, 5],
+            ]);
+    }
+
+    public void GetDataWithOnlyCancellationTokenProducesOneEmptyRow()
+    {
+        foreach (object?[][] rows in new[] { nameof(TokenOnly), nameof(OptionalTokenOnly) }.Select(GetData))
+        {
+            rows.Should().ContainSingle();
+            rows[0].Should().BeEmpty();
+        }
+    }
+
+    public void GetDataForParameterlessMethodRemainsEmpty()
+        => GetData(nameof(Parameterless)).Should().BeEmpty();
+
+    public void GetDataPreservesExplicitCancellationTokenValueProvider()
+    {
+        int previousConstructionCount = TokenValuesAttribute.ConstructionCount;
+        try
+        {
+            object?[][] rows = GetData(nameof(BooleanWithExplicitTokens));
+
+            AssertRows(
+                rows,
+                [
+                    [true, CancellationToken.None],
+                    [true, new CancellationToken(canceled: true)],
+                    [false, CancellationToken.None],
+                    [false, new CancellationToken(canceled: true)],
+                ]);
+            TokenValuesAttribute.ConstructionCount.Should().Be(previousConstructionCount + 1);
+        }
+        finally
+        {
+            TokenValuesAttribute.ConstructionCount = previousConstructionCount;
+        }
+    }
+
+    public void GetDataDoesNotExcludeUnsupportedCancellationTokenShapes()
+    {
+        string[] methodNames = [nameof(NonTrailingToken), nameof(NullableToken), nameof(TokenSource), nameof(ByRefToken)];
+        foreach (string methodName in methodNames)
+        {
+            Action action = () => GetData(methodName);
+
+            action.Should().Throw<NotSupportedException>("unsupported shape {0} is still a data parameter", methodName);
+        }
+    }
+
     public void GetDataInfersIntegersEnumsAndNullableValues()
     {
         object?[][] rows = GetData(nameof(InferredParameters));
@@ -139,6 +199,42 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
+    private static void BooleanAndIntegerWithToken(bool flag, [CombinatorialValues(3, 5)] int number, CancellationToken token)
+    {
+    }
+
+    private static void TokenOnly(CancellationToken token)
+    {
+    }
+
+    private static void OptionalTokenOnly(CancellationToken token = default)
+    {
+    }
+
+    private static void Parameterless()
+    {
+    }
+
+    private static void BooleanWithExplicitTokens(bool flag, [TokenValues] CancellationToken token)
+    {
+    }
+
+    private static void NonTrailingToken(CancellationToken token, bool flag)
+    {
+    }
+
+    private static void NullableToken(CancellationToken? token)
+    {
+    }
+
+    private static void TokenSource(CancellationTokenSource source)
+    {
+    }
+
+    private static void ByRefToken(ref CancellationToken token)
+    {
+    }
+
     private static void InferredParameters(int number, DateTimeKind kind, bool? flag)
     {
     }
@@ -162,6 +258,16 @@ public class CombinatorialDataAttributeTests : TestContainer
 
     private static void CountingProviderData([CountingValues] int value, bool flag)
     {
+    }
+
+    [AttributeUsage(AttributeTargets.Parameter)]
+    private sealed class TokenValuesAttribute : Attribute, ICombinatorialValuesProvider
+    {
+        public TokenValuesAttribute() => ConstructionCount++;
+
+        public static int ConstructionCount { get; set; }
+
+        public object?[] GetValues(ParameterInfo parameter) => [CancellationToken.None, new CancellationToken(canceled: true)];
     }
 
     [AttributeUsage(AttributeTargets.Parameter)]

@@ -264,4 +264,25 @@ public sealed class CommandLineConfigurationProviderTests
 
         public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
     }
+
+    [TestMethod]
+    public async Task Hierarchy_ExposesDistinctImmediateKeysAndScalarPresence()
+    {
+        CommandLineConfigurationProvider provider = new(new(
+            null,
+            [new("flag", []), new("filter-uid", ["second", "first"])],
+            []));
+        await provider.LoadAsync();
+
+        Assert.AreSequenceEqual(["commandLineOptions"], provider.GetChildKeys(null));
+        Assert.AreSequenceEqual(["filter-uid", "flag"], provider.GetChildKeys("commandLineOptions").OrderBy(key => key, StringComparer.Ordinal));
+        Assert.AreSequenceEqual(["0", "1"], provider.GetChildKeys("commandLineOptions:filter-uid"));
+        Assert.IsTrue(provider.TryGetScalar("COMMANDLINEOPTIONS:FLAG", out string? enabled));
+        Assert.AreEqual("True", enabled);
+        Assert.IsTrue(provider.TryGetScalar("commandLineOptions:filter-uid:1", out string? uid));
+        Assert.AreEqual("first", uid);
+        Assert.IsFalse(provider.TryGetScalar("commandLineOptions:missing", out string? missing));
+        Assert.IsNull(missing);
+        Assert.IsEmpty(provider.GetChildKeys("commandLineOptions:missing"));
+    }
 }

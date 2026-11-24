@@ -1,0 +1,170 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Extensions.AzureDevOpsReport;
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
+using Microsoft.Testing.Extensions.Reporting;
+using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
+
+namespace Microsoft.Testing.Extensions;
+
+/// <summary>
+/// Provides extension methods for adding Azure DevOps reporting support to the test application builder.
+/// </summary>
+public static class AzureDevOpsExtensions
+{
+    /// <summary>
+    /// Adds support to the test application builder.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
+    public static void AddAzureDevOpsProvider(this ITestApplicationBuilder builder)
+    {
+        AzureDevOpsHistoryService? historyService = null;
+
+        var compositeArtifactUploader =
+            new CompositeExtensionFactory<AzureDevOpsArtifactUploader>(serviceProvider =>
+                new AzureDevOpsArtifactUploader(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetConfiguration(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
+        var compositeSummaryReporter =
+            new CompositeExtensionFactory<AzureDevOpsSummaryReporter>(serviceProvider =>
+                new AzureDevOpsSummaryReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetConfiguration(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetMessageBus(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetTestApplicationProcessExitCode(),
+                    serviceProvider.GetRequiredService<ITestCoverageResult>(),
+                    serviceProvider.GetLoggerFactory(),
+                    () => ShouldDeferToArtifactPostProcessing(serviceProvider),
+                    historyService ??= CreateHistoryService(serviceProvider)));
+
+        var compositeSlowTestReporter =
+            new CompositeExtensionFactory<AzureDevOpsSlowTestReporter>(serviceProvider =>
+                new AzureDevOpsSlowTestReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTask(),
+                    serviceProvider.GetClock(),
+                    serviceProvider.GetLoggerFactory(),
+                    historyService ??= CreateHistoryService(serviceProvider)));
+
+        var compositeLogGroupReporter =
+            new CompositeExtensionFactory<AzureDevOpsLogGroupReporter>(serviceProvider =>
+                new AzureDevOpsLogGroupReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
+        var compositeTestResultsPublisher =
+            new CompositeExtensionFactory<AzureDevOpsTestResultsPublisher>(serviceProvider =>
+               new AzureDevOpsTestResultsPublisher(
+                   serviceProvider.GetCommandLineOptions(),
+                   serviceProvider.GetConfiguration(),
+                   serviceProvider.GetEnvironment(),
+                   serviceProvider.GetFileSystem(),
+                   serviceProvider.GetOutputDevice(),
+                   serviceProvider.GetTestApplicationModuleInfo(),
+                   serviceProvider.GetTestApplicationProcessExitCode(),
+                   new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock(), serviceProvider.GetLoggerFactory()),
+                   serviceProvider.GetTask(),
+                   serviceProvider.GetClock(),
+                   serviceProvider.GetLoggerFactory()));
+
+        builder.TestHost.AddDataConsumer(serviceProvider =>
+        {
+            historyService ??= CreateHistoryService(serviceProvider);
+
+            return new AzureDevOpsReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetLoggerFactory(),
+                historyService,
+                serviceProvider.GetTestApplicationModuleInfo());
+        });
+        builder.TestHost.AddDataConsumer(compositeArtifactUploader);
+        builder.TestHost.AddDataConsumer(compositeSummaryReporter);
+        builder.TestHost.AddDataConsumer(compositeSlowTestReporter);
+        builder.TestHost.AddDataConsumer(compositeTestResultsPublisher);
+        builder.TestHost.AddDataConsumer(compositeLogGroupReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
+            historyService ??= CreateHistoryService(serviceProvider));
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSlowTestReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
+
+        // Registered last so its OnTestSessionFinishingAsync (the closing ##[endgroup]) runs after
+        // the other AzDO handlers' finishing callbacks, ensuring the group wraps all their output.
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeLogGroupReporter);
+
+        // A test run must span every process an orchestrator launches (e.g. each --retry-failed-tests
+        // attempt), so its lifetime belongs to the orchestrator process rather than to any single test
+        // host. This is only built when an orchestrator is active, and is inert otherwise.
+        builder.TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(serviceProvider =>
+            new AzureDevOpsTestRunOrchestratorLifetime(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetConfiguration(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock(), serviceProvider.GetLoggerFactory()),
+                serviceProvider.GetTask(),
+                serviceProvider.GetClock(),
+                serviceProvider.GetLoggerFactory()));
+
+        builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
+
+        CiCoverageSummaryControllerHandlerRegistration.Register(
+            builder.TestHostControllers,
+            AzureDevOpsSummaryArtifactPostProcessor.Provider,
+            AzureDevOpsSummaryArtifactPostProcessor.FragmentArtifactKind,
+            serviceProvider => serviceProvider.GetLoggerFactory().CreateLogger<AzureDevOpsSummaryArtifactPostProcessor>(),
+            serviceProvider => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<AzureDevOpsSummaryArtifactPostProcessor>().Single(),
+            serviceProvider => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsRequiredArtifactPostProcessingSupported: true },
+            (path, exception) => string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.SummaryWriteFailedWarning, path, exception.Message));
+
+        if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
+                new AzureDevOpsSummaryArtifactPostProcessor(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice()));
+        }
+    }
+
+    private static AzureDevOpsHistoryService CreateHistoryService(IServiceProvider serviceProvider)
+        => new(
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetClock(),
+            new AzureDevOpsHistoryClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
+            serviceProvider.GetTask(),
+            serviceProvider.GetLoggerFactory());
+
+    private static bool ShouldDeferToArtifactPostProcessing(IServiceProvider serviceProvider)
+        => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsRequiredArtifactPostProcessingSupported: true }
+            || CoverageThresholdPolicy.IsDeferredToController(serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment());
+}

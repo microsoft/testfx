@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
@@ -59,14 +59,40 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
         // logging commands back to the originating assembly in a multi-assembly run.
         Assert.IsNotNull(result.ReceivedHandshake);
         Assert.IsTrue(result.ReceivedHandshake.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.InstanceId, out string? handshakeInstanceId));
-        string[] forwardedInstanceIds = [..
+        string[] forwardedInstanceIds = [
+            ..
             result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.AzureDevOpsLogMessage)
                 .Select(m => DotnetTestPipeProtocol.DecodeAzureDevOpsLogMessageBody(m.Body).InstanceId)
                 .Where(id => id is not null)
                 .Select(id => id!)
-                .Distinct()];
+                .Distinct(),
+        ];
         string onlyInstanceId = Assert.ContainsSingle(forwardedInstanceIds);
         Assert.AreEqual(handshakeInstanceId, onlyInstanceId);
+    }
+
+    [TestMethod]
+    public async Task DotnetTestPipe_WhenHostGroupsAreDisabled_DoesNotForwardGroupCommands()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            testHost,
+            extraArguments: "--report-azdo --report-azdo-groups on",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["TF_BUILD"] = "true",
+                ["TESTINGPLATFORM_DOTNETTEST_DISABLE_AZDO_HOST_GROUPS"] = "1",
+            },
+            supportedProtocolVersions: HostAdvertisedProtocolVersions,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual("1.2.0", result.NegotiatedProtocolVersion);
+        Assert.IsNotNull(result.ReceivedHandshake);
+        Assert.DoesNotContain(
+            line => line.StartsWith("##[group]", StringComparison.Ordinal) || line == "##[endgroup]",
+            GetForwardedAzureDevOpsLines(result));
     }
 
     [TestMethod]
@@ -119,11 +145,13 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
     }
 
     private static string[] GetForwardedAzureDevOpsLines(FakeDotnetTestSdkResult result)
-        => [..
+        => [
+            ..
             result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.AzureDevOpsLogMessage)
                 .Select(m => DotnetTestPipeProtocol.DecodeAzureDevOpsLogMessageBody(m.Body).LogText)
                 .Where(text => text is not null)
-                .Select(text => text!)];
+                .Select(text => text!),
+        ];
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {

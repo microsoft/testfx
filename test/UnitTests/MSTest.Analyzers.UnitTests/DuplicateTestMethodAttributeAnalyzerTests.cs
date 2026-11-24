@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -74,7 +74,7 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -123,7 +123,7 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -190,7 +190,7 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -241,7 +241,7 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -344,7 +344,7 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -376,7 +376,7 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -397,7 +397,7 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]

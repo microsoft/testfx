@@ -362,7 +362,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
                 VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize0"),
                 VerifyCS.Diagnostic().WithLocation(1).WithArguments("TestInitialize1"),
                 VerifyCS.Diagnostic().WithLocation(2).WithArguments("TestInitialize2"),
-                VerifyCS.Diagnostic().WithLocation(3).WithArguments("TestInitialize3")
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("TestInitialize3"),
             ],
             fixedCode);
     }

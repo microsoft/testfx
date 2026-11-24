@@ -34,7 +34,355 @@ gh aw logs <workflow-id>
 gh aw audit <run-id>
 ```
 
-For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
+For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.md`](../agents/agentic-workflows.md), which routes to the canonical `gh-aw` prompts.
+
+### Authoring-warning runtime contracts
+
+Fix authoring warnings at their execution boundary, without suppressing lint or
+weakening permissions, detection, network policy, or safe-output bounds.
+
+| Workflow | Required contract |
+| --- | --- |
+| Build failure analysis | `safe-outputs.needs` directly includes `fetch-binlog`, so publisher checkouts resolve the same validated head SHA and base ref as the analysis. Keep the binlog/source identity and publication gates intact. |
+| Dependabot PR bundler | gh-aw v1.0.1 through v1.2.2 exclude `dependabot` from the `all` alias. Opt into that toolset explicitly to expose both alert-read tools, without replacing the existing repository/PR tools or expanding permissions. |
+| `/parallel-audit` | Trusted extraction writes `/tmp/gh-aw/parallel-audit/audit-inputs.json` and its four input files inside the agent-visible tree. The prompt reads the resolved PR/revisions, counts, paths, scope, and HEAD-side regions at runtime, never from activation-time custom-step expressions. Missing required inputs mean incomplete analysis, not an empty scope. |
+| Unskip closed tests | The fresh publisher checkout does not persist credentials. Initial pushes and every branch-cleanup push use a command-scoped `gh auth git-credential` helper, leaving no credential/helper in checkout configuration. Verification, duplicate/race checks, and publication remain separate from the read-only agent. |
+
+The deterministic regression suite checks the compiled job/tool contracts and
+executes the trusted extraction and publisher scripts with isolated local
+fixtures. Run it alongside the checkout-identity tests and pin audit:
+
+```bash
+python .github/scripts/test_agentic_workflow_warning_contracts.py
+python .github/scripts/test_build_failure_analysis_checkout.py
+python .github/scripts/check_action_pins.py
+```
+
+Build-context fixtures substitute authored paths in one pass so temporary
+directories containing `/tmp/gh-aw` or `/tmp/binlogs` remain intact. Their
+prompt-command extraction also accepts Markdown list indentation.
+
+These are local contract checks, not evidence of live GitHub alert access,
+model analysis, or review/PR publication. Live runs require separate authorization.
+
+### Test-quality skill contract
+
+The [automatic test reviewer](./test-reviewer-on-pr.agent.md) and
+[`/review-tests` reviewer](./test-reviewer.agent.md) share
+[one prompt](./shared/test-reviewer-shared.md). They consume the upstream
+`grade-tests` and `test-gap-analysis` skills pinned by
+[the curated manifest](../../.copilot/curate/manifest.yml), without a local
+grading-weight fork.
+
+The primary per-test result is `Pass`, `Failed`, or `Uncertain`; a valid empty
+scope is `Not applicable`. Quality bands are secondary: a focused `B / Pass`
+needs no invented improvement, while `A / Failed` still requires a concrete
+action. Clean automatic runs still publish revision-bound test-value evidence,
+regardless of letter grade. Suppress only a complete same-head duplicate when
+no new actionable findings, material evidence, or resolved analysis limitations
+remain. Command runs always return the requested result, including incomplete
+evidence and applicable parallel-safety analysis.
+
+Grading reads the bundled .NET language reference directly and composes
+`test-gap-analysis` in read-only per-test context before scoring. It does not
+execute tests or mutations. Mutation evidence uses `Likely killed (inferred)`
+or `Candidate survivor (unverified)`, with a distinguishing input and
+original/mutant observations, not empirical kill ratios. Unavailable production
+context is disclosed without a deduction. Existing changed-line anchoring,
+deduplication, parallel-safety, and safe-output publication gates still apply.
+
+The trusted extraction step writes its revision, PR identity, counts, and file
+paths to `/tmp/gh-aw/test-review/review-inputs.json`, alongside the input files
+inside the agent-visible tree. The agent reads this manifest after extraction.
+Do not interpolate custom-step outputs into the prompt: gh-aw renders it before
+those steps run. Missing inputs are incomplete analysis, not an empty scope.
+
+#### Safe-output review tables
+
+[The review on PR #12204](https://github.com/microsoft/testfx/pull/12204#pullrequestreview-5783835641)
+displayed escaped `<table>`, `<code>`, and `<br>` markup instead of a scorecard.
+The gh-aw v1.0.1 through v1.2.2 report parser imports Markdown pipe tables as typed
+tables; raw HTML table markup is literal text, not an allowed table element.
+Both reviewers therefore use Markdown pipe tables, including evidence and
+parallel-safety tables, without changing the renderer or weakening sanitization.
+
+Keep each row on one physical line, escape literal pipes as `\|` even in inline
+code, and leave blank lines around tables, including inside `<details>`.
+Use backticks for complete test names instead of HTML spans or forced breaks.
+Empty grading scopes still omit the table.
+
+`test_authored_test_review_scorecard_publishes_as_markdown_table` extracts the
+shared prompt's actual scorecard example and checks the final GitHub review
+request through the unchanged pinned parser, renderer, and review buffer for
+both consumers. `test_review_table_preserves_escaped_cells_and_collapsed_rows`
+also checks long generic names, literal pipes, quotes, and `<details>` overflow.
+The existing offline runtime suite runs both without posting a review. Set
+`$actions` to the unmodified scripts installed by the pinned setup action and
+`$baseline` to an isolated archive's `.github\workflows` directory:
+
+```powershell
+$cases = @(
+  'GhAwRuntimeContractTests.test_authored_test_review_scorecard_publishes_as_markdown_table'
+  'GhAwRuntimeContractTests.test_review_table_preserves_escaped_cells_and_collapsed_rows'
+)
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions --workflow-root $baseline @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions @cases -v
+```
+
+Local evidence (November 5, 2026) retains these same tests against base
+`6876cf113dce6e1db55092779e73840697a0af73`: the scorecard case fails for both
+consumers because the final request starts with `&lt;table&gt;`, while the
+escaped-cell case passes (two methods executed, exit 1). The corrected selection
+passes both methods with no skips (exit 0), and the complete runtime suite
+passes all 15 methods. Strict compilation with ShellCheck passes both consumers
+with zero warnings; only their generated body hashes change.
+
+Revalidation for v1.2.2 (November 20, 2026): with `$actions` pointing to the
+v1.2.2 setup scripts at `53d0749e19424a918acd82b4d140264ce48f2f14`, the same
+baseline selection still fails the scorecard case for both consumers with
+`&lt;table&gt;` while the escaped-cell case passes (exit 1); the corrected
+selection passes both methods (exit 0).
+
+The GitHub Markdown API rendered the actual emitted fixture payload into two
+five-column tables. A local-only browser preview in the original review layout
+(1280 × 721 viewport, 800- and 480-pixel review widths) preserved test/result
+associations and escaped text, with working collapsed/expanded overflow and no
+overlapping cells. Narrow columns wrap heavily at 480 pixels. This is rendering
+and component evidence, not a live model run or review publication; neither
+workflow was dispatched and the existing review was not edited.
+
+#### Typed safe-output footer templates
+
+[Run 41640057298](https://github.com/microsoft/testfx/actions/runs/41640057298/job/125933099017?pr=12185)
+and four other inspected test-review runs failed during review finalization with
+`Report nodes cannot appear in scalar fields`. Analysis and threat detection
+completed; the publisher failed before submitting the review.
+
+The gh-aw v1.0.1 through v1.2.2 runtime represents `{history_link}` as a typed inline
+fragment containing the separator and complete optional history link, not a URL.
+Insert it directly after `{ai_credits_suffix}`. Do not wrap it in
+`[label]({history_link})`, a code span, or another scalar field. A missing history
+URL produces an empty fragment, not a broken link. This applies to every custom
+footer, including imported shared configuration, issue/PR bodies, and failure
+reports; changing only the test reviewer leaves the same defect elsewhere.
+Attribution, AI-credit reporting, diagnostic warnings, detection, and the pinned
+runtime remain enabled.
+
+`test_gh_aw_runtime_contracts.py` exercises these authored templates using the
+actual scripts installed by the pinned setup action. It also checks the review
+buffer's final GitHub request with isolated API doubles. Run after setup:
+
+```bash
+python .github/scripts/test_gh_aw_runtime_contracts.py --actions-dir "$RUNNER_TEMP/gh-aw/actions"
+```
+
+These are local component checks, not proof of hosted review permissions,
+publication, or GitHub UI rendering. Do not dispatch a workflow or post a test
+review merely to validate the template.
+
+Local regression evidence (November 3, 2026) uses the unchanged v1.0.1 setup
+scripts at `221ba4f4319de6b8e809d1a15528b3ae6a818aa5` and Node.js v24.22.1.
+The same retained tests and assertions were run against an isolated archive of
+base `d9e38dc463365dc12f714db14815b46dedb0ed15` and the corrected sources:
+
+| Contract / test | Baseline | Corrected |
+| --- | --- | --- |
+| `test_authored_test_review_footer_publishes_complete_advisory_review` | Fails inside the real renderer with `Report nodes cannot appear in scalar fields`, before an API request. | Passes; asserts the exact composed advisory review payload, attribution, credits, commit, and diagnostic-read isolation. |
+| `test_public_review_resolver_honors_explicit_public_only_policy` | Fails: actual minimum integrity is `approved`, not `none`. | Passes; public-only visibility remains `public`. |
+
+The paired selection executed two tests in each state: baseline exit 1 with
+two intended failures; corrected exit 0 with two passes and no skips. With
+`$actions` pointing to the pinned setup scripts and `$baseline` to the isolated
+archive's `.github\workflows` directory, reproduce the identical selection:
+
+```powershell
+$cases = @(
+  'GhAwRuntimeContractTests.test_authored_test_review_footer_publishes_complete_advisory_review'
+  'GhAwRuntimeContractTests.test_public_review_resolver_honors_explicit_public_only_policy'
+)
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions --workflow-root $baseline @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions -v
+```
+
+Revalidation for v1.2.2 (November 20, 2026): the same selection against the
+v1.2.2 setup scripts at `53d0749e19424a918acd82b4d140264ce48f2f14` still fails
+both baseline cases with the same errors (exit 1) and passes both corrected
+cases (exit 0), so the upstream runtime did not make the footer contract
+unnecessary.
+
+The full final suite passes all 13 methods, including all 33 authored footer
+templates with and without history. Existing warning-contract, checkout,
+firewall, and review-input suites pass another 64 tests. Strict compilation
+passes all 37 inputs with zero warnings and ShellCheck covers 2,103 resources;
+the three final public-scoped expert consumers also pass 186 lint resources.
+The action-pin audit passes 2,759 references across 58 files. These results do
+not include a live model, hosted MCP access, review publication, or GitHub UI
+rendering.
+
+#### Category-specific threat-detection evidence
+
+[Run 38707575125](https://github.com/microsoft/testfx/actions/runs/38707575125)
+reported the warning tracked by [#11950](https://github.com/microsoft/testfx/issues/11950).
+The detector classified a Cyrillic U+043B character in ordinary generated review
+prose as `secret_leak=true`, without identifying sensitive data or a disclosure
+path. The pinned threat-detect v0.5.2 binary installed and recorded its result
+correctly; this was a classification false positive, not a reporting failure.
+The agent and safe-output jobs were cancelled, so this run does not establish
+review publication or a detection-caused publication block.
+
+Both reviewers now require category-specific evidence in their shared custom
+detection prompt. A secret leak needs non-public sensitive data and a disclosure
+path; prompt injection needs a concrete hostile instruction from untrusted
+content. A typo or Unicode character alone establishes neither. This is not a
+Unicode exemption: encoded secrets and obfuscated hostile instructions still
+require analysis of their decoded meaning and context. Positive findings carry
+artifact locations and category-specific reasons via `--reasons-file`, without
+reproducing secret values.
+
+Keep detection, its maintained model alias, eligibility, credentials, firewall,
+and safe-output policy unchanged. Do not strip Unicode, suppress warnings, or
+close the automatically managed tracker to hide a false positive. Recompile both
+reviewers strictly and audit action pins after changing the shared prompt.
+Compilation checks prompt delivery and workflow controls, not the model's
+classification; behavioral regression sensitivity needs a matching detector
+replay. That validation used gh-aw v0.89.21, which does not support `--dry-run`.
+The current compiler supports a restricted dry-run mode, but these reviewers'
+authored host steps are outside its supported scope.
+
+Local validation on October 15, 2026 used the catalog-aligned pinned compiler
+described below: both workflows compiled strictly with zero warnings, including
+116 ShellCheck resources. A parsed-YAML comparison verified both prompt delivery
+steps in each workflow and equality of every other executable field against the
+base revision. The existing pin auditor checked the two reviewers plus
+`check-action-pins.yml`: three stale-header/manifest findings before regeneration,
+zero afterwards. The repository-wide audit still reports 36 pre-existing findings
+outside these reviewers (38 before this change). No live detector replay or
+workflow dispatch was performed; the model's regression sensitivity is unproven.
+
+### Expert-review input contract
+
+[Run 41639103767](https://github.com/microsoft/testfx/actions/runs/41639103767)
+failed earlier: the public-repository default required `approved` integrity,
+so the GitHub MCP server filtered the unapproved PR diff before delegation.
+The three expert-review workflows now explicitly accept unapproved PR content
+as data, like the test reviewer, with `min-integrity: none` and shell execution
+disabled. The public-repository visibility filter, read-only MCP toolsets,
+trigger eligibility, existing credentials, threat detection, and bounded review
+publication remain in place. Untrusted diffs must never become instructions.
+
+The shared prompt also resolves the PR number from centralized slash-command
+`aw_context` for `/review`, in addition to PR/comment event fields. A required
+diff-read failure reports both missing data and a terminal incomplete result;
+it must not pretend that delegation or review succeeded.
+Resolve the fallback in frontmatter `env.REVIEW_PR_NUMBER` and reference that
+environment value in the prompt: v1.0.1 through v1.2.2 reject `fromJSON(...)` directly in
+runtime-imported prompt text. Keep `allowed-repos: public` explicit too;
+setting only `min-integrity: none` otherwise changes the compiler's repository
+scope default to `all`.
+The pinned-runtime regression suite covers public-repository policy resolution
+and compiled consumer controls; command identity and incomplete instructions
+are static contracts, not evidence that a live model follows them.
+
+### Firewall access for repository work
+
+`network: defaults` covers infrastructure, not package feeds or Git transport.
+Workflows that restore, build, test, or query .NET package metadata need the
+`dotnet` ecosystem. It includes the repository's Azure DevOps feeds and their
+`*.vsblob.vsassets.io` package-download redirects. Workflows that fetch Git history
+or PR branches also allow `github.com` explicitly; GitHub MCP/CLI proxy access does
+not grant direct Git HTTPS access. Keep GitHub API calls on the existing proxies
+rather than adding `api.github.com` to bypass them.
+
+Build/test workflows set `DOTNET_CLI_TELEMETRY_OPTOUT=1` at workflow scope so both
+setup steps and agent-launched child processes inherit it. MTP and MSTest honor
+the same opt-out; do not add Application Insights destinations just to silence
+blocked telemetry requests.
+
+This is client-side suppression, not a blanket firewall ban on telemetry:
+gh-aw v0.89.21's maintained `dotnet` bundle also permits the Application Insights
+ingestion host `dc.services.visualstudio.com`. Adding `dotnet` therefore permits
+that host as well as package and SDK downloads. The removed regional
+`*.in.applicationinsights.azure.com` exception stays denied. The local firewall
+replay verified denial of `southcentralus-0.in.applicationinsights.azure.com`,
+not every telemetry endpoint. Keep the maintained SDK/feed bundle for restore
+compatibility rather than treating the opt-out as an egress-enforcement control.
+
+When investigating a blocked request, inspect the downloaded raw firewall
+`access.log` as well as the gh-aw summary. A `TCP_DENIED` entry remains a denial
+even when its HTTP status is `200`; some gh-aw summaries count those entries as
+allowed. Add only destinations required by the workflow's task, or eliminate
+unnecessary requests instead of broadening the firewall.
+
+#### Provisional CONNECT records and test-review footers
+
+The `history_link` footer value is an optional, already-rendered fragment,
+including its separator and link. Append `{history_link}` directly; do not
+nest it inside another Markdown link's URL. That nesting produces empty or
+malformed links in the string renderer and fails with `Report nodes cannot
+appear in scalar fields` in the structured renderer. Both reviewer variants
+and their shared configuration use the same fragment contract.
+`test_gh_aw_review_footer.py` exercises all three templates with the pinned
+runtime, with and without a history URL; the action-pin workflow runs it
+alongside the existing firewall-footer checks.
+
+The warning on [PR #11892](https://github.com/microsoft/testfx/pull/11892#pullrequestreview-5490606840)
+is a reporting defect, not missing GitHub access. In
+[run 38246632006](https://github.com/microsoft/testfx/actions/runs/38246632006),
+`github.com` was already allowlisted. Squid recorded `NONE_NONE:HIER_NONE / 200`
+for the provisional CONNECT and then `TCP_TUNNEL:HIER_DIRECT / 200` for the same
+client connection. There was no `TCP_DENIED` entry in the agent's raw log.
+The v0.89.21 footer classifier nevertheless treats every `NONE_NONE` as blocked.
+
+gh-aw v1.0.1 through v1.2.2 recognize successful provisional CONNECT records, but
+their status-first classifier hides explicit `TCP_DENIED / 200` records. The two
+test-review workflows retain a checksum-guarded correction through their shared
+`safe-outputs.steps`, after script setup and before review publication. It checks
+explicit `TCP_DENIED` decisions before the upstream status checks, preserving
+warnings for those denials, authentication failures, and unknown outcomes without
+warning on successful provisional records. This changes only reporting: network
+access, credentials, threat detection, raw logs, and artifacts remain unchanged.
+Unexpected module bytes fail the setup step rather than silently suppressing
+warnings; repeating the correction is harmless.
+
+Adding more domains cannot correct this false positive. Disabling footers would
+also hide real denials. Updating to the upstream status-first classifier is not
+equivalent: it can hide `TCP_DENIED / 200`, which this repository has observed.
+Keep the correction limited to the affected reviewers, and revalidate or remove
+it when updating the pinned gh-aw setup action. The action-pin check runs
+`test_gh_aw_firewall_footer.py` against that action's actual module, with isolated
+module copies and logs, so dependency changes cannot silently invalidate it.
+
+Regression evidence (November 3, 2026): the v1.0.1 setup action at
+`221ba4f4319de6b8e809d1a15528b3ae6a818aa5` ships the original module with SHA-256
+`31a9d24084cad849e2424f2c7d9504f6a91297ede058405103b01663f9fb1dd3`.
+With identical retained assertions, the isolated uncorrected module fails
+`test_explicit_denial_is_not_hidden_by_status_or_later_success` because it returns
+`[]` instead of `["github.com"]` (one executed test, exit 1). With the correction,
+that test and the full seven-test suite pass (exit 0). Reproduce after copying the
+pinned setup action's scripts to `$env:RUNNER_TEMP\gh-aw\actions`:
+
+```powershell
+$module = Join-Path $env:RUNNER_TEMP 'gh-aw\actions\firewall_blocked_domains.cjs'
+python .github\scripts\test_gh_aw_firewall_footer.py --module-path $module --without-correction GhAwFirewallFooterTests.test_explicit_denial_is_not_hidden_by_status_or_later_success
+python .github\scripts\test_gh_aw_firewall_footer.py --module-path $module
+gh aw compile --strict --no-check-update --shellcheck
+python .github\scripts\check_action_pins.py
+```
+
+The tests exercise the pinned module in isolated directories, including
+idempotence, unchanged raw logs, and rejection of unexpected upstream bytes.
+A five-case composed replay also used the shipped parser, sanitizer, renderer,
+and Markdown template: successful CONNECT and empty logs produced no warning;
+explicit denial, proxy authentication failure, and unknown outcomes produced
+the expected domain warning. This is local execution evidence, not a live
+workflow rerun or verification of GitHub publication.
+
+Revalidation for v1.2.2 (November 20, 2026): the setup action at
+`53d0749e19424a918acd82b4d140264ce48f2f14` ships a byte-identical module (same
+SHA-256 as above), so the correction still applies. The same
+`--without-correction` selection fails for the same reason (one test, exit 1),
+and the full seven-test suite passes with the correction (exit 0).
 
 ### Compile on the pinned toolchain, and check the pins afterwards
 
@@ -42,6 +390,86 @@ For deeper guidance — creating, updating, debugging, upgrading, or wrapping MC
 > A locally installed `gh aw` extension can silently rewrite action pins in **every** `.lock.yml` it touches, even when its `compiler_version` header matches CI. Observed corruptions include `actions/checkout` being downgraded (v7.0.1 → v7.0.0) and `github/gh-aw-actions/setup` losing its immutable SHA in favour of a mutable `@v0.83.1` tag. See [#10258](https://github.com/microsoft/testfx/issues/10258).
 
 The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
+
+The current toolchain is [gh-aw v1.2.2](https://github.com/github/gh-aw/releases/tag/v1.2.2),
+the latest stable release checked on November 20, 2026. Both `setup` and
+`setup-cli` use the matching immutable action commit
+`53d0749e19424a918acd82b4d140264ce48f2f14`. Use the matching released compiler,
+not an older installed extension; even `--no-emit` can update the action cache
+to the extension's version. The Windows amd64 release binary used for this
+refresh has SHA-256
+`5ed67185ce18c9b4c2bc6ea16f5ec914773fae12ac18782b59028c7c8605ae91`,
+verified against the release's `checksums.txt`.
+
+The v1.2.2 refresh (from v1.0.1) applies one codemod,
+`cli-proxy-false-when-bash-disabled`: the three review workflows and
+[`shared/review-shared.md`](./shared/review-shared.md) disable `bash`, so they now
+declare `cli-proxy: false` explicitly. The `agentic-workflows` agent and skill are
+refreshed with the repository overlay preserved. Generated workflows now use
+firewall 0.29.11, MCP gateway v0.5.6, and GitHub MCP server v2.1.0, all pinned by
+digest. The offline runtime contracts follow the release's step-level environment
+hardening and its `require(process.env.GH_AW_ACTIONS_DIR + ...)` loader form.
+The two explicit Copilot CLI overrides remain 1.0.103, which the v1.2.2 setup
+action still trusts. Custom prompts, triggers, credentials, network allowlists,
+and publication bounds are unchanged.
+
+The earlier v1.0.1 migration renamed the deprecated `missing-tool` and
+`missing-data` safe-output configuration keys to `report-missing-tool` and
+`report-missing-data`, removed the unsupported Copilot `web-fetch` tool, and
+replaced the 1.0.79 and 1.0.85 Copilot CLI overrides with 1.0.103, whose
+checksum manifest is reviewed by the pinned setup action. Other workflows retain
+compat-driven toolcache selection.
+
+[`aw.json`](./aw.json) redirects the compiler's remaining embedded
+`actions/upload-artifact@v7.0.1` reference to v7.0.2. Keep this redirect until
+the embedded version catches up, and align handwritten workflows whenever
+updating a shared action pin. The released v1.2.2 catalog still matches this
+repository's Node.js and SARIF action pins. Apart from the `setup` refresh, its
+generated jobs add more steps (one `actions/download-artifact` per workflow and
+more `actions/github-script` steps), but they use the SHAs already pinned here;
+no new action or SHA is introduced. Regeneration must update generated
+manifests as well as executable steps; changing only `uses:` lines leaves the
+repository broken.
+
+Carry Dependabot action updates back into their authored `.md` sources before
+regenerating. For `actions/setup-dotnet`, update both references in
+[`unskip-closed-tests-prepare.md`](./unskip-closed-tests-prepare.md), then run
+`gh aw compile unskip-closed-tests --strict --no-check-update` with the pinned
+compiler. Commit the updated action cache and generated workflow together with
+the pin in [`test-unskip-closed-tests.yml`](./test-unskip-closed-tests.yml), and
+run the action-pin audit. The executable steps, generated action inventory, and
+`gh-aw-manifest` must all agree.
+
+Align mutable-name container cache entries with the release catalog too. This
+refresh updates `ghcr.io/github/gh-aw-node` to the v1.2.2 catalog's digest
+`sha256:8735428c2d4e602f90781ba0c571c400e8ff93c7ee1508a75d71f87e34e415cc`;
+an existing cache entry otherwise keeps the old image even with the new
+compiler (the v1.0.1 digest `sha256:2c2ea524…` survived the first v1.2.2
+compile). Versioned unused cache entries need not be deleted to upgrade the
+images selected by the compiler. Launching the aligned image by digest reported
+Node.js v26.13.0 (the v1.0.1 image reported v24.22.1).
+
+For v1.2.2, strict compilation with ShellCheck
+(`compile --strict --no-check-update --shellcheck`) succeeded for all 37 inputs
+(35 runnable workflows and two shared components) with one warning: the
+accepted checkout-safety warning for the automatic build analyst, explained in
+[Runtime analysis inputs and native triage issue types](#runtime-analysis-inputs-and-native-triage-issue-types).
+The action-pin audit and the firewall (7), runtime (19), review-footer (2), and
+build-analysis checkout (6) contract suites pass. The authoring-warning suite
+also passes, except one publisher test that fails the same way on the unchanged
+base revision in a Windows CRLF checkout. The firewall, table, footer, and
+Dependabot-toolset workarounds were revalidated: each counterfactual still
+fails on v1.2.2 without its correction.
+
+The earlier v1.0.1 refresh compiled all 37 inputs and passed ShellCheck for
+2,100 shell resources, but initially reported 32
+existing authoring warnings: transitive `fetch-binlog`
+references, Dependabot alert tools not declared in the effective inventory,
+pre-extraction prompt references in the parallel-audit command, and persisted
+credentials in the trusted unskip publisher. The
+[authoring-contract fixes](#authoring-warning-runtime-contracts) resolve all 32
+without suppressing diagnostics or widening authored permissions, and v1.2.2
+reintroduces none of them.
 
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
@@ -57,6 +485,95 @@ python .github/scripts/check_action_pins.py --list
 ```
 
 [`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, when one action resolves to more than one SHA across the repository, when a `docker://` container action is not pinned to an image digest, or when a `uses` reachable in the parsed YAML is hidden from the line scan (a block scalar, flow mapping or alias). Comparisons are case-insensitive on owner/repository names, since GitHub resolves them that way and `Actions/Checkout` would otherwise escape the lock-file check.
+
+### Build-analysis checkout identity
+
+#### Runtime analysis inputs and native triage issue types
+
+[Run 43150146472](https://github.com/microsoft/testfx/actions/runs/43150146472)
+downloaded the binlogs and resolved PR #12415 correctly, but the analyst tried
+an unapproved `printf` command to read its environment. Its fallback searched
+the MCP-only `/data/binlogs` mount locally, then incorrectly reported missing
+logs and a missing PR target. Both automatic and command workflows now write
+validated inputs to `/tmp/gh-aw/build-failure-analysis/analysis-inputs.json`.
+The exporter uses isolated Python startup (`-I`) so a PR checkout or inherited
+`PYTHONPATH` cannot shadow its standard-library imports before sandboxing.
+The shared prompt reads this file with the already-allowed `cat` command and
+passes every inventoried path to `binlog-mcp`, not local file tools. Missing
+required identity or inventory fails explicitly; missing-leg evidence remains
+visible and PR-head revalidation still precedes publication.
+
+[Run 43180889320](https://github.com/microsoft/testfx/actions/runs/43180889320)
+completed test analysis and detection but failed issue publication with
+`unknown issue field "Type"`. Native Issue Type is not a custom field.
+Pipeline Test Triage now queues `create_issue` and `set_issue_type` using the
+same temporary ID. Type assignment accepts only `Bug` issues with the
+triage title prefix and both automation labels, with two handler attempts to
+cover the publisher's single deferred retry. The analyst queues at most one
+type request. The existing custom-field allowlist is retained: omitting it
+would grant access to all custom fields, not disable them. Existing deduplication,
+early/full escalation policy, stale-PR checks, credentials, detection, and
+publication limits remain unchanged. A queued creation is not publication;
+failed creation cannot provide an issue target for type assignment.
+
+The warning tracked by [#12385](https://github.com/microsoft/testfx/issues/12385)
+is gh-aw's auto-managed detection-runs tracker. Its only recorded case,
+[Markdown Linter run 43034387593](https://github.com/microsoft/testfx/actions/runs/43034387593),
+was a pre-agent apt mirror DNS failure (`azure.archive.ubuntu.com`) already
+fixed by [#12405](https://github.com/microsoft/testfx/pull/12405); later runs
+are green, so the tracker is closed. Recent review runs with no jobs, such as
+[43187028649](https://github.com/microsoft/testfx/actions/runs/43187028649),
+expired while waiting for GitHub approval. Neither is evidence of a detected
+threat, and the approval gates remain intact. gh-aw recreates the tracker when a
+new detection-run failure occurs.
+
+gh-aw v1.2.2 was first evaluated in an isolated snapshot on November 12, 2026,
+and the repository now uses it (see
+[Compile on the pinned toolchain](#compile-on-the-pinned-toolchain-and-check-the-pins-afterwards)).
+Its issue runtime still treats `Type` as a custom field, so the
+`set_issue_type` contract above remains required. The release also reports one
+checkout-safety warning for the automatic build analyst. It is accepted, not
+suppressed: `check_run` carries no pull-request payload, so the compiler-managed
+PR checkout never runs. The verified-SHA checkout is followed by a sparse
+base-revision checkout and a pre-agent restore of every engine
+agent-configuration folder and file (plus `.mcp.json`), a superset of the
+`.agents`, `.github`, and `AGENTS.md` paths v1.2.2 protects. Later host
+steps run only trusted pinned or temporary scripts (the exporter uses
+`python3 -I`), and nothing builds the checked-out code. Restructuring the
+checkout would change runtime behavior without an end-to-end validation path.
+
+Local validation completed strict compilation and ShellCheck for all three
+changed workflows, syntax checks, a generated-control comparison, and the action-pin
+audit. The new offline regression methods cover manifest delivery and identity,
+isolated imports, native issue typing, deferred retry, failed/duplicate creation,
+and scope filters, but have not been executed. Red/green sensitivity and hosted
+model/publication behavior remain unverified. No workflow was dispatched.
+
+[Run 40359801044](https://github.com/microsoft/testfx/actions/runs/40359801044)
+resolved an open PR, but it merged and its branch was deleted during activation.
+The later agent checkout failed before analysis. The automatic build analyst now
+checks out the head SHA already validated against the Azure Pipelines artifacts,
+asserts that exact identity, and attaches only a local same-repository branch.
+Its `origin/<branch>` baseline is also pinned locally to that SHA so incremental
+patch collection neither refetches a deleted branch nor includes newer commits.
+Fork checkouts remain detached; the safe-output target, closed/deleted-branch
+checks, allowed files, loop guard, and credentials are unchanged.
+
+`python .github/scripts/test_build_failure_analysis_checkout.py` exercises the
+authored checkout configuration and pre-agent script using isolated local Git
+repositories, including deleted/moving branches, fork isolation, patch baseline,
+and rejected input. The pin-check workflow runs these regressions as well.
+This does not prove hosted artifact access or safe-output publication.
+
+Failures before any jobs exist are not necessarily malformed YAML. For example,
+[run 40366844700](https://github.com/microsoft/testfx/actions/runs/40366844700)
+expired awaiting approval. Read the run annotation before changing triggers,
+permissions, or approval policy. Likewise, daily-credit HTTP 502 failures leave
+usage unknown; they do not justify removing the credit guardrail.
+
+Full strict compilation also checks the link checker's command-file writes.
+Keep every `GITHUB_OUTPUT` redirection quoted, including its empty-link path;
+an output-file path containing spaces must not split into multiple shell words.
 
 ## Secrets & authentication
 
@@ -245,6 +762,60 @@ that binary before honoring the skipped result and reports its expected absence 
 failure. Superseded runs can produce the same warning when their agent job is cancelled before
 emitting an output.
 
+The same eligibility mistake can also expose no-op runs to unrelated installation failures.
+In [run 42041693908](https://github.com/microsoft/testfx/actions/runs/42041693908), tracked by
+[#12224](https://github.com/microsoft/testfx/issues/12224), Pipeline Test Triage emitted only
+`noop` with `has_patch=false`, but its non-empty-output guard still started detection setup.
+The pinned threat-detect v0.5.3 download then returned HTTP 504 on all six attempts and exited
+22. The detector never started; this was neither a threat finding nor an invalid model verdict.
+Pipeline Test Triage now uses the no-op exclusion below. This avoids unnecessary detector
+installation without changing the model, verified downloads, credentials, permissions,
+firewall, or failure policy for runs that have real outputs or patches. A download outage on
+such a run still needs infrastructure investigation; do not suppress its warning or disable
+detection.
+
+ResourceLock refactoring encountered the same download failure in
+[run 42566204903](https://github.com/microsoft/testfx/actions/runs/42566204903),
+tracked by [#12263](https://github.com/microsoft/testfx/issues/12263), but its
+agent did **not** emit a successful no-op. It first called a nonexistent
+`safeoutputs` native tool, then the shell denied its
+`command -v safeoutputs && safeoutputs noop ...` fallback. The collector emitted
+`report_incomplete` with `missing_terminal_safe_output`; detection never started
+after the six HTTP 504 responses. Do not classify that incomplete report as a
+no-op or bypass its detection.
+
+The [ResourceLock prompt](./resource-lock-refactoring.md) now makes each terminal
+path a standalone `safeoutputs <tool_name> '<complete JSON object>'` invocation,
+using only the already-allowed executable. Its no-op, incomplete, and PR examples
+keep the JSON payload in one shell argument, including escaped multiline text.
+Unavailable or denied transport remains an explicit blocker; successful CLI
+acknowledgment records an intent, not a published PR. Once the agent genuinely
+emits only `noop` without a patch, ResourceLock uses the same eligibility guard
+as Pipeline Test Triage. Incomplete reports, other outputs, mixed outputs, and
+every patch still require detection.
+
+Expert Code Review hit the same eligibility defect in
+[run 42848192058](https://github.com/microsoft/testfx/actions/runs/42848192058),
+tracked by [#12320](https://github.com/microsoft/testfx/issues/12320).
+Its collector emitted only `noop` with `has_patch=false`, but detection still
+started. Unlike the download failures above, threat-detect v0.5.3 installed
+successfully and resolved `detection` to `claude-haiku-5.5`. The engine then
+timed out after five minutes without recording a verdict or inference usage.
+The tracker classified this as `detector_execution_failure` / `agent_failure`,
+not a threat finding; the assessment remained incomplete.
+
+The shared expert-review configuration now applies the same no-op exclusion to
+the ready-PR, `/review`, and after-autofix workflows. Real reviews, incomplete
+reports, mixed outputs such as `noop,submit_pull_request_review`, and every
+patch remain eligible. Existing runs
+[42886380382](https://github.com/microsoft/testfx/actions/runs/42886380382) and
+[42886933282](https://github.com/microsoft/testfx/actions/runs/42886933282)
+recorded verdicts for mixed review outputs using the same detector, CLI,
+firewall, and resolved model. The guard avoids unnecessary detection; it does
+not claim to repair the unproven cause of the engine stall. The failing run also
+had a separate unsupported reviewer subagent model error before its no-op;
+changing detection eligibility does not repair that delegation.
+
 **What to do.** For workflows where a no-op has no downstream side effects, gate threat detection
 on the presence of an actual safe output or patch:
 
@@ -258,6 +829,79 @@ The collector reports an intentional no-op as `output_types=noop`, so the explic
 needed to skip the broken no-content conclude path while preserving detection for every
 publishable output and patch. Remove the workaround after gh-aw fixes the external detector's
 skipped conclusion behavior.
+
+The offline `CompiledWarningContractTests.test_pipeline_triage_detection_skips_noop_only_runs`
+case checks both the authored guard and the generated job condition.
+`test_pipeline_triage_noop_skip_preserves_detection_security_controls` keeps the detector
+and safe-output gates intact. The equivalent expert-review cases are
+`test_expert_review_detection_skips_noop_only_runs` and
+`test_expert_review_noop_skip_preserves_detection_security_controls`; both cover
+all three consumers of `shared/review-shared.md`, including the no-op's
+non-publishing policy.
+
+On November 5, 2026, the same two retained Pipeline Test Triage tests ran against
+an isolated workflow archive of base `88a31ec394abe9f5c5dcf596f0a150ff998d3a0e`: the eligibility
+case failed both guard assertions and the security-controls case passed (exit 1).
+Both cases passed against the corrected source and regenerated lock (exit 0, no skips).
+Strict compilation with ShellCheck passed with zero warnings, and the action-pin audit passed
+all 2,763 references across 59 files. These are configuration-contract checks, not a hosted
+detector replay or proof of GitHub release-CDN availability. Set `$baseline` to the isolated
+archive's `.github\workflows` directory to reproduce the paired selection:
+
+```powershell
+$cases = @(
+  'CompiledWarningContractTests.test_pipeline_triage_detection_skips_noop_only_runs'
+  'CompiledWarningContractTests.test_pipeline_triage_noop_skip_preserves_detection_security_controls'
+)
+python .github\scripts\test_agentic_workflow_warning_contracts.py --workflow-root $baseline @cases -v
+python .github\scripts\test_agentic_workflow_warning_contracts.py @cases -v
+```
+
+ResourceLock's corresponding cases are
+`CompiledWarningContractTests.test_resource_lock_detection_skips_noop_only_runs`
+and `test_resource_lock_noop_skip_preserves_detection_security_controls`.
+`GhAwRuntimeContractTests.test_resource_lock_terminal_examples_use_pinned_cli_argument_parser`
+passes the authored examples through the unchanged pinned CLI argument parser
+and tool schemas, without starting MCP servers or making external writes.
+Use the same `--workflow-root $baseline` option for retained-test comparisons:
+
+```powershell
+$cases = @(
+  'CompiledWarningContractTests.test_resource_lock_detection_skips_noop_only_runs'
+  'CompiledWarningContractTests.test_resource_lock_noop_skip_preserves_detection_security_controls'
+  'CompiledWarningContractTests.test_pipeline_triage_detection_skips_noop_only_runs'
+  'CompiledWarningContractTests.test_pipeline_triage_noop_skip_preserves_detection_security_controls'
+)
+python .github\scripts\test_agentic_workflow_warning_contracts.py @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions `
+  GhAwRuntimeContractTests.test_resource_lock_terminal_examples_use_pinned_cli_argument_parser -v
+```
+
+On November 9, 2026, these same selections ran with the regression tests retained
+against an isolated workflow archive of base
+`54980bc56a22eb758c040a20b8f3571ee2d50417`. The ResourceLock eligibility case
+failed both authored/compiled guard assertions; the CLI contract failed because
+all three standalone examples were absent (both runners exited 1). The other
+three gate-family methods passed. Against the corrected source and regenerated
+lock, all four gate-family methods and the CLI method passed (both runners exited
+0, no skips); the CLI method exercised all three example payloads through the
+pinned parser. Strict compilation with ShellCheck passed one workflow with zero
+warnings, and the pin audit passed 2,769 references across 60 files without
+changing any action reference. Diagnostic `--dry-run` refused the existing
+`on.steps` declaration and emitted no replacement lock; it was not used to
+weaken the normal workflow.
+
+A separate download from the development machine returned HTTP 200 for the
+pinned v0.5.3 asset; all 3,158,178 bytes matched its locked SHA-256. The binary
+was not executed, and this local check does not establish hosted-runner
+connectivity.
+
+These local contracts do not prove that a hosted model follows the prompt, that
+the detector's release download has recovered, or that a queued PR is published.
+The original-state failures are configuration/authoring assertions, not a
+hosted red/green replay; hosted regression sensitivity remains unproven.
+Do not rerun a live workflow or suppress a required detection failure to replace
+those missing observations.
 
 ### `detection` job succeeds but the run is recorded as `parse_error`
 
@@ -333,10 +977,32 @@ the cause.
 | [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
 | [`pipeline-test-triage.md`](./pipeline-test-triage.md) | Failed `microsoft.testfx (Build ...)` child checks; completed aggregate `microsoft.testfx` check; manual | Posts deduplicated preliminary PR feedback from failed build legs, then analyzes the completed build for failures, retries/flakiness, crash or hang diagnostics, and historically abnormal durations. The final PR comment supersedes preliminary feedback; Bug issues are created only when recurrence and actionability thresholds are met. |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
-| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Expert-reviews new and modified test methods for correctness, effectiveness, reliability, maintainability, and repository conventions; bundles the scorecard and apply-ready suggestions into one COMMENT review when findings exist, and stays silent when clean. |
-| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the expert test review on demand and submits one COMMENT review. |
-| [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits changed MSTest tests for parallel-safety and submits one ranked COMMENT review only when findings exist; clean automatic runs are silent. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
+| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | Non-draft, same-repository PR opened/reopened/synchronize/ready_for_review (except OneLocBuild check-ins) | Reports SHA-bound test-value evidence, including source-only changes and explicit not-applicable outcomes, grades changed tests, and audits parallel safety in one advisory COMMENT review. Clean evidence is reported; duplicate reports for the same head are suppressed. |
+| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the consolidated test-value/quality/parallel-safety review on demand and submits one COMMENT review. |
 | [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand and submits one COMMENT review. |
+
+The test reviewer uses the vendored upstream
+[test-value-evidence](../../.agents/skills/test-value-evidence/SKILL.md) through
+the [TestFx adapter](../skills/testfx-test-value-evidence/SKILL.md)
+to ask whether a test detects the pre-fix behavior or a buildable missing/wrong
+feature. It is read-only: static predictions are not executed red-green or
+mutation proof, and green CI alone does not establish that proof. Implementation
+sessions gather paired execution evidence using the same skill; reviews expose
+missing evidence rather than manufacturing it. Reports describe the current PR
+head, not all intermediate commits or standalone pushes. Existing draft,
+localization, fork, stacked-PR, and budget activation gates remain in effect;
+maintainers can request a review with `/review-tests`.
+
+The canonical skill comes from `dotnet/skills` and is copied verbatim, with its
+immutable revision and blob recorded in
+[the vendoring manifest](../../eng/vendored-files.json). TestFx-specific
+toolchain, assertion, parallel-safety, and packed-consumer rules belong only in
+the local adapter. This single-file import does not refresh or overwrite the
+independently pinned `gh-copilot-curate` plugin inventory.
+
+Validate the deterministic review inputs and reporting contract with
+`python .github/workflows/tests/test_test_value_evidence.py`. This checks local
+fixtures, not live model output or safe-output publication.
 
 #### Continuous quality improvers (scheduled)
 
@@ -350,13 +1016,13 @@ the cause.
 | [`resource-lock-refactoring.md`](./resource-lock-refactoring.md) | Daily + manual | Prepares one bounded test project for safe parallel execution by eliminating shared state or applying the narrowest appropriate `[ResourceLock]`, then opens a draft PR. |
 | [`repository-quality-improver.md`](./repository-quality-improver.md) | Weekday schedule + manual | Daily analysis of repository quality, rotating focus areas. Opens tracking issues like this one. |
 | [`daily-file-diet.md`](./daily-file-diet.md) | Daily + manual | Identifies oversized source files and opens actionable refactoring issues. |
-| [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Finds tests skipped via `[Ignore("…#issue")]` whose tracking issue is now closed, verifies they pass, and opens a PR re-enabling them. |
+| [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Builds a source-bound Ignore inventory at the exact commit, accepts only completed issues or merged PRs, and opens one draft PR only for tests proven executed and passed in structured TRX results. |
 | [`duplicate-code-detector.md`](./duplicate-code-detector.md) | Schedule + manual | Identifies duplicate code patterns and suggests refactoring opportunities. |
 | [`malicious-code-scan.md`](./malicious-code-scan.md) | Schedule + manual | Reviews code changes from the last 3 days for suspicious patterns indicating malicious or agentic threats. |
 | [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual | Runs Markdown quality checks using markdownlint-cli2 and opens issues for violations. |
 | [`link-checker.md`](./link-checker.md) | Daily | Daily automated link checker that finds and fixes broken links in documentation files. |
 | [`glossary-maintainer.md`](./glossary-maintainer.md) | Schedule + manual | Maintains and updates the documentation glossary based on codebase changes. |
-| [`mutation-test-improver.md`](./mutation-test-improver.md) | Mutation testing workflow completion + manual | Tracks daily Stryker.NET mutation-testing results in a monthly report issue and may open focused draft PRs for verified test gaps. |
+| [`mutation-test-improver.md`](./mutation-test-improver.md) | Mutation testing workflow completion + manual | Tracks the weekly ServerMode Stryker.NET result in a monthly report issue and may open focused draft PRs for verified test gaps. |
 
 #### Issue & PR housekeeping
 
@@ -381,6 +1047,8 @@ the cause.
 | [`dedup-analysis.yml`](./dedup-analysis.yml) | Schedule + manual + issues | Code Duplication Analysis (jscpd-based). |
 | [`enable-auto-merge.yml`](./enable-auto-merge.yml) | `pull_request_target` | Enables auto-merge on eligible PRs. |
 | [`markdownlint.yml`](./markdownlint.yml) | PR | Runs `markdownlint` on changed Markdown files. |
+| [`test-build-failure-analysis.yml`](./test-build-failure-analysis.yml) | PR + push + manual | Runs the Build Failure Analysis archive-validation regression suite when its workflow sources or tests change. |
+| [`test-test-review-inputs.yml`](./test-test-review-inputs.yml) | PR + push + manual | Runs test-review input-handoff and revision-bound reporting regressions when their sources or tests change. |
 
 ## Shared components
 
@@ -393,7 +1061,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 | [`shared/formatting.md`](./shared/formatting.md) | Quality improver workflows (output formatting conventions) |
 | [`shared/msbuild-review-shared.md`](./shared/msbuild-review-shared.md) | `msbuild-quality-review.md` |
 | [`shared/test-reviewer-shared.md`](./shared/test-reviewer-shared.md) | `test-reviewer-on-pr.agent.md`, `test-reviewer.agent.md` |
-| [`shared/parallel-safety-audit-shared.md`](./shared/parallel-safety-audit-shared.md) | `parallel-safety-audit.md`, `parallel-safety-audit-command.md` |
+| [`shared/parallel-safety-audit-shared.md`](./shared/parallel-safety-audit-shared.md) | `parallel-safety-audit-command.md`; also supplies the analysis rubric used by the consolidated test-review specialist |
 | [`shared/repo-build-setup.md`](./shared/repo-build-setup.md) | Workflows that need to restore + build the repo before the agent runs |
 | [`shared/reporting.md`](./shared/reporting.md) | Quality improver workflows (issue/PR body templates) |
 | [`shared/review-shared.md`](./shared/review-shared.md) | `review.agent.md`, `review-on-open.agent.md`, `review-after-autofix.agent.md` |

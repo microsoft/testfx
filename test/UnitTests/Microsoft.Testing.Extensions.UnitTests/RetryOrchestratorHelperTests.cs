@@ -40,6 +40,95 @@ public sealed class RetryOrchestratorHelperTests
         Assert.AreEqual("after", arguments[2]);
     }
 
+    [DataRow("--target", "value")]
+    [DataRow("-target", "value")]
+    [DataRow("--target=value", "trailing")]
+    [DataRow("--target:value", "trailing")]
+    [DataRow("-target=value", "trailing")]
+    [DataRow("-target:value", "trailing")]
+    [TestMethod]
+    public void RemoveOption_EachSupportedFormInIsolation_RemovesOnlyTheOptionAndItsValue(
+        string option,
+        string value)
+    {
+        List<string> arguments = ["before", option, value, "--other"];
+
+        RetryOrchestratorHelper.RemoveOption(arguments, "target");
+
+        Assert.AreSequenceEqual(["before", "--other"], arguments);
+    }
+
+    [TestMethod]
+    public void RemoveOption_PrefixAndSuffixMatches_ArePreserved()
+    {
+        List<string> arguments =
+        [
+            "--targeted",
+            "value",
+            "--target-extra=value",
+            "-target-extra:value",
+            "--other",
+        ];
+
+        RetryOrchestratorHelper.RemoveOption(arguments, "target");
+
+        Assert.AreSequenceEqual(
+            ["--targeted", "value", "--target-extra=value", "-target-extra:value", "--other"],
+            arguments);
+    }
+
+    [TestMethod]
+    public void RemoveOption_AtIndexZero_RemovesOptionAndAllValues()
+    {
+        List<string> arguments = ["--target", "first", "second", "--other"];
+
+        RetryOrchestratorHelper.RemoveOption(arguments, "target");
+
+        Assert.AreSequenceEqual(["--other"], arguments);
+    }
+
+    [TestMethod]
+    public void RemoveOption_OnlyOptionAndValue_LeavesEmptyList()
+    {
+        List<string> arguments = ["--target", "value"];
+
+        RetryOrchestratorHelper.RemoveOption(arguments, "target");
+
+        Assert.IsEmpty(arguments);
+    }
+
+    [TestMethod]
+    public void RemoveOption_WithoutMatchingOption_DoesNotModifyArguments()
+    {
+        List<string> arguments = ["before", "--other", "value"];
+
+        RetryOrchestratorHelper.RemoveOption(arguments, "target");
+
+        Assert.AreSequenceEqual(["before", "--other", "value"], arguments);
+    }
+
+    [TestMethod]
+    public void RemoveOption_ExactLongOptionAtIndexZero_RemovesItsValue()
+    {
+        List<string> arguments = ["--target", "value"];
+
+        RetryOrchestratorHelper.RemoveOption(arguments, "target");
+
+        Assert.IsEmpty(arguments);
+    }
+
+    [DataRow("-target=value")]
+    [DataRow("-target:value")]
+    [TestMethod]
+    public void RemoveOption_InlineShortFormsAreEachRecognized(string option)
+    {
+        List<string> arguments = [option, "trailing-value"];
+
+        RetryOrchestratorHelper.RemoveOption(arguments, "target");
+
+        Assert.IsEmpty(arguments);
+    }
+
     [TestMethod]
     public void GetOptionArgumentIndex_WithLongForm_ReturnsOptionIndex()
     {
@@ -47,6 +136,17 @@ public sealed class RetryOrchestratorHelperTests
 
         Assert.AreEqual(1, RetryOrchestratorHelper.GetOptionArgumentIndex("target", executableArguments));
     }
+
+    [TestMethod]
+    public void GetOptionArgumentIndex_WithOptionAtIndexZero_ReturnsZero()
+    {
+        Assert.AreEqual(0, RetryOrchestratorHelper.GetOptionArgumentIndex("target", ["--target", "value"]));
+        Assert.AreEqual(0, RetryOrchestratorHelper.GetOptionArgumentIndex("target", ["-target", "value"]));
+    }
+
+    [TestMethod]
+    public void GetOptionArgumentIndex_WithOnlyShortOptionAtIndexZero_ReturnsZero()
+        => Assert.AreEqual(0, RetryOrchestratorHelper.GetOptionArgumentIndex("target", ["-target"]));
 
     [TestMethod]
     public void GetOptionArgumentIndex_WithShortForm_ReturnsOptionIndex()
@@ -96,4 +196,8 @@ public sealed class RetryOrchestratorHelperTests
     [TestMethod]
     public void FormatDuration_RendersCompactHumanFriendlyDuration(int milliseconds, string expected)
         => Assert.AreEqual(expected, RetryOrchestratorHelper.FormatDuration(TimeSpan.FromMilliseconds(milliseconds)));
+
+    [TestMethod]
+    public void FormatDuration_SubSecondValueDoesNotIncludeSecondsComponent()
+        => Assert.AreEqual("1ms", RetryOrchestratorHelper.FormatDuration(TimeSpan.FromMilliseconds(1)));
 }

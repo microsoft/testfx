@@ -170,10 +170,12 @@ $$"""
         {
             // The prefix can match neighboring packages; keep only those where a version digit
             // follows the prefix (mirrors AcceptanceTestBase.ExtractVersionFromPackage).
-            matches = [.. matches
-                .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefix.Length..]))
-                .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
-                .Select(tuple => tuple.path)];
+            matches = [
+                .. matches
+                .Select(path => (Path: path, FileName: Path.GetFileName(path)[packagePrefix.Length..]))
+                .Where(tuple => int.TryParse(tuple.FileName[0].ToString(), CultureInfo.InvariantCulture, out _))
+                .Select(tuple => tuple.Path),
+            ];
         }
 
         if (matches.Length != 1)

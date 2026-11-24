@@ -43,9 +43,11 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         // Filter by exact extension after the wildcard enumeration to defend against Windows' legacy
         // 8.3 short-name matching where the search pattern `CrashDump_*.dmp` can also match files
         // whose extension merely starts with `.dmp` (for example `CrashDump_xxx.dmp.crashreport.json`).
-        string[] dumpFiles = [.. Directory
+        string[] dumpFiles = [
+            .. Directory
             .GetFiles(resultDirectory, "CrashDump_*.dmp", SearchOption.AllDirectories)
-            .Where(f => Path.GetExtension(f).Equals(".dmp", StringComparison.OrdinalIgnoreCase))];
+            .Where(f => Path.GetExtension(f).Equals(".dmp", StringComparison.OrdinalIgnoreCase)),
+        ];
         Assert.HasCount(2, dumpFiles, $"Expected dumps for both the testhost and the child process '{tfm}'.\n{testHostResult}");
 
         // Both dumps must also be reported as out-of-process file artifacts so they show up to the user.
@@ -216,6 +218,9 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
                 { "CRASHDUMP_EXIT_GRACEFULLY", "1" },
             },
             cancellationToken: TestContext.CancellationToken);
+
+        // The fixture sends completion without any terminal test results, so the zero-tests policy still applies.
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
         // Even though tests were "started", the testhost exited cleanly so the sequence file has no
         // diagnostic value and must be cleaned up to avoid polluting the results directory.

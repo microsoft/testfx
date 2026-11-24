@@ -8,11 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace MSTest.Performance.Benchmarks;
 
 /// <summary>
-/// Measures <see cref="CollectionAssert.AreEquivalent{T}(System.Collections.Generic.IEnumerable{T}?, System.Collections.Generic.IEnumerable{T}?, System.Collections.Generic.IEqualityComparer{T}?, string?)"/>
-/// on its success path, which is the hot path exercised by every passing <c>CollectionAssert.AreEquivalent</c>
-/// call in a test suite. Internally this counts element occurrences via dictionaries built per invocation
-/// (see <c>CollectionAssert.Helpers.cs</c> <c>GetElementCounts</c>/<c>FindMismatchedElement</c>), so this
-/// benchmark tracks the cost of that allocation pattern as collection size grows.
+/// Measures unordered <c>Assert.AreSequenceEqual</c> calls on their success path,
+/// tracking the cost of counting element occurrences as collection size grows.
 /// </summary>
 [MemoryDiagnoser]
 public class CollectionAssertEquivalenceBenchmarks
@@ -36,9 +33,9 @@ public class CollectionAssertEquivalenceBenchmarks
 
     [Benchmark(Baseline = true)]
     public void AreEquivalent_SmallCollection()
-        => CollectionAssert.AreEquivalent(_smallExpected, _smallActual, EqualityComparer<int>.Default, string.Empty);
+        => Assert.AreSequenceEqual(_smallExpected, _smallActual, EqualityComparer<int>.Default, SequenceOrder.InAnyOrder, string.Empty);
 
     [Benchmark]
     public void AreEquivalent_LargeCollection()
-        => CollectionAssert.AreEquivalent(_largeExpected, _largeActual, EqualityComparer<int>.Default, string.Empty);
+        => Assert.AreSequenceEqual(_largeExpected, _largeActual, EqualityComparer<int>.Default, SequenceOrder.InAnyOrder, string.Empty);
 }

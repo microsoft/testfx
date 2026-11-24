@@ -1,4 +1,6 @@
 ---
+tools:
+  cli-proxy: false
 name: "Expert Code Review (command)"
 description: "Runs the expert-reviewer agent on /review and submits one consolidated review with bundled inline findings."
 
@@ -17,8 +19,8 @@ permissions:
 imports:
   - shared/review-shared.md
 
-# The expert-reviewer agent fans out into many dimension sub-agents on
-# claude-opus-4.6, so the default 1000 AI-credit budget is too low (see #9115).
+# Broad PRs can require several risk-scope agents, validators, and specialist
+# reviews on claude-opus-4.6, so retain headroom above the default budget.
 max-ai-credits: 2000
 
 safe-outputs:

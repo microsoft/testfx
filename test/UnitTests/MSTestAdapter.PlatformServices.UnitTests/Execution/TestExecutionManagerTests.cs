@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
+using AwesomeAssertions.Execution;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -10,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -146,6 +148,31 @@ public class TestExecutionManagerTests : TestContainer
         _frameworkHandle.ResultsList.Should().BeEmpty();
     }
 
+    public async Task SendTestResults_WhenCancellationOccursAfterFirstResult_DoesNotReportRemainingResults()
+    {
+        TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
+        UnitTestElement testElement = ToUnitTestElement(testCase);
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] unitTestResults =
+        [
+            new() { Outcome = UnitTestOutcome.Passed },
+            new() { Outcome = UnitTestOutcome.Passed },
+        ];
+        var recorder = new CancellingTestResultRecorder(_cancellationToken);
+        typeof(TestExecutionManager)
+            .GetField("_testRunCancellationToken", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(_testExecutionManager, _cancellationToken);
+
+        Func<Task> action = () => _testExecutionManager.SendTestResultsAsync(
+            testElement,
+            unitTestResults,
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            recorder);
+
+        await action.Should().ThrowAsync<OperationCanceledException>();
+        recorder.RecordedResultsCount.Should().Be(1);
+    }
+
     public async Task RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest");
@@ -185,12 +212,15 @@ public class TestExecutionManagerTests : TestContainer
 
         List<string> expectedTestCaseStartList = ["PassingTest", "FailingTest"];
         List<string> expectedTestCaseEndList = ["PassingTest:Passed", "FailingTest:Failed"];
-        List<string> expectedResultList = ["PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assertion failed."];
+        const string expectedFailure = """
+            FailingTest  Failed
+              Message: Assertion failed.
+            """;
 
         expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList).Should().BeTrue();
         expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList).Should().BeTrue();
-        _frameworkHandle.ResultsList[0].Should().Be(expectedResultList[0]);
-        _frameworkHandle.ResultsList[1].Should().Contain(expectedResultList[1]);
+        _frameworkHandle.ResultsList[0].Should().Be("PassingTest  Passed");
+        _frameworkHandle.ResultsList[1].Replace("\r\n", "\n").Should().Contain(expectedFailure.Replace("\r\n", "\n"));
     }
 
     public async Task RunTestsForCancellationTokenCanceledSetToTrueShouldSendZeroResults()
@@ -210,7 +240,6 @@ public class TestExecutionManagerTests : TestContainer
         _frameworkHandle.TestCaseEndList.Should().BeEmpty();
     }
 
-#if !WINDOWS_UWP && !WIN_UI
     public async Task RunTestsForTestShouldDeployBeforeExecution()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -230,7 +259,6 @@ public class TestExecutionManagerTests : TestContainer
         _callers[0].Should().Be("Deploy", "Deploy should be called before execution.");
         _callers[1].Should().Be("LoadAssembly", "Deploy should be called before execution.");
     }
-#endif
 
     public async Task RunTestsForTestShouldCleanupAfterExecution()
     {
@@ -240,21 +268,16 @@ public class TestExecutionManagerTests : TestContainer
         // Setup mocks.
         TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
 
-#if !WINDOWS_UWP && !WIN_UI
         testablePlatformService.MockTestDeployment.Setup(
             td => td.Cleanup()).Callback(() => SetCaller("Cleanup"));
-#endif
 
         await _testExecutionManager.RunTestsAsync(ToUnitTestElements(tests), CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
 
         _callers[0].Should().Be("LoadAssembly", "Cleanup should be called after execution.");
 
-#if !WINDOWS_UWP && !WIN_UI
         _callers.LastOrDefault().Should().Be("Cleanup", "Cleanup should be called after execution.");
-#endif
     }
 
-#if !WINDOWS_UWP && !WIN_UI
     public async Task RunTestsForTestShouldNotCleanupOnTestFailure()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -287,7 +310,6 @@ public class TestExecutionManagerTests : TestContainer
             fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp"))),
             Times.AtLeastOnce);
     }
-#endif
 
     public async Task RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
@@ -484,6 +506,87 @@ public class TestExecutionManagerTests : TestContainer
 
     #region Parallel tests
 
+    public Task RunTests_CancelledWhileStartingParallelWorkers_WaitsForScheduledWorkers()
+        => RunTestsCancelledWhileStartingWorkersAsync(withDependencies: false);
+
+    public Task RunTests_CancelledWhileStartingDependencyWorkers_WaitsForScheduledWorkers()
+        => RunTestsCancelledWhileStartingWorkersAsync(withDependencies: true);
+
+    private async Task RunTestsCancelledWhileStartingWorkersAsync(bool withDependencies)
+    {
+        UnitTestElement[] tests = ToUnitTestElements(
+            GetTestCase(typeof(DummyTestClassForParallelize), nameof(DummyTestClassForParallelize.TestMethod1)),
+            GetTestCase(typeof(DummyTestClassForParallelize2), nameof(DummyTestClassForParallelize2.TestMethod1)));
+        if (withDependencies)
+        {
+            tests[1].Dependencies =
+            [
+                new TestDependencyInfo(typeof(DummyTestClassForParallelize).FullName, nameof(DummyTestClassForParallelize.TestMethod1), proceedOnFailure: false),
+            ];
+        }
+
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+        MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+
+        var releaseWorker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int scheduledWorkers = 0;
+        var manager = new TestExecutionManager(action =>
+        {
+            if (++scheduledWorkers == 1)
+            {
+                _cancellationToken.Cancel();
+                return releaseWorker.Task;
+            }
+
+            return action();
+        });
+        Task run = manager.RunTestsAsync(
+            tests,
+            CurrentDeploymentContext,
+            _frameworkHandle.ToAdapterMessageLogger(),
+            TestResultRecorder,
+            new TestElementFilterProvider(_runContext),
+            _cancellationToken);
+
+        using var assertions = new AssertionScope();
+        try
+        {
+            scheduledWorkers.Should().BeGreaterThan(0);
+            run.IsCompleted.Should().BeFalse("cancellation must not abandon an already scheduled worker");
+        }
+        finally
+        {
+            releaseWorker.TrySetResult(true);
+        }
+
+        const int WorkerCleanupTimeoutMilliseconds = 60_000;
+        if (await Task.WhenAny(run, Task.Delay(WorkerCleanupTimeoutMilliseconds)) != run)
+        {
+            throw new TimeoutException("Parallel workers did not finish after their release.");
+        }
+
+        Func<Task> completeRun = () => run;
+        await completeRun.Should().NotThrowAsync();
+
+        scheduledWorkers.Should().Be(2);
+        _frameworkHandle.TestCaseStartList.Should().BeEmpty();
+        _frameworkHandle.ResultsList.Should().BeEmpty();
+        _frameworkHandle.TestCaseEndList.Should().BeEmpty();
+    }
+
     public async Task RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
     {
         TestCase testCase11 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -520,6 +623,25 @@ public class TestExecutionManagerTests : TestContainer
             DummyTestClassForParallelize.Cleanup();
             DummyTestClassForParallelize2.Cleanup();
         }
+    }
+
+    public async Task RunTestsForTestShouldReportParallelizationBannerByDefault()
+    {
+        await RunParallelizedTestsForBannerAsync();
+
+        _frameworkHandle.MessageList.Should().Contain(GetExpectedParallelizationBannerMessage());
+        _frameworkHandle.ResultsList.Should().HaveCount(2);
+    }
+
+    public async Task RunTestsForTestShouldNotReportParallelizationBannerWhenHidden()
+    {
+        _testExecutionManager.ShowParallelizationBanner = false;
+
+        await RunParallelizedTestsForBannerAsync();
+
+        _frameworkHandle.MessageList.Should().NotContain(GetExpectedParallelizationBannerMessage());
+        _frameworkHandle.ResultsList.Should().HaveCount(2);
+        _enqueuedParallelTestsCount.Should().Be(2);
     }
 
     public async Task RunTestsForTestShouldRunTestsByMethodLevelWhenSpecified()
@@ -1134,6 +1256,42 @@ public class TestExecutionManagerTests : TestContainer
 
     #region private methods
 
+    private async Task RunParallelizedTestsForBannerAsync()
+    {
+        TestCase[] tests =
+        [
+            GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1"),
+            GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2"),
+        ];
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>ClassLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(ToUnitTestElements(tests), CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+        }
+        finally
+        {
+            DummyTestClassForParallelize.Cleanup();
+        }
+    }
+
+    private static string GetExpectedParallelizationBannerMessage()
+        => $"{TestMessageLevel.Informational}:{string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, Assembly.GetExecutingAssembly().Location, 2, ExecutionScope.ClassLevel)}";
+
     private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
         MethodInfo methodInfo = typeOfClass.GetMethod(testName)!;
@@ -1628,5 +1786,31 @@ internal class TestableTestExecutionManager : TestExecutionManager
     }
 
     internal override UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new TestableUnitTestDiscoverer(testSourceHandler);
+}
+
+internal sealed class CancellingTestResultRecorder(TestRunCancellationToken cancellationToken) : ITestResultRecorder
+{
+    public int RecordedResultsCount { get; private set; }
+
+    public void PrepareResults(UnitTestElement testElement, Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] results)
+    {
+    }
+
+    public Task RecordStartAsync(UnitTestElement testElement)
+        => Task.CompletedTask;
+
+    public Task RecordEmptyResultAsync(UnitTestElement testElement)
+        => Task.CompletedTask;
+
+    public Task<bool> RecordResultAsync(
+        UnitTestElement testElement,
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestResult unitTestResult,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime)
+    {
+        RecordedResultsCount++;
+        cancellationToken.Cancel();
+        return Task.FromResult(false);
+    }
 }
 #endregion

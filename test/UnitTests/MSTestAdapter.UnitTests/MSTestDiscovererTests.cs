@@ -248,4 +248,40 @@ public class MSTestDiscovererTests : TestContainer
             // It does not perform any assertions or operations.
         }
     }
+
+    public async Task NeutralDiscoveryRejectsNullSinkAndBoundaryArguments()
+    {
+        Func<Task> missingSink = () => _discoverer.DiscoverTestsAsync(
+            ["source.dll"], _mockDiscoveryContext.Object, _mockMessageLogger.Object, (IUnitTestElementSink)null!, null, true);
+        Func<Task> missingSources = () => _discoverer.DiscoverTestsAsync(
+            null!, _mockDiscoveryContext.Object, _mockMessageLogger.Object, Mock.Of<IUnitTestElementSink>(), null, true);
+        Func<Task> missingLogger = () => _discoverer.DiscoverTestsAsync(
+            ["source.dll"], _mockDiscoveryContext.Object, null!, Mock.Of<IUnitTestElementSink>(), null, true);
+        Action syncMissingSink = () => _discoverer.DiscoverTests(
+            ["source.dll"], _mockDiscoveryContext.Object, _mockMessageLogger.Object, null!);
+
+        (await missingSink.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("elementSink");
+        (await missingSources.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("sources");
+        (await missingLogger.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("logger");
+        syncMissingSink.Should().ThrowExactly<ArgumentNullException>().WithParameterName("discoverySink");
+    }
+
+    public async Task NeutralDiscoveryStopsBeforePublishingWhenSettingsAreInvalid()
+    {
+        const string Settings = "<RunSettings><MSTest><Parallelize><Scope>Pond</Scope></Parallelize></MSTest></RunSettings>";
+        _mockTestSourceHandler.SetupGet(value => value.ValidSourceExtensions).Returns([".dll"]);
+        _mockDiscoveryContext.SetupGet(value => value.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.SetupGet(value => value.SettingsXml).Returns(Settings);
+        var sink = new Mock<IUnitTestElementSink>(MockBehavior.Strict);
+        var discoverer = new MSTestDiscoverer(_mockTestSourceHandler.Object, (_, _) => Task.CompletedTask);
+
+        await discoverer.DiscoverTestsAsync(["source.dll"], _mockDiscoveryContext.Object, _mockMessageLogger.Object, sink.Object, null, true);
+
+        sink.VerifyNoOtherCalls();
+        _mockMessageLogger.Verify(
+            value => value.SendMessage(
+            TestMessageLevel.Error,
+            "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mockTestSourceHandler.Verify(value => value.GetTestSources(It.IsAny<IEnumerable<string>>()), Times.Never);
+    }
 }

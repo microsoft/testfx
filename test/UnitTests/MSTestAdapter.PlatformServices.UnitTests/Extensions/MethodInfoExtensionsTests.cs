@@ -14,6 +14,100 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
 public class MethodInfoExtensionsTests : TestContainer
 {
+    public async Task GenericInvocationInfersReorderedParametersAndSkipsNullArguments()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo reordered = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Reordered))!;
+        (await (Task<string>)reordered.GetInvokeResultAsync(fixture, 7, "text")!).Should().Be("String:Int32:text:7");
+        MethodInfo same = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Same))!;
+        (await (Task<string>)same.GetInvokeResultAsync(fixture, null, "text")!).Should().Be("String::text");
+        (await (Task<string>)same.GetInvokeResultAsync(fixture, "text", null)!).Should().Be("String:text:");
+    }
+
+    public async Task GenericInvocationChoosesAssignableBaseRegardlessOfArgumentOrder()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo method = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Same))!;
+        (await (Task<string>)method.GetInvokeResultAsync(fixture, new ChildValue(), new ParentValue())!).Should().Be("ParentValue:child:parent");
+        (await (Task<string>)method.GetInvokeResultAsync(fixture, new ParentValue(), new ChildValue())!).Should().Be("ParentValue:parent:child");
+    }
+
+    public async Task GenericInvocationInfersArrayElementsAndNestedGenericArguments()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo array = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Array))!;
+        (await (Task<string>)array.GetInvokeResultAsync(fixture, new int[] { 2, 3 })!).Should().Be("Int32:2");
+        MethodInfo nested = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Nested))!;
+        Dictionary<string, List<int>> values = new() { ["key"] = [2, 3] };
+        (await (Task<string>)nested.GetInvokeResultAsync(fixture, values)!).Should().Be("String:Int32:5");
+        MethodInfo enumerable = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Enumerable))!;
+        (await (Task<string>)enumerable.GetInvokeResultAsync(fixture, new List<int> { 2, 3 })!).Should().Be("Int32:5");
+    }
+
+    public void GenericInvocationRejectsConflictingOrUninferableTypePartitions()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo same = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Same))!;
+        Action conflict = () => _ = same.GetInvokeResultAsync(fixture, 7, "text");
+        conflict.Should().Throw<InvalidOperationException>().WithMessage("*System.Int32*System.String*");
+        Action nullOnly = () => _ = same.GetInvokeResultAsync(fixture, new object?[] { null, null });
+        nullOnly.Should().Throw<InvalidOperationException>().WithMessage("*T*");
+        MethodInfo enumerable = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Enumerable))!;
+        Action differentShape = () => _ = enumerable.GetInvokeResultAsync(fixture, new int[] { 2, 3 });
+        differentShape.Should().Throw<InvalidOperationException>().WithMessage("*T*");
+        MethodInfo noParameters = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.NoParameters))!;
+        Action noArguments = () => _ = noParameters.GetInvokeResultAsync(fixture, arguments: null);
+        noArguments.Should().Throw<TestFailedException>().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+    }
+
+    public void GenericInvocationPreservesConstraintFailureAsTestErrorWithOriginalCause()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo constrained = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.ClassOnly))!;
+        Action invoke = () => _ = constrained.GetInvokeResultAsync(fixture, 7);
+
+        TestFailedException failure = invoke.Should().Throw<TestFailedException>().Which;
+        failure.Outcome.Should().Be(UnitTestOutcome.Error);
+        failure.InnerException.Should().BeOfType<ArgumentException>();
+        failure.Message.Should().Contain(nameof(GenericInvocationFixture.ClassOnly)).And.Contain("System.Int32");
+    }
+
+    private class ParentValue
+    {
+        public override string ToString() => "parent";
+    }
+
+    private sealed class ChildValue : ParentValue
+    {
+        public override string ToString() => "child";
+    }
+
+    private sealed class GenericInvocationFixture
+    {
+        public Task<string> Same<T>(T first, T second) => Task.FromResult($"{typeof(T).Name}:{first}:{second}");
+
+        public Task<string> Reordered<TFirst, TSecond>(TSecond first, TFirst second)
+            => Task.FromResult($"{typeof(TFirst).Name}:{typeof(TSecond).Name}:{second}:{first}");
+
+        public Task<string> Array<T>(T[] values) => Task.FromResult($"{typeof(T).Name}:{values.Length}");
+
+        public Task<string> Nested<TKey, TValue>(Dictionary<TKey, List<TValue>> values)
+            where TKey : notnull
+            => Task.FromResult($"{typeof(TKey).Name}:{typeof(TValue).Name}:{values.Values.SelectMany(value => value).Sum(value => Convert.ToInt32(value, CultureInfo.InvariantCulture))}");
+
+        public Task<string> Enumerable<T>(IEnumerable<T> values)
+            => Task.FromResult($"{typeof(T).Name}:{values.Sum(value => Convert.ToInt32(value, CultureInfo.InvariantCulture))}");
+
+        public void NoParameters<T>()
+        {
+        }
+
+        public void ClassOnly<T>(T value)
+            where T : class
+        {
+        }
+    }
+
     #region HasCorrectClassOrAssemblyInitializeSignature tests
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForNonStaticMethods()
@@ -132,6 +226,24 @@ public class MethodInfoExtensionsTests : TestContainer
         methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
     }
 
+    public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForInstanceMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
+    }
+
+    public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnTrueForStaticMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("StaticMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeTrue();
+    }
+
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForNonPublicMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("InternalMethod", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)!;
@@ -190,6 +302,24 @@ public class MethodInfoExtensionsTests : TestContainer
         methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
+    public void HasCorrectTestMethodSignatureShouldReturnFalseForInstanceMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
+    }
+
+    public void HasCorrectTestMethodSignatureShouldReturnTrueForStaticMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("StaticMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeTrue();
+    }
+
     public void HasCorrectTestMethodSignatureShouldReturnFalseForGenericMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicGenericMethod")!;
@@ -206,6 +336,46 @@ public class MethodInfoExtensionsTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithInt")!;
         methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
+    }
+
+    public void HasCorrectTestMethodSignatureAcceptsOnlyByValueCancellationTokenWithoutData()
+    {
+        string[] accepted =
+        [
+            nameof(CancellationTokenSignatureFixture.TokenOnly),
+            nameof(CancellationTokenSignatureFixture.TaskTokenOnly),
+            nameof(CancellationTokenSignatureFixture.ValueTaskTokenOnly),
+            nameof(CancellationTokenSignatureFixture.OptionalToken),
+        ];
+        foreach (string methodName in accepted)
+        {
+            typeof(CancellationTokenSignatureFixture).GetMethod(methodName)!
+                .HasCorrectTestMethodSignature(ignoreParameterLength: false).Should().BeTrue("{0}", methodName);
+        }
+
+        string[] rejected =
+        [
+            nameof(CancellationTokenSignatureFixture.NullableToken),
+            nameof(CancellationTokenSignatureFixture.TokenSource),
+            nameof(CancellationTokenSignatureFixture.ByRefToken),
+            nameof(CancellationTokenSignatureFixture.DataAndToken),
+            nameof(CancellationTokenSignatureFixture.NonTrailingToken),
+        ];
+        foreach (string methodName in rejected)
+        {
+            typeof(CancellationTokenSignatureFixture).GetMethod(methodName)!
+                .HasCorrectTestMethodSignature(ignoreParameterLength: false).Should().BeFalse("{0}", methodName);
+        }
+    }
+
+    public void LifecycleSignaturesDoNotAcceptCancellationTokenParameters()
+    {
+        MethodInfo instanceMethod = typeof(CancellationTokenSignatureFixture).GetMethod(nameof(CancellationTokenSignatureFixture.TokenOnly))!;
+        MethodInfo staticMethod = typeof(CancellationTokenSignatureFixture).GetMethod(nameof(CancellationTokenSignatureFixture.StaticToken))!;
+
+        instanceMethod.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
+        staticMethod.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
+        staticMethod.HasCorrectClassOrAssemblyCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnTrueForMethodsWithParametersWhenParameterCountIsIgnored()
@@ -461,6 +631,45 @@ public class MethodInfoExtensionsTests : TestContainer
 
     #region Dummy Class
 
+    private sealed class CancellationTokenSignatureFixture
+    {
+        public static void StaticToken(CancellationToken token)
+        {
+        }
+
+        public void TokenOnly(CancellationToken token)
+        {
+        }
+
+        public Task TaskTokenOnly(CancellationToken token) => Task.CompletedTask;
+
+        public ValueTask ValueTaskTokenOnly(CancellationToken token) => default;
+
+        public void OptionalToken(CancellationToken token = default)
+        {
+        }
+
+        public void NullableToken(CancellationToken? token)
+        {
+        }
+
+        public void TokenSource(CancellationTokenSource source)
+        {
+        }
+
+        public void ByRefToken(ref CancellationToken token)
+        {
+        }
+
+        public void DataAndToken(int value, CancellationToken token)
+        {
+        }
+
+        public void NonTrailingToken(CancellationToken token, int value)
+        {
+        }
+    }
+
     public class DummyTestClass2
     {
         public static Func<int, int, Task> DummyAsyncMethodBody { get; set; } = null!;
@@ -553,4 +762,136 @@ public class MethodInfoExtensionsTests : TestContainer
     }
 
     #endregion
+
+    public async Task GeneratedInvokerUsesCachedParametersAndPreservesReturnShapes()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        var services = new TestableImplementations.TestablePlatformServiceProvider();
+        MethodInfo method = typeof(GeneratedInvocationFixture).GetMethod(nameof(GeneratedInvocationFixture.Record))!;
+        var fixture = new GeneratedInvocationFixture();
+        object?[] shapes = [null, Task.CompletedTask, new ValueTask(Task.CompletedTask)];
+        try
+        {
+            foreach (object? shape in shapes)
+            {
+                var provider = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+                {
+                    TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+                    {
+                        [method] = (instance, args) =>
+                        {
+                            ((GeneratedInvocationFixture)instance!).Value = ((int)args![0]! * 3) + 1;
+                            return shape;
+                        },
+                    },
+                };
+                services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(provider));
+                Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = services;
+
+                Task? task = method.GetInvokeResultWithParametersAsync(fixture, method.GetParameters(), 4);
+                if (shape is null)
+                {
+                    task.Should().BeNull();
+                }
+                else
+                {
+                    task.Should().NotBeNull();
+                    await task!;
+                }
+
+                fixture.Value.Should().Be(13);
+                fixture.Value = -1;
+            }
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public void GeneratedInvokerRejectsMismatchedRowsBeforeCallingTheDelegate()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        var services = new TestableImplementations.TestablePlatformServiceProvider();
+        MethodInfo method = typeof(GeneratedInvocationFixture).GetMethod(nameof(GeneratedInvocationFixture.Record))!;
+        int calls = 0;
+        var provider = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+        {
+            TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+            {
+                [method] = (_, _) =>
+                {
+                    calls++;
+                    return Task.CompletedTask;
+                },
+            },
+        };
+        services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(provider));
+        try
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = services;
+            Action mismatch = () => _ = method.GetInvokeResultWithParametersAsync(new GeneratedInvocationFixture(), method.GetParameters(), 7, "extra");
+            TestFailedException failure = mismatch.Should().ThrowExactly<TestFailedException>().Which;
+            failure.Outcome.Should().Be(UnitTestOutcome.Error);
+            failure.Message.Should().Be(string.Format(
+                CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError,
+                typeof(GeneratedInvocationFixture).FullName, "Record", 1, "Int32", 2, "Int32, String"));
+            failure.InnerException.Should().BeNull();
+            Action noData = () => _ = method.GetInvokeResultWithParametersAsync(new GeneratedInvocationFixture(), method.GetParameters(), arguments: null);
+            noData.Should().ThrowExactly<TestFailedException>().Which.Message.Should().Be(string.Format(
+                CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, typeof(GeneratedInvocationFixture).FullName, "Record"));
+            calls.Should().Be(0);
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public async Task GeneratedObjectArrayInvokerReceivesOneUnchangedArrayArgument()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        var services = new TestableImplementations.TestablePlatformServiceProvider();
+        MethodInfo method = typeof(GeneratedInvocationFixture).GetMethod(nameof(GeneratedInvocationFixture.RecordArray))!;
+        var fixture = new GeneratedInvocationFixture();
+        object?[] data = [17, "row"];
+        var provider = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+        {
+            TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+            {
+                [method] = (instance, args) =>
+                {
+                    args.Should().HaveCount(1);
+                    args![0].Should().BeSameAs(data);
+                    ((GeneratedInvocationFixture)instance!).ArrayMode = "generated";
+                    return Task.CompletedTask;
+                },
+            },
+        };
+        services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(provider));
+        try
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = services;
+            await method.GetInvokeResultAsync(fixture, data)!;
+            fixture.ArrayMode.Should().Be("generated");
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    private sealed class GeneratedInvocationFixture
+    {
+        internal int Value { get; set; }
+
+        internal string? ArrayMode { get; set; }
+
+        public void Record(int value) => Value = value * 2;
+
+        public void RecordArray(object?[] values) => ArrayMode = "reflection";
+    }
 }

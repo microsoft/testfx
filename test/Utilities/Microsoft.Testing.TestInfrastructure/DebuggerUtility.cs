@@ -18,7 +18,7 @@ public class DebuggerUtility
     {
         try
         {
-            if (pid == null)
+            if (pid is null)
             {
                 Trace("FAIL: Pid is null.", enabled: enableLog);
                 return false;
@@ -29,7 +29,7 @@ public class DebuggerUtility
             Trace($"Using pid: {pid} to get parent VS.", enabled: enableLog);
             Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
 
-            if (vs != null)
+            if (vs is not null)
             {
                 Trace($"Parent VS is {vs.ProcessName} ({vs.Id}).", enabled: enableLog);
                 AttachTo(process, vs);
@@ -50,11 +50,11 @@ public class DebuggerUtility
                         return null;
                     }
                 })
-                .Where(p => p != null && !p.HasExited)
+                .Where(p => p is not null && !p.HasExited)
                 .OrderBy(p => p!.StartTime)
                 .FirstOrDefault();
 
-            if (firstVs != null)
+            if (firstVs is not null)
             {
                 Trace($"Found VS {firstVs.Process.Id}", enabled: enableLog);
                 AttachTo(process, firstVs.Process);
@@ -96,21 +96,21 @@ public class DebuggerUtility
             int r = CreateBindCtx(0, out bindCtx);
 #pragma warning restore IL2050
             Marshal.ThrowExceptionForHR(r);
-            if (bindCtx == null)
+            if (bindCtx is null)
             {
                 Trace("BindCtx is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             bindCtx.GetRunningObjectTable(out runningObjectTable);
-            if (runningObjectTable == null)
+            if (runningObjectTable is null)
             {
                 Trace("RunningObjectTable is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             runningObjectTable.EnumRunning(out enumMoniker);
-            if (enumMoniker == null)
+            if (enumMoniker is null)
             {
                 Trace("EnumMoniker is null. Cannot attach VS.", enabled: enableLog);
                 return false;
@@ -119,7 +119,7 @@ public class DebuggerUtility
             string dteSuffix = ":" + vs.Id;
 
             var moniker = new IMoniker[1];
-            while (enumMoniker.Next(1, moniker, IntPtr.Zero) == 0 && moniker[0] != null)
+            while (enumMoniker.Next(1, moniker, nint.Zero) == 0 && moniker[0] is not null)
             {
                 moniker[0].GetDisplayName(bindCtx, null, out string dn);
 
@@ -168,7 +168,7 @@ public class DebuggerUtility
         }
         finally
         {
-            if (enumMoniker != null)
+            if (enumMoniker is not null)
             {
                 try
                 {
@@ -179,7 +179,7 @@ public class DebuggerUtility
                 }
             }
 
-            if (runningObjectTable != null)
+            if (runningObjectTable is not null)
             {
                 try
                 {
@@ -190,7 +190,7 @@ public class DebuggerUtility
                 }
             }
 
-            if (bindCtx != null)
+            if (bindCtx is not null)
             {
                 try
                 {
@@ -216,7 +216,7 @@ public class DebuggerUtility
 
     private static bool IsVsOrNull([NotNullWhen(false)] Process? process, bool enableLog = false)
     {
-        if (process == null)
+        if (process is null)
         {
             Trace("Parent process is null..", enabled: enableLog);
             return true;
@@ -281,7 +281,7 @@ public class DebuggerUtility
         {
             try
             {
-                IntPtr handle = process.Handle;
+                nint handle = process.Handle;
                 int res = NtQueryInformationProcess(handle, 0, out PROCESS_BASIC_INFORMATION pbi, Marshal.SizeOf<PROCESS_BASIC_INFORMATION>(), out int size);
 
                 int p = res != 0 ? -1 : pbi.InheritedFromUniqueProcessId.ToInt32();
@@ -306,17 +306,17 @@ public class DebuggerUtility
     [StructLayout(LayoutKind.Sequential)]
     private struct PROCESS_BASIC_INFORMATION
     {
-        public readonly IntPtr ExitStatus;
-        public readonly IntPtr PebBaseAddress;
-        public readonly IntPtr AffinityMask;
-        public readonly IntPtr BasePriority;
-        public readonly IntPtr UniqueProcessId;
-        public IntPtr InheritedFromUniqueProcessId;
+        public readonly nint ExitStatus;
+        public readonly nint PebBaseAddress;
+        public readonly nint AffinityMask;
+        public readonly nint BasePriority;
+        public readonly nint UniqueProcessId;
+        public nint InheritedFromUniqueProcessId;
     }
 
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern int NtQueryInformationProcess(
-        IntPtr processHandle,
+        nint processHandle,
         int processInformationClass,
         out PROCESS_BASIC_INFORMATION processInformation,
         int processInformationLength,

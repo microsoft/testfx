@@ -364,7 +364,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests
                 VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup0"),
                 VerifyCS.Diagnostic().WithLocation(1).WithArguments("TestCleanup1"),
                 VerifyCS.Diagnostic().WithLocation(2).WithArguments("TestCleanup2"),
-                VerifyCS.Diagnostic().WithLocation(3).WithArguments("TestCleanup3")
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("TestCleanup3"),
             ],
             fixedCode);
     }

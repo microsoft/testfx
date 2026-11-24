@@ -32,9 +32,10 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedAbsolutePath()
     {
-        string path = @"C:\unitTesting\..\MsTest\Adapter";
+        string root = Path.GetFullPath("resolutionRoot");
+        string path = Path.Combine(root, "unitTesting", "..", "MsTest", "Adapter");
         string? baseDirectory = null;
-        string expectedResult = @"C:\MsTest\Adapter";
+        string expectedResult = Path.Combine(root, "MsTest", "Adapter");
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
@@ -49,13 +50,14 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void ResolveEnvironmentVariableShouldResolvePathWithAnEnvironmentVariable()
     {
-        string path = @"%temp%\unitTesting\MsTest\Adapter";
+        string path = Path.Combine("%temp%", "unitTesting", "MsTest", "Adapter");
         string? baseDirectory = null;
-        string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
+        string root = Path.GetFullPath("foo");
+        string expectedResult = Path.Combine(root, "unitTesting", "MsTest", "Adapter");
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
-            ExpandEnvironmentVariablesSetter = str => str.Replace("%temp%", "C:\\foo"),
+            ExpandEnvironmentVariablesSetter = str => str.Replace("%temp%", root),
             DoesDirectoryExistSetter = _ => true,
         };
 
@@ -67,9 +69,9 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithoutDot()
     {
-        string path = @"MsTest\Adapter";
-        string baseDirectory = @"C:\unitTesting";
-        string expectedResult = @"C:\unitTesting\MsTest\Adapter";
+        string path = Path.Combine("MsTest", "Adapter");
+        string baseDirectory = Path.GetFullPath("unitTesting");
+        string expectedResult = Path.Combine(baseDirectory, "MsTest", "Adapter");
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
@@ -84,9 +86,9 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithDot()
     {
-        string path = @".\MsTest\Adapter";
-        string baseDirectory = @"C:\unitTesting";
-        string expectedResult = @"C:\unitTesting\MsTest\Adapter";
+        string path = Path.Combine(".", "MsTest", "Adapter");
+        string baseDirectory = Path.GetFullPath("unitTesting");
+        string expectedResult = Path.Combine(baseDirectory, "MsTest", "Adapter");
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
@@ -101,15 +103,10 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePath()
     {
-        string path = @"\MsTest\Adapter";
-        string baseDirectory = @"C:\unitTesting";
-
-        // instead of returning "C:\unitTesting\MsTest\Adapter", it will return "(Drive from where test is running):\MsTest\Adapter",
-        // because path is starting with "\"
-        // this is how Path.GetFullPath works
-        string currentDirectory = Directory.GetCurrentDirectory();
-        string currentDrive = currentDirectory.Split('\\').First() + "\\";
-        string expectedResult = Path.Combine(currentDrive, @"MsTest\Adapter");
+        string path = Path.DirectorySeparatorChar + Path.Combine("MsTest", "Adapter");
+        string baseDirectory = Path.GetFullPath("unitTesting");
+        // A leading separator resolves against the current drive or filesystem root, not the supplied base directory.
+        string expectedResult = Path.Combine(Path.GetPathRoot(Directory.GetCurrentDirectory())!, "MsTest", "Adapter");
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
@@ -125,9 +122,9 @@ public class MSTestAdapterSettingsTests : TestContainer
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedNetworkPath()
     {
         string path = @"\\MsTest\Adapter";
-        string baseDirectory = @"C:\unitTesting";
-
-        string expectedResult = path;
+        string baseDirectory = Path.GetFullPath("unitTesting");
+        // A UNC path is rooted on Windows; on Unix the backslashes are literal filename characters.
+        string expectedResult = Path.DirectorySeparatorChar == '\\' ? path : Path.Combine(baseDirectory, path);
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
@@ -156,17 +153,16 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void GetDirectoryListWithRecursivePropertyShouldReadRunSettingCorrectly()
     {
-        string baseDirectory = @"C:\unitTesting";
+        string baseDirectory = Path.GetFullPath("unitTesting");
 
         List<RecursiveDirectoryPath> expectedResult =
         [
-            new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true),
-            new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false),
+            new RecursiveDirectoryPath(Path.GetFullPath(Path.Combine("MsTest", "Adapter")), true),
+            new RecursiveDirectoryPath(Path.Combine(baseDirectory, "MsTest", "Adapter"), false),
         ];
 
         var adapterSettings = new TestableMSTestAdapterSettings(expectedResult)
         {
-            ExpandEnvironmentVariablesSetter = str => str.Replace("%temp%", "C:\\foo"),
             DoesDirectoryExistSetter = _ => true,
         };
 
@@ -387,5 +383,5 @@ internal class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
-    protected override string ExpandEnvironmentVariables(string path) => ExpandEnvironmentVariablesSetter == null ? base.ExpandEnvironmentVariables(path) : ExpandEnvironmentVariablesSetter(path);
+    protected override string ExpandEnvironmentVariables(string path) => ExpandEnvironmentVariablesSetter is null ? base.ExpandEnvironmentVariables(path) : ExpandEnvironmentVariablesSetter(path);
 }

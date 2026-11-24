@@ -11,9 +11,6 @@ using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.InheritedMemberFromDifferentMSTestVersionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.InheritedMemberFromDifferentMSTestVersionAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -27,6 +24,58 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     private const string LegacyFrameworkAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework";
     private const string LegacyFrameworkExtensionsAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions";
     private const string CurrentFrameworkAssemblyName = "MSTest.TestFramework";
+
+    [TestMethod]
+    [DataRow("T[]", "T", "T[]", false, DisplayName = "SameArrayElementParameter")]
+    [DataRow("T[]", "T", "T[,]", true, DisplayName = "DifferentArrayRank")]
+    [DataRow("List<T>", "T", "List<T>", false, DisplayName = "SameConstructedGeneric")]
+    [DataRow("List<T>", "U", "List<U>", true, DisplayName = "RenamedNestedTypeParameter")]
+    [DataRow("List<T>", "T", "List<int>", true, DisplayName = "DifferentGenericArgument")]
+    [DataRow("List<T>", "T", "HashSet<T>", true, DisplayName = "DifferentGenericDefinition")]
+    [DataRow("List<T>", "T", "Dictionary<T, T>", true, DisplayName = "DifferentGenericArity")]
+    [DataRow("Dictionary<string, List<T[]>>", "T", "Dictionary<string, List<T[]>>", false, DisplayName = "SameRecursivelyNestedType")]
+    [DataRow("Dictionary<string, List<T[]>>", "T", "Dictionary<int, List<T[]>>", true, DisplayName = "DifferentDictionaryKey")]
+    public async Task RecursiveGenericSignatures_HideOnlyAnEquivalentDiscoveryKey(string baseParameter, string derivedTypeParameter, string derivedParameter, bool expectedDiagnostic)
+    {
+        string legacyBase = $$"""
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+            namespace Repro
+            {
+                using System.Collections.Generic;
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run<T>({{baseParameter}} value) { }
+                }
+            }
+            """;
+        string consumer = $$"""
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            namespace Repro
+            {
+                [TestClass]
+                public class {{(expectedDiagnostic ? "{|#0:SampleTests|}" : "SampleTests")}} : TestBase
+                {
+                    [TestMethod]
+                    public new void Run<{{derivedTypeParameter}}>({{derivedParameter}} value) { }
+                }
+            }
+            """;
+        var test = new VerifyCS.Test { TestCode = consumer };
+        AddLegacyFrameworkBaseProject(test, legacyBase);
+        if (expectedDiagnostic)
+        {
+            test.ExpectedDiagnostics.Add(VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0).WithArguments("Run", "TestBase", "DataTestMethod", LegacyFrameworkAssemblyName));
+        }
+
+        await test.RunAsync();
+    }
 
     [TestMethod]
     public async Task WhenInheritedTestInitializeComesFromDifferentFrameworkAssembly_Diagnostic()
@@ -2476,201 +2525,6 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenInheritedTestInitializeFromDifferentFrameworkAssemblyInVisualBasic_Diagnostic()
-    {
-        // The analyzer is symbol-based, so it reports the same mismatch for a Visual Basic test class inheriting a
-        // base compiled against a differently named framework.
-        string legacyBaseCode = """
-            namespace Microsoft.VisualStudio.TestTools.UnitTesting
-            {
-                public sealed class TestInitializeAttribute : System.Attribute { }
-            }
-
-            namespace Repro
-            {
-                using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-                public abstract class TestBase
-                {
-                    [TestInitialize]
-                    public void BaseInitialize() { }
-                }
-            }
-            """;
-
-        string consumerCode = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Namespace Repro
-                <TestClass>
-                Public Class {|#0:SampleTests|}
-                    Inherits TestBase
-
-                    <TestMethod>
-                    Public Sub MyTest()
-                    End Sub
-                End Class
-            End Namespace
-            """;
-
-        var test = new VerifyVB.Test { TestCode = consumerCode };
-        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
-
-        test.ExpectedDiagnostics.Add(
-            VerifyVB.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
-
-        await test.RunAsync();
-    }
-
-    [TestMethod]
-    public async Task WhenInheritedTestInitializeShadowedByValidMethodInVisualBasic_NoDiagnostic()
-    {
-        // A valid same-name Shadows method in the derived Visual Basic class hides the inherited fixture, so the
-        // mismatch is not reported.
-        string legacyBaseCode = """
-            namespace Microsoft.VisualStudio.TestTools.UnitTesting
-            {
-                public sealed class TestInitializeAttribute : System.Attribute { }
-            }
-
-            namespace Repro
-            {
-                using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-                public abstract class TestBase
-                {
-                    [TestInitialize]
-                    public void BaseInitialize() { }
-                }
-            }
-            """;
-
-        string consumerCode = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Namespace Repro
-                <TestClass>
-                Public Class SampleTests
-                    Inherits TestBase
-
-                    Public Shadows Sub BaseInitialize()
-                    End Sub
-
-                    <TestMethod>
-                    Public Sub MyTest()
-                    End Sub
-                End Class
-            End Namespace
-            """;
-
-        var test = new VerifyVB.Test { TestCode = consumerCode };
-        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
-
-        await test.RunAsync();
-    }
-
-    [TestMethod]
-    public async Task WhenOverrideInheritsInheritableCustomAttributeFromDifferentFrameworkAssemblyInVisualBasic_Diagnostic()
-    {
-        // Same inheritable-custom-attribute migration break as the C# case, verified for a Visual Basic Overrides.
-        string legacyBaseCode = """
-            namespace Microsoft.VisualStudio.TestTools.UnitTesting
-            {
-                public class DataTestMethodAttribute : System.Attribute { }
-            }
-
-            namespace Repro
-            {
-                using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = true)]
-                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
-
-                public abstract class TestBase
-                {
-                    [RetryTest]
-                    public virtual void Run() { }
-                }
-            }
-            """;
-
-        string consumerCode = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Namespace Repro
-                <TestClass>
-                Public Class {|#0:SampleTests|}
-                    Inherits TestBase
-
-                    Public Overrides Sub Run()
-                    End Sub
-                End Class
-            End Namespace
-            """;
-
-        var test = new VerifyVB.Test { TestCode = consumerCode };
-        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
-
-        test.ExpectedDiagnostics.Add(
-            VerifyVB.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("Run", "TestBase", "RetryTest", LegacyFrameworkAssemblyName));
-
-        await test.RunAsync();
-    }
-
-    [TestMethod]
-    public async Task WhenOverrideInheritsNonInheritableCustomAttributeFromDifferentFrameworkAssemblyInVisualBasic_NoDiagnostic()
-    {
-        // With Inherited=false the Visual Basic override does not carry the base attribute, so nothing is reported.
-        string legacyBaseCode = """
-            namespace Microsoft.VisualStudio.TestTools.UnitTesting
-            {
-                public class DataTestMethodAttribute : System.Attribute { }
-            }
-
-            namespace Repro
-            {
-                using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
-                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
-
-                public abstract class TestBase
-                {
-                    [RetryTest]
-                    public virtual void Run() { }
-                }
-            }
-            """;
-
-        string consumerCode = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Namespace Repro
-                <TestClass>
-                Public Class SampleTests
-                    Inherits TestBase
-
-                    Public Overrides Sub Run()
-                    End Sub
-
-                    <TestMethod>
-                    Public Sub MyTest()
-                    End Sub
-                End Class
-            End Namespace
-            """;
-
-        var test = new VerifyVB.Test { TestCode = consumerCode };
-        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
-
-        await test.RunAsync();
-    }
-
-    [TestMethod]
     public async Task WhenTestClassHasInvalidStaticTestContextProperty_NoDiagnostic()
     {
         string legacyBaseCode = """
@@ -3293,15 +3147,8 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     private static readonly MetadataReference[] FrameworkReferences = ResolveFrameworkReferences();
 
     private static MetadataReference[] ResolveFrameworkReferences()
-    {
-        string nuGetConfig = Path.Combine(RootFinder.Find(), "NuGet.config");
-#if NET462
-        ReferenceAssemblies referenceAssemblies = ReferenceAssemblies.NetFramework.Net462.Default.WithNuGetConfigFilePath(nuGetConfig);
-#else
-        ReferenceAssemblies referenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nuGetConfig);
-#endif
-        return referenceAssemblies.ResolveAsync(LanguageNames.CSharp, System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToArray();
-    }
+        => AnalyzerTestReferenceAssemblies.Default.ResolveAsync(LanguageNames.CSharp, System.Threading.CancellationToken.None)
+            .GetAwaiter().GetResult().ToArray();
 
     // The MSTest attribute surface a v3-compiled base library would have been compiled against, in an assembly named
     // like the legacy framework so its type identity differs from the current MSTest.TestFramework.

@@ -1,12 +1,12 @@
 # Build MyServer application in multi-stage build.
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER app
 WORKDIR /app
 EXPOSE 8080
 
 ## Use .NET SDK to build the application.
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["MyServer/MyServer.csproj", "MyServer/"]
@@ -28,7 +28,7 @@ COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MyServer.dll"]
 
 # Build MyServer.Tests.
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS buildTest
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS buildTest
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["MyServer.Tests/MyServer.Tests.csproj", "MyServer.Tests/"]

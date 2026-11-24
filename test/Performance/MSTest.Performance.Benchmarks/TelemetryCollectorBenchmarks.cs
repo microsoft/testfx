@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace MSTest.Performance.Benchmarks;
 
 /// <summary>
-/// Measures assertion telemetry collection, which runs once per Assert, CollectionAssert, and StringAssert call.
+/// Measures assertion telemetry collection, which runs once per Assert call.
 /// </summary>
 [MemoryDiagnoser]
 public class TelemetryCollectorBenchmarks : IDisposable

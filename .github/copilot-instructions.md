@@ -6,11 +6,13 @@ This is a .NET based repository that contains the MSTest testing framework and M
 
 The codebase ships several distinct (but related) products. Knowing which product a change belongs to is essential because they have different conventions, target frameworks, and public API surfaces:
 
-- `src/Platform/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/Platform/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
-- `src/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …) plus `TestFramework.Extensions`.
-- `src/Adapter` — bridges MSTest to test hosts: `MSTest.TestAdapter` (VSTest adapter) and `MSTestAdapter.PlatformServices` (platform-services abstraction shared by both hosts).
-- `src/Analyzers` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
-- `src/Package/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.
+The only source subfolders are `MTP`, `MSTest`, and `Polyfills`. MSTest projects sit directly under `src/MSTest`, without adapter, analyzer, framework, or package grouping folders. `Shared` and `APIHistory` hold shared sources and archived API records; `Polyfills` contains compatibility sources shared across both products.
+
+- `src/MTP/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/MTP/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
+- `src/MSTest/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …). The sibling `MSTest.TestFramework.Extensions` project builds the compatibility DLL that forwards older non-UI type references to the core framework.
+- `src/MSTest/MSTest.TestAdapter` and `src/MSTest/MSTestAdapter.PlatformServices` — bridge MSTest to test hosts (the VSTest adapter and platform-services abstraction shared by both hosts).
+- `src/MSTest/MSTest.Analyzers*` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
+- `src/MSTest/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.
 - `test/UnitTests/<Project>.UnitTests` — fast unit tests for each project.
 - `test/IntegrationTests/<Project>.IntegrationTests` or `<Package>.Acceptance.IntegrationTests` — file-system / process-level tests; acceptance tests consume the packed NuGets from `artifacts/packages/<Configuration>/Shipping`.
 - `test/Utilities/TestFramework.ForTestingMSTest` — the internal `TestContainer`-based framework used to unit-test MSTest itself (any public parameterless method on a `TestContainer` subclass is a test; no `[TestMethod]` needed).
@@ -18,6 +20,16 @@ The codebase ships several distinct (but related) products. Knowing which produc
 - `eng/` — Arcade-based build infrastructure. Do not hand-edit `eng/common/`: it is mirrored from `dotnet/arcade` and overwritten by automation.
 
 Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Testing.Platform.slnf`, and `NonWindowsTests.slnf` are filtered views.
+
+## Session delivery gate
+
+Use [session-delivery-hygiene](skills/session-delivery-hygiene/SKILL.md) for guidance-change requests, before editing or pushing PR-linked work, when diagnosing package/output provenance or cleaning task resources, and before implementation handoff. Apply only its relevant risk gates; it does not authorize review publication, GitHub mutation, or changes outside the requested scope.
+
+## Feature delivery and decision evidence
+
+Use [feature-delivery](skills/feature-delivery/SKILL.md) before implementing a new feature or making a material design/architecture decision, when adding regression coverage, and when preparing feature PR evidence. Keep a versioned decision record with the feature: research and sources, approaches actually tried and their outcomes, alternatives, assumptions, and why the chosen direction won. Update it as the work changes; a final summary reconstructed from memory is not a substitute.
+
+Challenge material design choices before coding, especially when the request gives no rationale or constraints. Compare the existing design and simpler alternatives, make compatibility/lifecycle/failure contracts explicit, and distinguish confirmed requirements from assumptions. Missing rationale is a reason to investigate, not permission to invent requirements.
 
 ## Build, test, and debug commands
 
@@ -40,13 +52,17 @@ Once the desired project has been built, invoke its test host directly. Note tha
 
 ```powershell
 # Filter by UID — works with both MSTest and MTP-based hosts
-dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests -f net8.0 --no-build -c Debug -- --filter-uid <TestUid>
+dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests -f net10.0 --no-build -c Debug -- --filter-uid <TestUid>
 
 # Tree-node / wildcard filter — MTP-only (faster to type than a UID)
-dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
+dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
 ```
 
 For acceptance tests that drive generated assets, prefer running them through the test explorer or `dotnet test --filter "FullyQualifiedName~MyTest"` on the specific project, after `-pack`.
+
+### Repository scripting
+
+For repository-local scripting, prefer PowerShell over Python only when functionality (including supported platforms), security, and performance are preserved. Keep Python where that parity is not established; do not force migrations with regressions or rewrite unrelated existing tools.
 
 ## Code Standards
 
@@ -77,7 +93,7 @@ You MUST minimize adding public API surface area but any newly added public API 
 
 Every packable project must carry the metadata that nuget.org renders on the package page. This is enforced at pack time by the `_ValidatePackageMetadata` target in the root [`Directory.Build.targets`](../Directory.Build.targets), which fails the build when a packable project is missing either piece — including packages that are `IsShipping=false`, because those still reach nuget.org.
 
-- Write `<PackageDescription>` so it **leads with what the package does**, and close it with `$(CommonProductDescription)` — the shared product sentence, defaulted per product area in [`src/Directory.Build.props`](../src/Directory.Build.props) (MSTest) and [`src/Platform/Directory.Build.props`](../src/Platform/Directory.Build.props) (Microsoft.Testing.Platform). nuget.org truncates the description in search results, so the package-specific sentence has to come first.
+- Write `<PackageDescription>` so it **leads with what the package does**, and close it with `$(CommonProductDescription)` — the shared product sentence, defaulted per product area in [`src/Directory.Build.props`](../src/Directory.Build.props) (MSTest) and [`src/MTP/Directory.Build.props`](../src/MTP/Directory.Build.props) (Microsoft.Testing.Platform). nuget.org truncates the description in search results, so the package-specific sentence has to come first.
 - Wrap the value in `<![CDATA[ ... ]]>` and keep its continuation lines unindented. MSBuild trims a property value but not the indentation of its inner lines, so an indented multi-line description leaks the .csproj whitespace into the published text. Property references such as `$(CommonProductDescription)` are still expanded inside CDATA.
 - NEVER leave the description unset. NuGet's pack targets substitute the literal placeholder `Package Description` during evaluation, which is why Arcade's own "PackageDescription must be specified" check cannot catch it and why the repo-level guard exists.
 - Add a `PACKAGE.md` next to the project file. It is picked up automatically as `PackageReadmeFile` and packed into the root of the `.nupkg`.
@@ -87,7 +103,7 @@ Every packable project must carry the metadata that nuget.org renders on the pac
 When making change to resource files, you MUST:
 
 - Add a corresponding entry in the resource file (`.resx`).
-- NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/TestFramework/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
+- NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/MTP/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/MSTest/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
 - A few resource accessors are hand-maintained — notably `PlatformResources.cs` has an `IS_MTP_UNIT_TESTS` block that must be updated when a unit test needs to read a newly added string.
 - `{Locked="…"}` markers in a resource `<comment>` are matched as **substrings, not whole words**. A short locked token therefore also freezes every longer word that contains it, which blocks a legitimately translatable word. For example, `{Locked="const"}` on a message that also contains the English word *constant* locks `const` inside `constant`, so translators cannot localize it. Make each locked token unambiguous:
   - Every locked token MUST occur verbatim in the corresponding `<value>`. Do not lock an option name or other contextual identifier that the user-facing string does not actually contain.
@@ -113,15 +129,21 @@ When making change to resource files, you MUST:
 
 ## Testing Guidelines
 
+- For every behavior-changing PR or commit you implement or review, use [testfx-test-value-evidence](skills/testfx-test-value-evidence/SKILL.md), which applies the vendored upstream `test-value-evidence` skill, and include a compact **Test-value evidence** section in the handoff or authorized PR review/description, bound to the exact revision. Bug fixes need a test that fails for the reported defect without the fix and passes with it; features need a buildable counterfactual that exposes the missing or wrong behavior. Do not count compilation/setup failures, skipped tests, or green CI alone as proof. Distinguish executed evidence, static predictions, surviving faults, and unavailable evidence. Existing tests may suffice; behavior-preserving refactors should pass on both revisions. Read-only reviewers must not mutate or execute untrusted PR code to manufacture evidence.
+- Before implementing a new feature or changing a consumer boundary, map the user journey to the affected shipping consumers and exact automated E2E cases using [feature-delivery](skills/feature-delivery/SKILL.md). Exercise the real packaged runner and final consumed output where applicable; unit tests or one correct reporter do not prove another reporter's mapping. Assert identities, grouping, counts, and each result's associated name/outcome, not just that expected text occurs somewhere. Reuse adequate existing tests and keep the matrix proportional to the changed contract.
+- For user-visible output or layout changes, inspect the actual rendered surface, not only generated HTML, JSON, snapshots of source text, or a successful process exit. Use representative viewport/terminal widths, long and escaped labels, and relevant empty/error/expanded states; check readability, clipping/overlap, alignment, and reachable interactions. Add deterministic presentation assertions with existing harnesses where practical. Record the surface, dimensions, interactions, and evidence; an inaccessible Azure DevOps/IDE UI remains an explicit validation gap even when its published payload is correct. See [rendered-surface validation](skills/feature-delivery/SKILL.md#4-demonstrate-the-feature-and-prepare-the-pr).
 - Tests for MTP and the MSTest analyzers MUST use MSTest.
+- Keep analyzer and code-fix test coverage C#-only. Do not add or retain Visual Basic (VB.NET) test methods, VB source snippets, VB cases in parameterized tests, VB verifier helpers, or Visual Basic analyzer-testing package dependencies. This restriction does not remove production VB support or unrelated VB application tests.
 - Unit tests for MSTest itself MUST use the internal test framework in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) (a `TestContainer`-based framework where any public parameterless method is a test).
 - The assertion style is project-specific and enforced by each project's `BannedSymbols.txt`. Check it before writing assertions:
-  - Most MTP unit-test projects (and `MSTest.Analyzers.UnitTests`, `MSTest.SelfRealExamples.UnitTests`) ban `AwesomeAssertions` and require MSTest `Assert`/`StringAssert`/`CollectionAssert`.
+  - Most MTP unit-test projects (and `MSTest.Analyzers.UnitTests`, `MSTest.SelfRealExamples.UnitTests`) ban `AwesomeAssertions` and require MSTest `Assert`.
   - The adapter unit-test projects (`MSTestAdapter.UnitTests`, `MSTestAdapter.PlatformServices.UnitTests`) ban MSTest's `Assert` family and require `AwesomeAssertions` (FluentAssertions-style API).
+- For deterministic multiline output, always prefer one exact equality assertion with a C# raw string literal (`"""..."""`) over multiple `Assert.Contains` assertions or a containment assertion with escaped line breaks. Express line breaks directly in the raw string instead of using `\n`, `\r\n`, or concatenating `Environment.NewLine`. Preserve ordering, indentation, blank lines, and trailing newlines in the expectation. Normalize both operands when production text can legitimately mix line-ending styles or uses platform-native newlines that may differ from the source checkout's raw-string line endings. When surrounding output is genuinely variable, match the deterministic block with a raw string instead of checking its individual lines.
 - Acceptance integration tests run with assembly-level method parallelization. Classes that share a single generated mutable test asset across multiple methods must be marked `[DoNotParallelize]` to avoid races on `bin/obj` outputs.
 - When asserting on test-host output that contains a rendered test **duration** (e.g. `failed MyTest (040ms)`), NEVER hard-code `\(\d+ms\)`. The duration format grows leading parts (`(1s 040ms)`, `(2m 03s 040ms)`, …) on slower machines (often macOS, sometimes Windows), so a `\d+ms`-only pattern is a classic source of timing flakiness. Use the shared `AcceptanceAssert.DurationPattern` constant (or, where a duration only ever applies to skipped tests, the deterministic `(0ms)`) instead.
 - Prefer deterministic output, marker, or rendezvous assertions over wall-clock timing. When an acceptance test must assert an upper bound on `Stopwatch.Elapsed` around a real process launch, use a named limit with a generous allowance for process startup, JIT, and teardown on loaded CI agents, and add a comment explaining its relationship to the configured timeout or expected operation.
 - When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
+- Keep regression tests present while removing the relevant production change in an isolated, task-owned comparison. Show that the same tests execute and fail for the intended behavioral reason without the change, then pass with it. Record source states, exact commands, exits, test identities/counts, and assertion failures using [feature-delivery](skills/feature-delivery/SKILL.md). Compilation, restore, launch failures, and skipped/zero tests are not red-phase proof. For behavior-preserving changes, record focused green-before/green-after evidence instead.
 
 ## CLI options guidelines
 
@@ -177,6 +199,9 @@ How to set the Issue Type from each surface:
 
 ## Pull Request guidelines
 
+- Use a descriptive, user-facing title naming the behavior and product area when useful. Do not require `[feat]` or other category prefixes; see the [PR-title research and decision](../docs/decisions/feature-delivery-guidance.md#pr-title-research). Preserve existing bot/automation prefixes that consumers depend on. A title category is not proof of scope, compatibility, or correctness.
+- Whenever practical, include screenshots or a short GIF/video showing the changed feature working in the PR description. Terminal/CLI and report changes can be demonstrated too. Prefer before/after evidence for changed behavior; include captions, reproduction commands, and source/package provenance. Use a readable text transcript or artifact when it communicates the result better, and explain unavailable or inapplicable media. Never fabricate a demonstration or expose sensitive data.
+- Preserve the [PR template](PULL_REQUEST_TEMPLATE.md) and link the maintained decision record and red/green evidence. Media supplements, never replaces, executable assertions and shipping-product validation. Upload or publish only when authorized, use `github-pr-media` when available for authorized uploads, and read back any published body to verify its content.
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
 - Do the changes when you are specifically tagged or mentioned as copilot.
 - If you are unsure, comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.

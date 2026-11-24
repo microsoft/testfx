@@ -126,13 +126,14 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
             .ToImmutableArray();
 
         Assert.HasCount(2, inheritedCases);
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[]
             {
                 "LifecycleObjectModel.InheritedDerived.BaseTest",
                 "LifecycleObjectModel.InheritedDerived.DerivedTest",
             },
-            inheritedCases.Select(testCase => testCase.FullyQualifiedName).ToArray());
+            inheritedCases.Select(testCase => testCase.FullyQualifiedName).ToArray(),
+            SequenceOrder.InAnyOrder);
 
         foreach (TestCase testCase in inheritedCases)
         {
@@ -221,7 +222,7 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
         string assemblyName = $"LegacyLifecycleObjectModel_{tfm.Replace('.', '_')}";
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, assemblyName, tfm);
         TestHostResult result = await testHost.ExecuteAsync(
-            "--output Detailed",
+            "--output Detailed --show-stdout all",
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);

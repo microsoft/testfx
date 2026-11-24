@@ -32,7 +32,7 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
             ?? throw new InvalidOperationException("A standalone process benchmark requires an MTP executable test host.");
 
         ProcessStartInfo processStartInfo =
-           new(testHost.FullName, $"--no-ansi --progress off {_argument}".Trim())
+           new(testHost.FullName, $"--ansi off --progress off {_argument}".Trim())
            {
                UseShellExecute = false,
                RedirectStandardOutput = true,

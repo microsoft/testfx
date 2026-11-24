@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
@@ -185,6 +185,26 @@ public partial class AssertTests : TestContainer
     public void AreSequenceEqual_NonGeneric_CustomComparer_Parity()
         => Assert.AreSequenceEqual(new ArrayList { "a", "B" }, new ArrayList { "A", "b" }, new CaseInsensitiveNonGenericComparer(), SequenceOrder.InAnyOrder);
 
+    public void AreSequenceEqual_NonGeneric_CustomComparer_InOrder_Passes()
+    {
+        IEnumerable expected = new ArrayList { "a" };
+        IEnumerable actual = new ArrayList { "A" };
+        IEqualityComparer comparer = new CaseInsensitiveNonGenericComparer();
+
+        Assert.AreSequenceEqual(expected, actual, comparer);
+    }
+
+    public void AreSequenceEqual_NonGeneric_NullComparer_UsesDefaultComparerForBothOrders()
+    {
+        IEnumerable expected = new ArrayList { 1, 2 };
+        IEnumerable sameOrder = new ArrayList { 1, 2 };
+        IEnumerable differentOrder = new ArrayList { 2, 1 };
+        IEqualityComparer? comparer = null;
+
+        Assert.AreSequenceEqual(expected, sameOrder, comparer);
+        Assert.AreSequenceEqual(expected, differentOrder, comparer, SequenceOrder.InAnyOrder);
+    }
+
     public void AreNotSequenceEqual_IdenticalSequences_Fails()
     {
         int[] notExpected = [1, 2, 3];
@@ -346,5 +366,399 @@ public partial class AssertTests : TestContainer
 
         public int GetHashCode(object obj)
             => StringComparer.OrdinalIgnoreCase.GetHashCode((string)obj);
+    }
+
+#if NETCOREAPP3_1_OR_GREATER
+    public void SequenceAssertions_ConcreteCollectionOverloads_KeepComparerAndOrder()
+    {
+        string[] expected = ["a", "b", "a"];
+        List<string> expectedList = [.. expected];
+        List<string> actual = [];
+        var comparer = new CaseInsensitiveStringComparer();
+        (Action Equal, Action NotEqual, bool AnyOrder, bool IgnoreCase)[] cases =
+        [
+            (() => Assert.AreSequenceEqual<string, List<string>, List<string>>(expectedList, actual, comparer, "concrete context"),
+                () => Assert.AreNotSequenceEqual<string, List<string>, List<string>>(expectedList, actual, comparer, "concrete context"), false, true),
+            (() => Assert.AreSequenceEqual<string, List<string>, List<string>>(expectedList, actual, comparer, SequenceOrder.InAnyOrder, "concrete context"),
+                () => Assert.AreNotSequenceEqual<string, List<string>, List<string>>(expectedList, actual, comparer, SequenceOrder.InAnyOrder, "concrete context"), true, true),
+            (() => Assert.AreSequenceEqual(expected, actual, "concrete context"),
+                () => Assert.AreNotSequenceEqual(expected, actual, "concrete context"), false, false),
+            (() => Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder, "concrete context"),
+                () => Assert.AreNotSequenceEqual(expected, actual, SequenceOrder.InAnyOrder, "concrete context"), true, false),
+            (() => Assert.AreSequenceEqual(expected, actual.ToArray(), comparer, SequenceOrder.InAnyOrder, "concrete context"),
+                () => Assert.AreNotSequenceEqual(expected, actual.ToArray(), comparer, SequenceOrder.InAnyOrder, "concrete context"), true, true),
+        ];
+        foreach ((Action equal, Action notEqual, bool anyOrder, bool ignoreCase) in cases)
+        {
+            actual = anyOrder ? ["b", "a", "a"] : ["a", "b", "a"];
+            if (ignoreCase)
+            {
+                actual = [.. actual.Select(value => value.ToUpperInvariant())];
+            }
+
+            equal.Should().NotThrow();
+            AssertFailedException inverse = CaptureSequenceScopedFailure(notEqual);
+            inverse.ExpectedText.Should().Be("[\"a\", \"b\", \"a\"]");
+            inverse.Message.Should().StartWith(anyOrder
+                ? "Assertion failed. Expected sequences to differ (in any order)."
+                : "Assertion failed. Expected sequences to differ.");
+            if (anyOrder && ignoreCase)
+            {
+                inverse.Message.Should().Contain(", <comparer>, <order>)");
+            }
+
+            inverse.Message.Should().Contain("concrete context");
+            actual = ["z", "z", "z"];
+            notEqual.Should().NotThrow();
+            AssertFailedException mismatch = CaptureSequenceScopedFailure(equal);
+            mismatch.ExpectedText.Should().Be("[\"a\", \"b\", \"a\"]");
+            mismatch.ActualText.Should().Be("[\"z\", \"z\", \"z\"]");
+            mismatch.Message.Should().Contain("concrete context");
+        }
+    }
+#endif
+
+    public void SequenceAssertions_NonGenericOverloads_KeepComparerOrderAndFailureEvidence()
+    {
+        IEnumerable expected = new ArrayList { "a", "b", "a" };
+        IEnumerable actual = Array.Empty<string>();
+        var comparer = new CaseInsensitiveNonGenericComparer();
+        (Action Equal, Action NotEqual, int Mode)[] cases =
+        [
+            (() => Assert.AreSequenceEqual(expected, actual, "non-generic context"),
+                () => Assert.AreNotSequenceEqual(expected, actual, "non-generic context"), 0),
+            (() => Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder, "non-generic context"),
+                () => Assert.AreNotSequenceEqual(expected, actual, SequenceOrder.InAnyOrder, "non-generic context"), 1),
+            (() => Assert.AreSequenceEqual(expected, actual, comparer, "non-generic context"),
+                () => Assert.AreNotSequenceEqual(expected, actual, comparer, "non-generic context"), 2),
+            (() => Assert.AreSequenceEqual(expected, actual, comparer, SequenceOrder.InAnyOrder, "non-generic context"),
+                () => Assert.AreNotSequenceEqual(expected, actual, comparer, SequenceOrder.InAnyOrder, "non-generic context"), 3),
+        ];
+        foreach ((Action equal, Action notEqual, int mode) in cases)
+        {
+            string[] matching = mode switch
+            {
+                0 => ["a", "b", "a"],
+                1 => ["b", "a", "a"],
+                2 => ["A", "B", "A"],
+                _ => ["B", "A", "A"],
+            };
+            actual = new ArrayList(matching);
+            equal.Should().NotThrow();
+            AssertFailedException inverse = CaptureSequenceScopedFailure(notEqual);
+            inverse.ExpectedText.Should().Be("[\"a\", \"b\", \"a\"]");
+            inverse.Message.Should().Contain("non-generic context");
+            inverse.Message.Should().Contain(mode switch
+            {
+                0 => "Assert.AreNotSequenceEqual(expected, actual)",
+                1 => "Assert.AreNotSequenceEqual(expected, actual, <order>)",
+                2 => "Assert.AreNotSequenceEqual(expected, actual, <comparer>)",
+                _ => "Assert.AreNotSequenceEqual(expected, actual, <comparer>, <order>)",
+            });
+
+            actual = new ArrayList { "z", "z", "z" };
+            notEqual.Should().NotThrow();
+            AssertFailedException mismatch = CaptureSequenceScopedFailure(equal);
+            mismatch.ExpectedText.Should().Be("[\"a\", \"b\", \"a\"]");
+            mismatch.ActualText.Should().Be("[\"z\", \"z\", \"z\"]");
+            mismatch.Message.Should().Contain("non-generic context");
+            mismatch.Message.Should().EndWith(mode switch
+            {
+                0 => "Assert.AreSequenceEqual(expected, actual)",
+                1 => "Assert.AreSequenceEqual(expected, actual, <order>)",
+                2 => "Assert.AreSequenceEqual(expected, actual, <comparer>)",
+                _ => "Assert.AreSequenceEqual(expected, actual, <comparer>, <order>)",
+            });
+            if (mode >= 2)
+            {
+                mismatch.Message.Should().Contain("CaseInsensitiveNonGenericComparer");
+            }
+        }
+
+        IEnumerable differentCaseExpected = new ArrayList { "value" };
+        IEnumerable differentCaseActual = new ArrayList { "VALUE" };
+        IEqualityComparer? nullComparer = null;
+        Action nullComparerInOrder = () => Assert.AreNotSequenceEqual(differentCaseExpected, differentCaseActual, nullComparer);
+        Action nullComparerAnyOrder = () => Assert.AreNotSequenceEqual(differentCaseExpected, differentCaseActual, nullComparer, SequenceOrder.InAnyOrder);
+
+        nullComparerInOrder.Should().NotThrow();
+        nullComparerAnyOrder.Should().NotThrow();
+    }
+
+    public void SequenceAssertions_AnyOrder_NullsHaveIndependentMultiplicity()
+    {
+        IEnumerable<string?> expected = new string?[] { null, "a", null };
+        IEnumerable<string?> actual = new string?[] { "a", null, null };
+        Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder);
+        CaptureSequenceScopedFailure(() => Assert.AreNotSequenceEqual(expected, actual, SequenceOrder.InAnyOrder))
+            .ActualText.Should().Be("[\"a\", null, null]");
+
+        (string?[] Expected, string?[] Actual, string Missing, string Unexpected)[] cases =
+        [
+            ([null, "a", null], [null, "a"], "[null]", "[]"),
+            ([null, "a"], [null, "a", null], "[]", "[null]"),
+        ];
+        foreach ((string?[] left, string?[] right, string missing, string unexpected) in cases)
+        {
+            expected = left;
+            actual = right;
+            Action differs = () => Assert.AreNotSequenceEqual(expected, actual, SequenceOrder.InAnyOrder);
+            differs.Should().NotThrow();
+            AssertFailedException exception = CaptureSequenceScopedFailure(() => Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder));
+            string summary = missing == "[]"
+                ? "Missing 0 element(s) from actual. Found 1 unexpected element(s)."
+                : "Missing 1 element(s) from actual. Found 0 unexpected element(s).";
+            string message = $"""
+                Assertion failed. Expected sequences to be equal (in any order).
+                {summary}
+
+                missing:    {missing}
+                unexpected: {unexpected}
+
+                Assert.AreSequenceEqual(expected, actual, <order>)
+                """;
+            exception.Message.Replace("\r\n", "\n").Should().Be(message.Replace("\r\n", "\n"));
+        }
+    }
+
+    public void AreSequenceEqual_InAnyOrder_MultipleMissingAndUnexpectedValuesPreserveAllOccurrences()
+    {
+        int[] expected = [1, 2, 2, 4];
+        int[] actual = [2, 3, 3];
+
+        Action action = () => Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder);
+        AssertFailedException exception = action.Should().Throw<AssertFailedException>().Which;
+
+        exception.Message.Should().Contain("missing:    [1, 2, 4]");
+        exception.Message.Should().Contain("unexpected: [3, 3]");
+    }
+
+    public void SequenceAssertions_InOrder_NullElementsComparePositionally()
+    {
+        string?[] equal = [null, "value"];
+        Assert.AreSequenceEqual<string?>(equal, [null, "value"]);
+        Assert.AreNotSequenceEqual<string?>([null], ["value"]);
+
+        Action sequencesShouldDiffer = () => Assert.AreSequenceEqual<string?>([null], ["value"]);
+        sequencesShouldDiffer.Should().Throw<AssertFailedException>();
+
+        Action sequencesShouldBeEqual = () => Assert.AreNotSequenceEqual<string?>(equal, [null, "value"]);
+        sequencesShouldBeEqual.Should().Throw<AssertFailedException>();
+    }
+
+    public void SequenceAssertions_NullAndLengthMismatches_ContinueWithinScope()
+    {
+        var comparer = new CaseInsensitiveStringComparer();
+        foreach (bool nullExpected in new[] { true, false })
+        {
+            IEnumerable<string>? expected = nullExpected ? null : new[] { "a" };
+            IEnumerable<string>? actual = nullExpected ? new[] { "a" } : null;
+            Action differs = () => Assert.AreNotSequenceEqual(expected, actual, comparer);
+            differs.Should().NotThrow();
+            AssertFailedException failure = CaptureSequenceScopedFailure(
+                () => Assert.AreSequenceEqual(expected, actual, comparer, message: null, expectedExpression: string.Empty, actualExpression: string.Empty));
+            string expectedText = nullExpected ? "null" : "[\"a\"]";
+            string actualText = nullExpected ? "[\"a\"]" : "null";
+            string message = $"""
+                Assertion failed. Expected sequences to be equal.
+                one side is null, the other is not.
+
+                expected: {expectedText}
+                actual:   {actualText}
+                comparer: CaseInsensitiveStringComparer
+                """;
+            failure.Message.Replace("\r\n", "\n").Should().Be(message.Replace("\r\n", "\n"));
+            failure.ExpectedText.Should().Be(expectedText);
+            failure.ActualText.Should().Be(actualText);
+        }
+
+        IEnumerable<string> left = new[] { "a", "b" };
+        IEnumerable<string> right = new[] { "A" };
+        Assert.AreNotSequenceEqual(left, right, comparer);
+        CaptureSequenceScopedFailure(() => Assert.AreSequenceEqual(left, right, comparer))
+            .Message.Should().Contain("different lengths (expected: 2, actual: 1)").And.Contain("comparer: CaseInsensitiveStringComparer");
+
+        CaptureSequenceScopedFailure(() => Assert.AreNotSequenceEqual(left, left)).ExpectedText.Should().Be("[\"a\", \"b\"]");
+    }
+
+    public void SequenceAssertions_InvalidOrder_IsRejectedBeforeReferenceEquality()
+    {
+        IEnumerable<int> values = new[] { 1, 2 };
+        foreach (SequenceOrder order in new[] { (SequenceOrder)(-1), (SequenceOrder)int.MaxValue })
+        {
+            Action equal = () => Assert.AreSequenceEqual(values, values, order);
+            Action notEqual = () => Assert.AreNotSequenceEqual(values, values, order);
+            equal.Should().ThrowExactly<ArgumentOutOfRangeException>().Which.ParamName.Should().Be("order");
+            notEqual.Should().ThrowExactly<ArgumentOutOfRangeException>().Which.ParamName.Should().Be("order");
+        }
+    }
+
+    public void AreSequenceEqual_EnumerableInOrder_NullElementsComparePositionally()
+    {
+        IEnumerable<string?> expected = new string?[] { null, "value" };
+        IEnumerable<string?> equal = new string?[] { null, "value" };
+        IEnumerable<string?> different = new string?[] { "other", "value" };
+
+        Assert.AreSequenceEqual(expected, equal);
+        Assert.AreNotSequenceEqual(expected, different);
+
+        Action unequalSequencesShouldFail = () => Assert.AreSequenceEqual(expected, different);
+        unequalSequencesShouldFail.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*1 element(s) differ. First difference at index 0*");
+
+        Action equalSequencesShouldFail = () => Assert.AreNotSequenceEqual(expected, equal);
+        equalSequencesShouldFail.Should().ThrowExactly<AssertFailedException>();
+    }
+
+    public void AreSequenceEqual_EnumerableInOrder_NullDoesNotMatchNonNullWhenComparerConsidersThemEqual()
+    {
+        IEnumerable<string?> expected = new string?[] { null };
+        IEnumerable<string?> actual = new string?[] { "value" };
+
+        Action action = () => Assert.AreSequenceEqual(expected, actual, new AllEqualStringComparer());
+        action.Should().ThrowExactly<AssertFailedException>()
+            .Which.Message.Should().Contain("1 element(s) differ. First difference at index 0.");
+    }
+
+    public void AreNotSequenceEqual_EnumerableInOrder_NullDiffersFromNonNullWhenComparerConsidersThemEqual()
+    {
+        IEnumerable<string?> notExpected = new string?[] { null };
+        IEnumerable<string?> actual = new string?[] { "value" };
+
+        Assert.AreNotSequenceEqual(notExpected, actual, new AllEqualStringComparer());
+    }
+
+    public void AreSequenceEqual_EnumerableInAnyOrder_AccumulatesRepeatedMissingAndUnexpectedValues()
+    {
+        IEnumerable<int> expected = [1, 1, 1, 2, 2, 4];
+        IEnumerable<int> actual = [1, 2, 3, 3];
+
+        Action action = () => Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder);
+        AssertFailedException exception = action.Should().ThrowExactly<AssertFailedException>().Which;
+
+        exception.Message.Should().Contain("missing:    [1, 1, 2, 4]");
+        exception.Message.Should().Contain("unexpected: [3, 3]");
+    }
+
+    public void AreSequenceEqual_EnumerableInAnyOrder_AccumulatesRepeatedNullDifferences()
+    {
+        IEnumerable<string?> expectedWithMissingNulls = new string?[] { null, null, null, "a" };
+        IEnumerable<string?> actualWithFewerNulls = new string?[] { null, "a" };
+        Action missing = () => Assert.AreSequenceEqual(expectedWithMissingNulls, actualWithFewerNulls, SequenceOrder.InAnyOrder);
+        missing.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Missing 2 element(s) from actual. Found 0 unexpected element(s).")
+            .And.Contain("missing:    [null, null]");
+
+        IEnumerable<string?> expectedWithOneNull = new string?[] { null, "a" };
+        IEnumerable<string?> actualWithExtraNulls = new string?[] { null, null, null, "a" };
+        Action unexpected = () => Assert.AreSequenceEqual(expectedWithOneNull, actualWithExtraNulls, SequenceOrder.InAnyOrder);
+        unexpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Missing 0 element(s) from actual. Found 2 unexpected element(s).")
+            .And.Contain("unexpected: [null, null]");
+    }
+
+    public void AreSequenceEqual_NullMismatch_UsesPlaceholdersForEmptyExpressions()
+    {
+        IEnumerable<int>? expected = null;
+        IEnumerable<int> actual = [1];
+
+        Action emptyExpected = () => Assert.AreSequenceEqual(expected, actual, expectedExpression: string.Empty, actualExpression: "actual");
+        emptyExpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(<expected>, actual)");
+
+        Action emptyActual = () => Assert.AreSequenceEqual(expected, actual, expectedExpression: "expected", actualExpression: string.Empty);
+        emptyActual.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(expected, <actual>)");
+    }
+
+    public void AreSequenceEqual_LengthMismatch_PreservesMessageAndExpectedActualValues()
+    {
+        IEnumerable<int> expected = [1, 2];
+        IEnumerable<int> actual = [1];
+        Action action = () => Assert.AreSequenceEqual(expected, actual, message: "length context");
+
+        AssertFailedException exception = action.Should().ThrowExactly<AssertFailedException>().Which;
+        exception.Message.Should().Contain("length context");
+        exception.ExpectedText.Should().Be("[1, 2]");
+        exception.ActualText.Should().Be("[1]");
+    }
+
+    public void AreSequenceEqual_LengthMismatch_UsesPlaceholdersForEmptyExpressions()
+    {
+        IEnumerable<int> expected = [1, 2];
+        IEnumerable<int> actual = [1];
+
+        Action emptyExpected = () => Assert.AreSequenceEqual(expected, actual, expectedExpression: string.Empty, actualExpression: "actual");
+        emptyExpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(<expected>, actual)");
+
+        Action emptyActual = () => Assert.AreSequenceEqual(expected, actual, expectedExpression: "expected", actualExpression: string.Empty);
+        emptyActual.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(expected, <actual>)");
+    }
+
+    public void AreSequenceEqual_ElementMismatch_UsesPlaceholdersForEmptyExpressions()
+    {
+        IEnumerable<int> expected = [1, 2];
+        IEnumerable<int> actual = [1, 3];
+
+        Action emptyExpected = () => Assert.AreSequenceEqual(expected, actual, expectedExpression: string.Empty, actualExpression: "actual");
+        emptyExpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(<expected>, actual)");
+
+        Action emptyActual = () => Assert.AreSequenceEqual(expected, actual, expectedExpression: "expected", actualExpression: string.Empty);
+        emptyActual.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(expected, <actual>)");
+    }
+
+    public void AreSequenceEqual_InAnyOrderMismatch_UsesPlaceholdersForEmptyExpressions()
+    {
+        IEnumerable<int> expected = [1];
+        IEnumerable<int> actual = [2];
+
+        Action emptyExpected = () => Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder, expectedExpression: string.Empty, actualExpression: "actual");
+        emptyExpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(<expected>, actual, <order>)");
+
+        Action emptyActual = () => Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder, expectedExpression: "expected", actualExpression: string.Empty);
+        emptyActual.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreSequenceEqual(expected, <actual>, <order>)");
+    }
+
+    public void AreNotSequenceEqual_EqualSequences_UsesPlaceholdersForEmptyExpressions()
+    {
+        IEnumerable<int> notExpected = [1];
+        IEnumerable<int> actual = [1];
+
+        Action emptyNotExpected = () => Assert.AreNotSequenceEqual(notExpected, actual, notExpectedExpression: string.Empty, actualExpression: "actual");
+        emptyNotExpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreNotSequenceEqual(<notExpected>, actual)");
+
+        Action emptyActual = () => Assert.AreNotSequenceEqual(notExpected, actual, notExpectedExpression: "notExpected", actualExpression: string.Empty);
+        emptyActual.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.AreNotSequenceEqual(notExpected, <actual>)");
+    }
+
+    private sealed class AllEqualStringComparer : IEqualityComparer<string?>
+    {
+        public bool Equals(string? x, string? y) => true;
+
+        public int GetHashCode(string? obj) => 0;
+    }
+
+    private static AssertFailedException CaptureSequenceScopedFailure(Action assertion)
+    {
+        int continued = 0;
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                assertion();
+                continued++;
+            }
+        };
+        AssertFailedException failure = action.Should().ThrowExactly<AssertFailedException>().Which;
+        continued.Should().Be(1);
+        return failure;
     }
 }

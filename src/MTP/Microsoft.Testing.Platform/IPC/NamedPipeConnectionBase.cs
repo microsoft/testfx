@@ -1,0 +1,226 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+#if NET
+using System.Buffers;
+#endif
+
+using System.IO.Pipes;
+using System.Net.Sockets;
+
+using Microsoft.CodeAnalysis;
+#if NET
+using Microsoft.Testing.Platform.Helpers;
+#endif
+
+namespace Microsoft.Testing.Platform.IPC;
+
+// Named-pipe framing/transport shared by NamedPipeServer and NamedPipeClient. This is deliberately NOT part of the
+// source-shared serializer registry (NamedPipeBase): the transport differs per repo (e.g. dotnet/sdk inlines its own
+// read/write loop), so only the registry + serializers are shared. This type stays local to Microsoft.Testing.Platform.
+[Embedded]
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Disposal is delegated to subclasses via DisposeBuffers().")]
+internal abstract class NamedPipeConnectionBase : NamedPipeBase
+{
+    private readonly MemoryStream _serializationBuffer = new();
+    private readonly MemoryStream _messageBuffer = new();
+    private readonly byte[] _readBuffer = new byte[250000];
+
+    /// <summary>
+    /// Serializes <paramref name="message"/> using <paramref name="serializer"/>, frames it with a
+    /// 4-byte size header and 4-byte serializer-ID prefix, writes the frame to <paramref name="stream"/>,
+    /// flushes, and (on Windows) waits for the pipe to drain.
+    /// </summary>
+    protected async Task WriteMessageAsync(Stream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken)
+    {
+        // Serialize the message body
+        _serializationBuffer.Position = 0;
+        serializer.Serialize(message, _serializationBuffer);
+
+        // Build the framed message:
+        //   4 bytes  – total payload length (serializer ID + body)
+        //   4 bytes  – serializer ID
+        //   N bytes  – serialized body
+        _messageBuffer.Position = 0;
+        int sizeOfTheWholeMessage = (int)_serializationBuffer.Position + sizeof(int);
+
+        try
+        {
+            // Write the message size header
+#if NET
+            byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
+            try
+            {
+                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
+                {
+                    // TryWriteBytes only fails if destination is too small; we rented at least sizeof(int).
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
+                // Stryker disable once Boolean: continuation scheduling does not change the frame header.
+                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
+            }
+
+            // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the emitted frame.
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bytes);
+            }
+#else
+            await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
+#endif
+
+            // Write the serializer ID
+#if NET
+            bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
+            try
+            {
+                if (!BitConverter.TryWriteBytes(bytes, serializer.Id))
+                {
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
+                // Stryker disable once Boolean: continuation scheduling does not change the serializer identifier.
+                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
+            }
+
+            // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the emitted frame.
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bytes);
+            }
+#else
+            await _messageBuffer.WriteAsync(BitConverter.GetBytes(serializer.Id), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
+#endif
+
+            // Write the serialized payload
+#if NET
+            // Stryker disable once Boolean: continuation scheduling does not change the serialized payload.
+            await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken).ConfigureAwait(false);
+#else
+            await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken).ConfigureAwait(false);
+#endif
+
+            // Send the framed message to the pipe stream
+#if NET
+            // Stryker disable once Boolean: continuation scheduling does not change the transmitted frame.
+            await stream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken).ConfigureAwait(false);
+#else
+            await stream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
+#endif
+            // Stryker disable once Boolean: continuation scheduling does not change flush completion.
+            await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            // Stryker disable once all: request/reply serialization prevents another message until the peer has consumed this frame.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && stream is PipeStream pipeStream)
+            {
+                pipeStream.WaitForPipeDrain();
+            }
+        }
+        finally
+        {
+            _messageBuffer.Position = 0;
+            _serializationBuffer.Position = 0;
+        }
+    }
+
+    /// <summary>
+    /// Reads one complete framed message from <paramref name="stream"/>, deserializes it, and returns
+    /// the result. Returns <see langword="null"/> when the peer disconnects through EOF, reset, or abort.
+    /// </summary>
+    protected async Task<object?> ReadNextMessageAsync(
+        Stream stream,
+        CancellationToken cancellationToken,
+        int maximumFrameSize = int.MaxValue)
+    {
+        _messageBuffer.SetLength(0);
+        bool frameComplete = false;
+
+        try
+        {
+            // Read the 4-byte size header. PipeStream.ReadAsync may return fewer bytes than requested
+            // (e.g. in byte-mode pipes), so we must loop until we've accumulated the full header or hit EOF.
+            int headerBytesRead = 0;
+            while (headerBytesRead < sizeof(int))
+            {
+#if NET
+                // Stryker disable once Boolean: continuation scheduling does not change the bytes read.
+                int n = await stream.ReadAsync(_readBuffer.AsMemory(headerBytesRead, sizeof(int) - headerBytesRead), cancellationToken).ConfigureAwait(false);
+#else
+                int n = await stream.ReadAsync(_readBuffer, headerBytesRead, sizeof(int) - headerBytesRead, cancellationToken).ConfigureAwait(false);
+#endif
+                if (n == 0)
+                {
+                    // EOF – peer disconnected (cleanly if headerBytesRead == 0, mid-header otherwise);
+                    // caller decides how to handle this.
+                    return null;
+                }
+
+                headerBytesRead += n;
+            }
+
+            int currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
+            if (currentMessageSize < sizeof(int) || currentMessageSize > maximumFrameSize - sizeof(int))
+            {
+                throw new IOException($"The transport returned an invalid frame payload length of {currentMessageSize} bytes.");
+            }
+
+            int missingBytesToReadOfWholeMessage = currentMessageSize;
+
+            // Read the message body in chunks, using _readBuffer as a transfer buffer.
+            while (missingBytesToReadOfWholeMessage > 0)
+            {
+                int toRead = Math.Min(_readBuffer.Length, missingBytesToReadOfWholeMessage);
+#if NET
+                // Stryker disable once Boolean: continuation scheduling does not change the bytes read.
+                int n = await stream.ReadAsync(_readBuffer.AsMemory(0, toRead), cancellationToken).ConfigureAwait(false);
+#else
+                int n = await stream.ReadAsync(_readBuffer, 0, toRead, cancellationToken).ConfigureAwait(false);
+#endif
+                if (n == 0)
+                {
+                    // EOF mid-message – treat the same as a clean disconnect.
+                    return null;
+                }
+
+#if NET
+                // Stryker disable once Boolean: continuation scheduling does not change the buffered payload.
+                await _messageBuffer.WriteAsync(_readBuffer.AsMemory(0, n), cancellationToken).ConfigureAwait(false);
+#else
+                await _messageBuffer.WriteAsync(_readBuffer, 0, n, cancellationToken).ConfigureAwait(false);
+#endif
+                missingBytesToReadOfWholeMessage -= n;
+            }
+
+            frameComplete = true;
+
+            // Full message received – deserialize and return
+            _messageBuffer.Position = 0;
+            int serializerId = BitConverter.ToInt32(_messageBuffer.GetBuffer(), 0);
+            INamedPipeSerializer namedPipeSerializer = GetSerializer(serializerId);
+            _messageBuffer.Position += sizeof(int); // skip the serializer ID
+            return namedPipeSerializer.Deserialize(_messageBuffer);
+        }
+        catch (IOException ex) when (
+            !frameComplete
+            && ex.InnerException is SocketException
+            {
+                SocketErrorCode: SocketError.ConnectionReset or SocketError.ConnectionAborted,
+            })
+        {
+            // A terminated peer can reset the underlying Unix socket instead of producing EOF.
+            return null;
+        }
+        finally
+        {
+            _messageBuffer.Position = 0;
+            _messageBuffer.SetLength(0);
+        }
+    }
+
+    /// <summary>Disposes the shared serialization and message buffers.</summary>
+    protected void DisposeBuffers()
+    {
+        _serializationBuffer.Dispose();
+        _messageBuffer.Dispose();
+    }
+}

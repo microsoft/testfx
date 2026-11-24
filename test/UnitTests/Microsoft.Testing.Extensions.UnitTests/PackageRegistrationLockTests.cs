@@ -126,6 +126,80 @@ public sealed class PackageRegistrationLockTests
         });
 
     [TestMethod]
+    public Task WithManifestAsync_WhenAlreadyCanceled_DoesNotOpenManifestOrAcquireLock()
+        => RunInTemporaryDirectoryAsync(async (directory, cancellationToken) =>
+        {
+            string manifestPath = CreateManifestFile(directory);
+            int warmup = await PackageRegistrationLock.WithManifestAsync(
+                manifestPath,
+                (_, _) => Task.FromResult(new FileStream(Path.Combine(directory, "warmup.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None)),
+                _ => Task.FromResult(42),
+                cancellationToken);
+            Assert.AreEqual(42, warmup);
+
+            using var canceled = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            canceled.Cancel();
+            bool lockRequested = false;
+            bool actionInvoked = false;
+
+            OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+                () => PackageRegistrationLock.WithManifestAsync(
+                    manifestPath,
+                    (_, _) =>
+                    {
+                        lockRequested = true;
+                        throw new InvalidOperationException("The lock must not be requested.");
+                    },
+                    _ =>
+                    {
+                        actionInvoked = true;
+                        return Task.FromResult(0);
+                    },
+                    canceled.Token));
+
+            Assert.AreEqual(canceled.Token, exception.CancellationToken);
+            Assert.IsFalse(lockRequested);
+            Assert.IsFalse(actionInvoked);
+        });
+
+    [TestMethod]
+    public Task WithManifestAsync_WhenCanceledByLockAcquisition_DoesNotInvokeAction()
+        => RunInTemporaryDirectoryAsync(async (directory, cancellationToken) =>
+        {
+            string manifestPath = CreateManifestFile(directory);
+            int warmup = await PackageRegistrationLock.WithManifestAsync(
+                manifestPath,
+                (_, _) => Task.FromResult(new FileStream(Path.Combine(directory, "warmup.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None)),
+                _ => Task.FromResult(42),
+                cancellationToken);
+            Assert.AreEqual(42, warmup);
+
+            using var canceled = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            bool actionInvoked = false;
+            string lockPath = Path.Combine(directory, "acquired.lock");
+
+            OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+                () => PackageRegistrationLock.WithManifestAsync(
+                    manifestPath,
+                    (_, _) =>
+                    {
+                        canceled.Cancel();
+                        return Task.FromResult(new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
+                    },
+                    _ =>
+                    {
+                        actionInvoked = true;
+                        return Task.FromResult(0);
+                    },
+                    canceled.Token));
+
+            Assert.AreEqual(canceled.Token, exception.CancellationToken);
+            Assert.IsFalse(actionInvoked);
+            using var probe = new FileStream(lockPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            Assert.AreEqual(lockPath, probe.Name);
+        });
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public Task AcquireAsync_SerializesRegistrationThroughActivation(bool differentCase)
@@ -182,6 +256,8 @@ public sealed class PackageRegistrationLockTests
             using FileStream second = await PackageRegistrationLock.AcquireAsync("Contoso.OtherApp_abcdefghijklm", directory, cancellationToken);
 
             Assert.AreNotEqual(first.Name, second.Name);
+            Assert.EndsWith(".lock", first.Name);
+            Assert.EndsWith(".lock", second.Name);
         });
 
     [TestMethod]
@@ -214,6 +290,35 @@ public sealed class PackageRegistrationLockTests
             {
                 using var probe = new FileStream(first.Name, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
             });
+        });
+
+    [TestMethod]
+    public Task AcquireAsync_WhenRetryDelayCancels_ChecksCancellationBeforeReopening()
+        => RunInTemporaryDirectoryAsync(async (directory, cancellationToken) =>
+        {
+            using var canceled = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            int openAttempts = 0;
+
+            OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+                () => AcquireRegistrationLockAsync(
+                    PackageFamilyName,
+                    directory,
+                    _ =>
+                    {
+                        openAttempts++;
+                        return openAttempts == 1
+                            ? throw new SharingViolationIOException()
+                            : throw new InvalidOperationException("The lock must not be reopened after cancellation.");
+                    },
+                    (_, _) =>
+                    {
+                        canceled.Cancel();
+                        return Task.CompletedTask;
+                    },
+                    canceled.Token));
+
+            Assert.AreEqual(canceled.Token, exception.CancellationToken);
+            Assert.AreEqual(1, openAttempts);
         });
 
     [TestMethod]
@@ -283,6 +388,38 @@ public sealed class PackageRegistrationLockTests
         string manifestPath = Path.Combine(directory, AppxManifestInfo.AppxManifestFileName);
         File.WriteAllText(manifestPath, ManifestXml);
         return manifestPath;
+    }
+
+    private static Task<FileStream> AcquireRegistrationLockAsync(
+        string packageFamilyName,
+        string lockDirectory,
+        Func<string, FileStream> openRegistrationLock,
+        Func<TimeSpan, CancellationToken, Task> delayAsync,
+        CancellationToken cancellationToken)
+        => (Task<FileStream>)typeof(PackageRegistrationLock)
+            .GetMethod(
+                "AcquireAsync",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static,
+                binder: null,
+                types:
+                [
+                    typeof(string),
+                    typeof(string),
+                    typeof(Func<string, FileStream>),
+                    typeof(Func<TimeSpan, CancellationToken, Task>),
+                    typeof(CancellationToken),
+                ],
+                modifiers: null)!
+            .Invoke(
+                null,
+                [packageFamilyName, lockDirectory, openRegistrationLock, delayAsync, cancellationToken])!;
+
+    private sealed class SharingViolationIOException : IOException
+    {
+        public SharingViolationIOException()
+        {
+            HResult = unchecked((int)0x80070020);
+        }
     }
 
     private static async Task<int> TryOpenInAnotherProcessAsync(string lockPath, CancellationToken cancellationToken)

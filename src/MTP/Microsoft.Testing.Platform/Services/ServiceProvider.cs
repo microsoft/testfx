@@ -1,0 +1,200 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
+
+namespace Microsoft.Testing.Platform.Services;
+
+internal sealed class ServiceProvider : IServiceProvider, ICloneable
+{
+    private readonly List<object> _services = [];
+
+    internal IReadOnlyCollection<object> Services => _services;
+
+    internal IReadOnlyList<string>? TestHostControllerAuthorizedSecurityIdentities { get; set; }
+
+    public bool AllowTestAdapterFrameworkRegistration { get; set; }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+    private static readonly Type[] InternalOnlyExtensions =
+    [
+        // TestHost
+        typeof(ITestHostApplicationLifetime),
+        typeof(IDataConsumer),
+        typeof(ITestSessionLifetimeHandler),
+
+        // TestHostControllers
+        typeof(ITestHostEnvironmentVariableProvider),
+        typeof(ITestHostProcessLifetimeHandler),
+    ];
+#pragma warning restore CS0618 // Type or member is obsolete
+
+    public void AddService(object service, bool throwIfSameInstanceExit = true)
+    {
+        ArgumentGuard.Ensure(
+            service is not ITestFramework || AllowTestAdapterFrameworkRegistration,
+            nameof(service),
+            PlatformResources.ServiceProviderShouldNotRegisterTestFramework);
+
+        // We don't want to add the same service twice, it's possible when with the CompositeExtensionFactory
+        ApplicationStateGuard.Ensure(
+            !_services.Contains(service) || !throwIfSameInstanceExit,
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderServiceAlreadyRegistered, service.GetType()));
+
+        _services.Add(service);
+        RegisterCoverageProducer(service);
+    }
+
+    public void AddServices(object[] services, bool throwIfSameInstanceExit = true)
+    {
+        foreach (object service in services)
+        {
+            AddService(service, throwIfSameInstanceExit);
+        }
+    }
+
+    public bool TryAddService(object service)
+    {
+        ArgumentGuard.Ensure(
+            service is not ITestFramework || AllowTestAdapterFrameworkRegistration,
+            nameof(service),
+            PlatformResources.ServiceProviderShouldNotRegisterTestFramework);
+
+        // We don't want to add the same service twice, it's possible when with the CompositeExtensionFactory
+        if (_services.Contains(service))
+        {
+            return false;
+        }
+
+        _services.Add(service);
+        RegisterCoverageProducer(service);
+        return true;
+    }
+
+    /// <summary>
+    /// Replaces the first registered service instance that is an instance of <typeparamref name="T"/> with the new service.
+    /// If no such service is found, the new service is added at the end of the list.
+    /// </summary>
+    /// <typeparam name="T">The type of service to replace.</typeparam>
+    internal void ReplaceService<T>(T newService)
+        where T : class
+    {
+        _ = newService ?? throw new ArgumentNullException(nameof(newService));
+        ArgumentGuard.Ensure(
+            newService is not ITestFramework || AllowTestAdapterFrameworkRegistration,
+            nameof(newService),
+            PlatformResources.ServiceProviderShouldNotRegisterTestFramework);
+
+        int index = _services.FindIndex(s => s is T);
+        if (index >= 0)
+        {
+            _services[index] = newService;
+        }
+        else
+        {
+            _services.Add(newService);
+        }
+    }
+
+    public IEnumerable<object> GetServicesInternal(
+        Type serviceType,
+        bool stopAtFirst = false,
+        bool skipInternalOnlyExtensions = false)
+    {
+        if (skipInternalOnlyExtensions && InternalOnlyExtensions.Contains(serviceType))
+        {
+            yield break;
+        }
+
+        foreach (object serviceInstance in _services)
+        {
+            if (serviceType.IsInstanceOfType(serviceInstance))
+            {
+                yield return serviceInstance;
+                if (stopAtFirst)
+                {
+                    yield break;
+                }
+            }
+        }
+    }
+
+    public object? GetServiceInternal(Type serviceType, bool skipInternalOnlyExtensions = false)
+    {
+        if (skipInternalOnlyExtensions && InternalOnlyExtensions.Contains(serviceType))
+        {
+            return null;
+        }
+
+        foreach (object serviceInstance in _services)
+        {
+            if (serviceType.IsInstanceOfType(serviceInstance))
+            {
+                return serviceInstance;
+            }
+        }
+
+        return null;
+    }
+
+    private void RegisterCoverageProducer(object service)
+    {
+        if (service is TestCoverageCapabilities capabilities)
+        {
+            foreach (IDataProducer producer in _services.OfType<IDataProducer>())
+            {
+                capabilities.RegisterProducer(producer);
+            }
+        }
+        else if (service is IDataProducer producer
+            && GetServiceInternal(typeof(TestCoverageCapabilities)) is TestCoverageCapabilities registeredCapabilities)
+        {
+            registeredCapabilities.RegisterProducer(producer);
+        }
+    }
+
+    public object Clone(Func<object, bool> filter)
+    {
+        ServiceProvider clone = new();
+        foreach (object service in _services)
+        {
+            if (filter(service))
+            {
+                clone._services.Add(service);
+            }
+        }
+
+        return clone;
+    }
+
+    public object Clone()
+    {
+        ServiceProvider clone = new();
+        foreach (object service in Services)
+        {
+            clone._services.Add(service is TestCoverageCapabilities
+                ? new TestCoverageCapabilities()
+                : service);
+        }
+
+        if (clone.GetServiceInternal(typeof(TestCoverageCapabilities)) is TestCoverageCapabilities capabilities)
+        {
+            foreach (IDataProducer producer in clone._services.OfType<IDataProducer>())
+            {
+                capabilities.RegisterProducer(producer);
+            }
+        }
+
+        return clone;
+    }
+
+    // IServiceProvider
+    public object? GetService(Type serviceType)
+        => GetServiceInternal(serviceType, skipInternalOnlyExtensions: true);
+}

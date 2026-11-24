@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -68,7 +68,7 @@ public sealed class AzureDevOpsTests
         // check would happily accept the framework frame if we did not skip it.
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan[T](T upperBound, T value, String message) in /_/src/TestFramework/TestFramework/Assertions/Assert.IComparable.cs:line 138",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan[T](T upperBound, T value, String message) in /_/src/MSTest/TestFramework/Assertions/Assert.IComparable.cs:line 138",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestAssertImplementationFrameInPartialClassFile() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -89,7 +89,7 @@ public sealed class AzureDevOpsTests
 
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(ICollection expected, ICollection actual, String message) in /_/src/TestFramework/TestFramework/Assertions/CollectionAssert.Equality.cs:line 42",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(ICollection expected, ICollection actual, String message) in /_/src/MSTest/TestFramework/Assertions/CollectionAssert.Equality.cs:line 42",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestCollectionAssertImplementationFrameInPartialClassFile() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -110,7 +110,7 @@ public sealed class AzureDevOpsTests
 
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(String value, String substring, String message) in /_/src/TestFramework/TestFramework/Assertions/StringAssert.cs:line 17",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(String value, String substring, String message) in /_/src/MSTest/TestFramework/Assertions/StringAssert.cs:line 17",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestStringAssertImplementationFrame() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -131,7 +131,7 @@ public sealed class AzureDevOpsTests
 
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.That(Expression`1 condition, String message, String conditionExpression) in /_/src/TestFramework/TestFramework/Assertions/Assert.That.cs:line 27",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.That(Expression`1 condition, String message, String conditionExpression) in /_/src/MSTest/TestFramework/Assertions/Assert.That.cs:line 27",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestAssertThatImplementationFrame() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -268,7 +268,7 @@ public sealed class AzureDevOpsTests
             text,
             $"AzDO annotation must point at the test method's source file. Got: {text}\nLogs:\n{safeLogs}");
         Assert.DoesNotContain(
-            "/src/TestFramework/TestFramework/Assertions/",
+            "/src/MSTest/TestFramework/Assertions/",
             text,
             $"AzDO annotation must not point at a framework Assert partial-class file. Got: {text}\nLogs:\n{safeLogs}");
     }
@@ -326,6 +326,107 @@ public sealed class AzureDevOpsTests
             "boom");
 
         Assert.AreEqual("HangDump_TemplateFileName_CreateDump (\"net10.0\") [net11.0]\nboom", formatted);
+    }
+
+    [TestMethod]
+    public void FormatErrorMessage_IncludesAssemblyAfterTestAndTfm()
+    {
+        string formatted = AzureDevOpsReporter.FormatErrorMessage(
+            "MyTest (net9.0)",
+            "net9.0",
+            "boom",
+            @"C:\tests\MyTestAssembly.dll");
+
+        Assert.AreEqual(@"MyTest (net9.0) (C:\tests\MyTestAssembly.dll)" + "\nboom", formatted);
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_EscapesLiteralPercentSequenceInAssemblyIdentity()
+    {
+        string text = GetMessageOnlyAnnotationForAssemblyIdentity(@"C:\tests\Module%3BOne.dll");
+
+        Assert.AreEqual(
+            @"vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%AZP253BOne.dll)%0Afailure",
+            text);
+        Assert.AreEqual(
+            """
+            vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%3BOne.dll)
+            failure
+            """.Replace("\r\n", "\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).Replace("\r\n", "\n"));
+
+        // When DECODE_PERCENTS=false, the agent intentionally leaves the percent token
+        // unchanged; there is no supported way to preserve a literal percent otherwise.
+        Assert.AreEqual(
+            """
+            vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%AZP253BOne.dll)
+            failure
+            """.Replace("\r\n", "\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: false).Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_EscapesSemicolonInAssemblyIdentity()
+    {
+        string text = GetMessageOnlyAnnotationForAssemblyIdentity(@"C:\tests\Module;One.dll");
+
+        Assert.AreEqual(
+            @"vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%3BOne.dll)%0Afailure",
+            text);
+        Assert.AreEqual(
+            """
+            vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module;One.dll)
+            failure
+            """.Replace("\r\n", "\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_LeavesStandalonePercentEscapingUnchanged()
+    {
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName%3B",
+            "failure",
+            exception: null,
+            severity: "error",
+            fileSystem: new SystemFileSystem(),
+            logger: new TextLogger(),
+            targetFrameworkMoniker: "net9.0",
+            additionalMessageSuffix: null,
+            userStackFrameFilters: null,
+            skipAssertionFrames: true)?.TrimStart('#');
+
+        Assert.AreEqual(
+            "vso[task.logissue type=error]MyTestDisplayName%3B [net9.0]%0Afailure",
+            text);
+    }
+
+    private static string GetMessageOnlyAnnotationForAssemblyIdentity(string assemblyIdentity)
+        => AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            "failure",
+            exception: null,
+            severity: "error",
+            fileSystem: new SystemFileSystem(),
+            logger: new TextLogger(),
+            targetFrameworkMoniker: "net9.0",
+            additionalMessageSuffix: null,
+            userStackFrameFilters: null,
+            skipAssertionFrames: true,
+            assemblyIdentity: assemblyIdentity)?.TrimStart('#')
+            ?? throw new InvalidOperationException("Expected a message-only Azure DevOps annotation.");
+
+    private static string DecodeAzurePipelinesAgentCommand(string value, bool decodePercents)
+    {
+        string unescaped = value
+            .Replace("%3B", ";")
+            .Replace("%0D", "\r")
+            .Replace("%0A", "\n")
+            .Replace("%5D", "]");
+
+        return decodePercents
+            ? unescaped.Replace("%AZP25", "%")
+            : unescaped;
     }
 
     [TestMethod]

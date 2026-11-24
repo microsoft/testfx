@@ -4,15 +4,47 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.CultureMutationUnderParallelizationAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.CultureMutationUnderParallelizationAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
 public sealed class CultureMutationUnderParallelizationAnalyzerTests
 {
+    [TestMethod]
+    public async Task ClassLevelCustomResourceLock_CoversTheCultureMutation()
+    {
+        const string source = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass, ResourceLock("culture")]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture; }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task OlderFrameworkWithoutResourceLocks_StillReportsTheCultureMutation()
+    {
+        const string source = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|}; }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, useMSTestV4: true,
+            VerifyCS.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule).WithLocation(0).WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
+    }
+
     [TestMethod]
     public async Task WhenTestMethodSetsDefaultThreadCurrentCulture_Diagnostic()
     {
@@ -265,31 +297,6 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenTestMethodSetsDefaultThreadCurrentCulture_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System.Globalization
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <Assembly: Parallelize(Workers:=0, Scope:=ExecutionScope.MethodLevel)>
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|}
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
     }
 
     [TestMethod]

@@ -365,7 +365,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests
                 VerifyCS.Diagnostic().WithLocation(2).WithArguments("AssemblyCleanup2"),
                 VerifyCS.Diagnostic().WithLocation(3).WithArguments("AssemblyCleanup3"),
                 VerifyCS.Diagnostic().WithLocation(4).WithArguments("AssemblyCleanup4"),
-                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyCleanup5")
+                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyCleanup5"),
             ],
             fixedCode);
     }

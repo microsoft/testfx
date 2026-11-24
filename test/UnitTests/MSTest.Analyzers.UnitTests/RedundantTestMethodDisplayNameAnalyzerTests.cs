@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -143,7 +143,7 @@ public sealed class RedundantTestMethodDisplayNameAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -268,6 +268,6 @@ public sealed class RedundantTestMethodDisplayNameAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 }

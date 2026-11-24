@@ -16,3 +16,6 @@ variables:
   value: $(Build.SourcesDirectory)/.packages
 - name: DOTNET_CLI_CONTEXT_VERBOSE
   value: 1
+# Trace files use the existing TestResults artifact publication, including failed jobs.
+- name: TESTFX_OTEL_TRACE_DIRECTORY
+  value: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/OpenTelemetry

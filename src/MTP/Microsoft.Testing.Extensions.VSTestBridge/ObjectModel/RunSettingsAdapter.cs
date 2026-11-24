@@ -1,0 +1,84 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
+using Microsoft.Testing.Extensions.VSTestBridge.Resources;
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
+
+/// <summary>
+/// A Microsoft Testing Platform oriented implementation of the VSTest <see cref="IRunSettings"/>.
+/// </summary>
+internal sealed class RunSettingsAdapter : IRunSettings
+{
+    public RunSettingsAdapter(
+        ICommandLineOptions commandLineOptions,
+        IFileSystem fileSystem,
+        IConfiguration configuration,
+        IClientInfo client,
+        ILoggerFactory loggerFactory,
+        IMessageLogger messageLogger)
+    {
+        string runSettingsXml = RunSettingsHelpers.ReadRunSettings(commandLineOptions, fileSystem);
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettingsXml, configuration, client, commandLineOptions);
+        WarnOnUnsupportedEntries(runSettingsDocument, messageLogger);
+
+        SettingsXml = runSettingsDocument.ToString();
+        ILogger<RunSettingsAdapter> logger = loggerFactory.CreateLogger<RunSettingsAdapter>();
+        logger.LogDebug($"Execution will use the following runsettings:{Environment.NewLine}{SettingsXml}");
+    }
+
+    /// <inheritdoc />
+    public string? SettingsXml { get; }
+
+    /// <inheritdoc />
+    // Needs to be implemented if used by adapters. It is not used by MSTest.
+    public ISettingsProvider? GetSettings(string? settingsName) => throw new NotImplementedException();
+
+    private static void WarnOnUnsupportedEntries(XDocument document, IMessageLogger messageLogger)
+    {
+        XElement runSettingsElement = document.Element("RunSettings")!;
+
+        if (runSettingsElement.Element("LoggerRunSettings") is not null)
+        {
+            messageLogger.SendMessage(TestMessageLevel.Warning, ExtensionResources.UnsupportedRunsettingsLoggers);
+        }
+
+        if (runSettingsElement.Element("DataCollectionRunSettings") is not null)
+        {
+            messageLogger.SendMessage(TestMessageLevel.Warning, ExtensionResources.UnsupportedRunsettingsDatacollectors);
+        }
+
+        if (runSettingsElement.Element("RunConfiguration") is not { } runConfigurationElement)
+        {
+            return;
+        }
+
+        string[] unsupportedRunConfigurationSettings =
+        [
+            "DotnetHostPath",
+            "MaxCpuCount",
+            "TargetFrameworkVersion",
+            "TargetPlatform",
+            "TestAdaptersPaths",
+            "TestSessionTimeout",
+            "TreatNoTestsAsError",
+            "TreatTestAdapterErrorsAsWarnings",
+        ];
+        foreach (string unsupportedRunConfigurationSetting in unsupportedRunConfigurationSettings)
+        {
+            if (runConfigurationElement.Element(unsupportedRunConfigurationSetting) is not null)
+            {
+                messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, unsupportedRunConfigurationSetting));
+            }
+        }
+    }
+}

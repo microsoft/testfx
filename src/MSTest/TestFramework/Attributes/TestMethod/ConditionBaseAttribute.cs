@@ -1,0 +1,78 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+/// <summary>
+/// This attribute is used to conditionally control whether a test class or a test method will run or be ignored, based on a condition and using an optional message.
+/// </summary>
+/// <remarks>
+/// This attribute isn't inherited. Applying it to a base class will not affect derived classes.
+/// <para>
+/// Whether the same condition attribute type can be applied more than once to a single test class or test method is
+/// decided by each derived attribute through its own <see cref="AttributeUsageAttribute.AllowMultiple"/> value:
+/// <list type="bullet">
+/// <item><description>
+/// <see cref="MemberConditionAttribute"/> and <see cref="ExecutableConditionAttribute"/> set
+/// <see cref="AttributeUsageAttribute.AllowMultiple"/> to <see langword="true"/>. Stacked usages with distinct
+/// <see cref="GroupName"/> values are combined with a logical AND, while repeated usages that produce the same
+/// <see cref="GroupName"/> are combined with a logical OR.
+/// </description></item>
+/// <item><description>
+/// <see cref="OSConditionAttribute"/>, <see cref="CIConditionAttribute"/> and <c>ArchitectureConditionAttribute</c>
+/// set <see cref="AttributeUsageAttribute.AllowMultiple"/> to <see langword="false"/>: stacking them is a compile-time
+/// error. <see cref="OSConditionAttribute"/> and <c>ArchitectureConditionAttribute</c> take a flags enum, so combine
+/// the values with the bitwise OR operator instead, for example
+/// <c>[OSCondition(OperatingSystems.Windows | OperatingSystems.Linux)]</c>. There is nothing to combine for
+/// <see cref="CIConditionAttribute"/>, which only carries a <see cref="ConditionMode"/>.
+/// </description></item>
+/// </list>
+/// </para>
+/// <para>
+/// Condition attributes are grouped by their <see cref="GroupName"/> value, regardless of attribute type. Values
+/// within the same group are combined with a logical OR, and different groups are combined with a logical AND. The
+/// built-in condition attribute types use distinct group names for different condition kinds, so combining those
+/// different built-in kinds requires all of them to be satisfied.
+/// </para>
+/// <para>
+/// Each scope is evaluated independently. An assembly-level <see cref="OSConditionAttribute"/> must be satisfied
+/// in addition to class and method conditions, even when those conditions use the same group name.
+/// </para>
+/// </remarks>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
+public abstract class ConditionBaseAttribute : Attribute
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConditionBaseAttribute"/> class.
+    /// </summary>
+    /// <param name="mode">The condition mode.</param>
+    protected ConditionBaseAttribute(ConditionMode mode)
+        => Mode = mode;
+
+    /// <summary>
+    /// Gets the condition mode.
+    /// </summary>
+    public ConditionMode Mode { get; }
+
+    /// <summary>
+    /// Gets or sets the ignore message indicating the reason for ignoring the test method or test class.
+    /// </summary>
+    public string? IgnoreMessage { get; set; }
+
+    /// <summary>
+    /// Gets the group name for this attribute. This is relevant when multiple
+    /// attributes that inherit <see cref="ConditionBaseAttribute"/> are present.
+    /// The <see cref="IsConditionMet"/> values of attributes in the same group are "OR"ed together.
+    /// While the value from different groups is "AND"ed together.
+    /// In other words, a test will be ignored if any group has all its <see cref="IsConditionMet"/> values as false.
+    /// </summary>
+    /// <remarks>
+    /// Usually, you can use <see langword="nameof"/> to return the group name.
+    /// </remarks>
+    public abstract string GroupName { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the condition is met. The implementation of this property shouldn't read the <see cref="Mode"/> property.
+    /// </summary>
+    public abstract bool IsConditionMet { get; }
+}

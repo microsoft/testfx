@@ -8,15 +8,176 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferAsyncAssertionAnalyzer,
     MSTest.Analyzers.PreferAsyncAssertionFixer>;
 
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.PreferAsyncAssertionAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
 public sealed class PreferAsyncAssertionAnalyzerTests
 {
+    [TestMethod]
+    [DataRow("?.Message")]
+    [DataRow("[0]")]
+    public async Task CodeFixAwaitPreservesConditionalAndElementAccessPrecedence(string suffix)
+    {
+        string code = $$"""
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var value = [|Assert.ThrowsExactly<IndexedException>(() => BarAsync().GetAwaiter().GetResult())|]{{suffix}};
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+
+            public class IndexedException : Exception
+            {
+                public int this[int index] => index;
+            }
+            """;
+        string fixedCode = $$"""
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    var value = (await Assert.ThrowsExactlyAsync<IndexedException>(() => BarAsync())){{suffix}};
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+
+            public class IndexedException : Exception
+            {
+                public int this[int index] => index;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task CodeFixOuterTaskReturnsDoesNotRewriteNestedDelegateOrLocalFunctionReturns()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public Task MyTestMethod()
+                {
+                    Func<int, Task> simple = i => { return Task.CompletedTask; };
+                    Func<Task> parenthesized = () => { return Task.CompletedTask; };
+                    Func<Task> anonymous = delegate { return Task.CompletedTask; };
+                    Task Local() { return Task.CompletedTask; }
+                    [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult())|];
+                    if (simple(1).IsCompleted) return parenthesized();
+                    if (anonymous().IsCompleted)
+                    {
+                        return Local();
+                    }
+
+                    return Task.CompletedTask;
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    Func<int, Task> simple = i => { return Task.CompletedTask; };
+                    Func<Task> parenthesized = () => { return Task.CompletedTask; };
+                    Func<Task> anonymous = delegate { return Task.CompletedTask; };
+                    Task Local() { return Task.CompletedTask; }
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
+                    if (simple(1).IsCompleted)
+                    {
+                        await parenthesized();
+                        return;
+                    }
+
+                    if (anonymous().IsCompleted)
+                    {
+                        await Local();
+                        return;
+                    }
+
+                    await Task.CompletedTask;
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task CodeFixTaskNameCollisionUsesActualFrameworkTaskType()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Task { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult())|];
+                }
+
+                private System.Threading.Tasks.Task BarAsync() => System.Threading.Tasks.Task.CompletedTask;
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Task { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async System.Threading.Tasks.Task MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
+                }
+
+                private System.Threading.Tasks.Task BarAsync() => System.Threading.Tasks.Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
     [TestMethod]
     public async Task WhenAssertThrowsExactlyBlocksOnTask_CodeFixUsesAsyncAssertionAndUpdatesSignature()
     {
@@ -833,30 +994,6 @@ public sealed class PreferAsyncAssertionAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenVisualBasicFunctionLambdaBlocksOnGenericTask_Diagnostic()
-    {
-        string code = """
-            Imports System
-            Imports System.Threading.Tasks
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    [|Assert.ThrowsExactly(Of InvalidOperationException)(Function() BarAsync().GetAwaiter().GetResult())|]
-                End Sub
-
-                Private Function BarAsync() As Task(Of Integer)
-                    Return Task.FromResult(42)
-                End Function
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]

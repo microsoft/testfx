@@ -1,13 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection.Emit;
+
 using AwesomeAssertions;
+using AwesomeAssertions.Execution;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,6 +25,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public sealed class UnitTestRunnerTests : TestContainer
 {
+    private const OperatingSystems AllOperatingSystems = OperatingSystems.Windows | OperatingSystems.Linux | OperatingSystems.OSX | OperatingSystems.FreeBSD;
+
     private readonly Dictionary<string, object?> _testRunParameters;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
@@ -31,6 +38,128 @@ public sealed class UnitTestRunnerTests : TestContainer
         _mockMessageLogger = new Mock<IMessageLogger>();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
+
+#pragma warning disable MSTESTEXP // Exercise the actual adapter programmatic test-filter bridge.
+    public void FilterContextPreservesHierarchyGenericsParametersAndDuplicateTraitOrder()
+    {
+        TestMethod method = new(
+            "Method`2(System.Int32,System.String[])",
+            ["assembly", "Actual.Namespace", "Outer+Inner`1", "Method"],
+            "Method",
+            "Actual.Namespace.Outer+Inner`1[[System.Int32, Framework]]",
+            "metadata.dll",
+            "display method",
+            null);
+        UnitTestElement element = new(method)
+        {
+            TestCategory = ["fast", "unit"],
+            Traits = [new TestTrait("case", "one"), new TestTrait("case", "two")],
+            Priority = 42,
+        };
+
+        TestFilterContext context = CreateActualFilterContext(element);
+
+        context.FullyQualifiedName.Should().Be("Actual.Namespace.Outer+Inner`1[[System.Int32, Framework]].Method");
+        context.DisplayName.Should().Be("display method");
+        context.MethodName.Should().Be("Method");
+        context.Source.Should().Be("metadata.dll");
+        context.Namespace.Should().Be("Actual.Namespace");
+        context.ClassName.Should().Be("Outer+Inner`1");
+        context.ManagedTypeName.Should().Be("Actual.Namespace.Outer+Inner`1");
+        context.ManagedMethodName.Should().Be("Method`2(System.Int32,System.String[])");
+        context.MethodArity.Should().Be(2);
+        context.ParameterTypeFullNames.Should().Equal("System.Int32", "System.String[]");
+        context.Categories.Should().Equal("fast", "unit");
+        context.Traits.Should().Equal(new KeyValuePair<string, string?>("case", "one"), new KeyValuePair<string, string?>("case", "two"));
+        context.Priority.Should().Be(42);
+    }
+
+    public void FilterContextMissingAndMalformedMetadataDoesNotInventStructuredNamesOrParameters()
+    {
+        foreach (string? managed in new[] { null, "Method`x()" })
+        {
+            foreach (string?[]? hierarchy in new string?[]?[] { null, [], ["short"] })
+            {
+                TestMethod method = new(managed, hierarchy, "Method", "Namespace.Class", "source.dll", null, null);
+                TestFilterContext context = CreateActualFilterContext(new UnitTestElement(method));
+                context.FullyQualifiedName.Should().Be("Namespace.Class.Method");
+                context.DisplayName.Should().Be("Method");
+                context.Namespace.Should().BeNull();
+                context.ClassName.Should().BeNull();
+                context.ManagedTypeName.Should().Be("Namespace.Class");
+                context.MethodArity.Should().BeNull();
+                context.ParameterTypeFullNames.Should().BeNull();
+                context.Categories.Should().BeEmpty();
+                context.Traits.Should().BeEmpty();
+                context.Priority.Should().BeNull();
+            }
+        }
+
+        TestFilterContext parameterless = CreateActualFilterContext(
+            new UnitTestElement(new TestMethod("Method", null, "Method", "Class", "source.dll", null, null)));
+        parameterless.MethodArity.Should().Be(0);
+        parameterless.ParameterTypeFullNames.Should().BeEmpty();
+    }
+
+    public void ApplyActualFilterDistinguishesRunDropSkipAndOriginalExceptionDiagnostics()
+    {
+        const string source = "scoped-filter.dll";
+        AssemblyName name = new("ScopedFilter" + Guid.NewGuid().ToString("N"));
+#if NETFRAMEWORK
+        AssemblyBuilder assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#else
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#endif
+        ConstructorInfo constructor = typeof(TestFilterProviderAttribute).GetConstructor([typeof(Type)])!;
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(constructor, [typeof(ObservedProgrammaticFilter)]));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(source)).Returns(assembly);
+        var reflection = new Mock<IReflectionOperations>();
+        reflection.Setup(value => value.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)))
+            .Returns([new TestFilterProviderAttribute(typeof(ObservedProgrammaticFilter))]);
+        _testablePlatformServiceProvider.SetupMockReflectionOperations(reflection);
+        TestMethod method = CreateTestMethod("Method", "Namespace.Class", source, "display");
+        UnitTestElement element = new(method);
+        UnitTestRunner runner = CreateUnitTestRunner([element]);
+        var cache = (TypeCache)typeof(UnitTestRunner).GetField("_typeCache", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(runner)!;
+        var filter = (ObservedProgrammaticFilter)cache.GetOrLoadTestFilter(source)!;
+        MethodInfo apply = typeof(UnitTestRunner).GetMethod("ApplyTestFilter", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        TestResult[]? Invoke() => (TestResult[]?)apply.Invoke(runner, [element]);
+
+        filter.Result = TestFilterResult.Run;
+        Invoke().Should().BeNull();
+        filter.Result = TestFilterResult.Drop;
+        Invoke().Should().BeEmpty();
+        filter.Result = TestFilterResult.Skip("explicit skip");
+        TestResult skipped = Invoke()!.Should().ContainSingle().Subject;
+        skipped.Outcome.Should().Be(UnitTestOutcome.Ignored);
+        skipped.IgnoreReason.Should().Be("explicit skip");
+        filter.Error = new InvalidOperationException("filter sentinel");
+        TestResult failed = Invoke()!.Should().ContainSingle().Subject;
+        failed.Outcome.Should().Be(UnitTestOutcome.Error);
+        failed.TestFailureException!.Message.Should().Contain("filter sentinel").And.Contain("Namespace.Class.Method").And.Contain(nameof(ObservedProgrammaticFilter));
+        filter.Context!.FullyQualifiedName.Should().Be("Namespace.Class.Method");
+        filter.Context.DisplayName.Should().Be("display");
+        filter.Context.Source.Should().Be(source);
+    }
+
+    private static TestFilterContext CreateActualFilterContext(UnitTestElement element)
+        => (TestFilterContext)typeof(UnitTestRunner).GetMethod("CreateFilterContext", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [element])!;
+
+    public sealed class ObservedProgrammaticFilter : ITestFilter
+    {
+        public TestFilterResult Result { get; set; }
+
+        public Exception? Error { get; set; }
+
+        public TestFilterContext? Context { get; private set; }
+
+        public TestFilterResult Filter(TestFilterContext context)
+        {
+            Context = context;
+            return Error is null ? Result : throw Error;
+        }
+    }
+#pragma warning restore MSTESTEXP
 
     private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
         => new(methodName, null, methodName, typeFullName, assemblyName, displayName, null);
@@ -340,6 +469,187 @@ public sealed class UnitTestRunnerTests : TestContainer
         results.Length.Should().Be(1);
         results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be("IgnoreTestClassMessage");
+    }
+
+    public async Task AssemblyOSCondition_IncludeExcludeAndAbsentGuards_ControlExecutionAndLifecycle()
+    {
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Include, AllOperatingSystems),
+            [], [], UnitTestOutcome.Passed, null);
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Include, default) { IgnoreMessage = "assembly include rejection" },
+            [], [], UnitTestOutcome.Ignored, "assembly include rejection");
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Exclude, AllOperatingSystems),
+            [], [], UnitTestOutcome.Ignored, "Test is not supported on Linux, OSX, Windows, FreeBSD");
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Exclude, default),
+            [], [], UnitTestOutcome.Passed, null);
+        await AssertAssemblyOSConditionAsync(
+            null, [], [], UnitTestOutcome.Passed, null);
+    }
+
+    public async Task AssemblyOSCondition_FailedAssemblyCannotBeReenabledByNarrowerScopes()
+    {
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(default) { IgnoreMessage = "assembly wins" },
+            [new OSConditionAttribute(AllOperatingSystems)],
+            [new OSConditionAttribute(AllOperatingSystems), new AssemblyOSAlternativeConditionAttribute(true)],
+            UnitTestOutcome.Ignored, "assembly wins");
+
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(default) { IgnoreMessage = "assembly wins" },
+            [new OSConditionAttribute(default) { IgnoreMessage = "class must not replace assembly" }],
+            [new OSConditionAttribute(default) { IgnoreMessage = "method must not replace assembly" }],
+            UnitTestOutcome.Ignored, "assembly wins");
+    }
+
+    public async Task AssemblyOSCondition_MatchingAssemblyAllowsNarrowerScopesToSkip()
+    {
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(AllOperatingSystems),
+            [new OSConditionAttribute(default) { IgnoreMessage = "class rejection" }],
+            [new OSConditionAttribute(AllOperatingSystems)],
+            UnitTestOutcome.Ignored, "class rejection");
+
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(AllOperatingSystems),
+            [new OSConditionAttribute(AllOperatingSystems)],
+            [new OSConditionAttribute(default) { IgnoreMessage = "method rejection" }],
+            UnitTestOutcome.Ignored, "method rejection");
+    }
+
+    public async Task AssemblyOSCondition_SameGroupAlternativesRemainWithinTheirScope()
+        => await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(AllOperatingSystems),
+            [new OSConditionAttribute(default), new AssemblyOSAlternativeConditionAttribute(true)],
+            [new OSConditionAttribute(default), new AssemblyOSAlternativeConditionAttribute(true)],
+            UnitTestOutcome.Passed, null);
+
+    private async Task AssertAssemblyOSConditionAsync(
+        OSConditionAttribute? assemblyCondition,
+        Attribute[] classConditions,
+        Attribute[] methodConditions,
+        UnitTestOutcome expectedOutcome,
+        string? expectedReason)
+    {
+        Type type = typeof(AssemblyOSConditionProbe);
+        MethodInfo test = type.GetMethod(nameof(AssemblyOSConditionProbe.Test))!;
+        List<string> lifecycle = [];
+        Dictionary<MethodInfo, Func<object?, object?[]?, object?>> invokers = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
+            .ToDictionary<MethodInfo, MethodInfo, Func<object?, object?[]?, object?>>(
+                method => method,
+                method => (_, _) =>
+                {
+                    lifecycle.Add(method.Name);
+                    return Task.CompletedTask;
+                });
+        _testablePlatformServiceProvider.SetReflectionOperations(new SourceGeneratedReflectionOperations(
+            new SourceGeneratedReflectionDataProvider
+            {
+                Assembly = type.Assembly,
+                AssemblyName = type.Assembly.GetName().Name!,
+                Types = [type],
+                TypesByName = new Dictionary<string, Type> { [type.FullName!] = type },
+                AssemblyAttributes = assemblyCondition is null ? [] : [assemblyCondition],
+                TypeAttributes = new Dictionary<Type, Attribute[]>
+                {
+                    [type] = [new TestClassAttribute(), .. classConditions],
+                },
+                TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]>
+                {
+                    [test] = [new TestMethodAttribute(), .. methodConditions],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.AssemblyInitialize))!] = [new AssemblyInitializeAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.AssemblyCleanup))!] = [new AssemblyCleanupAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.ClassInitialize))!] = [new ClassInitializeAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.ClassCleanup))!] = [new ClassCleanupAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.TestInitialize))!] = [new TestInitializeAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.TestCleanup))!] = [new TestCleanupAttribute()],
+                },
+                TypeMethodInvokers = invokers,
+                TypeConstructorsInvoker = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>
+                {
+                    [type] =
+                    [
+                        new()
+                        {
+                            Invoker = _ =>
+                            {
+                                lifecycle.Add("Constructor");
+                                return new AssemblyOSConditionProbe();
+                            },
+                        },
+                    ],
+                },
+            }));
+        const string source = "assembly-os-condition-source";
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(source)).Returns(type.Assembly);
+        var element = new UnitTestElement(CreateTestMethod(test.Name, type.FullName!, source, null));
+        UnitTestRunner runner = CreateUnitTestRunner([element]);
+        IAdapterMessageLogger logger = _mockMessageLogger.Object.ToAdapterMessageLogger();
+
+        TestResult[] results = await runner.RunSingleTestAsync(element, _testRunParameters, logger);
+        if (expectedOutcome == UnitTestOutcome.Ignored)
+        {
+            // Exercise the graceful-stop fallback on cached, uninitialized scopes.
+            // A normally completed runnable test has already performed its cleanup.
+            runner.ForceCleanup(_testRunParameters, logger);
+        }
+
+        TestResult result = results.Should().ContainSingle().Which;
+        result.Outcome.Should().Be(expectedOutcome);
+        result.IgnoreReason.Should().Be(expectedReason);
+        result.TestFailureException.Should().BeNull();
+        string[] expectedLifecycle = expectedOutcome == UnitTestOutcome.Passed
+            ? ["AssemblyInitialize", "ClassInitialize", "Constructor", "TestInitialize", "Test", "TestCleanup", "ClassCleanup", "AssemblyCleanup"]
+            : [];
+        lifecycle.Should().Equal(expectedLifecycle);
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+    private sealed class AssemblyOSAlternativeConditionAttribute(bool isConditionMet) : ConditionBaseAttribute(ConditionMode.Include)
+    {
+        public override bool IsConditionMet => isConditionMet;
+
+        public override string GroupName => "OSCondition";
+    }
+
+    // Lifecycle attributes live only in the per-case metadata above. Putting real
+    // AssemblyInitialize/Cleanup attributes here would pollute other runner tests
+    // that intentionally inspect this unit-test assembly with ordinary reflection.
+    private sealed class AssemblyOSConditionProbe
+    {
+        public AssemblyOSConditionProbe()
+        {
+        }
+
+        public static void AssemblyInitialize(TestContext context)
+        {
+        }
+
+        public static void AssemblyCleanup()
+        {
+        }
+
+        public static void ClassInitialize(TestContext context)
+        {
+        }
+
+        public static void ClassCleanup()
+        {
+        }
+
+        public void TestInitialize()
+        {
+        }
+
+        public void TestCleanup()
+        {
+        }
+
+        public void Test()
+        {
+        }
     }
 
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
@@ -829,4 +1139,367 @@ public sealed class UnitTestRunnerTests : TestContainer
     private class DummyTestClassAttribute : TestClassAttribute;
 
     #endregion
+
+    public void LiveWriterEncodingPreservesCodecBoundariesWithoutEmittingPreamble()
+    {
+        using var stream = new MemoryStream();
+        using TextWriter writer = UnitTestRunner.CreateLiveOutputWriter(stream, new UTF8Encoding(true, true));
+        writer.Write("AΩ中");
+        writer.Flush();
+        byte[] expected = [0x41, 0xCE, 0xA9, 0xE4, 0xB8, 0xAD];
+        stream.ToArray().Should().Equal(expected);
+        Encoding codec = writer.Encoding;
+        char[] input = ['A', 'Ω', '中'];
+        codec.GetByteCount(input, 0, 3).Should().Be(6);
+        byte[] bytes = new byte[10];
+        codec.GetBytes(input, 0, 3, bytes, 2).Should().Be(6);
+        bytes.Should().Equal(0, 0, 0x41, 0xCE, 0xA9, 0xE4, 0xB8, 0xAD, 0, 0);
+        codec.GetCharCount(expected, 0, expected.Length).Should().Be(3);
+        char[] output = ['?', '?', '?', '?', '?'];
+        codec.GetChars(expected, 0, expected.Length, output, 1).Should().Be(3);
+        output.Should().Equal('?', 'A', 'Ω', '中', '?');
+        codec.GetMaxByteCount(3).Should().Be(12);
+        codec.GetMaxCharCount(6).Should().Be(7);
+        Decoder decoder = codec.GetDecoder();
+        char[] first = new char[3];
+        decoder.GetChars(expected, 0, 2, first, 0, false).Should().Be(1);
+        first[0].Should().Be('A');
+        char[] rest = new char[3];
+        decoder.GetChars(expected, 2, 4, rest, 0, true).Should().Be(2);
+        rest.Take(2).Should().Equal('Ω', '中');
+        Action malformed = () => codec.GetBytes(['\uD800'], 0, 1, bytes, 0);
+        malformed.Should().ThrowExactly<EncoderFallbackException>();
+    }
+
+    public async Task SynchronousAndNotRunEntryPointsPreserveCountdownAndValidation()
+    {
+        var element = new UnitTestElement(CreateTestMethod("Missing", "MissingType", "source", null));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("source")).Returns(typeof(UnitTestRunnerTests).Assembly);
+        UnitTestRunner synchronous = CreateUnitTestRunner([element]);
+        TestResult[] missing = synchronous.RunSingleTest(element, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+        missing.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.NotFound);
+        UnitTestRunner notify = CreateUnitTestRunner([element]);
+        notify.NotifyTestNotRun(element, _testRunParameters, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger()).Should().BeEmpty();
+        UnitTestRunner invalid = CreateUnitTestRunner([element]);
+        Func<Task> absentElement = () => invalid.NotifyTestNotRunAsync(null!, _testRunParameters, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+        Func<Task> absentLifecycle = () => invalid.RunSingleTestAsync(element, _testRunParameters, null!, _mockMessageLogger.Object.ToAdapterMessageLogger());
+
+        (await absentElement.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("unitTestElement");
+        (await absentLifecycle.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("lifecycleContextProperties");
+    }
+
+    public async Task CleanupFailuresAfterIgnoredTailAreAttributedToTheLastRunnableTest()
+    {
+        Type type = typeof(DummyTestClassWithCleanupMethods);
+        MethodInfo ignored = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod2))!;
+        _testablePlatformServiceProvider.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(
+            new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+            {
+                Assembly = type.Assembly,
+                AssemblyName = type.Assembly.GetName().Name!,
+                Types = [type],
+                TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]> { [ignored] = [new TestMethodAttribute(), new IgnoreAttribute("selected but ignored")] },
+            }));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("cleanup-source")).Returns(type.Assembly);
+        var first = new UnitTestElement(CreateTestMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod), type.FullName!, "cleanup-source", null));
+        var last = new UnitTestElement(CreateTestMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod2), type.FullName!, "cleanup-source", null));
+        Action oldAssembly = DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody;
+        Action oldClass = DummyTestClassWithCleanupMethods.ClassCleanupMethodBody;
+        Action<TestContext> oldBody = DummyTestClassWithCleanupMethods.TestMethodBody;
+        DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody = () => throw new InvalidOperationException("assembly cleanup sentinel");
+        DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () => throw new InvalidOperationException("class cleanup sentinel");
+        DummyTestClassWithCleanupMethods.TestMethodBody = context => context.WriteLine("body executed");
+        try
+        {
+            UnitTestRunner runner = CreateUnitTestRunner([first, last]);
+            TestResult[] passed = await runner.RunSingleTestAsync(first, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+            passed.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Passed);
+
+            TestResult[] tail = await runner.RunSingleTestAsync(last, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+
+            tail.Select(result => result.Outcome).Should().Equal(UnitTestOutcome.Ignored, UnitTestOutcome.Failed, UnitTestOutcome.Failed);
+            tail[0].IgnoreReason.Should().Be("selected but ignored");
+            tail[1].AssociatedUnitTestElement.Should().BeSameAs(first);
+            tail[2].AssociatedUnitTestElement.Should().BeSameAs(first);
+            tail[1].TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException!.Message.Should().Be("class cleanup sentinel");
+            tail[2].TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException!.Message.Should().Be("assembly cleanup sentinel");
+        }
+        finally
+        {
+            DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody = oldAssembly;
+            DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = oldClass;
+            DummyTestClassWithCleanupMethods.TestMethodBody = oldBody;
+        }
+    }
+
+    public async Task AssemblyContextFailureProducesTheOriginalInfrastructureDiagnostic()
+    {
+        Type type = typeof(DummyTestClassWithInitializeMethods);
+        _testablePlatformServiceProvider.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(
+            new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+            {
+                Assembly = type.Assembly,
+                AssemblyName = type.Assembly.GetName().Name!,
+                Types = [type],
+            }));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("context-source")).Returns(type.Assembly);
+        var proxy = new Mock<IPlatformServiceProvider>();
+        proxy.SetupGet(value => value.ReflectionOperations).Returns(_testablePlatformServiceProvider.ReflectionOperations);
+        proxy.SetupGet(value => value.FileOperations).Returns(_testablePlatformServiceProvider.FileOperations);
+        proxy.SetupGet(value => value.AdapterTraceLogger).Returns(_testablePlatformServiceProvider.AdapterTraceLogger);
+        proxy.SetupGet(value => value.ThreadOperations).Returns(_testablePlatformServiceProvider.ThreadOperations);
+        proxy.SetupProperty(value => value.TestRunCancellationToken, new TestRunCancellationToken());
+        bool injected = false;
+        proxy.Setup(value => value.GetTestContext(
+            It.IsAny<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod?>(),
+            It.IsAny<string?>(), It.IsAny<IDictionary<string, object?>>(), It.IsAny<IAdapterMessageLogger>(), It.IsAny<UnitTestOutcome>()))
+            .Returns<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod?, string?, IDictionary<string, object?>, IAdapterMessageLogger, UnitTestOutcome>(
+                (method, className, properties, logger, outcome) =>
+                {
+                    ITestContext context = _testablePlatformServiceProvider.GetTestContext(method, className, properties, logger, outcome);
+                    if (method is null && className is null && !injected)
+                    {
+                        injected = true;
+                        var failing = new Mock<ITestContext>();
+                        failing.SetupSequence(value => value.Context).Throws(new InvalidOperationException("assembly context unavailable")).Returns(context.Context);
+                        return failing.Object;
+                    }
+
+                    return context;
+                });
+        var element = new UnitTestElement(CreateTestMethod(nameof(DummyTestClassWithInitializeMethods.TestMethod), type.FullName!, "context-source", null));
+        PlatformServiceProvider.Instance = proxy.Object;
+        try
+        {
+            UnitTestRunner runner = CreateUnitTestRunner([element]);
+
+            TestResult[] result = await runner.RunSingleTestAsync(element, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+
+            result.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+            result[0].TestFailureException.Should().BeOfType<TestFailedException>().Which.Message.Should().Be("assembly context unavailable");
+            injected.Should().BeTrue();
+        }
+        finally
+        {
+            PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
+        }
+    }
+
+    public Task RunSingleTestExpectedDuration_IOExceptionPreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new IOException("warning transport failed"),
+            "System.IO.IOException: warning transport failed");
+
+    public Task RunSingleTestExpectedDuration_OperationCanceledExceptionPreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new OperationCanceledException("warning transport cancelled"),
+            "System.OperationCanceledException: warning transport cancelled");
+
+    public Task RunSingleTestExpectedDuration_HostExceptionPreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new InvalidOperationException("warning host failed"),
+            "System.InvalidOperationException: warning host failed");
+
+    public Task RunSingleTestExpectedDuration_TraceFailurePreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new IOException("warning transport failed"),
+            "System.IO.IOException: warning transport failed",
+            new InvalidOperationException("trace transport failed"),
+            "System.InvalidOperationException: trace transport failed");
+
+    public Task RunSingleTestExpectedDuration_ThrowingExceptionMessagePreservesResultsAndCleanup()
+    {
+        string exceptionType = typeof(ThrowingWarningMessageException).FullName!;
+        return AssertExpectedDurationDeliveryFailureAsync(
+            new ThrowingWarningMessageException(),
+            $"{exceptionType}: (Failed to get the message for an exception of type {exceptionType} due to an exception.)");
+    }
+
+    private async Task AssertExpectedDurationDeliveryFailureAsync(
+        Exception deliveryException,
+        string formattedDeliveryFailure,
+        Exception? traceException = null,
+        string? formattedTraceFailure = null)
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            Type type = typeof(DummyTestClassWithCleanupMethods);
+            MethodInfo method = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod))!;
+            MethodInfo classCleanup = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.ClassCleanup))!;
+            MethodInfo assemblyCleanup = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.AssemblyCleanup))!;
+            List<string> cleanupEvents = [];
+            var originalFailure = new InvalidOperationException("completed failure sentinel");
+            var passedId = new Guid("10101010-1010-1010-1010-101010101010");
+            var failedId = new Guid("20202020-2020-2020-2020-202020202020");
+            var parentId = new Guid("30303030-3030-3030-3030-303030303030");
+            TestResult[] completed =
+            [
+                new()
+                {
+                    Outcome = UnitTestOutcome.Passed,
+                    DisplayName = "passing row",
+                    Duration = TimeSpan.FromTicks(1_501_250),
+                    ExecutionId = passedId,
+                    ParentExecId = parentId,
+                    TestContextMessages = "passing authored output",
+                    LogOutput = "passing stdout",
+                },
+                new()
+                {
+                    Outcome = UnitTestOutcome.Failed,
+                    DisplayName = "failing row",
+                    Duration = TimeSpan.FromTicks(2_005_000),
+                    ExecutionId = failedId,
+                    ParentExecId = parentId,
+                    TestFailureException = originalFailure,
+                    TestContextMessages = "failing authored output",
+                    LogError = "failing stderr",
+                },
+            ];
+            var executor = new CompletedDurationResultsAttribute(completed);
+            _testablePlatformServiceProvider.SetReflectionOperations(new SourceGeneratedReflectionOperations(
+                new SourceGeneratedReflectionDataProvider
+                {
+                    Assembly = type.Assembly,
+                    AssemblyName = type.Assembly.GetName().Name!,
+                    Types = [type],
+                    TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]>
+                    {
+                        [method] = [executor, new ExpectedDurationAttribute(100)],
+                    },
+                    TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+                    {
+                        [classCleanup] = (_, _) =>
+                        {
+                            cleanupEvents.Add("class cleanup");
+                            return Task.CompletedTask;
+                        },
+                        [assemblyCleanup] = (_, _) =>
+                        {
+                            cleanupEvents.Add("assembly cleanup");
+                            return Task.CompletedTask;
+                        },
+                    },
+                }));
+            _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("duration-warning-source"))
+                .Returns(type.Assembly);
+            _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(true);
+            if (traceException is not null)
+            {
+                _testablePlatformServiceProvider.MockTraceLogger.Setup(value => value.Warning(It.IsAny<string>()))
+                    .Throws(traceException);
+            }
+
+            List<string> warningAttempts = [];
+            var logger = new Mock<IAdapterMessageLogger>();
+            logger.Setup(value => value.SendMessage(MessageLevel.Warning, It.IsAny<string>()))
+                .Callback<MessageLevel, string>((_, message) =>
+                {
+                    warningAttempts.Add(message);
+                    if (warningAttempts.Count == 1)
+                    {
+                        throw deliveryException;
+                    }
+                });
+            var element = new UnitTestElement(CreateTestMethod(method.Name, type.FullName!, "duration-warning-source", null));
+            UnitTestRunner runner = CreateUnitTestRunner([element]);
+            TestResult[] results = [];
+            Exception? escaped = null;
+            try
+            {
+                results = await runner.RunSingleTestAsync(element, _testRunParameters, logger.Object);
+            }
+            catch (Exception exception)
+            {
+                // A hostile virtual Message getter can also escape the outer runner's
+                // error-conversion path. Treat that as the regression, not a harness fault.
+                escaped = exception;
+            }
+
+            string identity = $"{type.FullName}.TestMethod";
+            string passedWarning = $"Test '{identity} (passing row)' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+            string failedWarning = $"Test '{identity} (failing row)' took 200.5000 ms, exceeding its expected maximum duration of 100 ms.";
+            string deliveryFailure = $"Failed to display the expected-duration warning for test '{identity} (passing row)': {formattedDeliveryFailure}";
+            using (new AssertionScope())
+            {
+                escaped.Should().BeNull("an advisory sink must not throw out of the test runner");
+                results.Select(result => result.Outcome).Should().Equal(
+                    [UnitTestOutcome.Passed, UnitTestOutcome.Failed],
+                    "advisory delivery failures must not replace completed results with Error");
+                cleanupEvents.Should().Equal("class cleanup", "assembly cleanup");
+                executor.Calls.Should().Be(1);
+                warningAttempts.Should().Equal(passedWarning, failedWarning);
+                _testablePlatformServiceProvider.MockTraceLogger.Invocations
+                    .Where(invocation => invocation.Method.Name == nameof(ITraceLogger.Warning) && invocation.Arguments.Count == 1)
+                    .Select(invocation => (string)invocation.Arguments[0])
+                    .Should().Equal(deliveryFailure);
+
+                if (results.Length == 2)
+                {
+                    results.Select(result => result.ExecutionId).Should().Equal(passedId, failedId);
+                    results.Select(result => result.ParentExecId).Should().Equal(parentId, parentId);
+                    results.Select(result => result.Duration).Should().Equal(TimeSpan.FromTicks(1_501_250), TimeSpan.FromTicks(2_005_000));
+                    results.Select(result => result.DisplayName).Should().Equal("passing row", "failing row");
+                    results[0].TestFailureException.Should().BeNull();
+                    results[1].TestFailureException.Should().BeSameAs(originalFailure);
+                    results[1].ExceptionMessage.Should().Be("completed failure sentinel");
+                    results[0].LogOutput.Should().Be("passing stdout");
+                    results[1].LogError.Should().Be("failing stderr");
+                    List<string> expectedPassingOutput = ["passing authored output", passedWarning, deliveryFailure];
+                    if (traceException is not null)
+                    {
+                        expectedPassingOutput.Add($"Failed to trace the expected-duration warning delivery failure: {formattedTraceFailure}");
+                    }
+
+                    DiagnosticLines(results[0].TestContextMessages).Should().Equal(expectedPassingOutput);
+                    DiagnosticLines(results[1].TestContextMessages).Should().Equal("failing authored output", failedWarning);
+                }
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
+    private static IEnumerable<string> DiagnosticLines(string? output)
+        => (output ?? string.Empty).Replace("\r\n", "\n").Split('\n').Where(line => line.Length != 0);
+
+    private sealed class CompletedDurationResultsAttribute(TestResult[] results) : TestMethodAttribute
+    {
+        internal int Calls { get; private set; }
+
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            Calls++;
+            return Task.FromResult(results);
+        }
+    }
+
+    private sealed class ThrowingWarningMessageException : Exception
+    {
+        public override string Message => throw new InvalidOperationException("warning Message getter failed");
+    }
+
+#if WIN_UI || WINDOWS_UWP
+    public void UnsupportedDiagnosticsCaptureIsReportedAndDisabled()
+    {
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure = static (_, _, _) => { };
+        MSTestSettings settings = MSTestSettings.GetSettings(
+            "<RunSettings><MSTest><CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics></MSTest></RunSettings>",
+            MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        _ = new UnitTestRunner(settings, []);
+
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Warning(
+            "CaptureAssertionFailureDiagnostics is not supported on UWP or WinUI and will be ignored."), Times.Once);
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().BeNull();
+    }
+#endif
 }

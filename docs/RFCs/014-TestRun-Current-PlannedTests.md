@@ -1,5 +1,21 @@
 # RFC 014 - TestRun.Current ambient run-state API
 
+> **Current implementation note (2026-10-09):** The experimental planned-test slice exists;
+> running/completed snapshots and events remain future work.
+> [TestRun](../../src/MSTest/TestFramework/TestRun.cs) starts with a non-null empty value, and
+> [UnitTestRunner](../../src/MSTest/MSTestAdapter.PlatformServices/Execution/UnitTestRunner.cs) publishes a per-source
+> snapshot before assembly initialization. It is retained until replaced in that process/AppDomain.
+> The snapshot is **host-filter-selected**, not a guarantee that every entry executes:
+> [source execution](../../src/MSTest/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.SourceExecution.cs)
+> constructs it before later programmatic filter decisions, dependency failures or cancellation.
+> Thus `PlannedTests` cannot answer the motivation's “actually executed” cleanup question.
+> [TestRunInfoTests](../../test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestRunInfoTests.cs)
+> maps empty/reset/default-display-name/category/property behavior and public-constructor collection copying;
+> read-only collection interfaces do not establish deep immutability.
+> See the [current architecture](../architecture/mstest.md#execution-and-lifecycle) and
+> [snapshot contract](../specifications/mstest.md#mstest-024--planned-test-snapshots-describe-selection-not-execution).
+> This is source inspection/test mapping only, not executed fixture-visibility or multi-source/AppDomain conformance.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation (initial slice: `PlannedTests`)
@@ -33,7 +49,7 @@ The same shape is used by other frameworks: xUnit v3 separates per-test `TestCon
 
 ### Public API
 
-All types live in `Microsoft.VisualStudio.TestTools.UnitTesting` (same as `TestContext`) and ship inside `MSTest.TestFramework.Extensions` (where `TestContext` lives). All are gated behind `[Experimental("MSTESTEXP")]` for v1.
+All types live in `Microsoft.VisualStudio.TestTools.UnitTesting` (same as `TestContext`) and ship inside `MSTest.TestFramework`. Starting with MSTest 5, `TestContext` is also defined in that core assembly. All run-state types are gated behind `[Experimental("MSTESTEXP")]` for v1.
 
 ```csharp
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -96,7 +112,7 @@ Every property name on `PlannedTest` either mirrors an existing public MSTest AP
   - Not a `record`: structural equality across collection fields is surprising and expensive; positional records emit `init` accessors which the [repo guidelines explicitly forbid for new public APIs](../../.github/copilot-instructions.md#public-api-guidelines).
   - `sealed` to lock in the shape and allow non-breaking additions later (extra get-only properties + extra ctor overload).
 - **Collections**:
-  - `IReadOnlyCollection<string>` for `TestCategories` rather than `IReadOnlySet<string>` because `IReadOnlySet<T>` is not available on netstandard2.0 / net462 (the TFMs `TestFramework.Extensions` targets) and the repo does not currently polyfill it.
+  - `IReadOnlyCollection<string>` for `TestCategories` rather than `IReadOnlySet<string>` because `IReadOnlySet<T>` is not available on netstandard2.0 / net462 (TFMs the core framework targets) and the repo does not currently polyfill it.
   - `IReadOnlyCollection<KeyValuePair<string, string>>` for `TestProperties` (flat list) because `[TestProperty]` is multi-valued — the same name may appear several times — and a flat list represents that naturally without forcing an inner collection on every entry.
 
 ### Lifetime / scoping
@@ -107,11 +123,11 @@ Every property name on `PlannedTest` either mirrors an existing public MSTest AP
 
 ### Implementation outline
 
-1. New types in `src/TestFramework/TestFramework.Extensions/`:
+1. New types in `src/MSTest/TestFramework/`:
    - `TestRun.cs` — static class with `Current` (get) and `internal SetCurrent(ITestRunInfo?)`. Default value is an internal `EmptyTestRunInfo` that returns empty collections.
    - `ITestRunInfo.cs` — the interface.
    - `PlannedTest.cs` — the DTO.
-2. Internal adapter type `TestRunInfo` in `src/Adapter/MSTestAdapter.PlatformServices/Execution/TestRunInfo.cs`:
+2. Internal adapter type `TestRunInfo` in `src/MSTest/MSTestAdapter.PlatformServices/Execution/TestRunInfo.cs`:
    - Implements `ITestRunInfo`.
    - Provides `static TestRunInfo CreateFrom(IReadOnlyList<UnitTestElement>)` that materializes one `PlannedTest` per filtered `UnitTestElement`, reading `TestMethod.{FullClassName,Name,DisplayName,AssemblyName,ManagedTypeName,ManagedMethodName}`, `UnitTestElement.{DeclaringFilePath,DeclaringLineNumber,TestCategory,Traits}`.
 3. Wire-up in `UnitTestRunner` constructor (post `_classCleanupManager = …`):
@@ -126,7 +142,7 @@ Every property name on `PlannedTest` either mirrors an existing public MSTest AP
 
 ```csharp
 [TestClass]
-public static class GlobalSetup
+public class GlobalSetup
 {
     [AssemblyInitialize]
     public static void Init(TestContext _)
@@ -161,9 +177,9 @@ The same call works from a helper class, a fixture, or any other code reachable 
 
 ## Compatibility
 
-- **Not a breaking change.** All additions; no existing types are modified.
+- **Assembly identity.** The initial API addition was additive. MSTest 5 moves these types from `MSTest.TestFramework.Extensions` to `MSTest.TestFramework`; `MSTest.TestFramework.Extensions` forwards them to the core assembly, so existing consumers keep working without recompiling.
 - **Experimental.** The whole surface is annotated with `[Experimental("MSTESTEXP")]`. Consumers must explicitly opt in with `#pragma warning disable MSTESTEXP` (or equivalent). This lets us evolve the shape based on early feedback before locking it.
-- **TFM coverage.** `TestFramework.Extensions` targets are unchanged; the new types compile across `netstandard2.0`, `net462`, `net8.0`, `net9.0`, UWP and WinUI.
+- **TFM coverage.** The run-state types compile in the core framework for `netstandard2.0`, `net462`, `net10.0` and `net11.0`. The existing UWP and WinUI Extensions builds reference the core framework; their targets and package selection are unchanged.
 - **Source compatibility for derived `TestContext`s.** None affected; we did not touch `TestContext`.
 
 ### Unresolved questions

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
     <Platforms>x86;x64;arm64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />
     <SDKReference Include="TestPlatform.Universal, Version=$(VisualStudioVersion)" />
+    <!-- An AppContainer testhost cannot monitor its parent VSTest process. -->
     <RuntimeHostConfigurationOption Include="MSTest.EnableParentProcessQuery"
                                     Value="false"
                                     Trim="true" />

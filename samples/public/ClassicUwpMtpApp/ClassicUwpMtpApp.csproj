@@ -1,0 +1,81 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" />
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>uap10.0.16299</TargetFramework>
+    <TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <OutputType>AppContainerExe</OutputType>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
+    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <MicrosoftTestingPlatformVersion>$(MicrosoftTestingExtensionsPackagedAppVersion)</MicrosoftTestingPlatformVersion>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <GenerateTestingPlatformApplicationHelper>false</GenerateTestingPlatformApplicationHelper>
+    <GenerateSelfRegisteredExtensions>false</GenerateSelfRegisteredExtensions>
+    <TestingExtensionsProfile>None</TestingExtensionsProfile>
+    <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Update="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <AppxManifest Include="Package.appxmanifest" />
+    <Content Include="Assets\**\*" />
+    <None Remove="Strings\**\*.resw" />
+    <PRIResource Include="Strings\**\*.resw" Exclude="@(PRIResource)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.14" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$(MSTestVersion)', '5.0'))">
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$(MSTestVersion)\lib\uap10.0\MSTest.TestFramework.dll"
+             Link="MSTest.TestFramework.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$(MSTestVersion)\lib\uap10.0\MSTest.TestFramework.Extensions.dll"
+             Link="MSTest.TestFramework.Extensions.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(MSTestVersion)', '5.0'))">
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$(MSTestVersion)\lib\uap10.0.16299\MSTest.TestFramework.dll"
+             Link="MSTest.TestFramework.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$(MSTestVersion)\lib\uap10.0.16299\MSTest.Uwp.dll"
+             Link="MSTest.Uwp.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="TargetFramework=$(TargetFramework);UseUwpTools=$(UseUwpTools);UseWinUI=$(UseWinUI);MSBuildRuntimeType=$(MSBuildRuntimeType);NETCoreSdkVersion=$(NETCoreSdkVersion);NuGetPackageRoot=$(NuGetPackageRoot)"
+      Overwrite="true" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="@(ReferencePath->'%(FullPath)')"
+      Overwrite="false" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-runtime-assets.txt"
+      Lines="@(ReferenceCopyLocalPaths->'%(DestinationSubDirectory)%(Filename)%(Extension)|%(FullPath)')"
+      Overwrite="true" />
+  </Target>
+
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" />
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
+</Project>

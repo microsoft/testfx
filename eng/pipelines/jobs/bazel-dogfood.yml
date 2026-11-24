@@ -1,0 +1,113 @@
+parameters:
+- name: jobName
+  type: string
+- name: mode
+  type: string
+  values:
+  - Cold
+  - BuildCache
+  - Cached
+  - MSBuild
+- name: condition
+  type: string
+  default: succeeded()
+
+jobs:
+- job: ${{ parameters.jobName }}
+  displayName: Dogfood ${{ parameters.mode }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: 120
+  cancelTimeoutInMinutes: 5
+  pool:
+    name: NetCore-Public
+    demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+  variables:
+    DogfoodMode: ${{ parameters.mode }}
+    DogfoodRunRoot: $(Agent.TempDirectory)\bd-$(Build.BuildId)-$(System.JobName)-$(System.JobAttempt)
+    # Local state must not bypass Cache@2's branch isolation on a reused agent.
+    DogfoodCacheRoot: $(Agent.TempDirectory)\bd-cache-$(Build.BuildId)-$(System.JobName)-$(System.JobAttempt)
+  steps:
+  - checkout: self
+    fetchDepth: 0
+    clean: true
+    persistCredentials: false
+
+  - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+  - pwsh: |
+      .\eng\bazel\test-dogfood-results.ps1
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      .\eng\bazel\test-dogfood-runner.ps1
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      .\eng\bazel\test-dogfood-comparison.ps1
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      .\eng\bazel\dogfood.ps1 -Prepare -Mode '$(DogfoodMode)' `
+        -RunRoot '$(DogfoodRunRoot)' -CacheRoot '$(DogfoodCacheRoot)' -Jobs 8 -TestJobs 2
+    displayName: Validate and prepare the comparison contract
+
+  # Cache@2 scopes writes to this pipeline and branch. A PR can read the target
+  # branch's cache but cannot overwrite it. Snapshots are immutable, so each run
+  # gets a new key and restores the latest compatible prefix.
+  - ${{ if ne(parameters.mode, 'MSBuild') }}:
+    - task: Cache@2
+      displayName: Cache Bazel downloads
+      inputs:
+        key: '"bazel-downloads-v1" | "$(Agent.OS)" | "$(DogfoodCacheKey)" | "$(Build.BuildId)" | "$(System.JobName)" | "$(System.JobAttempt)"'
+        restoreKeys: |
+          "bazel-downloads-v1" | "$(Agent.OS)" | "$(DogfoodCacheKey)"
+        path: $(DogfoodCacheRoot)\downloads
+
+  - ${{ if in(parameters.mode, 'BuildCache', 'Cached') }}:
+    - task: Cache@2
+      displayName: Cache Bazel actions
+      inputs:
+        key: '"bazel-actions-v1" | "$(Agent.OS)" | "$(DogfoodCacheKey)" | "$(Build.BuildId)" | "$(System.JobName)" | "$(System.JobAttempt)"'
+        restoreKeys: |
+          "bazel-actions-v1" | "$(Agent.OS)" | "$(DogfoodCacheKey)"
+        path: $(DogfoodCacheRoot)\actions
+
+  - ${{ if eq(parameters.mode, 'MSBuild') }}:
+    - task: Cache@2
+      displayName: Cache MSBuild packages
+      inputs:
+        key: '"msbuild-dependencies-v1" | "$(Agent.OS)" | "$(DogfoodCacheKey)" | "$(Build.BuildId)" | "$(System.JobName)" | "$(System.JobAttempt)"'
+        restoreKeys: |
+          "msbuild-dependencies-v1" | "$(Agent.OS)" | "$(DogfoodCacheKey)"
+        path: $(DogfoodCacheRoot)\msbuild
+
+  - pwsh: |
+      .\eng\bazel\dogfood.ps1 -Mode '$(DogfoodMode)' `
+        -RunRoot '$(DogfoodRunRoot)' -CacheRoot '$(DogfoodCacheRoot)' -Jobs 8 -TestJobs 2
+      exit $LASTEXITCODE
+    displayName: Build and test the matched unit workload
+
+  - pwsh: |
+      $root = '$(DogfoodRunRoot)'
+      $hasEvidence = Test-Path -LiteralPath $root
+      $reports = Join-Path $root 'reports\executed'
+      $hasExecutedTests = (Test-Path -LiteralPath $reports) -and
+        @(Get-ChildItem -LiteralPath $reports -Filter '*.trx' -File).Count -gt 0
+      Write-Host "##vso[task.setvariable variable=DogfoodHasEvidence]$hasEvidence"
+      Write-Host "##vso[task.setvariable variable=DogfoodHasExecutedTests]$hasExecutedTests"
+    displayName: Locate completed and partial evidence
+    condition: always()
+
+  # Cached TRXs are retained in the evidence artifact, never republished as new
+  # test executions in Azure's test-history/coverage services.
+  - task: PublishTestResults@2
+    displayName: Publish newly executed unit tests
+    condition: and(always(), eq(variables.DogfoodHasExecutedTests, 'True'))
+    inputs:
+      testResultsFormat: VSTest
+      searchFolder: $(DogfoodRunRoot)\reports\executed
+      testResultsFiles: '*.trx'
+      mergeTestResults: true
+      testRunTitle: Dogfood $(DogfoodMode) executed tests
+      failTaskOnFailedTests: true
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish dogfood evidence
+    condition: and(always(), eq(variables.DogfoodHasEvidence, 'True'))
+    inputs:
+      targetPath: $(DogfoodRunRoot)
+      artifact: dogfood-$(System.JobName)

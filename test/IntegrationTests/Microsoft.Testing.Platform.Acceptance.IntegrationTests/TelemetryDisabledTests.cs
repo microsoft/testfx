@@ -29,7 +29,9 @@ public sealed class TelemetryDisabledTests : AcceptanceTestBase<TelemetryDisable
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_CLI_TELEMETRY_OPTOUT environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG Telemetry is 'DISABLED'
 """;
-        await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
+        string report = await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
+        string content = await File.ReadAllTextAsync(report, TestContext.CancellationToken);
+        Assert.DoesNotContain("Send telemetry event:", content);
     }
 
     private static async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Trace", string flushType = "async")
@@ -73,10 +75,12 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 
 #file Program.cs
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -86,6 +90,7 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args$TelemetryArg$);
+        builder.AddAppInsightsTelemetryProvider();
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();

@@ -1,0 +1,82 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Services;
+
+namespace Microsoft.Testing.Extensions.Hosting;
+
+internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFrameworkInvoker
+{
+    private readonly bool _isHotReloadEnabled;
+    private readonly IStopPoliciesService _stopPoliciesService;
+
+    public HotReloadTestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
+        : base(serviceProvider)
+    {
+        _isHotReloadEnabled = IsHotReloadEnabled(serviceProvider.GetEnvironment());
+        _stopPoliciesService = serviceProvider.GetRequiredService<IStopPoliciesService>();
+        if (_isHotReloadEnabled)
+        {
+            ((SystemRuntimeFeature)serviceProvider.GetRuntimeFeature()).EnableHotReload();
+            _stopPoliciesService.RegisterDeadlineStopFallback(() =>
+            {
+                HotReloadHandler.RequestShutdown();
+                return Task.FromResult(true);
+            });
+        }
+    }
+
+    private static bool IsHotReloadEnabled(IEnvironment environment)
+        => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
+        || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
+
+    public override async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request,
+        IMessageBus messageBus, CancellationToken cancellationToken)
+    {
+        if (!_isHotReloadEnabled)
+        {
+            await base.ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        // Using the output device here rather than Console WriteLine ensures that we don't break live logger output.
+        IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
+        var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
+        await _stopPoliciesService.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            HotReloadHandler.RequestShutdown();
+            return Task.CompletedTask;
+        }).ConfigureAwait(continueOnCapturedContext: default);
+        TaskCompletionSource<int>? executionCompleted = null;
+        while (!_stopPoliciesService.IsDeadlineTriggered
+            && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(continueOnCapturedContext: default))
+        {
+            executionCompleted = new();
+
+            // Reset the shared coverage accumulator at the start of every hot-reload cycle so each cycle reports
+            // only its own coverage and a prior cycle's threshold-failure verdict cannot carry over.
+            ServiceProvider.GetRequiredService<TestCoverageResult>().Reset();
+
+            var hotReloadOutputDevice = ServiceProvider.GetPlatformOutputDevice() as IHotReloadPlatformOutputDevice;
+            if (hotReloadOutputDevice is not null)
+            {
+                await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            await base.ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
+
+            await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(continueOnCapturedContext: default);
+            if (hotReloadOutputDevice is not null)
+            {
+                await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            executionCompleted.SetResult(0);
+        }
+    }
+}

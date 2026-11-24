@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
@@ -17,18 +17,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.AI\Microsoft.Testing.Platform.AI.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureFoundry\Microsoft.Testing.Extensions.AzureFoundry.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Platform.AI\Microsoft.Testing.Platform.AI.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.AzureFoundry\Microsoft.Testing.Extensions.AzureFoundry.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers\MSTest.Analyzers.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
     <PackageReference Include="Nerdbank.MessagePack" />
     <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
     <PackageReference Include="MessagePack" />
     <PackageReference Include="StreamJsonRpc" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,5 +49,5 @@
   </ItemGroup>
 
   <!-- Import the capabilities for the Microsoft.Testing.Platform -->
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
+  <Import Project="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
 </Project>

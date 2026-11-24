@@ -175,11 +175,11 @@ public class AssemblyLoadWorkerTests : TestContainer
         public Func<string> FullNameSetter { get; set; } = null!;
 
         public override AssemblyName[] GetReferencedAssemblies()
-            => GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : [];
+            => GetReferencedAssembliesSetter is not null ? GetReferencedAssembliesSetter.Invoke() : [];
 
         public string? Name { get; set; }
 
-        public override string FullName => FullNameSetter != null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
+        public override string FullName => FullNameSetter is not null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
 
         public override bool GlobalAssemblyCache => false;
 

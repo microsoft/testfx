@@ -17,10 +17,16 @@
          declared near the bottom of this file (the one Dependabot updates). The
          _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
          the two drift apart. -->
-    <AspireHostingTestingVersion>13.5.3</AspireHostingTestingVersion>
-    <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
-    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
+    <AspireHostingTestingVersion>13.6.5</AspireHostingTestingVersion>
+    <DotNetRuntimePackagesVersion>10.0.15</DotNetRuntimePackagesVersion>
+    <DotNetExtensionsPackagesVersion>10.11.0</DotNetExtensionsPackagesVersion>
+    <!-- MSBuild 18.10+ requires .NET 11; keep the latest version that supports our .NET 10 targets. -->
+    <MicrosoftBuildVersion>18.9.6</MicrosoftBuildVersion>
+    <!-- Roslyn is supplied by the analyzer host: Visual Studio 2022 17.14 / .NET SDK 9.0.300 or newer.
+         Automatic minor/major updates are disabled: changing this baseline also requires updating the
+         native producer/test declarations and regenerating their lockfiles in eng/bazel. -->
+    <MicrosoftCodeAnalysisVersion>4.14.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersionForTests>4.14.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
     <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers.
          On a 5.10.0-1.* (roslyn main) preview from the dnceng dotnet-tools feed to pick up the
@@ -32,20 +38,23 @@
          just never go back to 5.10.0-1.26360.* or earlier (built before the merge).
          Promote to a stable Microsoft.CodeAnalysis.*Analyzers release once one ships with #84437.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26467.6</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26477.9</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>18.10.1</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>18.12.0</MicrosoftNETTestSdkVersion>
     <MicrosoftTestPlatformFilterSourceVersion>$(MicrosoftNETTestSdkVersion)</MicrosoftTestPlatformFilterSourceVersion>
     <!-- MicrosoftPlaywrightVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Microsoft.Playwright.MSTest.v4
          PackageVersion declared near the bottom of this file (the one Dependabot updates). The
          _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
          the two drift apart. -->
-    <MicrosoftPlaywrightVersion>1.62.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.65.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
+    <!-- OpenTelemetry and OpenTelemetry.Exporter.OpenTelemetryProtocol ship in lockstep: the exporter
+         requires the matching OpenTelemetry version, so bumping only one fails restore with NU1605. -->
+    <OpenTelemetryVersion>1.21.0</OpenTelemetryVersion>
     <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
          opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public
          stable release on nuget.org. Promote when the internal feed ships a non-preview version.
@@ -60,72 +69,76 @@
     <SystemMemoryVersion>4.6.3</SystemMemoryVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
-    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.26255.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
+    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.4</MicrosoftCodeAnalysisAnalyzerTestingVersion>
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
+    <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.2.19" />
+    <!-- Stable 18.13.0 is unavailable on the configured feeds; use this dotnet-tools build until a stable version is mirrored. -->
+    <PackageVersion Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="18.14.0-1.26559.118" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
-    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />
-    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
+    <!-- Keep a version mirrored by dotnet-public; the internal pipeline rejects mixed external feeds. -->
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.3.180" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
     <!-- If this gets updated, please revise if the explicit dependency on System.Diagnostics.DiagnosticSource is still needed -->
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
     <!-- This comes transitvely via Microsoft.ApplicationInsights, but we want to upgrade it because 5.0.0 is not maintained -->
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisVersion)" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.607501" />
-    <PackageVersion Include="Microsoft.Extensions.AI" Version="9.10.0" />
-    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="9.10.0-preview.1.25513.3" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="$(DotNetExtensionsPackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="$(DotNetExtensionsPackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
-    <PackageVersion Include="Azure.Core" Version="1.62.0" />
+    <PackageVersion Include="Azure.Core" Version="1.65.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsAffectedTestsVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsAffectedTestsVersion)" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="$(MicrosoftTestPlatformFilterSourceVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
-    <PackageVersion Include="OpenTelemetry" Version="1.19.1" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="1.8.250906003" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
-    <PackageVersion Include="System.Text.Json" Version="10.0.12" />
+    <PackageVersion Include="System.Reflection.Metadata" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="System.Text.Json" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="FSharp.Core" Version="11.0.100" />
-    <PackageVersion Include="NUnit" Version="4.6.1" />
-    <PackageVersion Include="NUnit3TestAdapter" Version="6.3.0" />
+    <PackageVersion Include="FSharp.Core" Version="11.0.101" />
+    <PackageVersion Include="NUnit" Version="5.0.0" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="6.3.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
-    <!-- Used by Microsoft.Testing.Platform acceptance tests, which consume the released MSTest packages
-         rather than MSTest from source. -->
-    <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
-    <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(DotNetRuntimePackagesVersion)" />
+    <!-- Avoid direct Polly references: future major releases have a maintenance fee, but transitive
+         use through Microsoft.Extensions.Resilience is exempt.
+         https://thepollyproject.org/2026/07/14/polly-osmf-announcement.html -->
+    <PackageVersion Include="Microsoft.Extensions.Resilience" Version="$(DotNetExtensionsPackagesVersion)" />
     <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
     <PackageVersion Include="Moq" Version="4.20.72" />
-    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.3.246" />
+    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.3.269" />
     <PackageVersion Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Polly" Version="8.8.0" />
-    <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.26.150" />
     <!--
       Nerdbank.MessagePack and MessagePack both come transitively via StreamJsonRpc, but we pin them
       here to pick up versions that fix security vulnerabilities in the transitive versions shipped
@@ -137,12 +150,17 @@
       AND <PackageReference Include="MessagePack" /> entries, otherwise the transitive (vulnerable)
       versions get restored. See PR #9120 / #9124 for context.
     -->
-    <PackageVersion Include="Nerdbank.MessagePack" Version="1.3.85" />
-    <PackageVersion Include="MessagePack" Version="3.1.8" />
-    <PackageVersion Include="StrongNamer" Version="0.2.5" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageVersion Include="System.Management" Version="10.0.12" />
-    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.1" />
+    <PackageVersion Include="Nerdbank.MessagePack" Version="1.4.104" />
+    <PackageVersion Include="MessagePack" Version="3.1.12" />
+    <!--
+      Keep the analyzer-testing dependency aligned with the runtime packages.
+      Transitive pinning is disabled, so consumers also need an explicit PackageReference.
+    -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="StrongNamer" Version="0.2.5" />    
+    <PackageVersion Include="System.CommandLine" Version="3.0.0" />
+    <PackageVersion Include="System.Management" Version="$(DotNetRuntimePackagesVersion)" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />
   </ItemGroup>
   <!--
     Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK
@@ -183,7 +201,7 @@
     bumps only the PackageVersion), so the duplication can never ship out of sync.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.5.3" />
-    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.62.0" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.6.5" />
+    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.65.0" />
   </ItemGroup>
 </Project>

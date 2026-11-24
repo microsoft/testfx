@@ -1,0 +1,1030 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
+using System.Text.Json;
+
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+
+namespace MSTest.Acceptance.IntegrationTests;
+
+[TestClass]
+public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFixture>
+{
+    private const string WindowsTargetFramework = "net10.0-windows10.0.26100.0";
+
+    // MSTest.TestFramework and MSTest.TestAdapter targeting the Windows TFM, where UI tooling properties select their UI payloads.
+    private const string WindowsUIConsumer = "WindowsUI";
+
+    public TestContext TestContext { get; set; }
+
+    private static string? WindowsPackageIgnoreMessage
+        => OperatingSystem.IsWindows() ? null : "MSTest UI payloads are produced only by Windows packs.";
+
+    [TestMethod]
+    [DataRow("--help", false)]
+    [DataRow("--help", true)]
+    [DataRow("--info", false)]
+    [DataRow("--info", true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ShippingController_FilterHelpAndInfoRequireMSTestToken(string option, bool mstest)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, "<UseWinUI>true</UseWinUI>");
+        DotnetMuxerResult restore = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, restore.ExitCode, restore.ToString());
+        string controller = Path.Combine(
+            Environment.GetEnvironmentVariable("NUGET_PACKAGES")!,
+            "microsoft.testing.extensions.packagedapp.msbuild", MicrosoftTestingPlatformVersion,
+            "tools", "AppModelController", "net10.0", RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64",
+            "mstest-appmodel-controller.exe");
+        Dictionary<string, string?> environment = new()
+        {
+            ["MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"] = mstest ? "msbuild;packagedapp;mstest" : "msbuild;packagedapp",
+            ["TESTINGPLATFORM_UI_LANGUAGE"] = "en-US",
+        };
+        BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
+            $"\"{controller}\" {option}", asset.TargetAssetPath, TestContext.CancellationToken, environment);
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+        string output = result.StandardOutput.ReplaceLineEndings();
+        if (!mstest)
+        {
+            Assert.DoesNotContain(
+                option == "--help"
+                    ? """
+                          --filter
+
+                      """.ReplaceLineEndings()
+                    : """
+                            --filter
+                              Arity: 1
+                      """.ReplaceLineEndings(),
+                output);
+            result = await RunWindowsApplicationModelCommandAsync(
+                $"\"{controller}\" --filter Name=Identity", asset.TargetAssetPath, TestContext.CancellationToken, environment);
+            Assert.AreEqual(5, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+            Assert.Contains("Unknown option '--filter'", result.StandardOutput + result.ErrorOutput);
+        }
+        else
+        {
+            Assert.Contains(
+                option == "--help"
+                    ? """
+                          --filter
+                              Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+                      """.ReplaceLineEndings()
+                    : """
+                      Registered command line providers:
+                        ControllerTestFramework
+                          Name: Windows application-model controller
+                          Version: 1.0.0
+                          Description: Controller-only test framework for packaged Windows application test hosts.
+                          Options:
+                            --filter
+                              Arity: 1
+                              Hidden: False
+                              Description: Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+                      """.ReplaceLineEndings(),
+                output);
+        }
+    }
+
+    public static IEnumerable<TestDataRow<(string Package, string Properties, bool Controller, bool Helper)>> ConsumerContracts()
+    {
+        foreach (string package in new[] { "MSTest", "MSTest.TestAdapter" })
+        {
+            yield return new((package, "<UseUwp>true</UseUwp><UseUwpTools>false</UseUwpTools>", false, true));
+            yield return new((package, string.Empty, false, true));
+        }
+
+        (string Package, string Properties, bool Controller, bool Helper)[] uiCases =
+        [
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI>", true, true),
+            (WindowsUIConsumer, "<UseUwp>true</UseUwp>", true, true),
+            (WindowsUIConsumer, "<UseUwpTools>true</UseUwpTools>", true, true),
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI><WindowsPackageType>None</WindowsPackageType>", false, true),
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI><UseVSTest>true</UseVSTest>", false, true),
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI><IsTestApplication>false</IsTestApplication>", false, true),
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI><OutputType>Library</OutputType>", false, true),
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI><EnableMSTestRunner>false</EnableMSTestRunner>", false, false),
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI><EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>", false, true),
+            (WindowsUIConsumer, "<UseWinUI>true</UseWinUI><OS>Unix</OS>", false, true),
+        ];
+        foreach ((string Package, string Properties, bool Controller, bool Helper) testCase in uiCases)
+        {
+            yield return new(testCase) { IgnoreMessage = WindowsPackageIgnoreMessage };
+        }
+    }
+
+    public static IEnumerable<TestDataRow<string>> ExecutableOverridePackages =>
+    [
+        new("MSTest"),
+        new("MSTest.TestAdapter"),
+        new(WindowsUIConsumer) { IgnoreMessage = WindowsPackageIgnoreMessage },
+    ];
+
+    [TestMethod]
+    [DynamicData(nameof(ConsumerContracts))]
+    public async Task ExplicitConsumer_SelectsControllerOnlyForPackagedMtpApplication(
+        string package, string properties, bool controller, bool helper)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(package, properties);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+
+        bool selectsController = controller && OperatingSystem.IsWindows();
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "contract.txt"), TestContext.CancellationToken);
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                $"Controller={(selectsController ? "mstest-appmodel-controller.exe" : string.Empty)}",
+                $"Extensions={(selectsController ? "msbuild;packagedapp;trx;mstest" : string.Empty)}",
+                $"Helper={helper.ToString().ToLowerInvariant()}",
+            },
+            lines);
+        AssertAlignedPackages(asset.TargetAssetPath);
+    }
+
+    [TestMethod]
+    [DataRow("-p:TestingPlatformPackagedAppControllerArchitecture=arm64", "win-arm64")]
+    [DataRow("-p:TestingPlatformPackagedAppControllerArchitecture=ARM64", "win-arm64")]
+    [DataRow("-p:TestingPlatformPackagedAppControllerArchitecture=x64", "win-x64")]
+    [DataRow("-p:NETCoreSdkRuntimeIdentifier=win-arm64", "win-arm64")]
+    [DataRow("-p:NETCoreSdkRuntimeIdentifier=win-x64", "win-x64")]
+    [DataRow("-p:NETCoreSdkRuntimeIdentifier=win-arm64 -p:TestingPlatformPackagedAppControllerArchitecture=x64", "win-x64")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_SelectsAndStagesControllerForRequestedArchitecture(string arguments, string runtimeIdentifier)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, "<UseWinUI>true</UseWinUI>");
+        string executable = Path.Join(GetConsumerOutputDirectory(asset, WindowsUIConsumer), "PackagedConsumer.exe");
+
+        // Explicitly requesting arm64 on a computer that cannot run it is a misconfiguration the targets report as a warning.
+        bool warnsUnrunnableController = arguments.Contains("TestingPlatformPackagedAppControllerArchitecture=ARM64", StringComparison.OrdinalIgnoreCase)
+            && RuntimeInformation.OSArchitecture != Architecture.Arm64;
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\" {arguments}",
+            warnAsError: !warnsUnrunnableController,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        if (warnsUnrunnableController)
+        {
+            result.AssertOutputContains("selects the arm64 controller, but this computer does not run Windows on an arm64 processor");
+        }
+
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        string stagedDirectory = Path.GetDirectoryName(bootstrapFile)!;
+        Assert.AreEqual(runtimeIdentifier, Path.GetFileName(stagedDirectory));
+
+        // The apphost is the architecture-specific entry point, so its machine type proves which layout was staged.
+        using var peReader = new PEReader(File.OpenRead(Path.Combine(stagedDirectory, "mstest-appmodel-controller.exe")));
+        Machine expectedMachine = runtimeIdentifier == "win-arm64" ? Machine.Arm64 : Machine.Amd64;
+        Assert.AreEqual(expectedMachine, peReader.PEHeaders.CoffHeader.Machine);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_UnsupportedControllerArchitectureFailsExplicitly()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, "<UseWinUI>true</UseWinUI>");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract -p:TestingPlatformPackagedAppControllerArchitecture=x86",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("TestingPlatformPackagedAppControllerArchitecture must be 'x64' or 'arm64' but was 'x86'.");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(ExecutableOverridePackages))]
+    public async Task ExplicitConsumer_PreservesCustomExecutableAndEnvironment(string package)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            package,
+            (package == WindowsUIConsumer ? "<UseWinUI>true</UseWinUI>" : string.Empty)
+                + "<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        Assert.AreSequenceEqual(
+            new[] { "Controller=custom-controller.exe", "Extensions=", "Helper=true" },
+            await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "contract.txt"), TestContext.CancellationToken));
+        result.AssertOutputContains("CallerEnvironment=preserved");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(ConsumerContracts))]
+    public async Task ComputeRunArguments_SelectsSidecarOnlyForPackagedMtpApplication(
+        string package, string properties, bool controller, bool helper)
+    {
+        _ = helper;
+        using TestAsset asset = await GenerateConsumerAsync(package, properties);
+        string executable = Path.Join(GetConsumerOutputDirectory(asset, package), "PackagedConsumer.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken);
+        bool selectsController = controller && OperatingSystem.IsWindows();
+        string expectedCommand = properties.Contains("<OutputType>Library</OutputType>", StringComparison.Ordinal)
+            ? string.Empty
+            : OperatingSystem.IsWindows() ? "PackagedConsumer.exe" : "PackagedConsumer";
+        Assert.AreEqual($"Command={(selectsController ? "mstest-appmodel-controller.exe" : expectedCommand)}", lines[0]);
+        Assert.AreEqual("Arguments=", lines[1]);
+        Assert.AreEqual(
+            selectsController,
+            File.Exists(Path.ChangeExtension(executable, ".launcher.config.json")),
+            "Only the automatic packaged MTP controller should generate a Test Explorer launcher.");
+        if (selectsController)
+        {
+            string bootstrapFile = (await File.ReadAllTextAsync(
+                Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+            Assert.AreSequenceEqual(
+                ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx;mstest"],
+                await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+        }
+    }
+
+    [TestMethod]
+    [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "", false)]
+    [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "<TestingPlatformEnvironmentVariable Include=\"DOTNET_ROOT_ARM64\" Value=\"custom-root\" />", false)]
+    [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "", true)]
+    [DataRow("win-x86", "win-x64", "DOTNET_ROOT_X64", "", false)]
+    [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "", false)]
+    [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "<TestingPlatformEnvironmentVariable Include=\"DOTNET_ROOT_X64\" Value=\"custom-root\" />", false)]
+    [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "", true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_UsesControllerRuntimeRoot(
+        string sdkRuntimeIdentifier, string applicationRuntimeIdentifier, string rootVariable, string extraEnvironment, bool disableAutomaticRoot)
+    {
+        string disableRoot = disableAutomaticRoot ? "<TestingPlatformDisableAppHostDotnetRoot>true</TestingPlatformDisableAppHostDotnetRoot>" : string.Empty;
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer,
+            $"<UseWinUI>true</UseWinUI><RuntimeIdentifier>{applicationRuntimeIdentifier}</RuntimeIdentifier>{disableRoot}",
+            extraReferences: extraEnvironment);
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string hostPath = Path.Combine(RootFinder.Find(), ".dotnet", "dotnet.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRuntimeContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:NETCoreSdkRuntimeIdentifier={sdkRuntimeIdentifier} -p:DOTNET_HOST_PATH=\"{hostPath}\" -p:{rootVariable}=",
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "runtime-contract.txt"), TestContext.CancellationToken);
+        string expectedRoot = extraEnvironment.Length == 0 ? Path.GetDirectoryName(hostPath)! : "custom-root";
+        string rootMessage = $"ControllerEnvironment={rootVariable}={expectedRoot}";
+        bool hasRoot = result.StandardOutput.Contains($"ControllerEnvironment={rootVariable}=", StringComparison.Ordinal);
+        bool callerProvidedRoot = extraEnvironment.Length != 0;
+        bool sdkMatchesController = sdkRuntimeIdentifier.EndsWith(
+            rootVariable == "DOTNET_ROOT_ARM64" ? "-arm64" : "-x64",
+            StringComparison.Ordinal);
+        string controllerRuntimeIdentifier = rootVariable == "DOTNET_ROOT_ARM64" ? "win-arm64" : "win-x64";
+        bool configuresAppHost = sdkMatchesController
+            && applicationRuntimeIdentifier != controllerRuntimeIdentifier
+            && !disableAutomaticRoot;
+        bool expectsRoot = callerProvidedRoot || (!disableAutomaticRoot && sdkMatchesController);
+        Assert.AreEqual(
+            expectsRoot,
+            hasRoot,
+            "The root injection must honor the disable switch and caller-provided roots.");
+        if (expectsRoot)
+        {
+            result.AssertOutputContains(rootMessage);
+        }
+
+        Assert.AreEqual($"RuntimeIdentifier={applicationRuntimeIdentifier}", lines[0]);
+        Assert.AreEqual("Arguments=", lines[1], "The apphost command must preserve the application's empty launch-profile argument tail.");
+        Assert.AreEqual("Command=mstest-appmodel-controller.exe", lines[2]);
+        string controllerPath = lines[3]["RunCommandPath=".Length..];
+        Assert.IsTrue(File.Exists(controllerPath), $"Expected staged controller apphost at '{controllerPath}'.");
+        string expectedRelativeRoot = configuresAppHost
+            ? Path.GetRelativePath(Path.GetDirectoryName(controllerPath)!, Path.GetDirectoryName(hostPath)!)
+            : string.Empty;
+        Assert.AreEqual($"ControllerRuntimeRoot={expectedRelativeRoot}", lines[4]);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_PreservesGlobalApplicationRuntimeIdentifier()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer,
+            "<UseWinUI>true</UseWinUI>");
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string hostPath = Path.Combine(RootFinder.Find(), ".dotnet", "dotnet.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRuntimeContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:RuntimeIdentifier=win-x64 -p:NETCoreSdkRuntimeIdentifier=win-arm64 -p:DOTNET_HOST_PATH=\"{hostPath}\" -p:DOTNET_ROOT_ARM64=",
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "runtime-contract.txt"), TestContext.CancellationToken);
+        Assert.AreEqual("RuntimeIdentifier=win-x64", lines[0], "The global application RID must remain unchanged.");
+        Assert.AreEqual("Arguments=", lines[1]);
+        Assert.AreEqual("Command=mstest-appmodel-controller.exe", lines[2]);
+        string controllerPath = lines[3]["RunCommandPath=".Length..];
+        Assert.IsTrue(File.Exists(controllerPath), $"Expected staged controller apphost at '{controllerPath}'.");
+        Assert.AreEqual(
+            $"ControllerRuntimeRoot={Path.GetRelativePath(Path.GetDirectoryName(controllerPath)!, Path.GetDirectoryName(hostPath)!)}",
+            lines[4]);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments(bool crossVolume, bool explicitMtpRoot)
+    {
+        string sdkRoot = Path.Combine(RootFinder.Find(), ".dotnet");
+        // Leave room for the Windows TFM and app-relative runtime junction within Windows loader path limits.
+        string intermediatePath = Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        if (crossVolume && string.Equals(Path.GetPathRoot(intermediatePath), Path.GetPathRoot(sdkRoot), StringComparison.OrdinalIgnoreCase))
+        {
+            Assert.Inconclusive("Cross-volume controller validation requires the system temporary directory and SDK on different volumes.");
+        }
+
+        string intermediateProperty = crossVolume
+            ? $"<IntermediateOutputPath>{System.Security.SecurityElement.Escape(intermediatePath)}\\</IntermediateOutputPath>"
+            : string.Empty;
+        string rootVariable = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64";
+        // MTP-only items must neither leak into dotnet run nor disable its private SDK discovery.
+        string environmentItem = explicitMtpRoot ? $"<TestingPlatformEnvironmentVariable Include=\"{rootVariable}\" Value=\"mtp-only-root\" />" : string.Empty;
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer, $"<UseWinUI>true</UseWinUI>{intermediateProperty}", extraReferences: environmentItem);
+        string profiles = Path.Combine(asset.TargetAssetPath, "Properties");
+        Directory.CreateDirectory(profiles);
+        await File.WriteAllTextAsync(
+            Path.Combine(profiles, "launchSettings.json"),
+            """
+            {
+              "profiles": {
+                "ControllerInfo": {
+                  "commandName": "Project",
+                  "commandLineArgs": "--info"
+                }
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+        string applicationRid = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-x64" : "win-arm64";
+        string controllerRid = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64";
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string tracePath = Path.Combine(asset.TargetAssetPath, "host-trace.txt");
+        string controllerDirectory = Path.Combine(
+            crossVolume ? Path.Combine(intermediatePath, WindowsTargetFramework, applicationRid) : Path.Combine(asset.TargetAssetPath, "obj", "Debug", WindowsTargetFramework, applicationRid),
+            "PackagedAppController", controllerRid);
+        try
+        {
+            _ = await DotnetCli.RunAsync(
+                $"build \"{asset.TargetAssetPath}\" --runtime {applicationRid} -t:WriteRuntimeContract " +
+                $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:DOTNET_ROOT_X64= -p:DOTNET_ROOT_ARM64=",
+                cancellationToken: TestContext.CancellationToken);
+            DotnetMuxerResult result = await DotnetCli.RunAsync(
+                $"run --project \"{asset.TargetAssetPath}\" --no-build --runtime {applicationRid} --launch-profile ControllerInfo " +
+                $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+                environmentVariables: new Dictionary<string, string?>
+                {
+                    ["DOTNET_ROOT"] = null,
+                    ["DOTNET_ROOT_X64"] = null,
+                    ["DOTNET_ROOT_ARM64"] = null,
+                    ["DOTNET_HOST_TRACE"] = "1",
+                    ["DOTNET_HOST_TRACEFILE"] = tracePath,
+                },
+                cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, result.ExitCode, result.ToString());
+            result.AssertOutputContains($"Test module: {Path.Combine(controllerDirectory, "mstest-appmodel-controller.dll")}");
+            string runtimeLocation = crossVolume ? Path.Combine(controllerDirectory, "dotnet-runtime") : sdkRoot;
+            Assert.Contains(
+                $"Using app-relative location [{runtimeLocation}] as runtime location.",
+                await File.ReadAllTextAsync(tracePath, TestContext.CancellationToken));
+            if (crossVolume)
+            {
+                Assert.AreEqual(sdkRoot, Directory.ResolveLinkTarget(runtimeLocation, returnFinalTarget: true)!.FullName);
+                string command = $"build \"{asset.TargetAssetPath}\" --runtime {applicationRid} -t:WriteRuntimeContract " +
+                    $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:DOTNET_ROOT_X64= -p:DOTNET_ROOT_ARM64=";
+                string apphost = Path.Combine(controllerDirectory, "mstest-appmodel-controller.exe");
+                DateTime timestamp = File.GetLastWriteTimeUtc(apphost);
+                byte[] apphostBytes = await File.ReadAllBytesAsync(apphost, TestContext.CancellationToken);
+                _ = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+                Assert.AreEqual(timestamp, File.GetLastWriteTimeUtc(apphost), "Unchanged cross-volume staging must remain incremental.");
+                _ = await DotnetCli.RunAsync(
+                    command + " -p:TestingPlatformDisableAppHostDotnetRoot=true", cancellationToken: TestContext.CancellationToken);
+                Assert.IsFalse(Directory.Exists(runtimeLocation), "Opt-out must remove the runtime junction.");
+                _ = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+                Assert.AreEqual(sdkRoot, Directory.ResolveLinkTarget(runtimeLocation, returnFinalTarget: true)!.FullName);
+                Assert.AreSequenceEqual(apphostBytes, await File.ReadAllBytesAsync(apphost, TestContext.CancellationToken));
+                _ = await DotnetCli.RunAsync(
+                    $"clean \"{asset.TargetAssetPath}\" --runtime {applicationRid}", cancellationToken: TestContext.CancellationToken);
+                Assert.IsFalse(Directory.Exists(runtimeLocation), "Clean must remove the junction without deleting the borrowed SDK.");
+                Assert.IsTrue(File.Exists(Path.Combine(sdkRoot, "dotnet.exe")));
+            }
+        }
+        finally
+        {
+            if (crossVolume && Directory.Exists(intermediatePath))
+            {
+                Directory.Delete(intermediatePath, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow("<RunCommand>custom-run.exe</RunCommand>", "custom-run.exe")]
+    [DataRow("<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>", "PackagedConsumer.exe")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_PreservesExplicitOverrides(string properties, string expectedCommand)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, $"<UseWinUI>true</UseWinUI>{properties}");
+        string executable = Path.Join(GetConsumerOutputDirectory(asset, WindowsUIConsumer), "PackagedConsumer.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken);
+        Assert.AreEqual($"Command={expectedCommand}", lines[0]);
+        Assert.DoesNotContain("--internal-packagedapp-controller", string.Join(Environment.NewLine, lines));
+        Assert.AreEqual(
+            properties.Contains("<RunCommand>", StringComparison.Ordinal),
+            File.Exists(Path.ChangeExtension(executable, ".launcher.config.json")),
+            "A native RunCommand override must not disable Test Explorer's automatic controller.");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_ResolvesRelativeTargetAndPreservesTailWithoutAppHost()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer,
+            """
+            <UseWinUI>true</UseWinUI>
+            <UseAppHost>false</UseAppHost>
+            <TestingPlatformPackagedAppTargetPath>staged\host.exe</TestingPlatformPackagedAppTargetPath>
+            <StartArguments>--results-directory &quot;a b&quot;</StartArguments>
+            <TestingPlatformCommandLineArguments>--report-trx</TestingPlatformCommandLineArguments>
+            """);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                "Command=mstest-appmodel-controller.exe",
+                "Arguments= --results-directory \"a b\" --report-trx",
+            },
+            await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken));
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        Assert.AreSequenceEqual(
+            ["--internal-packagedapp-controller-v1", Path.Combine(asset.TargetAssetPath, "staged", "host.exe"), "msbuild;packagedapp;trx;mstest"],
+            await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_NoAppHostWithoutStagedExecutableFailsExplicitly()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, "<UseWinUI>true</UseWinUI><UseAppHost>false</UseAppHost>");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("Enable UseAppHost or set TestingPlatformPackagedAppTargetPath");
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_StagedControllerIsIncrementalAndCleaned(bool crossArchitecture)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, "<UseWinUI>true</UseWinUI>");
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string applicationRid = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-x64" : "win-arm64";
+        string runtimeArgument = crossArchitecture ? $" -p:RuntimeIdentifier={applicationRid} -p:DOTNET_ROOT_X64= -p:DOTNET_ROOT_ARM64=" : string.Empty;
+        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"{runtimeArgument}";
+        DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, first.ExitCode, first.ToString());
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        string controller = Path.Combine(Path.GetDirectoryName(bootstrapFile)!, "mstest-appmodel-controller.exe");
+        DateTime bootstrapTimestamp = File.GetLastWriteTimeUtc(bootstrapFile);
+        DateTime controllerTimestamp = File.GetLastWriteTimeUtc(controller);
+        byte[] controllerBytes = await File.ReadAllBytesAsync(controller, TestContext.CancellationToken);
+        DotnetMuxerResult second = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, second.ExitCode, second.ToString());
+        Assert.AreEqual(bootstrapTimestamp, File.GetLastWriteTimeUtc(bootstrapFile));
+        Assert.AreEqual(controllerTimestamp, File.GetLastWriteTimeUtc(controller));
+        if (crossArchitecture)
+        {
+            _ = await DotnetCli.RunAsync(
+                command + " -p:TestingPlatformDisableAppHostDotnetRoot=true", cancellationToken: TestContext.CancellationToken);
+            _ = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+            Assert.AreSequenceEqual(controllerBytes, await File.ReadAllBytesAsync(controller, TestContext.CancellationToken));
+        }
+
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean \"{asset.TargetAssetPath}\"{runtimeArgument}", cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        Assert.IsFalse(File.Exists(bootstrapFile));
+        Assert.IsFalse(File.Exists(controller));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_GeneratesIncrementalExecutableAndRecipeLaunchers(bool specialPath)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer,
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\$ConsumerTargetFramework$\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """ + (specialPath ? """<IntermediateOutputPath>obj\controller's &amp; special path\</IntermediateOutputPath>""" : string.Empty));
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
+        DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, first.ExitCode, first.ToString());
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        string controller = Path.Combine(Path.GetDirectoryName(bootstrapFile)!, "mstest-appmodel-controller.exe");
+        string directory = GetConsumerOutputDirectory(asset, WindowsUIConsumer);
+        string[] launchers =
+        [
+            Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
+            Path.Combine(directory, "PackagedConsumer.build.launcher.config.json"),
+        ];
+        foreach (string launcher in launchers)
+        {
+            using var json = JsonDocument.Parse(await File.ReadAllTextAsync(launcher, TestContext.CancellationToken));
+            Assert.AreEqual(controller, json.RootElement.GetProperty("program").GetString());
+            Assert.AreSequenceEqual(["--server"], json.RootElement.GetProperty("args").EnumerateArray().Select(value => value.GetString()));
+        }
+
+        Assert.AreSequenceEqual(
+            ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx;mstest"],
+            await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+        DateTime[] timestamps = [.. launchers.Select(File.GetLastWriteTimeUtc)];
+        DotnetMuxerResult second = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, second.ExitCode, second.ToString());
+        Assert.AreSequenceEqual(timestamps, launchers.Select(File.GetLastWriteTimeUtc));
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean \"{asset.TargetAssetPath}\"", cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        Assert.IsFalse(launchers.Any(File.Exists));
+        Assert.IsFalse(File.Exists(bootstrapFile));
+    }
+
+    [TestMethod]
+    [DataRow(false, "clean")]
+    [DataRow(false, "rebuild")]
+    [DataRow(true, "clean")]
+    [DataRow(true, "rebuild")]
+    [DataRow(true, "build-clean")]
+    [DataRow(true, "build-rebuild")]
+    [DataRow(true, "optout-clean")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_PreservesCallerLauncherIncludingAnEditedGeneratedFile(bool generateFirst, string operation)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer,
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\$ConsumerTargetFramework$\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """);
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
+        if (generateFirst)
+        {
+            DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, first.ExitCode, first.ToString());
+        }
+
+        string directory = GetConsumerOutputDirectory(asset, WindowsUIConsumer);
+        string[] launchers =
+        [
+            Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
+            Path.Combine(directory, "PackagedConsumer.build.launcher.config.json"),
+        ];
+        Directory.CreateDirectory(directory);
+        const string CallerConfiguration = """{"program":"custom-controller.exe","args":["--server","jsonrpc"]}""";
+        foreach (string launcher in launchers)
+        {
+            await File.WriteAllTextAsync(launcher, CallerConfiguration, TestContext.CancellationToken);
+        }
+
+        if (!generateFirst || operation.StartsWith("build-", StringComparison.Ordinal) || operation == "optout-clean")
+        {
+            string buildCommand = operation == "optout-clean"
+                ? $"{command} -p:GenerateTestingPlatformPackagedAppTestExplorerLauncher=false"
+                : command;
+            DotnetMuxerResult build = await DotnetCli.RunAsync(buildCommand, cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, build.ExitCode, build.ToString());
+            await AssertPreservedAsync();
+        }
+
+        string lifecycleCommand = operation.EndsWith("rebuild", StringComparison.Ordinal)
+            ? $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\""
+            : $"clean \"{asset.TargetAssetPath}\"";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(lifecycleCommand, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        await AssertPreservedAsync();
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean \"{asset.TargetAssetPath}\"", cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        await AssertPreservedAsync();
+
+        async Task AssertPreservedAsync()
+        {
+            foreach (string launcher in launchers)
+            {
+                Assert.IsTrue(File.Exists(launcher), $"Caller launcher was deleted: {launcher}");
+                Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(launcher, TestContext.CancellationToken));
+            }
+
+            foreach (string manifest in Directory.GetFiles(asset.TargetAssetPath, "*.FileListAbsolute.txt", SearchOption.AllDirectories))
+            {
+                string[] entries = await File.ReadAllLinesAsync(manifest, TestContext.CancellationToken);
+                foreach (string launcher in launchers)
+                {
+                    Assert.IsFalse(entries.Contains(launcher, StringComparer.OrdinalIgnoreCase), $"Caller launcher entered clean tracking: {launcher}");
+                }
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_RebuildPreservesSourceCopiedCallerLaunchers(bool generateFirst)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer,
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\$ConsumerTargetFramework$\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """,
+            extraReferences: """
+                <None Include="CallerExecutable.json" TargetPath="PackagedConsumer.launcher.config.json" CopyToOutputDirectory="Always" />
+                <None Include="CallerRecipe.json" TargetPath="PackagedConsumer.build.launcher.config.json" CopyToOutputDirectory="Always" />
+                """);
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        if (generateFirst)
+        {
+            DotnetMuxerResult first = await DotnetCli.RunAsync(
+                $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+                cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, first.ExitCode, first.ToString());
+        }
+
+        const string CallerConfiguration = """{"program":"custom-controller.exe","args":["--server","jsonrpc"]}""";
+        await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "CallerExecutable.json"), CallerConfiguration, TestContext.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "CallerRecipe.json"), CallerConfiguration, TestContext.CancellationToken);
+
+        DotnetMuxerResult rebuild = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, rebuild.ExitCode, rebuild.ToString());
+        string directory = GetConsumerOutputDirectory(asset, WindowsUIConsumer);
+        foreach (string launcher in new[] { "PackagedConsumer.launcher.config.json", "PackagedConsumer.build.launcher.config.json" })
+        {
+            Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(Path.Combine(directory, launcher), TestContext.CancellationToken), launcher);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("<GenerateTestingPlatformPackagedAppTestExplorerLauncher>false</GenerateTestingPlatformPackagedAppTestExplorerLauncher>")]
+    [DataRow("<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>")]
+    [DataRow("<DesignTimeBuild>true</DesignTimeBuild>")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_PreservesExplicitLauncherOptOuts(string properties)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, $"<UseWinUI>true</UseWinUI>{properties}");
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        Assert.IsFalse(File.Exists(Path.Join(GetConsumerOutputDirectory(asset, WindowsUIConsumer), "PackagedConsumer.launcher.config.json")));
+    }
+
+    [TestMethod]
+    [DataRow("MSTest")]
+    [DataRow("MSTest.TestAdapter")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_CustomExecutableRunsWithoutControllerEnvironment(string package)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(package, string.Empty, "Custom");
+        _ = await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", cancellationToken: TestContext.CancellationToken);
+        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Release", "net10.0", "PackagedConsumer.exe");
+        string resultsDirectory = Path.Combine(asset.TargetAssetPath, "results");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{asset.TargetAssetPath}\" -t:InvokeTestingPlatform -p:Configuration=Release -p:UseWinUI=true " +
+            $"-p:TestingPlatformExecutablePath=\"{executable}\" " +
+            $"-p:TestingPlatformCommandLineArguments=\"--report-trx --report-trx-filename custom.trx --results-directory {resultsDirectory}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement test = Assert.ContainsSingle(XDocument.Load(Path.Combine(resultsDirectory, "custom.trx")).Descendants(ns + "UnitTestResult"));
+        Assert.AreEqual("Passed", (string?)test.Attribute("outcome"));
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_MissingPayloadFailsWithoutFallback()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(WindowsUIConsumer, "<UseWinUI>true</UseWinUI>");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract -p:_TestingPlatformPackagedAppPackageRoot=\"{asset.TargetAssetPath}{Path.DirectorySeparatorChar}missing{Path.DirectorySeparatorChar}\"",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("The packaged-app controller payload is missing or incomplete.");
+        Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "contract.txt")));
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_IncompatiblePlatformCannotSilentlyRun()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            WindowsUIConsumer,
+            "<UseWinUI>true</UseWinUI>",
+            extraReferences: "<PackageReference Include=\"Microsoft.Testing.Platform.MSBuild\" Version=\"[1.0.0]\" />");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("The packaged-app controller requires version-aligned Microsoft.Testing.Platform.MSBuild assets.");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_SuppressedLauncherCannotReturnSuccess()
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", string.Empty);
+        _ = await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{asset.TargetAssetPath}\" -t:InvokeTestingPlatform -p:Configuration=Release -p:UseWinUI=true -p:TestingPlatformCaptureOutput=false",
+            environmentVariables: new Dictionary<string, string?> { ["TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"] = "never" },
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("The packaged application test host was not launched.");
+    }
+
+    [TestMethod]
+    [DataRow("Passed", 0)]
+    [DataRow("Failed", 1)]
+    [DataRow("Mixed", 1)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_MultiTargetRunsAggregateExitCodes(string outcome, int expectedExitCode)
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", string.Empty, outcome, multiTarget: true);
+        _ = await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", cancellationToken: TestContext.CancellationToken);
+        string resultsDirectory = Path.Combine(asset.TargetAssetPath, "results");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{asset.TargetAssetPath}\" -t:DispatchToInnerBuildsWithMTPTestTarget -p:Configuration=Release -p:UseWinUI=true " +
+            $"-p:TestingPlatformCommandLineArguments=\"--report-trx --results-directory {resultsDirectory}\"",
+            environmentVariables: new Dictionary<string, string?> { ["TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"] = "always" },
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(expectedExitCode, result.ExitCode, result.ToString());
+        string[] reports = Directory.GetFiles(resultsDirectory, "*.trx");
+        Assert.HasCount(2, reports);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        foreach (string report in reports)
+        {
+            XElement test = Assert.ContainsSingle(XDocument.Load(report).Descendants(ns + "UnitTestResult"));
+            string expectedOutcome = outcome == "Mixed"
+                ? Path.GetFileName(report).Contains("net11.0", StringComparison.Ordinal) ? "Failed" : "Passed"
+                : outcome;
+            Assert.AreEqual(expectedOutcome, (string?)test.Attribute("outcome"), report);
+        }
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_ControllerTimeoutCancelsHostWithoutFalseSuccess()
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", string.Empty, "Cancellation");
+        _ = await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", cancellationToken: TestContext.CancellationToken);
+        string marker = Path.Combine(asset.TargetAssetPath, "cancellation.txt");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{asset.TargetAssetPath}\" -t:InvokeTestingPlatform -p:Configuration=Release -p:UseWinUI=true " +
+            "-p:TestingPlatformCommandLineArguments=\"--timeout 30s\"",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"] = "always",
+                ["CANCELLATION_MARKER"] = marker,
+            },
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        Assert.IsTrue(File.Exists(marker), result.ToString());
+        Assert.AreEqual("True", await File.ReadAllTextAsync(marker, TestContext.CancellationToken));
+    }
+
+    [TestMethod]
+    [DataRow("MSTest", "Passed", 0)]
+    [DataRow("MSTest.TestAdapter", "Passed", 0)]
+    [DataRow("MSTest", "Failed", 1)]
+    [DataRow("MSTest.TestAdapter", "Failed", 1)]
+    [DataRow("MSTest.TestAdapter", "Empty", 0)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_ControllerRunsShippingHostAndReconcilesResults(
+        string package, string outcome, int expectedFailed)
+    {
+        // A forced loose layout exercises the shipping sidecar's process contract without OS registration.
+        // Real WinUI/UWP activation is covered by the preflight-gated Windows application-model tests.
+        using TestAsset asset = await GenerateConsumerAsync(package, string.Empty, outcome);
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -c Release",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, build.ExitCode, build.ToString());
+        AssertAlignedPackages(asset.TargetAssetPath);
+
+        string resultsDirectory = Path.Combine(asset.TargetAssetPath, "results");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{asset.TargetAssetPath}\" -t:InvokeTestingPlatform -p:Configuration=Release -p:UseWinUI=true " +
+            $"-p:TestingPlatformCommandLineArguments=\"--report-trx --report-trx-filename integration.trx --results-directory {resultsDirectory}\"",
+            environmentVariables: new Dictionary<string, string?> { ["TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"] = "always" },
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(expectedFailed == 0 && outcome != "Empty" ? 0 : 1, result.ExitCode, result.ToString());
+
+        string trxPath = Path.Combine(resultsDirectory, "integration.trx");
+        Assert.IsTrue(File.Exists(trxPath), result.ToString());
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var trx = XDocument.Load(trxPath);
+        XElement[] results = trx.Descendants(ns + "UnitTestResult").ToArray();
+        Assert.HasCount(outcome == "Empty" ? 0 : 1, results, trxPath);
+        if (outcome != "Empty")
+        {
+            Assert.AreEqual(outcome, (string?)results[0].Attribute("outcome"), trxPath);
+        }
+    }
+
+    private static void AssertAlignedPackages(string assetPath)
+    {
+        using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(assetPath, "obj", "project.assets.json")));
+        foreach (string package in new[] { "Microsoft.Testing.Extensions.PackagedApp.MSBuild", "Microsoft.Testing.Extensions.PackagedApp", "Microsoft.Testing.Platform.MSBuild", "Microsoft.Testing.Platform" })
+        {
+            Assert.IsTrue(assets.RootElement.GetProperty("libraries").TryGetProperty($"{package}/{MicrosoftTestingPlatformVersion}", out _), $"The consumer did not resolve {package}/{MicrosoftTestingPlatformVersion}.");
+        }
+    }
+
+    private static string GetConsumerTargetFramework(string package)
+        => package == WindowsUIConsumer ? WindowsTargetFramework : "net10.0";
+
+    private static string GetConsumerOutputDirectory(TestAsset asset, string package)
+        => Path.Join(asset.TargetAssetPath, "bin", "Debug", GetConsumerTargetFramework(package));
+
+    private static Task<TestAsset> GenerateConsumerAsync(
+        string package, string properties, string outcome = "Passed", string extraReferences = "", bool multiTarget = false)
+    {
+        string references = package switch
+        {
+            "MSTest" => $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />",
+            "MSTest.TestAdapter" or WindowsUIConsumer => $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />",
+            _ => throw new ArgumentOutOfRangeException(nameof(package), package, "Unsupported consumer composition."),
+        };
+        string targetFramework = GetConsumerTargetFramework(package);
+        properties = properties.Replace("$ConsumerTargetFramework$", targetFramework, StringComparison.Ordinal);
+        string test = outcome == "Empty"
+            ? string.Empty
+            : $$"""
+                [TestClass]
+                public sealed class ConsumerTests
+                {
+                    [TestMethod]
+                    public void Test() => Assert.{{(outcome == "Failed" ? "Fail(\"expected failure\")" : "AreEqual(4, 2 + 2)")}};
+                }
+                """;
+        if (outcome == "Cancellation")
+        {
+            test = """
+                [TestClass]
+                public sealed class ConsumerTests
+                {
+                    public TestContext TestContext { get; set; }
+
+                    [TestMethod]
+                    public async System.Threading.Tasks.Task Test()
+                    {
+                        try
+                        {
+                            await System.Threading.Tasks.Task.Delay(System.Threading.Timeout.Infinite, TestContext.CancellationToken);
+                        }
+                        finally
+                        {
+                            System.IO.File.WriteAllText(System.Environment.GetEnvironmentVariable("CANCELLATION_MARKER"), TestContext.CancellationToken.IsCancellationRequested.ToString());
+                        }
+                    }
+                }
+                """;
+        }
+        else if (outcome == "Custom")
+        {
+            test = """
+                [TestClass]
+                public sealed class ConsumerTests
+                {
+                    [TestMethod]
+                    public void Test()
+                    {
+                        Assert.IsNull(System.Environment.GetEnvironmentVariable("TESTINGPLATFORM_PACKAGEDAPP_TARGET"));
+                        Assert.IsNull(System.Environment.GetEnvironmentVariable("MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"));
+                        Assert.AreEqual("preserved", System.Environment.GetEnvironmentVariable("CALLER_ENVIRONMENT"));
+                    }
+                }
+                """;
+        }
+        else if (outcome == "Mixed")
+        {
+            test = """
+                [TestClass]
+                public sealed class ConsumerTests
+                {
+                    [TestMethod]
+                    public void Test()
+                    {
+                #if NET11_0
+                        Assert.Fail("expected failure only in the net11 module");
+                #else
+                        Assert.AreEqual(4, 2 + 2);
+                #endif
+                    }
+                }
+                """;
+        }
+
+        return TestAsset.GenerateAssetAsync(
+            "PackagedConsumer",
+            $$"""
+            #file PackagedConsumer.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                {{(multiTarget ? "<TargetFrameworks>net10.0;net11.0</TargetFrameworks>" : $"<TargetFramework>{targetFramework}</TargetFramework>")}}
+                {{(targetFramework == WindowsTargetFramework ? "<EnableWindowsTargeting>true</EnableWindowsTargeting>" : string.Empty)}}
+                <OutputType>Exe</OutputType>
+                <EnableMSTestRunner>true</EnableMSTestRunner>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+                <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
+                <NoWarn>$(NoWarn);NU1507</NoWarn>
+                {{properties}}
+              </PropertyGroup>
+              <ItemGroup>
+                {{references}}
+                {{extraReferences}}
+                <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp.MSBuild" Version="{{MicrosoftTestingPlatformVersion}}" />
+                <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="{{MicrosoftTestingPlatformVersion}}" />
+                <TestingPlatformEnvironmentVariable Include="CALLER_ENVIRONMENT" Value="preserved" />
+              </ItemGroup>
+              <Target Name="WriteContract" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\contract.txt" Overwrite="true"
+                                  Lines="Controller=$([System.IO.Path]::GetFileName('$(TestingPlatformExecutablePath)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\contract.txt"
+                                  Lines="$([MSBuild]::Escape('Extensions=$(_TestingPlatformPackagedAppControllerExtensions)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\contract.txt"
+                                  Lines="Helper=$(GenerateTestingPlatformApplicationHelper)" />
+                <Message Importance="high" Text="CallerEnvironment=%(TestingPlatformEnvironmentVariable.Value)" />
+              </Target>
+              <Target Name="WriteRunContract" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;ComputeRunArguments">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\run-contract.txt" Overwrite="true"
+                                  Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\run-contract.txt"
+                                  Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\bootstrap-file-path.txt" Overwrite="true"
+                                  Lines="$(_TestingPlatformPackagedAppBootstrapFile)" />
+              </Target>
+              <Target Name="WriteRuntimeContract" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;ComputeRunArguments;_ConfigureTestingPlatformPackagedAppEnvironment">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt" Overwrite="true"
+                                  Lines="RuntimeIdentifier=$(RuntimeIdentifier)" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="$([MSBuild]::Escape('RunCommandPath=$(RunCommand)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="$([MSBuild]::Escape('ControllerRuntimeRoot=$(_TestingPlatformPackagedAppRelativeDotNet)'))" />
+                <Message Importance="high" Text="ControllerEnvironment=%(TestingPlatformEnvironmentVariable.Identity)=%(TestingPlatformEnvironmentVariable.Value)" />
+              </Target>
+            </Project>
+            #file Tests.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            {{test}}
+            """);
+    }
+}

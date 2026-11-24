@@ -1,30 +1,29 @@
 {
   "tools": {
-    "dotnet": "11.0.100-rc.2.26471.109",
+    "dotnet": "12.0.100-alpha.1.26570.125",
     "runtimes": {
       "dotnet": [
-        "8.0.31",
-        "9.0.20",
-        "10.0.12"
+        "10.0.15",
+        "11.0.0"
       ],
       "dotnet/x86": [
-        "9.0.20",
-        "10.0.12"
+        "10.0.15",
+        "11.0.0"
       ],
       "aspnetcore": [
-        "9.0.20",
-        "10.0.12"
+        "10.0.15",
+        "11.0.0"
       ]
     },
     "vs": {
-      "version": "17.14.10",
+      "version": "18.12",
       "components": [
         "Microsoft.VisualStudio.Workload.Universal"
       ]
     }
   },
   "sdk": {
-    "version": "11.0.100-rc.2.26471.109",
+    "version": "12.0.100-alpha.1.26570.125",
     "paths": [
       ".dotnet",
       "$host$"
@@ -58,22 +57,16 @@
           "test/**/Directory.Build.*"
         ]
       },
-      "instrumentation": {
-        "include": [
-          "src/**"
-        ],
-        "exclude": [
-          "artifacts/**",
-          "samples/**",
-          "test/**",
-          "**/bin/**",
-          "**/obj/**"
-        ]
+      "storage": {
+        "type": "azureDevOpsArtifact",
+        "project": "public",
+        "buildDefinitionId": 209,
+        "artifactName": "TestFx_AffectedTestsMaps"
       }
     }
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "12.0.0-beta.26473.4",
+    "Microsoft.DotNet.Arcade.Sdk": "12.0.0-beta.26569.6",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

@@ -4,18 +4,104 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="4.5.0" />[4.5.0] - UNRELEASED
+## <a name="5.0.0" />[5.0.0] - Unreleased
 
-See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4.1...main)
+See full log [of v4.5.3...main](https://github.com/microsoft/testfx/compare/v4.5.3...main)
+
+For the Microsoft.Testing.Platform changes included with this release, see [3.0.0](Changelog-Platform.md#3.0.0).
+
+### Breaking changes
+
+* Remove `StringAssert` and `CollectionAssert`. Use the corresponding `Assert` APIs; the [complete migration table](decisions/legacy-assertion-removal.md#complete-collection-migration) covers every collection assertion, comparer differences, and custom extension hooks. See [#12354](https://github.com/microsoft/testfx/issues/12354).
+* Remove the obsolete, unused `TestResult.InnerResultsCount`, `DatarowIndex`, and `ReturnValue` properties. Stop reading or assigning these properties; they had no supported effect. See [#12312](https://github.com/microsoft/testfx/issues/12312).
+* Remove the deprecated `mstest:orderTestsByNameInClass` configuration fallback. Move the setting to `mstest:execution:orderTestsByNameInClass`; the flat key is now ignored. See [#12312](https://github.com/microsoft/testfx/issues/12312).
+* Remove the .NET Framework `microsoft.visualstudio.qualitytools` (Beta2) app.config section fallback. Rename its section declaration and element to `microsoft.visualstudio.testtools`; app.config data-source support remains available with the canonical name. See [the configuration-section migration decision](decisions/mstest-appconfig-section-migration.md).
+
+* Seal `DiscoverInternalsAttribute`, `DoNotParallelizeAttribute`, `ParallelizeAttribute`, `TestDataSourceDiscoveryAttribute`, `STATestClassAttribute`, `WinUITestTargetAttribute`, and the UWP/WinUI `UITestMethodAttribute` implementations. Use `TestClassAttribute` or `TestMethodAttribute` for custom execution attributes. `DataRowAttribute` remains extensible, including its `GetDisplayName` override point. See [#7374](https://github.com/microsoft/testfx/issues/7374) and [#12212](https://github.com/microsoft/testfx/pull/12212).
+* Remove `DataTestMethodAttribute`. Replace `[DataTestMethod]` with `[TestMethod]` for data-driven tests. Unlike `DataTestMethodAttribute`, `TestMethodAttribute` is not inherited: explicitly apply `[TestMethod]` to overrides that previously inherited `[DataTestMethod]` from a virtual base method, or those overrides will no longer be discovered. See [#7374](https://github.com/microsoft/testfx/issues/7374) and [#12212](https://github.com/microsoft/testfx/pull/12212).
+* Raise the minimum compiler host for `MSTest.Analyzers` and its code fixes to Roslyn 4.14: Visual Studio 2022 17.14 or .NET SDK 9.0.300 or newer. Roslyn is supplied by the host, not bundled with the package; older hosts can continue using `MSTest.Analyzers` 4.x. See [#10446](https://github.com/microsoft/testfx/issues/10446) and [#12201](https://github.com/microsoft/testfx/pull/12201).
+* Drop .NET 8 and .NET 9 support from MSTest, including the framework, adapter, SDK, hosting and UI Automation packages, and the modern UWP/WinUI assets. The supported modern .NET targets are .NET 10 and .NET 11; .NET Framework, .NET Standard and classic UWP assets remain where previously provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
+* Remove `DeploymentItemAttribute` from the .NET Standard 2.0 assembly. Projects using `[DeploymentItem]` must target a supported .NET Framework or .NET version; deployment remains unsupported for UWP and WinUI, in [#12223](https://github.com/microsoft/testfx/pull/12223).
 
 ### Added
 
+* Add `Assert.ContainsOnly` for collections whose elements must all match a predicate, report the first offending index and value for it and predicate-based `Assert.DoesNotContain`, and extend MSTEST0037 to guide positive LINQ `All` assertions. See [#12260](https://github.com/microsoft/testfx/issues/12260).
+* Add [`--partition index/count`](mstest-partitioning.md) to native MSTest applications on Microsoft.Testing.Platform for deterministic class-preserving CI selections, keeping declared dependency components together and preserving normal filtering, Retry, and zero-test policies. Relates to [#4068](https://github.com/microsoft/testfx/issues/4068).
+* Add method-level `[ExpectedDuration(milliseconds)]` budgets that warn on final passed or failed results exceeding their reported duration budget without changing outcomes, cancellation, or timeout behavior. See [#12245](https://github.com/microsoft/testfx/issues/12245).
+* Discover annotated F# module functions without requiring `[<TestClass>]`, with module-level attributes and lifecycle functions for reflection-based execution on both test hosts, by @Evangelink in [#11830](https://github.com/microsoft/testfx/pull/11830)
+* Add opt-in experimental reflection-metadata reuse for eligible repeated MSTest JSON-RPC server-mode selections through `MSTEST_EXPERIMENTAL_DISCOVERY_CACHE=1`, without caching test instances or data-source results, by @Evangelink in [#11853](https://github.com/microsoft/testfx/pull/11853)
+* Add MSTEST0090 to flag count and existence assertions that enumerate `IQueryable` instead of keeping those operations on the query provider. The rule is advisory and does not provide an automatic fix, by @Evangelink in [#11892](https://github.com/microsoft/testfx/pull/11892)
+* Allow test methods to declare a trailing `CancellationToken` that MSTest supplies from the current `TestContext.CancellationToken` when it is omitted from the test data, including data-driven and source-generated execution while preserving explicitly supplied tokens, by @Evangelink in [#11991](https://github.com/microsoft/testfx/pull/11991)
+
+### Fixed
+
+* Preserve binary references to MSTest APIs relocated into the core framework, including existing Playwright integrations and legacy assembly-qualified configuration names.
+* Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12121](https://github.com/microsoft/testfx/pull/12121)
+* Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12134](https://github.com/microsoft/testfx/pull/12134)
+
+## <a name="4.5.3" />[4.5.3] - 2026-11-11
+
+See full log [of v4.5.2...v4.5.3](https://github.com/microsoft/testfx/compare/v4.5.2...v4.5.3)
+
+For the Microsoft.Testing.Platform changes included with this release, see [2.5.3](Changelog-Platform.md#2.5.3).
+
+### Changed
+
+* Inspect assembly metadata before loading dependencies during assembly-fixture provider discovery, avoiding unnecessary loads of unmarked libraries while preserving transitive providers, runtime binding and diagnosed fallback, by @Evangelink in [#12291](https://github.com/microsoft/testfx/pull/12291)
+* Update the `Microsoft.NET.Test.Sdk` dependency selected by `MSTest.Sdk` to 18.10.2, by @Evangelink in [#12366](https://github.com/microsoft/testfx/pull/12366)
+
+### Fixed
+
+* Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12128](https://github.com/microsoft/testfx/pull/12128)
+* Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12145](https://github.com/microsoft/testfx/pull/12145)
+* Preserve global test cleanup after a locally canceled or timed-out test cleanup, retain original deadlines and cancellation-source ownership, and aggregate independent cleanup failures without losing timeout or inconclusive outcomes, including nested aggregate messages on .NET Framework, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220) and [#12292](https://github.com/microsoft/testfx/pull/12292)
+* Keep `TestContext.AddResultFile` attachments readable after Microsoft.Testing.Platform host shutdown by retaining copied files in visible `MSTest-<random-id>` result folders, subject to the caller's results-retention policy, by @Evangelink in [#12247](https://github.com/microsoft/testfx/pull/12247)
+* Avoid duplicate Microsoft.Testing.Platform runtime DLLs in the classic UWP adapter payload by restoring dependencies from their owning NuGet packages and including the resolved assemblies in AppX deployment, by @Evangelink in [#12248](https://github.com/microsoft/testfx/pull/12248)
+* Await all scheduled workers when cancellation occurs during ordinary or dependency-ordered parallel execution, preventing canceled runs from returning before their workers finish, by @Evangelink in [#12297](https://github.com/microsoft/testfx/pull/12297)
+
+## <a name="4.5.2" />[4.5.2] - 2026-10-27
+
+See full log [of v4.5.1...v4.5.2](https://github.com/microsoft/testfx/compare/v4.5.1...v4.5.2)
+
+For the Microsoft.Testing.Platform fixes included with this release, see [2.5.2](Changelog-Platform.md#2.5.2).
+
+### Changed
+
+* Add documentation links to the MSTest source generator's `AOTSG0001` through `AOTSG0005` diagnostics, by @Evangelink in [#11972](https://github.com/microsoft/testfx/pull/11972)
+* Update localized MSTest adapter and analyzer messages, by @Evangelink and @nohwnd-bot in [#11898](https://github.com/microsoft/testfx/pull/11898), [#11899](https://github.com/microsoft/testfx/pull/11899), [#11900](https://github.com/microsoft/testfx/pull/11900), [#11973](https://github.com/microsoft/testfx/pull/11973), [#12024](https://github.com/microsoft/testfx/pull/12024) and [#12090](https://github.com/microsoft/testfx/pull/12090)
+
+### Fixed
+
+* Materialize array `Type` arguments such as `[DataRow(typeof(int[]))]` in Native AOT tests, while checking the accessibility of array elements and enclosing generic type arguments, by @Evangelink and @Sergio0694 in [#12030](https://github.com/microsoft/testfx/pull/12030)
+* Keep timed UI test initialization, execution and cleanup on their original synchronization context, avoiding WinUI dispatcher deadlocks while preserving timeout and cancellation handling, by @Evangelink in [#12029](https://github.com/microsoft/testfx/pull/12029)
+* Allow `MSTEST0032` assertions that intentionally compare a literal with a constant from another assembly to pin a dependency's contract, by @drognanar in [#12087](https://github.com/microsoft/testfx/pull/12087)
+* Report `MSTEST0025` for exact-type assertions against abstract classes, and avoid offering an `Assert.Fail` replacement when the assertion's return value is used, by @Evangelink in [#12099](https://github.com/microsoft/testfx/pull/12099)
+* Register copied MSTest adapter satellite assemblies in MSBuild's clean manifest so incremental cleanup and `Clean` can remove stale generated localized outputs, by @Copilot in [#12107](https://github.com/microsoft/testfx/pull/12107)
+
+## <a name="4.5.1" />[4.5.1] - 2026-10-07
+
+See full log [of v4.5.0...v4.5.1](https://github.com/microsoft/testfx/compare/v4.5.0...v4.5.1)
+
+There was a problem with the release infrastructure preventing us from shipping `4.5.0`.
+
+## <a name="4.5.0" />[4.5.0] - Unreleased
+
+See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4.4.1...v4.5.0)
+
+### Added
+
+* Add the preview `MSTest.Windows.UIAutomation` package for MSTest-managed application lifecycle and UIA2 window access in unpackaged Win32, WinForms and WPF tests, with opt-in `MSTest.Sdk` integration for Microsoft.Testing.Platform and VSTest, by @Evangelink in [#10862](https://github.com/microsoft/testfx/pull/10862)
+* Run classic UWP, modern UWP, and AppContainer-configured WinUI test applications end to end through Microsoft.Testing.Platform using the MSTest.Sdk app-model sidecar controller, with AUMID activation, exact package-SID IPC authorization, UI-thread tests, TRX, HangDump, Retry, and encrypted activation payloads, by @Evangelink in [#11484](https://github.com/microsoft/testfx/pull/11484)
 * Ship the MSTest adapter's Microsoft.Testing.Platform integration and required runtime assets for classic and modern UWP targets while retaining VSTest routing for true UWP/AppContainer `MSTest.Sdk` applications, by @Evangelink in [#11118](https://github.com/microsoft/testfx/pull/11118)
 * Add opt-in assertion failure diagnostics through `CaptureAssertionFailureDiagnostics` / `mstest:execution:captureAssertionFailureDiagnostics`, producing bounded per-test artifacts with assertion values, source frames, concurrent tests and process state for supported VSTest and Microsoft.Testing.Platform runs, by @Evangelink in [#11244](https://github.com/microsoft/testfx/pull/11244)
+* Add the opt-in prerelease `MSTest.Extensions.Hosting` package so MSTest test classes can be constructed from a caller-owned Microsoft.Extensions.Hosting service provider with one dependency-injection scope per test invocation, data row and retry, by @Evangelink in [#11635](https://github.com/microsoft/testfx/pull/11635)
 * Add MSTEST0084 and a code fix to align MSTest `OSCondition` attributes with `SupportedOSPlatformAttribute` and `UnsupportedOSPlatformAttribute`, including safe handling of versioned platform constraints, by @Evangelink in [#11044](https://github.com/microsoft/testfx/pull/11044) and [#11302](https://github.com/microsoft/testfx/pull/11302)
 * Add MSTEST0085 to report `[TestClass]` and derived attributes on abstract classes that MSTest cannot discover directly, by @Evangelink in [#11240](https://github.com/microsoft/testfx/pull/11240)
 * Add MSTEST0086 and a code fix to remove method-level MSTest attributes whose effective behavior is already supplied by the containing test class, by @Evangelink in [#11267](https://github.com/microsoft/testfx/pull/11267)
 * Add MSTEST0087 to report duplicate explicit `DataRow` display names within the same test method, by @Evangelink in [#11409](https://github.com/microsoft/testfx/pull/11409)
+* Add MSTEST0088 to reject hosted test-class injection with Native AOT, browser WebAssembly, AOT compilation or MSTest source generation, and update MSTEST0063 to validate dependency-injected test-class constructors, by @Evangelink in [#11635](https://github.com/microsoft/testfx/pull/11635)
+* Add opt-in `ArgumentsDisplayName` properties to `DataRowAttribute` and `TestDataRow<T>` so a data row can label only its arguments while retaining the test method's display name. Existing full `DisplayName` overrides retain precedence, and dynamic row labels require an updated adapter, by @Evangelink in [#11775](https://github.com/microsoft/testfx/pull/11775)
+* Add MSTEST0089 to report conflicting constant `DisplayName` and `ArgumentsDisplayName` values in C# and Visual Basic data-row declarations, by @Evangelink in [#11775](https://github.com/microsoft/testfx/pull/11775)
 
 ### Changed
 
@@ -23,12 +109,24 @@ See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4
 * Reduce reflection, resource lookup, allocation and array-enumeration overhead when generating data-driven test display names, by @Evangelink in [#11019](https://github.com/microsoft/testfx/pull/11019)
 * Escape control characters and unpaired surrogates in automatically generated data-driven test display names while preserving valid surrogate pairs and distinguishing literal escape-sequence text, by @Evangelink in [#11428](https://github.com/microsoft/testfx/pull/11428)
 * Avoid double enumeration and unnecessary allocation when converting VSTest test traits into Microsoft.Testing.Platform properties, by @Evangelink in [#11452](https://github.com/microsoft/testfx/pull/11452)
+* Reduce one-shot `Assert.That` expression overhead by using interpreted expression compilation where supported, and cache invalid path and file-name character sets used by deployment and test temporary-directory sanitization, by @Evangelink in [#11554](https://github.com/microsoft/testfx/pull/11554), [#11555](https://github.com/microsoft/testfx/pull/11555) and [#11561](https://github.com/microsoft/testfx/pull/11561)
+* Run native Microsoft.Testing.Platform MSTest user code inside one canonical test activity so automatic and custom child activities correlate with the logical test without duplicate test spans, by @Evangelink in [#11596](https://github.com/microsoft/testfx/pull/11596)
+* Use `UseUwpTools` to select the specialized MSTest UWP application model, allowing `UseUwpTools=false` to retain UWP XAML references while opting into direct Microsoft.Testing.Platform execution, by @Sergio0694 in [#11614](https://github.com/microsoft/testfx/pull/11614)
+* Use the separately shipped `Microsoft.Testing.Extensions.PackagedApp.MSBuild` package for `MSTest.Sdk` packaged Windows application execution instead of embedding duplicate controller tools. MSTest metapackage and adapter-only consumers can opt in to the same integration explicitly with `EnableMSTestRunner=true`, by @Evangelink in [#11777](https://github.com/microsoft/testfx/pull/11777)
+* Update the Code Coverage extension selected by `MSTest.Sdk` to stable 18.12.0, by @Evangelink in [#11789](https://github.com/microsoft/testfx/pull/11789)
+* Synchronize the vendored xxHash implementation with dotnet/runtime, using inline-array state buffers on modern .NET while preserving hash output and stable test IDs, by @Evangelink in [#11771](https://github.com/microsoft/testfx/pull/11771)
+* Enable trimming and Native AOT compatibility analysis for modern .NET builds of the MSTest framework and adapter, by @Copilot in [#11729](https://github.com/microsoft/testfx/pull/11729)
 
 ### Fixed
 
 * Copy requested classic UWP adapter satellite assemblies independently of the build-machine culture when `EnableMSTestRunner=true`, by @Evangelink in [#11112](https://github.com/microsoft/testfx/pull/11112)
 * Prevent the MSTest source generator from crashing on null array attribute arguments such as `[DataRow(null)]`, preserving the value as one null test argument, by @Sergio0694 in [#11371](https://github.com/microsoft/testfx/pull/11371)
 * Restore source compatibility when asserting a non-null value against a collection with nullable element types, by @Sergio0694 in [#11374](https://github.com/microsoft/testfx/pull/11374)
+* Preserve `TestContext.AddResultFile` attachments for deferred Microsoft.Testing.Platform reporters after MSTest deployment cleanup, including same-named files and long TRX paths, by @Evangelink in [#11606](https://github.com/microsoft/testfx/pull/11606)
+* Launch .NET 10 modern UWP tests through Microsoft.Testing.Platform when the AppX recipe names the published executable differently from its source path, by @Evangelink in [#11609](https://github.com/microsoft/testfx/pull/11609)
+* Fix MSTest-only and standalone `MSTest.Sdk` restore/build/pack failures caused by missing packaged-app controller restore assets, and keep `MSTest.Extensions.Hosting` prerelease while its Microsoft.Testing.Platform hosting dependency remains alpha, by @Evangelink in [#11773](https://github.com/microsoft/testfx/pull/11773)
+* Warn when custom top-level `.runsettings` sections are ignored by MSTest on Microsoft.Testing.Platform, naming the sections and explaining that VSTest `ISettingsProvider` extensions are not invoked, by @Evangelink in [#11785](https://github.com/microsoft/testfx/pull/11785)
+* Correct the MSTEST0033 suppression justification to explain that MSTest initializes writable `TestContext` properties rather than requiring constructor initialization, by @Copilot in [#11768](https://github.com/microsoft/testfx/pull/11768)
 
 ## <a name="4.4.1" />[4.4.1] - 2026-09-15
 

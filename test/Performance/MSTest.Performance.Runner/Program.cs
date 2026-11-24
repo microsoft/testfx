@@ -22,18 +22,21 @@ internal class EntryPoint
         Console.WriteLine("Microsoft (R) MSTest Performance Profiler Command Line Tool");
 
         var rootCommand = new RootCommand("MSTest Performance Profiler Command Line Tool");
-        var pipelineNameFilter = new Option<string>(name: "--pipelineNameFilter", description: "Globing filter for the pipeline name to execute.", getDefaultValue: () => string.Empty);
+        var pipelineNameFilter = new Option<string>("--pipelineNameFilter")
+        {
+            Description = "Globing filter for the pipeline name to execute.",
+            DefaultValueFactory = _ => string.Empty,
+        };
         var executeTests = new Command("execute", "Execute the performance scenarios.")
         {
             pipelineNameFilter,
         };
-        executeTests.SetHandler(
-            context =>
-                context.ExitCode = Pipelines(context.ParseResult.GetValueForOption(pipelineNameFilter) ?? string.Empty));
+        executeTests.SetAction(parseResult =>
+            Pipelines(parseResult.GetValue(pipelineNameFilter) ?? string.Empty));
 
-        rootCommand.AddCommand(executeTests);
+        rootCommand.Subcommands.Add(executeTests);
 
-        return rootCommand.InvokeAsync(args);
+        return rootCommand.Parse(args).InvokeAsync();
     }
 
     private static int Pipelines(string pipelineNameFilter)
@@ -42,7 +45,7 @@ internal class EntryPoint
 
         pipelineRunner.AddPipeline("Default", "Scenario1_PerfView", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new PerfviewRunner(" /BufferSizeMB:1024 ", "Scenario1_PerfView.zip", includeScenario: true))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -51,7 +54,7 @@ internal class EntryPoint
         // dotnet-trace is a cross-platform CLI tool; no Windows-only restriction needed.
         pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTrace", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new DotnetTrace("--profile cpu-sampling", "DotnetTrace_CPU_Sampling.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -60,14 +63,14 @@ internal class EntryPoint
         // C:\Program Files\Microsoft Visual Studio\2022\Preview\Team Tools\DiagnosticsHub\Collector\AgentConfigs
         pipelineRunner.AddPipeline("Default", "Scenario1_DotNetObjectAllocBase", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new VSDiagnostics("DotNetObjectAllocLow.json", "Scenario1_DotNetObjectAllocBase.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
         pipelineRunner.AddPipeline("Default", "Scenario1_CpuUsageLow", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new VSDiagnostics("CpuUsageHigh.json", "Scenario1_CpuUsageLow.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -75,7 +78,7 @@ internal class EntryPoint
 
         pipelineRunner.AddPipeline("Default", "Scenario1_ConcurrencyVisualizer", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new ConcurrencyVisualizer("Scenario1_ConcurrencyVisualizer.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -86,7 +89,7 @@ internal class EntryPoint
         // on Linux and macOS can capture baseline timing data without needing Windows tools.
         pipelineRunner.AddPipeline("Default", "Scenario1_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario1_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -96,7 +99,7 @@ internal class EntryPoint
         // Useful for comparing parallelism-strategy overhead vs. MethodLevel on the same hardware.
         pipelineRunner.AddPipeline("Default", "Scenario1_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario1_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -107,7 +110,7 @@ internal class EntryPoint
         // suffix keeps this scenario captured by the existing nightly workflow filter (*PlainProcess*).
         pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new DotnetTestProcess("Scenario1_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -119,7 +122,7 @@ internal class EntryPoint
                 () => new Scenario1(
                     numberOfClass: 100,
                     methodsPerClass: 100,
-                    tfm: "net9.0",
+                    tfm: "net10.0",
                     executionScope: ExecutionScope.MethodLevel,
                     sourceGenerationMode: MSTestSourceGenerationMode.Rooting),
                 parametersBag)
@@ -134,7 +137,7 @@ internal class EntryPoint
                 () => new Scenario1(
                     numberOfClass: 100,
                     methodsPerClass: 100,
-                    tfm: "net9.0",
+                    tfm: "net10.0",
                     executionScope: ExecutionScope.MethodLevel,
                     sourceGenerationMode: MSTestSourceGenerationMode.ReflectionFree),
                 parametersBag)
@@ -149,7 +152,7 @@ internal class EntryPoint
                 () => new Scenario1(
                     numberOfClass: 100,
                     methodsPerClass: 100,
-                    tfm: "net9.0",
+                    tfm: "net10.0",
                     executionScope: ExecutionScope.MethodLevel,
                     sourceGenerationMode: MSTestSourceGenerationMode.NativeAot),
                 parametersBag)
@@ -164,7 +167,7 @@ internal class EntryPoint
                 () => new Scenario1(
                     numberOfClass: 100,
                     methodsPerClass: 100,
-                    tfm: "net9.0",
+                    tfm: "net10.0",
                     executionScope: ExecutionScope.MethodLevel,
                     testPlatform: TestPlatform.VSTest),
                 parametersBag)
@@ -178,7 +181,7 @@ internal class EntryPoint
         // the plain and data-driven execution paths.
         pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario2_DataDriven_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -187,7 +190,7 @@ internal class EntryPoint
         // Class-level parallelism variant of the data-driven scenario.
         pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net10.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario2_DataDriven_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -196,7 +199,7 @@ internal class EntryPoint
         // dotnet-test path for the data-driven scenario.
         pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new DotnetTestProcess("Scenario2_DataDriven_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -208,7 +211,7 @@ internal class EntryPoint
         // isolates the per-test cost of the MSTest lifecycle machinery.
         pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario3_Lifecycle_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -217,7 +220,7 @@ internal class EntryPoint
         // Class-level parallelism variant of the lifecycle scenario.
         pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario3_Lifecycle_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -226,7 +229,7 @@ internal class EntryPoint
         // dotnet-test path for the lifecycle scenario.
         pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new DotnetTestProcess("Scenario3_Lifecycle_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -239,7 +242,7 @@ internal class EntryPoint
         // per-test (TestInitialize/TestCleanup) cost measured by Scenario3.
         pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario4_ClassInit_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -248,7 +251,7 @@ internal class EntryPoint
         // Class-level parallelism variant of the class-init scenario.
         pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario4_ClassInit_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -257,7 +260,7 @@ internal class EntryPoint
         // dotnet-test path for the class-init scenario.
         pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net10.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new DotnetTestProcess("Scenario4_ClassInit_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))

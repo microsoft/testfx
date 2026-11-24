@@ -15,11 +15,11 @@
 
     <!-- Shared closing sentence of every MSTest package description. Projects reference it inline, the way
          they reference $(CommonPackageTags), so each project still shows its whole published description.
-         Microsoft.Testing.Platform packages override this in src/Platform/Directory.Build.props. -->
+         Microsoft.Testing.Platform packages override this in src/MTP/Directory.Build.props. -->
     <CommonProductDescription>MSTest is Microsoft supported Test Framework.</CommonProductDescription>
 
     <!-- Populates the "Release Notes" tab on nuget.org. Defaults to the MSTest changelog entry for this
-         version; Microsoft.Testing.Platform packages override this in src/Platform/Directory.Build.props. -->
+         version; Microsoft.Testing.Platform packages override this in src/MTP/Directory.Build.props. -->
     <PackageReleaseNotes>See the release notes at https://github.com/microsoft/testfx/blob/main/docs/Changelog.md#$(VersionPrefix).</PackageReleaseNotes>
   </PropertyGroup>
 </Project>

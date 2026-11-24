@@ -24,12 +24,13 @@ permissions:
   copilot-requests: write
 
 env:
-  DOTNET_CLI_TELEMETRY_SESSIONID: gha-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
 
 network:
   allowed:
     - defaults
     - dotnet
+    - github.com
     - data.nuget.org
 
 tools:
@@ -60,8 +61,8 @@ safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
   # false positives and malformed result markers (#10821).
   threat-detection:
-    # Avoid gh-aw v0.88.7's false agent_failure when no output or patch exists (#11263).
-    enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
+    # Skip only empty/noop output without a patch; real outputs still need detection (#12263).
+    enabled: ${{ (needs.agent.outputs.output_types != '' && needs.agent.outputs.output_types != 'noop') || needs.agent.outputs.has_patch == 'true' }}
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
       is trusted redaction metadata added by gh-aw. Workflow-authored task, tool,
@@ -77,14 +78,14 @@ safe-outputs:
     engine:
       id: copilot
   report-failure-as-issue: false
-  missing-tool:
+  report-missing-tool:
     create-issue: false
-  missing-data:
+  report-missing-data:
     create-issue: false
   report-incomplete:
     create-issue: false
   messages:
-    footer: "> Automated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} | [History]({history_link})"
+    footer: "> Automated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix}{history_link}"
   create-pull-request:
     max: 1
     draft: true
@@ -133,14 +134,53 @@ The existing `/parallel-audit` workflow remains read-only because it analyzes
 arbitrary pull request heads. This workflow runs only from the protected `main`
 branch and is the only workflow in this pair allowed to edit tests.
 
+## Safe-output transport and completion
+
+This Copilot harness exposes safe outputs only through the `safeoutputs` CLI
+already on `PATH`, not as native model tools. Every instruction below to emit
+`noop`, `report_incomplete`, or `create_pull_request` means a standalone Bash
+invocation of `safeoutputs <tool_name> '<complete JSON object>'`. Do not invent
+a `safeoutputs` function call or invoke an individual tool as a shell command.
+
+Use `safeoutputs --help` or `safeoutputs <tool_name> --help` for schema discovery.
+Do not prefix the invocation with `command -v`, `type`, or another helper:
+the terminal command must start with the already-allowed `safeoutputs`
+executable. Do not use pipelines, command substitutions, heredocs, temporary
+payload files, or flags such as `--body -`.
+
+Pass the complete JSON object as one single-quoted argument. Encode newlines as
+`\n`, double quotes as `\"`, backslashes as `\\`, and apostrophes as `\u0027`
+inside JSON strings. Replace example values with the actual final result before
+submitting; never send placeholder output to probe the transport.
+
+When no safe candidate exists, leave the checkout unchanged and emit a terminal
+no-op with the actual analysis reason:
+
+```bash
+safeoutputs noop '{"message":"No high-confidence bounded ResourceLock refactoring was found.\nNo files were changed."}'
+```
+
+If a terminal output command fails, do not claim a successful no-op or retry
+through an unavailable native tool or authenticated GitHub write. When the CLI
+is reachable, report the actual failed command and error:
+
+```bash
+safeoutputs report_incomplete '{"reason":"The intended safe output could not be queued.","details":"<failed command and concrete error>"}'
+```
+
+If even this diagnostic command is unavailable or denied, stop and state the
+blocker in the final response. A successful terminal CLI response means the
+output was queued for downstream application, not that a pull request was
+published. Stop after the terminal response; do not poll for its future effect.
+
 ## Guard against duplicate work
 
 Before editing, search open pull requests in `${{ github.repository }}` for the
 durable body marker `gh-aw-workflow-id: resource-lock-refactoring`. Confirm any
 match has both the `type/automation` and `type/tech-debt` labels and a head branch
 beginning with `resource-lock/`; do not rely on the mutable title alone. If such
-a pull request is open, call `noop` with its number and stop. Keep at most one
-automated rollout pull request open at a time.
+a pull request is open, run `safeoutputs noop` with its number and stop. Keep at
+most one automated rollout pull request open at a time.
 
 ## Ground rules
 
@@ -152,6 +192,14 @@ Read these files before selecting a candidate:
 - the owning test project's `.csproj` and `BannedSymbols.txt`, when present
 - `.github/workflows/shared/parallel-safety-audit-shared.md`, especially Step 0,
   the finding taxonomy in Step 1, and declaration reconciliation in category C
+- `.github/skills/testfx-parallel-safety-preflight/SKILL.md`
+
+Apply the preflight before choosing declarations and again against the final
+diff. It reuses the shared rubric and adds implementation-time checks for global
+listeners and their producers, inherited CI environment values, deterministic
+rendezvous, and bounded cleanup that awaits the original workers' termination.
+Use it within this workflow's existing one-project scope and edit allowlist;
+it does not authorize changing assembly scheduling or shared infrastructure.
 
 Re-check the repository at HEAD instead of trusting a fixed list of projects or
 attributes in this prompt. Distinguish MSTest projects from
@@ -205,7 +253,7 @@ sample-input changes.
   observer must either declare the same key (use
   `Mode = ResourceAccessMode.Read` for readers), inherit a class-level lock, or
   be isolated from the resource. If any row is unknown or uncovered, retain
-  `[DoNotParallelize]` and select another candidate or call `noop`.
+  `[DoNotParallelize]` and select another candidate or run `safeoutputs noop`.
 - Prefer eliminating shared state. Use `TestContext.TestTempDirectory` for
   per-test filesystem state when available, and use unique
   `TestAssetFixture`/test-asset identifiers when generated projects would
@@ -237,7 +285,8 @@ sample-input changes.
 
 ## Validate the selected change
 
-Before running tests, perform a declaration-reconciliation self-review using
+Before running tests, repeat the implementation preflight and perform a
+declaration-reconciliation self-review using
 category C of `.github/workflows/shared/parallel-safety-audit-shared.md`. Rebuild
 the resource coverage matrix from the final diff and verify that:
 
@@ -250,8 +299,15 @@ the resource coverage matrix from the final diff and verify that:
   why the replacement declarations prevent every previously excluded race.
 
 If this self-review finds an uncovered observer, fix the declarations or revert
-the attempted replacement and call `noop`. A passing test run is not evidence
-that a scheduling race is impossible.
+the attempted replacement and run `safeoutputs noop`. A passing test run is not
+evidence that a scheduling race is impossible.
+
+For affected asynchronous or environment-dependent tests, include the preflight's
+worker-termination and exact state-restoration evidence in the working notes.
+If a failed assertion, cancellation, or inherited CI gate can leave cleanup
+incomplete or change the expected result, fix it within the bounded patch or
+retain the existing exclusion and select another candidate. Do not accept a
+release signal or timeout-wrapper completion as proof that workers have stopped.
 
 Use the repository-pinned SDK and the smallest build and focused tests that cover
 the edited class or methods. Follow `.github/copilot-instructions.md` exactly:
@@ -270,20 +326,21 @@ the edited class or methods. Follow `.github/copilot-instructions.md` exactly:
 Fix failures caused by the patch. If a runner prerequisite is unavailable,
 record the exact command and limitation in the pull request; never claim an
 unrun check passed. If the change does not compile or its focused tests fail,
-revert the attempted edits, call `noop` with the reason, and stop.
+revert the attempted edits, run `safeoutputs noop` with the reason, and stop.
 
-The `DOTNET_CLI_TELEMETRY_SESSIONID` environment value correlates build and test
-telemetry to this workflow run. Preserve it in validation commands and include
-the workflow run URL in the pull request's validation section.
+Preserve `DOTNET_CLI_TELEMETRY_OPTOUT=1` in validation commands so .NET, MTP, and
+MSTest do not send nonessential telemetry from the sandbox. Include the workflow
+run URL in the pull request's validation section.
 
 ## Open the draft pull request
 
 Review the final diff and confirm every changed path is an allowed C# file under
 `test/` and none is an excluded fixture, sample input, generated source, or
-performance scenario. Inspect the diff itself and stop with `noop` if it adds,
-removes, or changes any assembly-level `Parallelize` / `DoNotParallelize`
-attribute or any other parallelization setting forbidden above. Commit the
-changes, then call `create_pull_request` exactly once with:
+performance scenario. Inspect the diff itself and stop with `safeoutputs noop`
+if it adds, removes, or changes any assembly-level `Parallelize` /
+`DoNotParallelize` attribute or any other parallelization setting forbidden
+above. Commit the changes, then run `safeoutputs create_pull_request` exactly
+once with:
 
 - branch `resource-lock/<short-project-slug>`
 - a title describing the concrete refactoring (the safe output adds the
@@ -296,9 +353,16 @@ changes, then call `create_pull_request` exactly once with:
 - an explicit note when the project remains sequential that this is preparation
   for a later parallelization opt-in, not an opt-in itself
 
-Pass the complete Markdown body as the safe-output tool's `body` value. Never
-pass `--body -` or otherwise use `-` as a stdin placeholder; the safe-output CLI
-treats it as the literal pull request body.
+Pass those final values as one complete JSON argument, following the transport
+and escaping rules above:
 
-If no high-confidence bounded candidate exists, make no changes, call `noop`
-with a concise explanation, and stop.
+```bash
+safeoutputs create_pull_request '{"branch":"resource-lock/<short-project-slug>","title":"<final refactoring title>","body":"## Summary\n<complete final Markdown body>"}'
+```
+
+The `branch` must match the actual local branch containing the verified commits.
+Do not submit this example or a partial body; finalize all values before the
+single PR intent is queued.
+
+If no high-confidence bounded candidate exists, make no changes, run
+`safeoutputs noop` with a concise explanation, and stop.

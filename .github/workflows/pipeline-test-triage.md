@@ -660,7 +660,7 @@ jobs:
 
       - name: Upload test evidence
         if: steps.collect.outputs.evidence-found == 'true'
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: pipeline-test-triage-data
           path: ${{ runner.temp }}/pipeline-test-triage
@@ -669,7 +669,7 @@ jobs:
 
 steps:
   - name: Download test evidence
-    uses: actions/download-artifact@v8.0.1
+    uses: actions/download-artifact@v8.0.2
     with:
       name: pipeline-test-triage-data
       path: /tmp/gh-aw/agent/pipeline-test-triage
@@ -730,15 +730,15 @@ post-steps:
 
 safe-outputs:
   report-failure-as-issue: false
-  missing-tool:
+  report-missing-tool:
     create-issue: false
-  missing-data:
+  report-missing-data:
     create-issue: false
   report-incomplete:
     create-issue: false
   threat-detection:
-    # Avoid gh-aw v0.88.7's false agent_failure when no output or patch exists (#11263).
-    enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
+    # No publishable output exists for noop-only runs without a patch (#12224).
+    enabled: ${{ (needs.agent.outputs.output_types != '' && needs.agent.outputs.output_types != 'noop') || needs.agent.outputs.has_patch == 'true' }}
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
       is trusted redaction metadata added by gh-aw. Workflow-authored task, tool,
@@ -761,6 +761,14 @@ safe-outputs:
     allowed-fields: [Type]
     deduplicate-by-title: 3
     max: 1
+  set-issue-type:
+    allowed: [Bug]
+    target: "*"
+    required-labels: [type/automation, type/ai-inspected]
+    required-title-prefix: "[pipeline-test-triage] "
+    # The handler counts a deferred temporary-ID lookup against its budget.
+    # Allow its initial attempt plus the publisher's single deferred retry.
+    max: 2
   add-comment:
     max: 1
     # check_run has no gh-aw triggering-item context. The trusted collector

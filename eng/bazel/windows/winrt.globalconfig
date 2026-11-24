@@ -1,0 +1,5 @@
+is_global = true
+global_level = 1
+build_property.CsWinRTAotOptimizerEnabled = true
+build_property.CsWinRTCcwLookupTableGeneratorEnabled = true
+build_property.CsWinRTUseWindowsUIXamlProjections = false

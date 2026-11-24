@@ -5,16 +5,14 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-public sealed record TestNodeUpdate
-(
+public sealed record TestNodeUpdate(
     [property: JsonProperty("node")]
     TestNode Node,
 
     [property: JsonProperty("parent")]
     string ParentUid);
 
-public sealed record TestNode
-(
+public sealed record TestNode(
     [property: JsonProperty("uid")]
     string Uid,
 

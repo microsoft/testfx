@@ -46,6 +46,18 @@ After writing the **first** `*.Tests.ps1` file — before writing any others:
 
 This catches placement and discovery mistakes on turn 1 instead of after dozens of failed-test iterations.
 
+### Harness Discovery Check
+
+Before reporting success, run the **harness-equivalent** discovery command from the repo root and confirm the test count went up by at least the number of tests you generated. CI/msbench/coverage harnesses do not know which directory you targeted with `-Path`; they invoke Pester from the repo root with default discovery, so a test that passes via `Invoke-Pester -Path ./tools/Foo.Tests.ps1` is still worthless if `Invoke-Pester` from the repo root does not enumerate it.
+
+```powershell
+# From repo root — mirrors what a generic harness sees
+$result = Invoke-Pester -Configuration @{ Run = @{ PassThru = $true; SkipRun = $true } }
+"$($result.TotalCount) tests discovered"
+```
+
+If the count did not increase, your `*.Tests.ps1` file is outside the harness discovery root. Move it to the convention the repo's existing tests use (or, if there are no existing tests, prefer the repo root's `tests/`, `Tests/`, `tst/`, `test/`, or co-locate next to the source). Do **not** report success until the harness-equivalent command sees your new tests.
+
 ## Rule #1: Investigate the Repo First
 
 Before writing any test or running any command, read:
@@ -107,6 +119,51 @@ Pester v5 runs in **two phases**: Discovery (collects test metadata) then Run (e
 - `-Skip:$condition` evaluates at Discovery time — conditions from `BeforeAll` will be `$null`
 - Use `foreach` loops for dynamic test generation only with `BeforeDiscovery` data
 - Use `TestDrive:` for file-based tests instead of touching repo files — Pester cleans it up automatically
+
+## Parameterized Test Display Names
+
+Apply [Report-safe test names and result validation](../../code-testing/unit-test-generation.prompt.md#report-safe-test-names-and-result-validation).
+Use an explicit safe `Name`/`Case` in `-ForEach` or `-TestCases` data and expand
+only that field in the `It` title. Do not expand arbitrary `<Input>` or
+`<Expected>` values into discovery/report metadata.
+
+For a function whose contract reverses UTF-16 code units (not Unicode scalars),
+the reversed supplementary character is intentionally malformed UTF-16. Keep
+that expected value in the assertion, not the title:
+
+Use `Text` for the data field, not `Input`: `$Input` is PowerShell's automatic
+pipeline-input variable and can hide the intended case value inside `It`.
+
+```powershell
+BeforeDiscovery {
+    $cases = @(
+        @{
+            Name = 'supplementary code-unit reversal'
+            Text = [string]::Concat([char]0xD83D, [char]0xDE00)
+            Expected = [string]::Concat([char]0xDE00, [char]0xD83D)
+        }
+        @{
+            Name = 'isolated high surrogate'
+            Text = [string][char]0xD800
+            Expected = [string][char]0xD800
+        }
+    )
+}
+
+Describe 'Get-Reversed' {
+    BeforeAll {
+        Import-Module (Join-Path $PSScriptRoot '../tools/StringUtils.psm1') -Force
+    }
+
+    It 'reverses <Name>' -ForEach $cases {
+        Get-Reversed -Value $Text | Should -BeExactly $Expected
+    }
+}
+```
+
+Reuse the repository's configured Pester `TestResult` export path and format
+when present and parse the resulting artifact before reporting success. A
+passing `TotalCount`/`PassedCount` does not prove JUnit export succeeded.
 
 ## Common Errors
 

@@ -23,6 +23,9 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [ResourceLock(WellKnownResources.EnvironmentVariables)]
 public sealed class TestingPlatformResourceDetectorTests
 {
+    private static readonly MethodInfo SelectServiceVersionMethod = typeof(TestingPlatformResourceDetector)
+        .GetMethod("SelectServiceVersion", BindingFlags.Static | BindingFlags.NonPublic)!;
+
     // Every environment variable the detector reads. They are all cleared before a test body runs so that the CI
     // environment hosting this test run cannot make a "no CI provider" assertion fail, and restored afterwards.
     private static readonly string[] ObservedEnvironmentVariables =
@@ -52,6 +55,31 @@ public sealed class TestingPlatformResourceDetectorTests
             });
 
     [TestMethod]
+    public void GetServiceVersion_PrefersEntryAssemblyInformationalVersion()
+    {
+        var entryAssembly = Assembly.GetEntryAssembly();
+        Assert.IsNotNull(entryAssembly);
+        string? informationalVersion = entryAssembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        Assert.IsNotNull(informationalVersion);
+        Assert.AreNotEqual(entryAssembly.GetName().Version?.ToString(), informationalVersion);
+
+        Assert.AreEqual(informationalVersion, TestingPlatformResourceDetector.GetServiceVersion());
+    }
+
+    [TestMethod]
+    [DataRow("informational", "assembly", "informational")]
+    [DataRow(null, "assembly", "assembly")]
+    [DataRow(null, null, null)]
+    public void SelectServiceVersion_UsesInformationalVersionThenAssemblyVersion(
+        string? informationalVersion,
+        string? assemblyVersion,
+        string? expected)
+        => Assert.AreEqual(
+            expected,
+            (string?)SelectServiceVersionMethod.Invoke(null, [informationalVersion, assemblyVersion]));
+
+    [TestMethod]
     public void GetResourceAttributes_AlwaysIncludeProcessAndHostAttributes()
         => WithEnvironment(
             [],
@@ -64,7 +92,24 @@ public sealed class TestingPlatformResourceDetectorTests
                 Assert.AreEqual(RuntimeInformation.FrameworkDescription, attributes["process.runtime.description"]);
                 Assert.AreEqual(RuntimeInformation.OSDescription, attributes["os.description"]);
                 Assert.IsTrue(attributes.ContainsKey("host.arch"));
-                Assert.IsTrue(attributes.ContainsKey("process.pid"));
+#if NET
+                Assert.AreEqual(Environment.ProcessId, attributes["process.pid"]);
+#else
+                using (var process = System.Diagnostics.Process.GetCurrentProcess())
+                {
+                    Assert.AreEqual(process.Id, attributes["process.pid"]);
+                }
+#endif
+
+                string? expectedOsType = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                    ? "windows"
+                    : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                        ? "darwin"
+                        : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                            ? "linux"
+                            : null;
+                Assert.IsNotNull(expectedOsType);
+                Assert.AreEqual(expectedOsType, attributes["os.type"]);
             });
 
     [TestMethod]
@@ -118,6 +163,16 @@ public sealed class TestingPlatformResourceDetectorTests
                 Assert.AreEqual("abc123", attributes["vcs.ref.head.revision"]);
                 Assert.AreEqual("microsoft/testfx", attributes["vcs.repository.name"]);
             });
+
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("true")]
+    [DataRow("True")]
+    [DataRow("TRUE")]
+    public void GetResourceAttributes_ForRecognizedGitHubActionsMarker_EmitsGitHubProvider(string marker)
+        => WithEnvironment(
+            new() { ["GITHUB_ACTIONS"] = marker },
+            () => Assert.AreEqual("github_actions", GetResourceAttributeMap()["cicd.provider.name"]));
 
     [TestMethod]
     public void GetResourceAttributes_ForAzurePipelines_EmitsAzureCiAttributes()
@@ -225,6 +280,44 @@ public sealed class TestingPlatformResourceDetectorTests
                 Assert.AreEqual("github_actions", attributes["cicd.provider.name"]);
                 Assert.IsFalse(attributes.ContainsKey("vcs.repository.url.full"));
             });
+
+    [TestMethod]
+    public void GetResourceAttributes_WhenAzureAndGitLabBothSet_PrefersAzurePipelines()
+        => WithEnvironment(
+            new()
+            {
+                ["TF_BUILD"] = "true",
+                ["BUILD_DEFINITIONNAME"] = "azure-pipeline",
+                ["GITLAB_CI"] = "true",
+                ["CI_PIPELINE_NAME"] = "gitlab-pipeline",
+            },
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap();
+
+                Assert.AreEqual("azure_pipelines", attributes["cicd.provider.name"]);
+                Assert.AreEqual("azure-pipeline", attributes["cicd.pipeline.name"]);
+            });
+
+    [TestMethod]
+    [DataRow("repository", "repository")]
+    [DataRow("user@host", "user@host")]
+    [DataRow("://user@host/path", "://host/path")]
+    [DataRow("https://user@host", "https://host")]
+    [DataRow("https://user@host/path", "https://host/path")]
+    [DataRow("https://user@host?query=@value", "https://host?query=@value")]
+    [DataRow("https://user@host#fragment@value", "https://host#fragment@value")]
+    [DataRow("https:///path", "https:///path")]
+    [DataRow("https://host/@secret", "https://host/@secret")]
+    [DataRow("https://@host/path", "https://host/path")]
+    public void RemoveUrlUserInfo_HandlesAuthorityBoundaries(string value, string expected)
+        => WithEnvironment(
+            new()
+            {
+                ["TF_BUILD"] = "true",
+                ["BUILD_REPOSITORY_URI"] = value,
+            },
+            () => Assert.AreEqual(expected, GetResourceAttributeMap()["vcs.repository.url.full"]));
 
     private static Dictionary<string, object> GetResourceAttributeMap()
     {

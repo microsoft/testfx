@@ -10,6 +10,186 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 {
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CA1515_OnlyPublicTestClassesAreSuppressed(bool includeHelper)
+    {
+        string code = $$"""
+            #file PublicTestClasses.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFrameworks$</TargetFramework>
+                <OutputType>Exe</OutputType>
+                <RunAnalyzers>true</RunAnalyzers>
+                <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="MSTest.Analyzers" Version="$MSTestVersion$" />
+                <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+              </ItemGroup>
+            </Project>
+
+            #file .editorconfig
+            root = true
+            [*.cs]
+            dotnet_diagnostic.CA1515.severity = warning
+
+            #file Program.cs
+            internal static class Program
+            {
+                private static void Main() { }
+            }
+
+            #file TestCases.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public sealed class TestCases
+            {
+                [TestMethod]
+                public void Test() { }
+            }
+
+            #file Helper.cs
+            {{(includeHelper ? "public class Helper { }" : string.Empty)}}
+            """
+            .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(CA1515_OnlyPublicTestClassesAreSuppressed), code);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\"",
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(includeHelper ? 1 : 0, result.ExitCode, result.StandardOutput);
+        result.AssertOutputDoesNotContain("TestCases.cs(");
+        if (includeHelper)
+        {
+            result.AssertOutputContains("Helper.cs(1,14): error CA1515");
+        }
+    }
+
+    [TestMethod]
+    public async Task PackagedAnalyzersAndCodeFixesRunOnMinimumRoslynHost()
+    {
+        string code = """"
+            #file MinimumRoslynHost.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFrameworks$</TargetFramework>
+                <OutputType>Exe</OutputType>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <Nullable>enable</Nullable>
+                <RunAnalyzers>false</RunAnalyzers>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="MSTest.Analyzers" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
+                <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" ExcludeAssets="analyzers" />
+                <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
+                <Reference Include="MSTest.Analyzers" HintPath="$(PkgMSTest_Analyzers)\analyzers\dotnet\cs\MSTest.Analyzers.dll" />
+                <Reference Include="MSTest.Analyzers.CodeFixes" HintPath="$(PkgMSTest_Analyzers)\analyzers\dotnet\cs\MSTest.Analyzers.CodeFixes.dll" />
+              </ItemGroup>
+            </Project>
+
+            #file Program.cs
+            using System.Collections.Immutable;
+            using Microsoft.CodeAnalysis;
+            using Microsoft.CodeAnalysis.CodeActions;
+            using Microsoft.CodeAnalysis.CodeFixes;
+            using Microsoft.CodeAnalysis.CSharp;
+            using Microsoft.CodeAnalysis.Diagnostics;
+            using Microsoft.CodeAnalysis.Formatting;
+            using Microsoft.CodeAnalysis.Text;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using MSTest.Analyzers;
+
+            Version minimumHostVersion = new(4, 14, 0, 0);
+            Assert.AreEqual(minimumHostVersion, typeof(Compilation).Assembly.GetName().Version);
+            Assert.AreEqual(minimumHostVersion, typeof(Workspace).Assembly.GetName().Version);
+            Assert.AreEqual(minimumHostVersion, typeof(CSharpCompilation).Assembly.GetName().Version);
+            Assert.AreEqual(minimumHostVersion, typeof(AvoidUsingAssertsInAsyncVoidContextAnalyzer).Assembly
+                .GetReferencedAssemblies().Single(reference => reference.Name == "Microsoft.CodeAnalysis").Version);
+            Assert.AreEqual(minimumHostVersion, typeof(AvoidUsingAssertsInAsyncVoidContextFixer).Assembly
+                .GetReferencedAssemblies().Single(reference => reference.Name == "Microsoft.CodeAnalysis.Workspaces").Version);
+
+            MetadataReference[] references = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
+                .Split(Path.PathSeparator)
+                .Select(path => MetadataReference.CreateFromFile(path))
+                .ToArray();
+            const string source = """
+                global using System;
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public class Tests
+                {
+                    public async void Run()
+                    {
+                        Assert.Fail();
+                    }
+                }
+                """;
+            using var workspace = new AdhocWorkspace();
+            Project project = workspace.AddProject(ProjectInfo.Create(
+                ProjectId.CreateNewId(),
+                VersionStamp.Create(),
+                "MinimumHost",
+                "MinimumHost",
+                LanguageNames.CSharp,
+                compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary),
+                metadataReferences: references));
+            Document document = workspace.AddDocument(project.Id, "Tests.cs", SourceText.From(source));
+            Compilation compilation = (await document.Project.GetCompilationAsync())!;
+            Assert.IsEmpty(compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error));
+            var analyzer = new AvoidUsingAssertsInAsyncVoidContextAnalyzer();
+            ImmutableArray<Diagnostic> diagnostics = await compilation.WithAnalyzers([analyzer]).GetAnalyzerDiagnosticsAsync();
+            Assert.HasCount(1, diagnostics);
+            Assert.AreEqual("MSTEST0040", diagnostics[0].Id);
+            Assert.AreEqual("Assert.Fail()", source.Substring(diagnostics[0].Location.SourceSpan.Start, diagnostics[0].Location.SourceSpan.Length));
+
+            var actions = new List<CodeAction>();
+            await new AvoidUsingAssertsInAsyncVoidContextFixer().RegisterCodeFixesAsync(new CodeFixContext(
+                document, diagnostics[0], (action, _) => actions.Add(action), CancellationToken.None));
+            Assert.HasCount(1, actions);
+            ImmutableArray<CodeActionOperation> operations = await actions[0].GetOperationsAsync(CancellationToken.None);
+            ApplyChangesOperation change = operations.OfType<ApplyChangesOperation>().Single();
+            Document fixedDocument = await Formatter.FormatAsync(change.ChangedSolution.GetDocument(document.Id)!);
+            const string expected = """
+                global using System;
+                using System.Threading.Tasks;
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public class Tests
+                {
+                    public async Task Run()
+                    {
+                        Assert.Fail();
+                    }
+                }
+                """;
+            Assert.AreEqual(expected.ReplaceLineEndings(), (await fixedDocument.GetTextAsync()).ToString().ReplaceLineEndings());
+            Compilation fixedCompilation = (await fixedDocument.Project.GetCompilationAsync())!;
+            Assert.IsEmpty(fixedCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error));
+            Assert.IsEmpty(await fixedCompilation.WithAnalyzers([analyzer]).GetAnalyzerDiagnosticsAsync());
+
+            Console.WriteLine("Roslyn 4.14: packaged C# analyzer and code fix passed.");
+            """"
+            .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(PackagedAnalyzersAndCodeFixesRunOnMinimumRoslynHost), code);
+        await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"run --project {testAsset.TargetAssetPath} --no-build",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode);
+        result.AssertOutputContains("Roslyn 4.14: packaged C# analyzer and code fix passed.");
+    }
+
+    [TestMethod]
     [DataRow(false, false)]
     [DataRow(false, true)]
     [DataRow(true, false)]

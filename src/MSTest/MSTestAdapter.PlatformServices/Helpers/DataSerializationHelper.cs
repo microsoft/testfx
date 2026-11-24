@@ -1,0 +1,273 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+#if NETFRAMEWORK
+using System.CodeDom;
+using System.Collections.ObjectModel;
+#endif
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
+internal static class DataSerializationHelper
+{
+    private const string DataContractSerializationJustification =
+        "Data contract serialization is used for cross-process VSTest payloads. " +
+        "This should be safe as long as our generator mentions getting fields / properties of the target type. " +
+        "https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551";
+
+    private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new();
+    private static readonly DataContractJsonSerializerSettings SerializerSettings = new()
+    {
+        UseSimpleDictionaryFormat = true,
+        EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,
+        DateTimeFormat = new DateTimeFormat("O", CultureInfo.InvariantCulture),
+#if NETFRAMEWORK
+        DataContractSurrogate = SerializationSurrogateProvider.Instance,
+#endif
+        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly)],
+    };
+
+    /// <summary>
+    /// Serializes the date in such a way that won't throw exceptions during deserialization in Test Platform.
+    /// The result can be deserialized using <see cref="Deserialize(string[])"/> method.
+    /// </summary>
+    /// <param name="data">Data array to serialize.</param>
+    /// <returns>Serialized array.</returns>
+    /// <exception cref="NotSupportedException">
+    /// Thrown when the runtime does not support dynamic code generation
+    /// (<c>RuntimeFeature.IsDynamicCodeSupported</c> is <see langword="false"/>),
+    /// for example under Native AOT, Mono AOT on iOS, or Blazor WebAssembly AOT.
+    /// DataContract-based serialization relies on dynamic code generation, and in such
+    /// AOT/MTP scenarios the in-process <c>ActualData</c> reference is used instead,
+    /// so this method should never be reached at runtime.
+    /// </exception>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
+    public static string?[]? Serialize(object?[]? data)
+    {
+        if (data is null)
+        {
+            return null;
+        }
+
+#if NET
+        if (!RuntimeFeature.IsDynamicCodeSupported)
+        {
+            // Cross-process data serialization is not used when dynamic code generation is
+            // unavailable (Native AOT, Mono iOS AOT, Blazor WASM AOT, ...). In MTP mode,
+            // discovery sets ActualData (in-process reference) instead. Reaching this code
+            // means a vstest-style code path is being exercised in an AOT build, which is
+            // unsupported because DataContractJsonSerializer requires runtime code generation.
+            throw new NotSupportedException(
+                "MSTest data-source argument serialization is not supported when the runtime " +
+                "does not support dynamic code generation (Native AOT, Mono iOS AOT, Blazor " +
+                "WebAssembly AOT, ...). Use Microsoft.Testing.Platform (MTP) mode, where " +
+                "parameterized test arguments are passed in-process.");
+        }
+#endif
+
+        string?[] serializedData = new string?[data.Length * 2];
+        for (int i = 0; i < data.Length; i++)
+        {
+            int typeIndex = i * 2;
+            int dataIndex = typeIndex + 1;
+            if (data[i] is null)
+            {
+                serializedData[typeIndex] = null;
+                serializedData[dataIndex] = null;
+
+                continue;
+            }
+
+            Type type = data[i]!.GetType();
+            string? typeName = type.AssemblyQualifiedName;
+
+            serializedData[typeIndex] = typeName;
+
+            DataContractJsonSerializer serializer = GetSerializer(type);
+#if NET7_0_OR_GREATER
+            serializer.SetSerializationSurrogateProvider(SerializationSurrogateProvider.Instance);
+#endif
+
+            using var memoryStream = new MemoryStream();
+            serializer.WriteObject(memoryStream, data[i]);
+            byte[] serializerData = memoryStream.ToArray();
+
+            serializedData[dataIndex] = Encoding.UTF8.GetString(serializerData, 0, serializerData.Length);
+        }
+
+        return serializedData;
+    }
+
+    /// <summary>
+    /// Deserializes the data serialized by <see cref="Serialize(object[])" /> method.
+    /// </summary>
+    /// <param name="serializedData">Serialized data array to deserialize.</param>
+    /// <returns>Deserialized array.</returns>
+    /// <exception cref="NotSupportedException">
+    /// Thrown when the runtime does not support dynamic code generation
+    /// (<c>RuntimeFeature.IsDynamicCodeSupported</c> is <see langword="false"/>),
+    /// for example under Native AOT, Mono AOT on iOS, or Blazor WebAssembly AOT.
+    /// DataContract-based deserialization relies on dynamic code generation, and in such
+    /// AOT/MTP scenarios the in-process <c>ActualData</c> reference is used instead,
+    /// so this method should never be reached at runtime.
+    /// </exception>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
+    public static object?[]? Deserialize(string?[]? serializedData)
+    {
+        if (serializedData is null || serializedData.Length % 2 != 0)
+        {
+            return null;
+        }
+
+#if NET
+        if (!RuntimeFeature.IsDynamicCodeSupported)
+        {
+            // See note on Serialize: when dynamic code generation is unavailable
+            // (Native AOT, Mono iOS AOT, Blazor WASM AOT, ...), the execution path uses
+            // TestMethod.ActualData in MTP mode, so this branch should be unreachable.
+            throw new NotSupportedException(
+                "MSTest data-source argument deserialization is not supported when the runtime " +
+                "does not support dynamic code generation (Native AOT, Mono iOS AOT, Blazor " +
+                "WebAssembly AOT, ...). Use Microsoft.Testing.Platform (MTP) mode, where " +
+                "parameterized test arguments are passed in-process.");
+        }
+#endif
+
+        int length = serializedData.Length / 2;
+        object?[] data = new object?[length];
+
+        for (int i = 0; i < length; i++)
+        {
+            int typeIndex = i * 2;
+            string? assemblyQualifiedName = serializedData[typeIndex];
+            string? serializedValue = serializedData[typeIndex + 1];
+
+            if (serializedValue is null || assemblyQualifiedName is null)
+            {
+                data[i] = null;
+                continue;
+            }
+
+            DataContractJsonSerializer serializer = GetSerializer(assemblyQualifiedName);
+#if NET7_0_OR_GREATER
+            serializer.SetSerializationSurrogateProvider(SerializationSurrogateProvider.Instance);
+#endif
+
+            byte[] serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
+            using var memoryStream = new MemoryStream(serializedDataBytes);
+            data[i] = serializer.ReadObject(memoryStream);
+            // For some reason, we don't get SerializationSurrogateProvider.GetDeserializedObject to be called by .NET runtime.
+            // So we manually call it.
+            data[i] = SerializationSurrogateProvider.GetDeserializedObject(data[i]!);
+        }
+
+        return data;
+    }
+
+    private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
+        => SerializerCache.GetOrAdd(assemblyQualifiedName, CreateSerializerForAssemblyQualifiedName);
+
+    private static DataContractJsonSerializer GetSerializer(Type type)
+        => SerializerCache.GetOrAdd(type.AssemblyQualifiedName!, _ => CreateSerializerForType(type));
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
+    private static DataContractJsonSerializer CreateSerializerForAssemblyQualifiedName(string assemblyQualifiedName)
+        => new(PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings);
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
+    private static DataContractJsonSerializer CreateSerializerForType(Type type)
+        => new(type, SerializerSettings);
+
+    [DataContract]
+    private sealed class SurrogatedDateOnly
+    {
+        [DataMember]
+        public int DayNumber { get; set; }
+    }
+
+    [DataContract]
+    private sealed class SurrogatedTimeOnly
+    {
+        [DataMember]
+        public long Ticks { get; set; }
+    }
+
+    private sealed class SerializationSurrogateProvider
+#if NETFRAMEWORK
+        : IDataContractSurrogate
+#else
+        : ISerializationSurrogateProvider
+#endif
+    {
+        public static SerializationSurrogateProvider Instance { get; } = new();
+
+#if NETFRAMEWORK
+        public object GetCustomDataToExport(MemberInfo memberInfo, Type dataContractType) => null!;
+
+        public object GetCustomDataToExport(Type clrType, Type dataContractType) => null!;
+
+        public void GetKnownCustomDataTypes(Collection<Type> customDataTypes)
+        {
+        }
+
+        public Type GetReferencedTypeOnImport(string typeName, string typeNamespace, object customData) => null!;
+
+        public CodeTypeDeclaration ProcessImportedType(CodeTypeDeclaration typeDeclaration, CodeCompileUnit compileUnit) => typeDeclaration;
+#endif
+
+        public object GetDeserializedObject(object obj, Type targetType)
+            => GetDeserializedObject(obj);
+
+        internal static object GetDeserializedObject(object obj)
+        {
+#if NET6_0_OR_GREATER
+            if (obj is SurrogatedDateOnly surrogatedDateOnly)
+            {
+                return DateOnly.FromDayNumber(surrogatedDateOnly.DayNumber);
+            }
+            else if (obj is SurrogatedTimeOnly surrogatedTimeOnly)
+            {
+                return new TimeOnly(surrogatedTimeOnly.Ticks);
+            }
+#endif
+
+            return obj;
+        }
+
+        public object GetObjectToSerialize(object obj, Type targetType)
+            => obj switch
+            {
+#if NET6_0_OR_GREATER
+                DateOnly dateOnly => new SurrogatedDateOnly() { DayNumber = dateOnly.DayNumber },
+                TimeOnly timeOnly => new SurrogatedTimeOnly() { Ticks = timeOnly.Ticks },
+#endif
+                _ => obj,
+            };
+
+#if NETFRAMEWORK
+        public Type GetDataContractType(Type type)
+#else
+        public Type GetSurrogateType(Type type)
+#endif
+        {
+#if NET6_0_OR_GREATER
+            if (type == typeof(DateOnly))
+            {
+                return typeof(SurrogatedDateOnly);
+            }
+            else if (type == typeof(TimeOnly))
+            {
+                return typeof(SurrogatedTimeOnly);
+            }
+#endif
+
+            return type;
+        }
+    }
+}

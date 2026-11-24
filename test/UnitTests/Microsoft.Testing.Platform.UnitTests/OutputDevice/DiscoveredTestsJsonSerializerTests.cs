@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
@@ -11,6 +11,74 @@ namespace Microsoft.Testing.Platform.UnitTests.OutputDevice;
 [TestClass]
 public sealed class DiscoveredTestsJsonSerializerTests
 {
+    [TestMethod]
+    [DataRow(false, DisplayName = "Duplicate file location")]
+    [DataRow(true, DisplayName = "Duplicate method identifier")]
+    public void Serialize_DuplicateSingletonMetadata_RejectsAmbiguousDiscovery(bool methodIdentifier)
+    {
+        IProperty[] properties = methodIdentifier
+            ?
+            [
+                new TestMethodIdentifierProperty("Assembly", "Namespace", "Class", "First", 0, [], "System.Void"),
+                new TestMethodIdentifierProperty("Assembly", "Namespace", "Class", "Second", 0, [], "System.Void"),
+            ]
+            :
+            [
+                new TestFileLocationProperty("first.cs", new(new(2, 0), new(4, 0))),
+                new TestFileLocationProperty("second.cs", new(new(7, 0), new(9, 0))),
+            ];
+        TestNode node = new() { Uid = "node", DisplayName = "Test", Properties = new(properties) };
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => DiscoveredTestsJsonSerializer.Serialize([node]));
+
+        Assert.AreEqual($"Found multiple properties of type '{properties[0].GetType()}'.", exception.Message);
+    }
+
+    [TestMethod]
+    public void Serialize_MixedMetadataAndMalformedUnicode_PreservesNodeAndPropertyOrdering()
+    {
+        TestNode first = new()
+        {
+            Uid = "first",
+            DisplayName = "quote\"\0Ω\uD800",
+            Properties = new(
+                new TestFileLocationProperty("tests with spaces.cs", new(new(2, 1), new(4, 3))),
+                new TestMetadataProperty("Category", "Fast"),
+                new SerializableKeyValuePairStringProperty("Tag", "first"),
+                new TestMetadataProperty("Owner", "Team"),
+                new SerializableKeyValuePairStringProperty("Tag", "last")),
+        };
+        TestNode second = new() { Uid = "second", DisplayName = "Plain" };
+
+        using var document = JsonDocument.Parse(DiscoveredTestsJsonSerializer.Serialize([first, second]));
+        JsonElement tests = document.RootElement.GetProperty("tests");
+
+        Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
+        Assert.AreEqual(2, tests.GetArrayLength());
+        Assert.AreEqual("first", tests[0].GetProperty("uid").GetString());
+        Assert.AreEqual("quote\"\0Ω\uFFFD", tests[0].GetProperty("displayName").GetString());
+        JsonElement location = tests[0].GetProperty("location");
+        Assert.AreEqual("tests with spaces.cs", location.GetProperty("file").GetString());
+        Assert.AreEqual(2, location.GetProperty("lineStart").GetInt32());
+        Assert.AreEqual(4, location.GetProperty("lineEnd").GetInt32());
+        JsonElement traits = tests[0].GetProperty("traits");
+        Assert.AreEqual("Category", traits[0].GetProperty("key").GetString());
+        Assert.AreEqual("Fast", traits[0].GetProperty("value").GetString());
+        Assert.AreEqual("Owner", traits[1].GetProperty("key").GetString());
+        Assert.AreEqual("Team", traits[1].GetProperty("value").GetString());
+        JsonElement properties = tests[0].GetProperty("properties");
+        Assert.AreEqual("Tag", properties[0].GetProperty("key").GetString());
+        Assert.AreEqual("first", properties[0].GetProperty("value").GetString());
+        Assert.AreEqual("Tag", properties[1].GetProperty("key").GetString());
+        Assert.AreEqual("last", properties[1].GetProperty("value").GetString());
+        Assert.AreEqual("second", tests[1].GetProperty("uid").GetString());
+        Assert.AreEqual("Plain", tests[1].GetProperty("displayName").GetString());
+        Assert.IsFalse(tests[1].TryGetProperty("location", out _));
+        Assert.IsFalse(tests[1].TryGetProperty("traits", out _));
+        Assert.IsFalse(tests[1].TryGetProperty("properties", out _));
+    }
+
     [TestMethod]
     public void Serialize_Empty_ProducesEnvelopeWithNoTests()
     {
@@ -206,6 +274,38 @@ public sealed class DiscoveredTestsJsonSerializerTests
         Assert.AreEqual(
             "Quotes\" Backslash\\ Newline\n Tab\t",
             document.RootElement.GetProperty("tests")[0].GetProperty("displayName").GetString());
+    }
+
+    [TestMethod]
+    public void Serialize_NonAsciiCharacters_ProducesLosslessAsciiJson()
+    {
+        var node = new TestNode
+        {
+            Uid = new TestNodeUid("uid-\u20DD"),
+            DisplayName = "Unicode \u00C5 \u20DD \uD83D\uDE00",
+        };
+
+        string json = DiscoveredTestsJsonSerializer.Serialize([node]);
+
+        Assert.AreEqual(
+            """
+
+            {
+              "schemaVersion": 1,
+              "tests": [
+                {
+                  "uid": "uid-\u20dd",
+                  "displayName": "Unicode \u00c5 \u20dd \ud83d\ude00"
+                }
+              ]
+            }
+            """.Replace("\r", string.Empty),
+            json.Replace("\r", string.Empty));
+
+        using var document = JsonDocument.Parse(json);
+        JsonElement test = document.RootElement.GetProperty("tests")[0];
+        Assert.AreEqual(node.Uid.Value, test.GetProperty("uid").GetString());
+        Assert.AreEqual(node.DisplayName, test.GetProperty("displayName").GetString());
     }
 
     [TestMethod]

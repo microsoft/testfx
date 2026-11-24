@@ -1,5 +1,12 @@
 # RFC 016 - JUnit XML report extension
 
+> **Current implementation note (2026-10-09):** A JUnit implementation now exists; the unchecked
+> implementation/shipping boxes below are historical, not a release-status assertion.
+> Unlike the uncapped-key proposal below, [JUnitReportGenerator](../../src/MTP/Microsoft.Testing.Extensions.JUnitReport/JUnitReportGenerator.cs)
+> truncates parent-chain UID keys to the shared identity budget and excludes superseded retry attempts.
+> See [MTP-012](../specifications/mtp.md#mtp-012--report-artifacts-and-post-processing).
+> XML-consumer interoperability and every schema/memory-bound claim have not been revalidated.
+
 - [x] Approved in principle
 - [ ] Under discussion
 - [ ] Implementation
@@ -8,6 +15,14 @@
 ## Summary
 
 Introduce **`Microsoft.Testing.Extensions.JUnitReport`**: a new Microsoft.Testing.Platform (MTP) extension that emits a JUnit-style XML report at the end of a test run. The report follows the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema that is consumed by Jenkins, GitLab CI, GitHub Actions test reporters, Azure DevOps, CircleCI, TeamCity, and most other CI tooling. The extension ships with the standard MTP integration surface (CLI option, MSBuild auto-registration, `AddJUnitReportProvider` builder method) and addresses [#4268](https://github.com/microsoft/testfx/issues/4268).
+
+## Stable release decision
+
+The extension graduates using the same version line as Microsoft.Testing.Platform, following the [CTRF graduation policy](../decisions/ctrf-stable-release.md). Remove the experimental registration marker and forced alpha version together with the SDK's independent version calculation; removing only one would leave contradictory API, package and consumer contracts. The Bazel SDK packager uses the same shared extension default rather than retaining a separate JUnit template substitution.
+
+The public registration signature, CLI options, XML semantics, retry/merge behavior and host-owned lifecycle remain unchanged. MSTest.Sdk reporting stays opt-in, including explicit version overrides, and existing NativeAOT and VSTest restrictions remain in place. Normal developer, CI and preview suffixes still apply; only a final release produces an unsuffixed package. This change targets the next release from `main`, not a servicing backport or downstream profile rollout.
+
+Before promotion, retained regression tests detected the experimental registration marker on all supported unit-test targets and the SDK's independently versioned package in both central and non-central package management. Existing JUnit unit cases remained green. The PR records the exact source states, package provenance and executed red/green results; historical checks below do not establish fresh schema or external CI-service interoperability evidence.
 
 ## Motivation
 
@@ -134,14 +149,13 @@ The root `<testsuites>` `name` attribute is the module file name without extensi
 | `FailedTestNodeStateProperty`                  | `<failure message="..." type="...">body</failure>` |
 | `TimeoutTestNodeStateProperty`                 | `<error message="..." type="...">body</error>`  |
 | `ErrorTestNodeStateProperty`                   | `<error message="..." type="...">body</error>`  |
-| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="...">body</error>`  |
 | Other `WellKnownTestNodeTestRunOutcomeFailedProperties` | `<failure message="..." type="...">body</failure>` |
 | `DiscoveredTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 | `InProgressTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 
 `body` is the composed failure text described in [Failure and error body format](#failure-and-error-body-format); the element is written with explicit start/end tags whenever that text is non-empty.
 
-`Cancelled` becomes `<error>` rather than `<failure>` because cancellation indicates an interruption, not an assertion failure — `<error>` is the schema-correct bucket for "the test could not be evaluated".
+Microsoft.Testing.Platform 3 removes `CancelledTestNodeStateProperty`. Frameworks cancel by throwing `OperationCanceledException` with the platform-supplied token, not by publishing a test outcome. Historical journal results with a `cancelled` outcome still become `<error>` rather than `<failure>` when replayed.
 
 ### Failure and error body format
 
@@ -300,5 +314,5 @@ A fresh GUID is generated for the `<TestingPlatformBuilderHook Include>` attribu
   - Duplicate `(classname, name)` uniquification.
   - Parent-chain resolution with missing intermediate parents.
   - Counters at the suite and root level.
-  - Outcome mapping (skipped/failed/error/timeout/cancelled).
+  - Outcome mapping (skipped/failed/error/timeout), including historical cancelled journal results.
   - Failure/error body composition across every combination of present/absent exception type, message and stack trace, plus the `type` attribute fallback to the element name.

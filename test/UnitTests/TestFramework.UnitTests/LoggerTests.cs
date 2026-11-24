@@ -48,4 +48,41 @@ public sealed class LoggerTests : TestContainer
         Logger.LogMessage("{ A");
         calledWith.Should().Be("{ A");
     }
+
+    public void LogMessage_ThrowingSubscriber_DoesNotPreventLaterSynchronousDelivery()
+    {
+        var calls = new List<string>();
+        int callerThread = Environment.CurrentManagedThreadId;
+        int deliveredThread = 0;
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        Logger.LogMessageHandler first = message =>
+        {
+            calls.Add($"first:{message}");
+            throw new InvalidOperationException("subscriber failure");
+        };
+        Logger.LogMessageHandler second = message =>
+        {
+            deliveredThread = Environment.CurrentManagedThreadId;
+            calls.Add($"second:{message}");
+        };
+        Logger.LogMessageHandler third = message => calls.Add($"third:{message}");
+        Logger.OnLogMessage += first;
+        Logger.OnLogMessage += second;
+        Logger.OnLogMessage += third;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("fr-FR");
+            Action action = () => Logger.LogMessage("value {0:F1}", 1.5);
+            action.Should().NotThrow();
+            calls.Should().Equal("first:value 1.5", "second:value 1.5", "third:value 1.5");
+            deliveredThread.Should().Be(callerThread);
+        }
+        finally
+        {
+            Logger.OnLogMessage -= first;
+            Logger.OnLogMessage -= second;
+            Logger.OnLogMessage -= third;
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
 }

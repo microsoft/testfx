@@ -14,6 +14,55 @@ public sealed class SilenceDrivenHeartbeatRendererTests
     private static readonly TimeSpan Slow60s = TimeSpan.FromSeconds(60);
 
     [TestMethod]
+    public void ContextualHeartbeat_IdentifiesEachActiveModuleAndItsTest()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        var renderer = new SilenceDrivenHeartbeatRenderer(
+            Silence30s, TimeSpan.Zero, clock.CreateStopwatch, contextualModuleOutput: true,
+            moduleDisplayName: (path, _) => Path.GetFileName(path));
+        var first = new TestProgressState(1, Path.Combine("a", "first.dll"), "net472", "x64", clock.CreateStopwatch(), false, "net481");
+        var second = new TestProgressState(2, Path.Combine("b", "second.dll"), "net10.0", "x64", clock.CreateStopwatch(), false);
+        first.GetOrCreateTestNodeResultsState(() => new(1))
+            .AddRunningTestNode(1, "one", "First test", clock.CreateStopwatch());
+        second.GetOrCreateTestNodeResultsState(() => new(2))
+            .AddRunningTestNode(2, "two", "Second test", clock.CreateStopwatch());
+        renderer.OnStart();
+        clock.Advance(Silence30s);
+
+        renderer.OnTick(terminal, [first, second]);
+
+        const string expected = """
+            running... 0 completed, 0 failed, active modules: 2 | no tests completed yet
+              [first.dll net472|x64, runtime: net481] 30s - First test
+              [second.dll net10.0|x64] 30s - Second test
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
+    public void SlowTest_PreservesSeparateTargetAndRuntimeIdentity()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        var renderer = new SilenceDrivenHeartbeatRenderer(TimeSpan.Zero, Slow60s, clock.CreateStopwatch);
+        var state = new TestProgressState(1, "application.dll", "net472", "x64", clock.CreateStopwatch(), isDiscovery: false, runtimeFramework: "net481");
+        state.GetOrCreateTestNodeResultsState(() => new(1))
+            .AddRunningTestNode(1, "slow", "Slow test", clock.CreateStopwatch());
+        renderer.OnStart();
+        clock.Advance(Slow60s);
+
+        renderer.OnTick(terminal, [state]);
+
+        const string expected = """
+            [slow] still running after 1m 00s: Slow test (application.dll|net472|x64, runtime: net481)
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
     public void SilenceHeartbeat_WhenNoCompletionForThreshold_EmitsSingleSummaryLine()
     {
         var clock = new FakeClock();
@@ -23,6 +72,7 @@ public sealed class SilenceDrivenHeartbeatRendererTests
 
         TestProgressState asm = CreateAssembly(clock, totalTests: 5, failedTests: 2, activeTestName: "MyTest");
         TestProgressState?[] items = [asm];
+        renderer.OnTestCompleted();
 
         // Below threshold: nothing.
         clock.Advance(TimeSpan.FromSeconds(29));
@@ -33,11 +83,11 @@ public sealed class SilenceDrivenHeartbeatRendererTests
         clock.Advance(TimeSpan.FromSeconds(2));
         renderer.OnTick(terminal, items);
 
-        Assert.Contains("running...", terminal.Output);
-        Assert.Contains("5 completed", terminal.Output);
-        Assert.Contains("2 failed", terminal.Output);
-        Assert.Contains("active: MyTest", terminal.Output);
-        Assert.AreEqual(1, terminal.LineCount);
+        const string expected = """
+            running... 5 completed, 2 failed, active modules: 1 | last completion: 31s ago | active: MyTest
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
     }
 
     [TestMethod]
@@ -66,22 +116,147 @@ public sealed class SilenceDrivenHeartbeatRendererTests
     }
 
     [TestMethod]
-    public void SilenceHeartbeat_WhenCompletionsKeepHappening_DoesNotEmit()
+    public void VisibleSilence_HiddenCompletions_EmitAtDefaultBoundary()
     {
         var clock = new FakeClock();
         var terminal = new RecordingStringTerminal();
-        var renderer = new SilenceDrivenHeartbeatRenderer(Silence30s, Slow60s, clock.CreateStopwatch);
+        var renderer = new SilenceDrivenHeartbeatRenderer(new TerminalTestReporterOptions().HeartbeatSilenceThreshold, TimeSpan.Zero, clock.CreateStopwatch);
         renderer.OnStart();
 
-        TestProgressState?[] items = [CreateAssembly(clock, totalTests: 1, failedTests: 0, activeTestName: null)];
+        TestProgressState asm = CreateAssembly(clock, totalTests: 0, failedTests: 0, activeTestName: null);
+        TestProgressState?[] items = [asm];
 
         clock.Advance(TimeSpan.FromSeconds(20));
+        asm.ReportPassingTest("first", "First", "inst-1");
         renderer.OnTestCompleted();
         clock.Advance(TimeSpan.FromSeconds(20));
+        asm.ReportPassingTest("second", "Second", "inst-1");
+        renderer.OnTestCompleted();
+        clock.Advance(TimeSpan.FromSeconds(19));
+        asm.ReportPassingTest("third", "Third", "inst-1");
+        renderer.OnTestCompleted();
+        renderer.OnTick(terminal, items);
+        Assert.AreEqual(string.Empty, terminal.Output);
+
+        clock.Advance(TimeSpan.FromSeconds(1));
         renderer.OnTick(terminal, items);
 
-        // Only 20s since the last completion, below the 30s silence threshold.
-        Assert.AreEqual(string.Empty, terminal.Output);
+        clock.Advance(TimeSpan.FromSeconds(59));
+        asm.ReportPassingTest("fourth", "Fourth", "inst-1");
+        renderer.OnTestCompleted();
+        renderer.OnTick(terminal, items);
+        Assert.AreEqual(1, terminal.LineCount);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        renderer.OnTick(terminal, items);
+
+        const string expected = """
+            running... 3 completed, 0 failed, active modules: 1 | last completion: 1s ago
+            running... 4 completed, 0 failed, active modules: 1 | last completion: 1s ago
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
+    public void VisibleSilence_VisibleWriteDelaysHeartbeatButNotCompletionAge()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        var renderer = new SilenceDrivenHeartbeatRenderer(Silence30s, TimeSpan.Zero, clock.CreateStopwatch);
+        renderer.OnStart();
+        renderer.OnTestCompleted();
+        TestProgressState?[] items = [CreateAssembly(clock, 1, 0, null)];
+
+        clock.Advance(TimeSpan.FromSeconds(20));
+        renderer.OnWrite(terminal, items, output => output.AppendLine("diagnostic"));
+        clock.Advance(TimeSpan.FromSeconds(29));
+        renderer.OnTick(terminal, items);
+        Assert.AreEqual(1, terminal.LineCount);
+
+        clock.Advance(TimeSpan.FromSeconds(1));
+        renderer.OnTick(terminal, items);
+        clock.Advance(TimeSpan.FromSeconds(30));
+        renderer.OnTick(terminal, items);
+
+        const string expected = """
+            diagnostic
+            running... 1 completed, 0 failed, active modules: 1 | last completion: 50s ago
+            running... 1 completed, 0 failed, active modules: 1 | last completion: 1m 20s ago
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
+    public void VisibleSilence_NoCompletionsAndRestart_DoNotInventProgress()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        var renderer = new SilenceDrivenHeartbeatRenderer(Silence30s, TimeSpan.Zero, clock.CreateStopwatch);
+        renderer.OnStart();
+
+        clock.Advance(TimeSpan.FromSeconds(30));
+        renderer.OnTick(terminal, []);
+        renderer.OnTestCompleted();
+        renderer.OnStart();
+        clock.Advance(TimeSpan.FromSeconds(29));
+        renderer.OnTick(terminal, []);
+        Assert.AreEqual(1, terminal.LineCount);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        renderer.OnTick(terminal, []);
+
+        const string expected = """
+            running... 0 completed, 0 failed, active modules: 0 | no tests completed yet
+            running... 0 completed, 0 failed, active modules: 0 | no tests completed yet
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
+    public void VisibleSilence_CompletedModules_RemainInCumulativeCounts()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        TestProgressState finished = CreateAssembly(clock, 3, 1, null);
+        TestProgressState active = CreateAssembly(clock, 2, 0, "ActiveTest");
+        var renderer = new SilenceDrivenHeartbeatRenderer(Silence30s, TimeSpan.Zero, clock.CreateStopwatch, () => [finished, active]);
+        renderer.OnStart();
+        renderer.OnTestCompleted();
+
+        clock.Advance(TimeSpan.FromSeconds(30));
+        renderer.OnTick(terminal, [null, active]);
+
+        const string expected = """
+            running... 5 completed, 1 failed, active modules: 1 | last completion: 30s ago | active: ActiveTest
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
+    public void VisibleSilence_ProgressMessage_PostponesHeartbeat()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        var renderer = new SilenceDrivenHeartbeatRenderer(Silence30s, TimeSpan.Zero, clock.CreateStopwatch);
+        using var progress = new TestProgressStateAwareTerminal(terminal, () => true, renderer);
+        renderer.OnStart();
+
+        clock.Advance(TimeSpan.FromSeconds(20));
+        progress.UpdateProgressMessage("run", "instance", "producer", "key", "Preparing tests");
+        clock.Advance(TimeSpan.FromSeconds(29));
+        renderer.OnTick(terminal, []);
+        Assert.AreEqual(1, terminal.LineCount);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        renderer.OnTick(terminal, []);
+
+        const string expected = """
+            Preparing tests
+            running... 0 completed, 0 failed, active modules: 0 | no tests completed yet
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
     }
 
     [TestMethod]
@@ -221,6 +396,8 @@ public sealed class SilenceDrivenHeartbeatRendererTests
         Assert.IsFalse(terminal.EraseProgressCalled);
         Assert.IsFalse(terminal.RenderProgressCalled);
     }
+
+    private static string Normalize(string value) => value.Replace("\r\n", "\n");
 
     private static TestProgressState CreateAssembly(FakeClock clock, int totalTests, int failedTests, string? activeTestName)
     {

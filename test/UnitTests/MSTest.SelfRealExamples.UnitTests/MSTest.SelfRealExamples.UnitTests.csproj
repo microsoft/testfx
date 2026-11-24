@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net9.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(SupportedNetFrameworks)</TargetFrameworks>
 
     <ProjectReferenceTFM>netstandard2.0</ProjectReferenceTFM>
-    <ProjectReferenceTFM Condition="'$(TargetFramework)'=='net9.0'">net9.0</ProjectReferenceTFM>
+    <ProjectReferenceTFM Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">$(TargetFramework)</ProjectReferenceTFM>
 
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
@@ -19,15 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" SetTargetFramework="TargetFramework=$(ProjectReferenceTFM)" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers\MSTest.Analyzers.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
   </ItemGroup>
 
   <ItemGroup>

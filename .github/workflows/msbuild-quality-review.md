@@ -22,10 +22,14 @@ imports:
 
 timeout-minutes: 30
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 network:
   allowed:
     - defaults
     - dotnet
+    - github.com
 ---
 
 <!--

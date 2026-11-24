@@ -64,9 +64,12 @@ public sealed class SynchronizedSingleSessionVSTestBridgedTestFrameworkTests
         assembly.Setup(a => a.Location).Returns(string.Empty);
         assembly.Setup(a => a.GetName()).Returns(new AssemblyName());
 
-        // Act & Assert
-        Assert.ThrowsExactly<InvalidOperationException>(
+        // Act
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
             () => SynchronizedSingleSessionVSTestBridgedTestFramework.GetAssemblyPath(assembly.Object));
+
+        // Assert
+        Assert.AreEqual($"Cannot determine the name of assembly '{assembly.Object}'.", exception.Message);
     }
 
     [TestMethod]

@@ -169,7 +169,12 @@
             },
             "treatDiscoveryWarningsAsErrors": {
               "type": "boolean",
-              "description": "When true, warnings raised during test discovery are treated as errors. Defaults to false."
+              "description": "When true, warnings raised during test discovery are treated as errors. Defaults to true."
+            },
+            "discoverReferencedAssemblyFixtureProviders": {
+              "type": "boolean",
+              "default": true,
+              "description": "Search referenced assemblies for AssemblyFixtureProvider attributes. Set to false to search only the test assembly itself; fixtures supplied only by markers on dependencies will not run."
             },
             "considerEmptyDataSourceAsInconclusive": {
               "type": "boolean",

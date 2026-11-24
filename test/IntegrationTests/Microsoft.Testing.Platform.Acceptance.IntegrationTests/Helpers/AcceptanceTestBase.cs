@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if USE_EXTERNAL_COMBINATORIAL
-using Combinatorial.MSTest;
-#else
-using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
-#endif
-
 using System.Text.Json;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -22,6 +18,8 @@ public abstract class AcceptanceTestBase
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
         MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
+        MicrosoftExtensionsHostingVersion = GetPackageVersion("Microsoft.Extensions.Hosting");
+        OpenTelemetryVersion = GetPackageVersion("OpenTelemetry");
 
         using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
         MSBuildSdkExtrasVersion = globalJson.RootElement
@@ -31,9 +29,13 @@ public abstract class AcceptanceTestBase
             ?? throw new InvalidOperationException("The repository global.json does not define a non-empty MSBuild.Sdk.Extras version.");
 
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
+        MSTestExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Extensions.Hosting.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
+        MicrosoftTestingExtensionsConfigurationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
+        MicrosoftTestingExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Hosting.");
         MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
+        MicrosoftTestingExtensionsOpenTelemetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.OpenTelemetry.");
         MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
         MicrosoftTestingExtensionsGitHubActionsReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.GitHubActionsReport.");
@@ -80,11 +82,17 @@ public abstract class AcceptanceTestBase
 
     public static string MSTestVersion { get; private set; }
 
+    public static string MSTestExtensionsHostingVersion { get; private set; }
+
     public static string MSTestSourceGenerationVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     public static string MicrosoftNETCoreUniversalWindowsPlatformVersion { get; private set; }
+
+    public static string MicrosoftExtensionsHostingVersion { get; private set; }
+
+    public static string OpenTelemetryVersion { get; private set; }
 
     public static string MSBuildSdkExtrasVersion { get; private set; }
 
@@ -110,7 +118,13 @@ public abstract class AcceptanceTestBase
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
+    public static string MicrosoftTestingExtensionsConfigurationVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsHostingVersion { get; private set; }
+
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsOpenTelemetryVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsCtrfReportVersion { get; private set; }
 
@@ -137,13 +151,15 @@ public abstract class AcceptanceTestBase
             // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
             // So we need to find a package that contains a number after the prefix.
             // Ideally, we would want to do a full validation to check this is a nuget version number, but that's too much work for now.
-            matches = [.. matches
+            matches = [
+                .. matches
                 // (full path, file name without prefix)
-                .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
+                .Select(path => (Path: path, FileName: Path.GetFileName(path)[packagePrefixName.Length..]))
                 // check if first character of file name without prefix is number
-                .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
+                .Where(tuple => int.TryParse(tuple.FileName[0].ToString(), CultureInfo.InvariantCulture, out _))
                 // take the full path
-                .Select(tuple => tuple.path)];
+                .Select(tuple => tuple.Path),
+            ];
         }
 
         if (matches.Length != 1)
@@ -153,6 +169,15 @@ public abstract class AcceptanceTestBase
 
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
+    }
+
+    private static string GetPackageVersion(string packageName)
+    {
+        string? version = typeof(Constants).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .SingleOrDefault(attribute => string.Equals(attribute.Key, packageName, StringComparison.Ordinal))?.Value;
+        return !string.IsNullOrEmpty(version)
+            ? version
+            : throw new InvalidOperationException($"The test infrastructure does not define an evaluated version for '{packageName}'.");
     }
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
@@ -256,10 +281,30 @@ public abstract class AcceptanceTestBase
             cancellationToken);
     }
 
+    internal static void ConfigureDotnetSdkEnvironment(
+        IDictionary<string, string?> environment, string dotnetPath, string sdkVersion)
+    {
+        string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+            ?? throw new ArgumentException("The dotnet executable must include its installation directory.", nameof(dotnetPath));
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk", sdkVersion);
+
+        // dotnet test exports its own SDK paths to the test host. A nested CLI's global.json
+        // does not override those paths, so its targets and tasks must match the selected SDK.
+        environment["MSBuildSDKsPath"] = Path.Combine(sdkDirectory, "Sdks");
+        environment["MSBuildExtensionsPath"] = sdkDirectory;
+        environment["DOTNET_ROOT"] = dotnetRoot;
+        environment["DOTNET_ROOT_X64"] = dotnetRoot;
+        environment["DOTNET_INSTALL_DIR"] = dotnetRoot;
+        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+        environment["MSBUILDUSESERVER"] = "0";
+    }
+
     internal static async Task<BoundedCommandLineResult> RunWindowsApplicationModelCommandAsync(
         string command,
         string? workingDirectory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IDictionary<string, string?>? environmentVariables = null,
+        bool cleanEnvironment = false)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(WindowsApplicationModelExecutionTimeout);
@@ -269,7 +314,9 @@ public abstract class AcceptanceTestBase
         {
             int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
                 command,
+                environmentVariables,
                 workingDirectory: workingDirectory,
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: cleanEnvironment,
                 cancellationToken: timeout.Token);
             return new(exitCode, commandLine.StandardOutput, commandLine.ErrorOutput);
         }
@@ -311,9 +358,9 @@ public abstract class AcceptanceTestBase
         using (var stringReader = new StringReader(commandLine.StandardOutput))
         {
             string? line;
-            while ((line = await stringReader.ReadLineAsync(cancellationToken)) != null)
+            while ((line = await stringReader.ReadLineAsync(cancellationToken)) is not null)
             {
-                if (path != null)
+                if (path is not null)
                 {
                     throw new InvalidOperationException(
                         $"vswhere.exe returned more than one path while locating {requiredCapability}:{Environment.NewLine}{commandLine.StandardOutput}");

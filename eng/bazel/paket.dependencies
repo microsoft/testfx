@@ -1,0 +1,60 @@
+source https://api.nuget.org/v3/index.json
+framework: >= net8.0
+storage: none
+strategy: min
+
+nuget Microsoft.Testing.Platform == 2.5.2
+nuget Microsoft.Testing.Extensions.TrxReport == 2.5.2
+nuget Microsoft.Testing.Extensions.TrxReport.Abstractions == 2.5.2
+nuget MSTest.TestFramework == 4.5.2
+nuget MSTest.TestAdapter == 4.5.2
+
+group source
+    source https://api.nuget.org/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+    lowest_matching: true
+
+    nuget Microsoft.ApplicationInsights == 2.23.0
+    nuget Microsoft.Build.Framework == 17.11.48
+    nuget Microsoft.Build.Utilities.Core == 17.11.48
+    nuget Microsoft.TestPlatform.ObjectModel == 18.10.1
+    nuget Microsoft.TestPlatform.Filter.Source == 18.10.1
+    nuget AwesomeAssertions == 9.6.0
+    nuget Moq == 4.20.72
+    nuget Microsoft.Diagnostics.NETCore.Client == 0.2.607501
+    // The composed AI/resilience/hosting graph requires the 10.0.13 abstractions.
+    nuget System.Diagnostics.DiagnosticSource == 10.0.13
+    nuget Microsoft.Extensions.Configuration.Abstractions == 10.0.13
+    nuget Microsoft.Extensions.DependencyInjection.Abstractions == 10.0.13
+    nuget Microsoft.Extensions.Hosting.Abstractions == 10.0.13
+    nuget Microsoft.Extensions.Logging == 10.0.13
+    nuget Microsoft.Extensions.FileSystemGlobbing == 9.0.4
+    nuget System.Text.Json == 10.0.12
+    nuget OpenTelemetry == 1.19.1
+    nuget OpenTelemetry.Exporter.OpenTelemetryProtocol == 1.19.1
+    nuget Microsoft.Extensions.AI == 9.10.0
+    nuget Microsoft.Extensions.AI.OpenAI == 9.10.0-preview.1.25513.3
+    nuget Azure.AI.OpenAI == 2.1.0
+    nuget Azure.Core == 1.64.0
+    nuget Microsoft.Extensions.Resilience == 10.11.0
+
+group generator
+    source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0
+    storage: none
+    strategy: min
+
+    nuget Microsoft.CodeAnalysis.CSharp == 4.8.0
+    nuget Microsoft.CodeAnalysis.Analyzers == 5.6.0
+
+group analyzers
+    source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0
+    storage: none
+    strategy: min
+
+    nuget Microsoft.CodeAnalysis.Common == 4.14.0
+    nuget Microsoft.CodeAnalysis.CSharp.Workspaces == 4.14.0
+    nuget Microsoft.CodeAnalysis.Analyzers == 5.6.0

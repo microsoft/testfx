@@ -1,0 +1,131 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.IPC.Models;
+
+namespace Microsoft.Testing.Platform.IPC.Serializers;
+
+/*
+    |---FieldCount---| 2 bytes
+
+    |---ExecutionId Id---| (2 bytes)
+    |---ExecutionId Size---| (4 bytes)
+    |---ExecutionId Value---| (n bytes)
+
+    |---InstanceId Id---| (2 bytes)
+    |---InstanceId Size---| (4 bytes)
+    |---InstanceId Value---| (n bytes)
+
+    |---TestInProgressMessageList Id---| (2 bytes)
+    |---TestInProgressMessageList Size---| (4 bytes)
+    |---TestInProgressMessageList Value---| (n bytes)
+        |---TestInProgressMessageList Length---| (4 bytes)
+
+        |---TestInProgressMessageList[0] FieldCount---| 2 bytes
+
+        |---TestInProgressMessageList[0].Uid Id---| (2 bytes)
+        |---TestInProgressMessageList[0].Uid Size---| (4 bytes)
+        |---TestInProgressMessageList[0].Uid Value---| (n bytes)
+
+        |---TestInProgressMessageList[0].DisplayName Id---| (2 bytes)
+        |---TestInProgressMessageList[0].DisplayName Size---| (4 bytes)
+        |---TestInProgressMessageList[0].DisplayName Value---| (n bytes)
+*/
+
+internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<TestInProgressMessages>, INamedPipeSerializer
+{
+    public override int Id => TestInProgressMessagesFieldsId.MessagesSerializerId;
+
+    protected override TestInProgressMessages DeserializeCore(Stream stream)
+    {
+        TestInProgressMessagesFields fields = ReadFields(
+            stream,
+            new TestInProgressMessagesFields { InProgressMessages = [] },
+            static (stream, fieldId, fieldSize, fields) =>
+            {
+                if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref fields.ExecutionId, ref fields.InstanceId))
+                {
+                    return fields;
+                }
+
+                if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
+                {
+                    fields.InProgressMessages = ReadFieldPayload(stream, fieldSize, ReadInProgressMessagesPayload);
+                    return fields;
+                }
+
+                return null;
+            });
+
+        return new(fields.ExecutionId, fields.InstanceId, fields.InProgressMessages);
+    }
+
+    private static TestInProgressMessage[] ReadInProgressMessagesPayload(Stream stream)
+    {
+        int length = ReadCollectionLength(stream, sizeof(ushort));
+        var inProgressMessages = new TestInProgressMessage[length];
+        for (int i = 0; i < length; i++)
+        {
+            TestInProgressFields fields = ReadFields(stream, default(TestInProgressFields), static (stream, fieldId, fieldSize, fields) =>
+            {
+                switch (fieldId)
+                {
+                    case TestInProgressMessageFieldsId.Uid:
+                        fields.Uid = ReadStringValue(stream, fieldSize);
+                        return fields;
+
+                    case TestInProgressMessageFieldsId.DisplayName:
+                        fields.DisplayName = ReadStringValue(stream, fieldSize);
+                        return fields;
+
+                    default:
+                        return null;
+                }
+            });
+
+            inProgressMessages[i] = new TestInProgressMessage(fields.Uid, fields.DisplayName);
+        }
+
+        return inProgressMessages;
+    }
+
+    protected override void SerializeCore(TestInProgressMessages objectToSerialize, Stream stream)
+    {
+        WriteExecutionScopedHeader(
+            stream,
+            objectToSerialize.ExecutionId,
+            objectToSerialize.InstanceId,
+            (ushort)(IsNullOrEmpty(objectToSerialize.InProgressMessages) ? 0 : 1));
+
+        WriteInProgressMessagesPayload(stream, objectToSerialize.InProgressMessages);
+    }
+
+    private static void WriteInProgressMessagesPayload(Stream stream, TestInProgressMessage[]? inProgressMessageList)
+        => WriteListPayload(stream, TestInProgressMessagesFieldsId.TestInProgressMessageList, inProgressMessageList, static (s, inProgressMessage) =>
+        {
+            WriteUShort(s, GetFieldCount(inProgressMessage));
+
+            WriteField(s, TestInProgressMessageFieldsId.Uid, inProgressMessage.Uid);
+            WriteField(s, TestInProgressMessageFieldsId.DisplayName, inProgressMessage.DisplayName);
+        });
+
+    private static ushort GetFieldCount(TestInProgressMessage inProgressMessage) =>
+        (ushort)((inProgressMessage.Uid is null ? 0 : 1) +
+        (inProgressMessage.DisplayName is null ? 0 : 1));
+
+    private struct TestInProgressFields
+    {
+        public string? Uid { get; set; }
+
+        public string? DisplayName { get; set; }
+    }
+
+    private struct TestInProgressMessagesFields
+    {
+        public string? ExecutionId;
+
+        public string? InstanceId;
+
+        public TestInProgressMessage[] InProgressMessages { get; set; }
+    }
+}

@@ -377,7 +377,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
                 VerifyCS.Diagnostic().WithLocation(2).WithArguments("AssemblyInitialize2"),
                 VerifyCS.Diagnostic().WithLocation(3).WithArguments("AssemblyInitialize3"),
                 VerifyCS.Diagnostic().WithLocation(4).WithArguments("AssemblyInitialize4"),
-                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyInitialize5")
+                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyInitialize5"),
             ],
             fixedCode);
     }

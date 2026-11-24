@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
@@ -21,10 +22,14 @@ public partial class UnitTestApp : Application
     /// </summary>
     public UnitTestApp() => InitializeComponent();
 
+    internal static Window GetWindow()
+        => ((UnitTestApp)Current)._window ?? throw new InvalidOperationException("The test window has not been initialized.");
+
     /// <summary>
     /// Invoked when the application is launched.
     /// </summary>
     /// <param name="args">Details about the launch request and process.</param>
+    [SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "The continuation must resume on the WinUI dispatcher.")]
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         _window = new UnitTestAppWindow();

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile;TPEXP</NoWarn>
 
@@ -20,10 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CtrfReport\Microsoft.Testing.Extensions.CtrfReport.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.CtrfReport\Microsoft.Testing.Extensions.CtrfReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\TestFramework\TestFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,5 +32,5 @@
   </ItemGroup>
 
   <!-- Import the capabilities for the Microsoft.Testing.Platform -->
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
+  <Import Project="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
 </Project>

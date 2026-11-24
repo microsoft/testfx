@@ -1,0 +1,206 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
+
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
+
+[Embedded]
+internal sealed class TerminalTestReporterOptions
+{
+    /// <summary>
+    /// Gets the set of test outcomes whose per-test terminal block (result line, informative details, stack
+    /// trace, expected/actual, and captured stdout/stderr) is rendered. Resolved once, at construction time, from
+    /// <c>--show-test-results</c> (when passed) or from <c>--output</c> otherwise.
+    /// </summary>
+    public TestResultVisibility ShowTestResults { get; init; } = TestResultVisibility.All;
+
+    /// <summary>
+    /// Gets minimum amount of tests to run.
+    /// </summary>
+    public int MinimumExpectedTests { get; init; }
+
+    /// <summary>
+    /// Gets the policy that controls whether an all-skipped run is treated as a "zero tests ran" failure.
+    /// </summary>
+    public CommandLine.ZeroTestsPolicy ZeroTestsPolicy { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether an otherwise-successful zero-test run is expected.
+    /// </summary>
+    public bool AllowZeroTests { get; init; }
+
+    /// <summary>
+    /// Gets a callback indicating whether the framework session failed independently of individual test results.
+    /// </summary>
+    public Func<bool> HasTestSessionFailure { get; init; } = static () => false;
+
+    /// <summary>
+    /// Gets a value indicating whether we should write progress periodically to screen. Cursor-capable terminals
+    /// update in place; non-cursor terminals emit bounded progress lines after visible-output silence.
+    /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean
+    /// and then cache that value.
+    /// </summary>
+    public Func<bool?> ShowProgress { get; init; } = () => true;
+
+    /// <summary>
+    /// Gets a value indicating whether the active tests should be visible when the progress is shown.
+    /// </summary>
+    public bool ShowActiveTests { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether per-assembly summary lines (with the compact pass/fail/skip counts) should be
+    /// rendered. Used by the <c>dotnet test</c> orchestrator which runs multiple assemblies; the in-process host
+    /// leaves this off.
+    /// </summary>
+    public bool ShowAssembly { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the orchestrator identifies output by module in a shared log.
+    /// </summary>
+    public bool ContextualModuleOutput { get; init; }
+
+    /// <summary>
+    /// Gets an optional presentation-only module name selector. The original assembly path remains the run identity.
+    /// </summary>
+    public Func<string, string?, string>? ModuleDisplayName { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether, when <see cref="ShowAssembly"/> is set, the per-assembly summary line is
+    /// printed mid-stream as each assembly completes.
+    /// </summary>
+    public bool ShowAssemblyStartAndComplete { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating the ANSI mode.
+    /// </summary>
+    public AnsiMode AnsiMode { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating when to show standard output.
+    /// </summary>
+    public OutputShowMode ShowStdout { get; init; } = OutputShowMode.Failed;
+
+    /// <summary>
+    /// Gets a value indicating when to show standard error output.
+    /// </summary>
+    public OutputShowMode ShowStderr { get; init; } = OutputShowMode.Failed;
+
+    /// <summary>
+    /// Gets the visible-output silence threshold for the non-cursor heartbeat renderer (E1). Hidden test
+    /// completions do not reset this interval. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
+    /// </summary>
+    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Gets the per-test threshold for the non-cursor heartbeat renderer (E2). When a single test exceeds this
+    /// duration, a single "[slow]" line is emitted (with exponential backoff). <see cref="TimeSpan.Zero"/>
+    /// disables slow-test surfacing.
+    /// </summary>
+    public TimeSpan SlowTestThreshold { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Gets the number of slowest tests to list in the run summary. When greater than zero, a "Slowest tests"
+    /// section ranking the longest-running tests (by their reported execution duration) is appended to the summary.
+    /// Zero (the default) disables the section.
+    /// </summary>
+    public int SlowestTestsCount { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether tests that failed at least once but eventually passed after a retry are
+    /// reported (the "flaky: N" summary line and the "Flaky tests" section). On by default; turned off by
+    /// <c>--show-flaky-tests off</c>. Has no effect on a run where nothing was retried.
+    /// </summary>
+    public bool ShowFlakyTests { get; init; } = true;
+
+    /// <summary>
+    /// Gets a value indicating whether the run-summary verdict and its counts are rendered. Turned off for the
+    /// <em>retry</em> attempts of the <c>--retry-failed-tests</c> orchestrator, meaning the second and later ones:
+    /// those re-run only the previously-failed tests, so their summary reports a shrinking, filtered subset
+    /// ("total: 1" for a four-test suite) that reads as the run's verdict but is not. The first attempt executes
+    /// the whole suite, so its summary is accurate and is kept. The orchestrator then prints one reconciled retry
+    /// summary at the end. Everything else — produced artifacts, the slowest-tests section and the error recaps —
+    /// is still rendered for every attempt, since none of it is restated by the orchestrator.
+    /// </summary>
+    public bool ShowRunSummary { get; init; } = true;
+}
+
+[Embedded]
+internal enum OutputShowMode
+{
+    /// <summary>
+    /// Always show the output.
+    /// </summary>
+    All,
+
+    /// <summary>
+    /// Show the output only for failed tests.
+    /// </summary>
+    Failed,
+
+    /// <summary>
+    /// Never show the output.
+    /// </summary>
+    None,
+}
+
+/// <summary>
+/// Which test outcomes get a rendered per-test terminal block. Resolved once from <c>--show-test-results</c> or
+/// <c>--output</c> into <see cref="TerminalTestReporterOptions.ShowTestResults"/>.
+/// </summary>
+[Embedded]
+[Flags]
+internal enum TestResultVisibility
+{
+    /// <summary>
+    /// No test outcome is rendered.
+    /// </summary>
+    None = 0,
+
+    /// <summary>
+    /// Tests that passed.
+    /// </summary>
+    Passed = 1,
+
+    /// <summary>
+    /// Tests that did not pass: <see cref="TestOutcome.Fail"/>, <see cref="TestOutcome.Error"/>,
+    /// <see cref="TestOutcome.Timeout"/>, and <see cref="TestOutcome.Canceled"/>.
+    /// </summary>
+    Failed = 1 << 1,
+
+    /// <summary>
+    /// Tests that were skipped.
+    /// </summary>
+    Skipped = 1 << 2,
+
+    /// <summary>
+    /// Every test outcome.
+    /// </summary>
+    All = Passed | Failed | Skipped,
+}
+
+[Embedded]
+internal enum AnsiMode
+{
+    /// <summary>
+    /// Disable ANSI escape codes.
+    /// </summary>
+    NoAnsi,
+
+    /// <summary>
+    /// Use simplified ANSI renderer, which colors output, but does not move cursor.
+    /// This is used in compatible CI environments.
+    /// </summary>
+    SimpleAnsi,
+
+    /// <summary>
+    /// Enable ANSI escape codes, including cursor movement, when the capabilities of the console allow it.
+    /// </summary>
+    AnsiIfPossible,
+
+    /// <summary>
+    /// Force ANSI escape codes, regardless of the capabilities of the console.
+    /// This is needed only for testing.
+    /// </summary>
+    ForceAnsi,
+}

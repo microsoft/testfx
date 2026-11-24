@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -33,8 +33,8 @@ public sealed class NopPlatformOutputDeviceTests
         // We can't assert equality against this test assembly's PlatformVersion.Version because it
         // is an [Embedded] per-assembly constant whose value differs from the Platform assembly's,
         // so we only check the version is present (matching this test's "NonEmpty" intent).
-        Assert.IsFalse(string.IsNullOrWhiteSpace(device.Version));
-        Assert.IsFalse(string.IsNullOrWhiteSpace(device.Description));
+        Assert.IsNotNullOrWhiteSpace(device.Version);
+        Assert.IsNotNullOrWhiteSpace(device.Description);
     }
 
     [TestMethod]

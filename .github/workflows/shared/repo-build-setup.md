@@ -12,12 +12,15 @@
 
 description: "Repository-specific build setup for add-tests workflow"
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 steps:
   - name: Build
     run: ./build.sh
 
   - name: Put dotnet on the path
-    run: echo "$PWD/.dotnet" >> $GITHUB_PATH
+    run: echo "$PWD/.dotnet" >> "$GITHUB_PATH"
 ---
 
 # Repository Build Setup
@@ -28,6 +31,7 @@ This file contains the repo-specific build configuration for the `/add-tests` wo
 
 - **Build**: Runs the Arcade SDK build script (`build.sh`) to compile all managed code
 - **PATH**: Adds the locally-installed .NET SDK to `$PATH` so the agent can invoke `dotnet` directly
+- **Telemetry**: Disables nonessential .NET, MTP, and MSTest telemetry in builds and agent-run tests
 
 ## Customization
 

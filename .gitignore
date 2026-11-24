@@ -88,6 +88,10 @@ ehthumbs.db
 /.dotnet/
 /TestAssets/
 
+# Bazel output symlinks/junctions and local overrides
+/bazel-*/
+/.bazelrc.local
+
 # Lean build artifacts
 .lake/
 
@@ -145,8 +149,8 @@ project.fragment.lock.json
 # ===========================
 # Update template files
 # ===========================
-/src/Package/MSTest.Sdk/Sdk/Sdk.props
-/src/Package/MSTest.Sdk/Sdk/Runner/Runner.targets
+/src/MSTest/MSTest.Sdk/Sdk/Sdk.props
+/src/MSTest/MSTest.Sdk/Sdk/Runner/Runner.targets
 
 # Playground project (use force add if a change is really worth it)
 /samples/Playground/

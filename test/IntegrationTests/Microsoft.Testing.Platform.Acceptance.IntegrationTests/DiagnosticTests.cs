@@ -1,16 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// Suppress CS0618 for the entire file: we intentionally exercise the deprecated legacy
-// diagnostic environment variable constants (TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX,
-// TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE) to validate back-compat behavior.
-#pragma warning disable CS0618 // Type or member is obsolete
-
 using Microsoft.Testing.Platform.Configurations;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixture>
 {
     private const string AssetName = "DiagnosticTest";
@@ -158,40 +154,15 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Diag_EnableWithEnvironmentVariables_CustomPrefix_Succeeded(string tfm)
+    public async Task Diag_RemovedFilePrefixEnvironmentVariable_IsIgnored(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"MyPrefix_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string?>
-            {
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX, "MyPrefix" },
-            },
-            cancellationToken: TestContext.CancellationToken);
-
-        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
-        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX}' instead.");
-    }
-
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    [TestMethod]
-    public async Task Diag_EnableWithEnvironmentVariables_CustomPrefix_NewName_Succeeded(string tfm)
-    {
-        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"MyPrefix_.*.diag").Replace(@"\", @"\\");
-
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            null,
-            new Dictionary<string, string?>
-            {
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX, "MyPrefix" },
-            },
+            CreateDiagnosticEnvironment(removedPrefix: "MyPrefix"),
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
@@ -200,7 +171,24 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Diag_EnableWithEnvironmentVariables_CustomPrefix_NewNameTakesPrecedence(string tfm)
+    public async Task Diag_FilePrefixEnvironmentVariable_CustomizesReport(string tfm)
+    {
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPathPattern = Path.Combine(diagPath, @"MyPrefix_.*.diag").Replace(@"\", @"\\");
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            null,
+            CreateDiagnosticEnvironment(prefix: "MyPrefix"),
+            cancellationToken: TestContext.CancellationToken);
+
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+        testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_SupportedFilePrefixEnvironmentVariable_IgnoresRemovedAlias(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"NewPrefix_.*.diag").Replace(@"\", @"\\");
@@ -208,23 +196,17 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string?>
-            {
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX, "OldPrefix" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX, "NewPrefix" },
-            },
+            CreateDiagnosticEnvironment(prefix: "NewPrefix", removedPrefix: "OldPrefix"),
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
 
-        // Setting the legacy env var should still warn even when the new one is also set and wins.
-        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX}' instead.");
+        testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_Succeeded(string tfm)
+    public async Task Diag_RemovedSynchronousWriteEnvironmentVariable_IsIgnored(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
@@ -232,20 +214,16 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string?>
-            {
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE, "1" },
-            },
+            CreateDiagnosticEnvironment(removedSynchronousWrite: "1"),
             cancellationToken: TestContext.CancellationToken);
 
-        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
-        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE}' instead.");
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+        testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_NewName_Succeeded(string tfm)
+    public async Task Diag_SynchronousWriteEnvironmentVariable_EnablesSynchronousFlush(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
@@ -253,11 +231,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string?>
-            {
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE, "1" },
-            },
+            CreateDiagnosticEnvironment(synchronousWrite: "1"),
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
@@ -266,29 +240,39 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_NewNameTakesPrecedence(string tfm)
+    public async Task Diag_SupportedSynchronousWriteEnvironmentVariable_IgnoresRemovedAlias(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        // Legacy env var would request async flush ("0"), the new env var requests sync flush ("1").
-        // The new env var must win => the diagnostic report should be written with sync flush.
+        // The supported name requests sync flush; the removed name must have no effect.
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string?>
-            {
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE, "0" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE, "1" },
-            },
+            CreateDiagnosticEnvironment(synchronousWrite: "1", removedSynchronousWrite: "0"),
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
 
-        // Setting the legacy env var should still warn even when the new one is also set and wins.
-        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE}' instead.");
+        testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_SupportedSynchronousWriteEnvironmentVariable_DisablesCliSynchronousFlush(string tfm)
+    {
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--diagnostic --diagnostic-synchronous-write",
+            CreateDiagnosticEnvironment(synchronousWrite: "0", removedSynchronousWrite: "1"),
+            cancellationToken: TestContext.CancellationToken);
+
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+        testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -311,6 +295,68 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputContains("Diagnostic file");
     }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_WhenDisabled_ExtensionFactoryReceivesNoInformation(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+        testHostResult.AssertOutputContains("Diagnostic service: disabled");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_WhenResultsDirectoryIsConfigured_ExtensionFactoryReceivesRelocatedInformation(string tfm)
+    {
+        string resultsDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
+        string configFile = Path.Combine(AssetFixture.TargetAssetPath, $"{Guid.NewGuid():N}.testconfig.json");
+        File.WriteAllText(
+            configFile,
+            $$"""
+            {
+              "platformOptions": {
+                "resultDirectory": {{System.Text.Json.JsonSerializer.Serialize(resultsDirectory)}}
+              }
+            }
+            """);
+
+        try
+        {
+            string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(resultsDirectory, AssetName, tfm);
+            var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                $"--diagnostic --config-file \"{configFile}\"",
+                cancellationToken: TestContext.CancellationToken);
+
+            string diagnosticPath = await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+            testHostResult.AssertOutputContains($"Diagnostic service: {diagnosticPath}|Trace|False");
+        }
+        finally
+        {
+            File.Delete(configFile);
+        }
+    }
+
+    private static Dictionary<string, string?> CreateDiagnosticEnvironment(
+        string? prefix = null,
+        string? synchronousWrite = null,
+        string? removedPrefix = null,
+        string? removedSynchronousWrite = null)
+        => new()
+        {
+            [EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC] = "1",
+            [EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY] = "Trace",
+            [EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY] = null,
+            [EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX] = prefix,
+            [EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE] = synchronousWrite,
+            ["TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX"] = removedPrefix,
+            ["TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE"] = removedSynchronousWrite,
+        };
 
     private static async Task<string> AssertDiagnosticReportWasGeneratedAsync(TestHostResult testHostResult, string diagPathPattern, string level = "Trace", string flushType = "async")
     {
@@ -362,9 +408,12 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 </Project>
 
 #file Program.cs
+#pragma warning disable TPEXP
+
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -373,15 +422,28 @@ public class Program
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
-            sp => new TestFrameworkCapabilities(),
-            (_,__) => new DummyTestFramework());
+            serviceProvider => new DiagnosticTestFrameworkCapabilities(serviceProvider.GetDiagnosticLoggingInformation()),
+            (capabilities, _) => new DummyTestFramework(((DiagnosticTestFrameworkCapabilities)capabilities).DiagnosticLoggingInformation));
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
+public sealed class DiagnosticTestFrameworkCapabilities(
+    IDiagnosticLoggingInformation? diagnosticLoggingInformation) : ITestFrameworkCapabilities
+{
+    public IDiagnosticLoggingInformation? DiagnosticLoggingInformation { get; } = diagnosticLoggingInformation;
+
+    public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => [];
+}
+
 public class DummyTestFramework : ITestFramework
 {
+    public DummyTestFramework(IDiagnosticLoggingInformation? diagnosticLoggingInformation)
+        => Console.WriteLine(diagnosticLoggingInformation is null
+            ? "Diagnostic service: disabled"
+            : $"Diagnostic service: {diagnosticLoggingInformation.LogFile.FullName}|{diagnosticLoggingInformation.LogLevel}|{diagnosticLoggingInformation.SynchronousWrite}");
+
     public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";

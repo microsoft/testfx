@@ -48,7 +48,7 @@ public sealed class TcpMessageHandlerTests
         using TcpClient tcpClient = new();
         using var handler = new TcpMessageHandler(
             tcpClient,
-            new ConnectionResetStream(connectionReset),
+            new ThrowingStream(connectionReset),
             new MemoryStream(),
             Mock.Of<IMessageFormatter>(),
             logger.Object);
@@ -62,6 +62,22 @@ public sealed class TcpMessageHandlerTests
         logger.Verify(
             x => x.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter),
             Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ReadAsync_IOExceptionWrappingConnectionReset_ReturnsNull()
+    {
+        SocketException connectionReset = new((int)SocketError.ConnectionReset);
+        using TcpClient tcpClient = new();
+        using var handler = new TcpMessageHandler(
+            tcpClient,
+            new ThrowingStream(new IOException("Connection reset.", connectionReset)),
+            new MemoryStream(),
+            Mock.Of<IMessageFormatter>());
+
+        RpcMessage? message = await handler.ReadAsync(TestContext.CancellationToken);
+
+        Assert.IsNull(message);
     }
 
     /// <summary>
@@ -144,6 +160,24 @@ public sealed class TcpMessageHandlerTests
 
         Assert.AreEqual("testing/first", first.Method);
         Assert.AreEqual("testing/second", second.Method);
+    }
+
+    [TestMethod]
+    public async Task ReadAsync_BareLineFeedHeaderTerminator_IsTolerated()
+    {
+        using ConnectedHandlers handlers = await ConnectedHandlers.CreateAsync().ConfigureAwait(false);
+
+        string body = BuildNotificationJson("testing/bare-lf");
+        byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
+        byte[] header = Encoding.ASCII.GetBytes(
+            $"Content-Length: {bodyBytes.Length}\nContent-Type: application/testingplatform\n\n");
+
+        await handlers.WriterStream.WriteAsync(header, 0, header.Length, TestContext.CancellationToken).ConfigureAwait(false);
+        await handlers.WriterStream.WriteAsync(bodyBytes, 0, bodyBytes.Length, TestContext.CancellationToken).ConfigureAwait(false);
+
+        var message = (NotificationMessage)(await ReadWithTimeoutAsync(handlers).ConfigureAwait(false))!;
+
+        Assert.AreEqual("testing/bare-lf", message.Method);
     }
 
     /// <summary>
@@ -318,7 +352,7 @@ public sealed class TcpMessageHandlerTests
         return await readTask.ConfigureAwait(false);
     }
 
-    private sealed class ConnectionResetStream(SocketException exception) : MemoryStream
+    private sealed class ThrowingStream(Exception exception) : MemoryStream
     {
         public override int Read(byte[] buffer, int offset, int count) => throw exception;
 

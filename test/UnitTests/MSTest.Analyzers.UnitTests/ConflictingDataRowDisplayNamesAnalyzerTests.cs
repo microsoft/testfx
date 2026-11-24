@@ -1,0 +1,265 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
+    MSTest.Analyzers.ConflictingDataRowDisplayNamesAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+
+namespace MSTest.Analyzers.Test;
+
+[TestClass]
+public sealed class ConflictingDataRowDisplayNamesAnalyzerTests
+{
+    [TestMethod]
+    [DataRow("\"full\"", "\"label\"", true)]
+    [DataRow("FullName", "ArgumentName", true)]
+    [DataRow("nameof(MyTestClass)", "\"la\" + \"bel\"", true)]
+    [DataRow("null", "\"label\"", false)]
+    [DataRow("\"\"", "\"label\"", false)]
+    [DataRow("\" \\t\"", "\"label\"", false)]
+    [DataRow("\"full\"", "null", false)]
+    [DataRow("\"full\"", "\"\"", false)]
+    [DataRow("\"full\"", "\" \\t\"", false)]
+    public async Task Attribute_ReportsOnlyEffectiveConflicts(string fullName, string argumentName, bool reportsDiagnostic)
+    {
+        string attribute = $"DataRow(1, DisplayName = {fullName}, ArgumentsDisplayName = {argumentName})";
+        if (reportsDiagnostic)
+        {
+            attribute = "{|#0:" + attribute + "|}";
+        }
+
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private const string FullName = "full";
+                private const string ArgumentName = "label";
+
+                [TestMethod]
+                [{{attribute}}]
+                public void Test(int value) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, reportsDiagnostic ? [VerifyCS.Diagnostic().WithLocation(0)] : []);
+    }
+
+    [TestMethod]
+    [DataRow("DataRowAttribute", "\"full\"", "\"label\"", true)]
+    [DataRow("DataRowAttribute", "null", "\"label\"", false)]
+    [DataRow("DataRowAttribute", "\"\"", "\"label\"", false)]
+    [DataRow("DataRowAttribute", "\" \\t\"", "\"label\"", false)]
+    [DataRow("DataRowAttribute", "\"full\"", "null", false)]
+    [DataRow("DataRowAttribute", "\"full\"", "\"\"", false)]
+    [DataRow("DataRowAttribute", "\"full\"", "\" \\t\"", false)]
+    [DataRow("TestDataRow<int>", "\"full\"", "\"label\"", true)]
+    [DataRow("TestDataRow<int>", "\"\"", "\"label\"", true)]
+    [DataRow("TestDataRow<int>", "\" \\t\"", "\"label\"", true)]
+    [DataRow("TestDataRow<int>", "null", "\"label\"", false)]
+    [DataRow("TestDataRow<int>", "\"full\"", "null", false)]
+    [DataRow("TestDataRow<int>", "\"full\"", "\"\"", false)]
+    [DataRow("TestDataRow<int>", "\"full\"", "\" \\t\"", false)]
+    public async Task ObjectInitializer_ReportsOnlyEffectiveConflicts(string typeName, string fullName, string argumentName, bool reportsDiagnostic)
+    {
+        string creation = $"new {typeName}(1) {{ DisplayName = {fullName}, ArgumentsDisplayName = {argumentName} }}";
+        if (reportsDiagnostic)
+        {
+            creation = "{|#0:" + creation + "|}";
+        }
+
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class MyClass
+            {
+                public object Create() => {{creation}};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, reportsDiagnostic ? [VerifyCS.Diagnostic().WithLocation(0)] : []);
+    }
+
+    [TestMethod]
+    public async Task ImplicitCreationAndReversedPropertyOrder_ReportDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class MyClass
+            {
+                public TestDataRow<int> Create()
+                    => {|#0:new(1) { ArgumentsDisplayName = "label", DisplayName = "full" }|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic().WithLocation(0));
+    }
+
+    [TestMethod]
+    public async Task MissingPropertiesAndSeparateInstances_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class MyClass
+            {
+                private object[] rows =
+                {
+                    new DataRowAttribute(1),
+                    new DataRowAttribute(2) { DisplayName = "full" },
+                    new DataRowAttribute(3) { ArgumentsDisplayName = "label" },
+                    new TestDataRow<int>(1),
+                    new TestDataRow<int>(2) { DisplayName = "full" },
+                    new TestDataRow<int>(3) { ArgumentsDisplayName = "label" },
+                };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ValuesNotKnownAtCompileTime_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class MyClass
+            {
+                public object[] Create(string fullName, string label) => new object[]
+                {
+                    new DataRowAttribute(1) { DisplayName = fullName, ArgumentsDisplayName = "label" },
+                    new DataRowAttribute(2) { DisplayName = "full", ArgumentsDisplayName = label },
+                    new TestDataRow<int>(1) { DisplayName = fullName, ArgumentsDisplayName = "label" },
+                    new TestDataRow<int>(2) { DisplayName = "full", ArgumentsDisplayName = label },
+                };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task CustomDataRowAttributeAndUnrelatedTypes_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomDataRowAttribute : Attribute, ITestDataSource
+            {
+                public string DisplayName { get; set; }
+                public string ArgumentsDisplayName { get; set; }
+                public IEnumerable<object[]> GetData(MethodInfo method) => new[] { new object[] { 1 } };
+                public string GetDisplayName(MethodInfo method, object[] data)
+                    => DisplayName + ArgumentsDisplayName;
+            }
+            public class OtherRow
+            {
+                public string DisplayName { get; set; }
+                public string ArgumentsDisplayName { get; set; }
+            }
+            public class MyClass
+            {
+                [CustomDataRow(DisplayName = "full", ArgumentsDisplayName = "label")]
+                public void Test() { }
+                public object[] Create() => new object[]
+                {
+                    new CustomDataRowAttribute { DisplayName = "full", ArgumentsDisplayName = "label" },
+                    new OtherRow { DisplayName = "full", ArgumentsDisplayName = "label" },
+                };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task DerivedDataRowAttributeWithDisplayNameOverride_NoDiagnostic()
+    {
+        string code = """
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomDataRowAttribute : DataRowAttribute
+            {
+                public override string GetDisplayName(MethodInfo method, object[] data)
+                    => DisplayName + ArgumentsDisplayName;
+            }
+            public class MyClass
+            {
+                [CustomDataRow(DisplayName = "full", ArgumentsDisplayName = "label")]
+                public void Test() { }
+                public object Create()
+                    => new CustomDataRowAttribute { DisplayName = "full", ArgumentsDisplayName = "label" };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task LegacyDerivedDataRowAttribute_NoDiagnostic()
+    {
+        string code = """
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomDataRowAttribute : DataRowAttribute
+            {
+                // Argument labels are not part of v4 DataRowAttribute; this custom attribute owns the property.
+                public string ArgumentsDisplayName { get; set; }
+                public override string GetDisplayName(MethodInfo method, object[] data)
+                    => DisplayName + ArgumentsDisplayName;
+            }
+            public class MyClass
+            {
+                [CustomDataRow(DisplayName = "full", ArgumentsDisplayName = "label")]
+                public void Test() { }
+                public object Create()
+                    => new CustomDataRowAttribute { DisplayName = "full", ArgumentsDisplayName = "label" };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
+    }
+
+    [TestMethod]
+    public async Task GeneratedCode_NoDiagnostic()
+    {
+        var test = new VerifyCS.Test();
+        test.TestState.Sources.Add(("Test.g.cs", """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class MyClass
+            {
+                public object Create() => new TestDataRow<int>(1) { DisplayName = "full", ArgumentsDisplayName = "label" };
+            }
+            """));
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task OlderFrameworkWithoutArgumentLabels_NoDiagnostic()
+    {
+        var test = new VerifyCS.Test
+        {
+            TestCode = """
+                namespace Microsoft.VisualStudio.TestTools.UnitTesting
+                {
+                    public sealed class DataRowAttribute : System.Attribute
+                    {
+                        public string DisplayName { get; set; }
+                    }
+                }
+                public class MyClass
+                {
+                    [Microsoft.VisualStudio.TestTools.UnitTesting.DataRow(DisplayName = "full")]
+                    public void Test() { }
+                }
+                """,
+        };
+        test.TestState.AdditionalReferences.Clear();
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    public TestContext TestContext { get; set; } = default!;
+}

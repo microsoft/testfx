@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
@@ -53,7 +53,7 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
         // framework + adapter against a managed C++/CLI test assembly.
         using var packagesDir = new TempDirectory();
         string frameworkNet462Dir = Path.Combine(ExtractShippingPackage(packagesDir, "MSTest.TestFramework", MSTestVersion), "lib", "net462");
-        string adapterNet462Dir = Path.Combine(ExtractShippingPackage(packagesDir, "MSTest.TestAdapter", MSTestVersion), "buildTransitive", "net462");
+        string adapterNet462Dir = Path.Combine(ExtractShippingPackage(packagesDir, "MSTest.TestAdapter", MSTestVersion), "lib", "net462");
         Assert.IsTrue(
             File.Exists(Path.Combine(frameworkNet462Dir, "MSTest.TestFramework.dll")),
             $"Expected MSTest.TestFramework.dll under '{frameworkNet462Dir}'.");
@@ -168,9 +168,6 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
   <ItemGroup>
     <Reference Include="MSTest.TestFramework">
       <HintPath>$MSTestFrameworkDir$\MSTest.TestFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="MSTest.TestFramework.Extensions">
-      <HintPath>$MSTestFrameworkDir$\MSTest.TestFramework.Extensions.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

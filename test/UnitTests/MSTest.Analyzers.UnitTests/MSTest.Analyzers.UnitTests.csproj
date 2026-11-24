@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <!-- Don't use net462 as analyzer testing library brings Newtonsoft.Json 9.0.1 via NuGet.Packaging -->
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net8.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">$(SupportedNetFrameworks)</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     
@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- We use a more recent version for tests so that we have bug fixes like https://github.com/dotnet/roslyn/pull/69309 -->
+    <!-- Exercise analyzers and code fixes with the oldest supported Roslyn host. -->
     <PackageReference Include="Microsoft.CodeAnalysis" VersionOverride="$(MicrosoftCodeAnalysisVersionForTests)" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" VersionOverride="$(MicrosoftCodeAnalysisVersionForTests)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="$(MicrosoftCodeAnalysisVersionForTests)" />
@@ -28,9 +28,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" />
+    <!-- Align the dependency from NuGet.Packaging with the runtime packages. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,14 +37,28 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers\MSTest.Analyzers.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
+    <!-- GlobalConfigGeneratorContinuationTests launches the tool from its own output, not from the test host. -->
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.GlobalConfigsGenerator\MSTest.GlobalConfigsGenerator.csproj"
+                      ReferenceOutputAssembly="false" PrivateAssets="all"
+                      SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Extensions.Hosting\MSTest.Extensions.Hosting.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\DiagnosticAssertionObserver.cs" Link="TestInfrastructure\DiagnosticAssertionObserver.cs" />
   </ItemGroup>
+
+  <Target Name="_AddAnalyzerTestReferencePackMetadata"
+          BeforeTargets="GetAssemblyAttributes"
+          Condition="'$(TargetFramework)' == 'net11.0'">
+    <ItemGroup>
+      <AssemblyMetadata Include="Net11RuntimeVersion" Value="$(Net11RuntimeVersion)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

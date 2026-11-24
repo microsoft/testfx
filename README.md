@@ -24,6 +24,7 @@ We welcome any kind of contribution!
 
 - [Contributing](./CONTRIBUTING.md) guides how to best contribute
 - [Dev Guide](./docs/dev-guide.md) explains how to build and test
+- [Experimental Bazel build](./docs/bazel.md) documents the staged native build, validation commands, and remaining MSBuild parity gaps.
 - [Documentation](docs/README.md) contains information about the history, context, and supported or unsupported features. It also gathers the various official documentation pages on learn.microsoft.com about MSTest.
 
 ## How to consume MSTest?

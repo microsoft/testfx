@@ -1,0 +1,200 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+public sealed partial class Assert
+{
+    /// <summary>
+    /// Tests whether the specified string ends with the specified suffix
+    /// and throws an exception if the test string does not end with the
+    /// suffix.
+    /// </summary>
+    /// <param name="expectedSuffix">
+    /// The string expected to be a suffix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to end with <paramref name="expectedSuffix"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// does not end with <paramref name="expectedSuffix"/>. The message is
+    /// shown in test results.
+    /// </param>
+    /// <param name="expectedSuffixExpression">
+    /// The syntactic expression of expectedSuffix as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="expectedSuffix"/> is null,
+    /// or <paramref name="value"/> does not end with <paramref name="expectedSuffix"/>.
+    /// </exception>
+    public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => EndsWith(expectedSuffix, value, StringComparison.Ordinal, message, expectedSuffixExpression, valueExpression);
+
+    /// <summary>
+    /// Tests whether the specified string ends with the specified suffix
+    /// and throws an exception if the test string does not end with the
+    /// suffix.
+    /// </summary>
+    /// <param name="expectedSuffix">
+    /// The string expected to be a suffix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to end with <paramref name="expectedSuffix"/>.
+    /// </param>
+    /// <param name="comparisonType">
+    /// The comparison method to compare strings <paramref name="comparisonType"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// does not end with <paramref name="expectedSuffix"/>. The message is
+    /// shown in test results.
+    /// </param>
+    /// <param name="expectedSuffixExpression">
+    /// The syntactic expression of expectedSuffix as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="expectedSuffix"/> is null,
+    /// or <paramref name="value"/> does not end with <paramref name="expectedSuffix"/>.
+    /// </exception>
+    public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => StartsOrEndsWithCore(
+            expectedSuffix,
+            value,
+            comparisonType,
+            "Assert.EndsWith",
+            "expectedSuffix",
+            message,
+            expectedSuffixExpression,
+            valueExpression,
+            shouldMatch: true,
+            static (candidate, affix, comparison) => candidate.EndsWith(affix, comparison),
+            ReportAssertEndsWithFailed);
+
+    [DoesNotReturn]
+    private static void ReportAssertEndsWithFailed(string expectedSuffix, string value, StringComparison comparisonType, string? userMessage, string expectedSuffixExpression, string valueExpression)
+    {
+        string expectedText = AssertionValueRenderer.RenderValue(expectedSuffix);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected suffix:", expectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.EndsWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.EndsWith", expectedSuffixExpression, valueExpression, "<expectedSuffix>", "<value>"));
+
+        ReportAssertFailed(structured);
+    }
+
+    /// <summary>
+    /// Tests whether the specified string does not end with the specified unexpected suffix
+    /// and throws an exception if the test string ends with the
+    /// suffix.
+    /// </summary>
+    /// <param name="notExpectedSuffix">
+    /// The string expected not to be a suffix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to not end with <paramref name="notExpectedSuffix"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// ends with <paramref name="notExpectedSuffix"/>. The message is
+    /// shown in test results.
+    /// </param>
+    /// <param name="notExpectedSuffixExpression">
+    /// The syntactic expression of notExpectedSuffix as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="notExpectedSuffix"/> is null,
+    /// or <paramref name="value"/> ends with <paramref name="notExpectedSuffix"/>.
+    /// </exception>
+    public static void DoesNotEndWith([NotNull] string? notExpectedSuffix, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(notExpectedSuffix))] string notExpectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => DoesNotEndWith(notExpectedSuffix, value, StringComparison.Ordinal, message, notExpectedSuffixExpression, valueExpression);
+
+    /// <summary>
+    /// Tests whether the specified string does not end with the specified unexpected suffix
+    /// and throws an exception if the test string does ends with the
+    /// suffix.
+    /// </summary>
+    /// <param name="notExpectedSuffix">
+    /// The string expected not to be a suffix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to not end with <paramref name="notExpectedSuffix"/>.
+    /// </param>
+    /// <param name="comparisonType">
+    /// The comparison method to compare strings <paramref name="comparisonType"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// ends with <paramref name="notExpectedSuffix"/>. The message is
+    /// shown in test results.
+    /// </param>
+    /// <param name="notExpectedSuffixExpression">
+    /// The syntactic expression of notExpectedSuffix as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="notExpectedSuffix"/> is null,
+    /// or <paramref name="value"/> ends with <paramref name="notExpectedSuffix"/>.
+    /// </exception>
+    public static void DoesNotEndWith([NotNull] string? notExpectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedSuffix))] string notExpectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => StartsOrEndsWithCore(
+            notExpectedSuffix,
+            value,
+            comparisonType,
+            "Assert.DoesNotEndWith",
+            "notExpectedSuffix",
+            message,
+            notExpectedSuffixExpression,
+            valueExpression,
+            shouldMatch: false,
+            static (candidate, affix, comparison) => candidate.EndsWith(affix, comparison),
+            ReportAssertDoesNotEndWithFailed);
+
+    [DoesNotReturn]
+    private static void ReportAssertDoesNotEndWithFailed(string notExpectedSuffix, string value, StringComparison comparisonType, string? userMessage, string notExpectedSuffixExpression, string valueExpression)
+    {
+        string notExpectedText = AssertionValueRenderer.RenderValue(notExpectedSuffix);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected suffix:", notExpectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotEndWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(notExpectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotEndWith", notExpectedSuffixExpression, valueExpression, "<notExpectedSuffix>", "<value>"));
+
+        ReportAssertFailed(structured);
+    }
+}

@@ -8,6 +8,69 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 [SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "We want to test also the non-generic API")]
 public partial class AssertTests
 {
+    public void IsExactInstanceGenericInterpolated_ReturnsValueAndSkipsSuccessfulMessageEvaluation()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        int actual = Assert.IsExactInstanceOfType<int>(42, $"unused {message}");
+        actual.Should().Be(42);
+        message.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsExactInstanceGenericInterpolated_ReportsMismatchAndEvaluatesMessage()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        Action assert = () => Assert.IsExactInstanceOfType<string>(42, $"mismatch {message}");
+        AssertFailedException error = assert.Should().Throw<AssertFailedException>().Which;
+        error.ExpectedText.Should().Be("System.String");
+        error.ActualText.Should().Be("System.Int32");
+        error.Message.Should().Contain("mismatch DummyClassTrackingToStringCalls");
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotExactInstanceInterpolated_RejectsExactTypesButAcceptsDerivedAndNull()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        using MemoryStream value = new();
+        Assert.IsNotExactInstanceOfType(value, typeof(Stream), $"unused {message}");
+        Assert.IsNotExactInstanceOfType(null, typeof(Stream), $"unused {message}");
+        message.WasToStringCalled.Should().BeFalse();
+        Action assert = () => Assert.IsNotExactInstanceOfType(value, typeof(MemoryStream), $"exact {message}");
+        AssertFailedException error = assert.Should().Throw<AssertFailedException>().Which;
+        error.ExpectedText.Should().Be("System.IO.MemoryStream");
+        error.ActualText.Should().Be("System.IO.MemoryStream");
+        error.Message.Should().Contain("exact DummyClassTrackingToStringCalls");
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotExactInstanceGenericInterpolated_RejectsExactTypesButAcceptsDerivedAndNull()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        using MemoryStream value = new();
+        Assert.IsNotExactInstanceOfType<Stream>(value, $"unused {message}");
+        Assert.IsNotExactInstanceOfType<Stream>(null, $"unused {message}");
+        message.WasToStringCalled.Should().BeFalse();
+        Action assert = () => Assert.IsNotExactInstanceOfType<MemoryStream>(value, $"exact {message}");
+        AssertFailedException error = assert.Should().Throw<AssertFailedException>().Which;
+        error.ExpectedText.Should().Be("System.IO.MemoryStream");
+        error.ActualText.Should().Be("System.IO.MemoryStream");
+        error.Message.Should().Contain("exact DummyClassTrackingToStringCalls");
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotExactInstanceInterpolated_NullTypeReportsDedicatedError()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        Action assert = () => Assert.IsNotExactInstanceOfType(42, null, $"missing type {message}");
+        assert.Should().Throw<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Cannot check type because the not-expected type argument is null.
+            missing type DummyClassTrackingToStringCalls
+
+            Assert.IsNotExactInstanceOfType(42)
+            """);
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
     public void ExactInstanceOfTypeShouldFailWhenValueIsNull()
     {
         Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests));

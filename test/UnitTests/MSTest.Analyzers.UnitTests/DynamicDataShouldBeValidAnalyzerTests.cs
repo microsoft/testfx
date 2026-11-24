@@ -11,6 +11,65 @@ namespace MSTest.Analyzers.Test;
 public sealed class DynamicDataShouldBeValidAnalyzerTests
 {
     [TestMethod]
+    public async Task EventDataSource_IsRejectedAsNeitherPropertyMethodNorField()
+    {
+        const string source = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                public static event Action Data;
+                [TestMethod]
+                [{|#0:DynamicData(nameof(Data))|}]
+                public void Check() { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule)
+            .WithLocation(0).WithArguments("Tests", "Data"));
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "PropertyDisplayName")]
+    [DataRow(true, DisplayName = "OverloadedDisplayName")]
+    public async Task DisplayNameSource_MustBeOneUnambiguousMethod(bool overloaded)
+    {
+        string source = $$"""
+            using System.Collections.Generic;
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                public static IEnumerable<object[]> Data => new[] { new object[] { 17 } };
+                {{(overloaded
+                    ? "public static string Display(MethodInfo method, object[] data) => \"case\"; public static string Display(int value) => \"other\";"
+                    : "public static string Display => \"case\";")}}
+                [TestMethod]
+                [{|#0:DynamicData(nameof(Data), DynamicDataDisplayName = nameof(Display))|}]
+                public void Check(int number) { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, VerifyCS.Diagnostic(overloaded
+                ? DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule
+                : DynamicDataShouldBeValidAnalyzer.MemberMethodRule)
+            .WithLocation(0).WithArguments("Tests", "Display"));
+    }
+
+    [TestMethod]
+    public async Task NullDataSourceName_DoesNotInventAMemberDiagnostic()
+    {
+        const string source = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                [DynamicData(null)]
+                public void Check() { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
     public async Task WhenDataIsIEnumerableObjectArray_NoDiagnostic()
     {
         string code = """

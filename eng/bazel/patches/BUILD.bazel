@@ -1,0 +1,16 @@
+exports_files([
+    "testfx-source-pathmap.patch",
+    "compatibility-package-references.patch",
+    "framework-reference-priority.patch",
+    "generated-resource-names.patch",
+    "pdb-runfiles.patch",
+    "public-signing.patch",
+    "quote-csharp-sources.patch",
+    "reference-only-analyzers.patch",
+    "short-launcher-name.patch",
+    "satellite-assemblies.patch",
+    "unique-analyzers.patch",
+    "windows-launcher.patch",
+    "testfx-tests-paket-integrity.patch",
+    "windows-targeting.patch",
+])

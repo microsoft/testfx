@@ -1,0 +1,39 @@
+# Expected files of the MSTest.Windows.UIAutomation NuGet package, validated by eng/verify-nupkgs.ps1 after pack.
+# After an intentional package layout change, regenerate with: .\eng\verify-nupkgs.ps1 -configuration <Configuration> -updateBaselines
+# PDB files are excluded because this package only contains them in some build modes.
+Icon.png
+MSTest.Windows.UIAutomation.nuspec
+PACKAGE.md
+[Content_Types].xml
+_rels/.rels
+lib/net10.0-windows7.0/MSTest.Windows.UIAutomation.dll
+lib/net10.0-windows7.0/MSTest.Windows.UIAutomation.xml
+lib/net10.0-windows7.0/cs/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/de/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/es/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/fr/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/it/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/ja/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/ko/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/pl/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/pt-BR/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/ru/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/tr/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/zh-Hans/MSTest.Windows.UIAutomation.resources.dll
+lib/net10.0-windows7.0/zh-Hant/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/MSTest.Windows.UIAutomation.dll
+lib/net11.0-windows7.0/MSTest.Windows.UIAutomation.xml
+lib/net11.0-windows7.0/cs/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/de/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/es/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/fr/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/it/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/ja/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/ko/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/pl/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/pt-BR/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/ru/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/tr/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/zh-Hans/MSTest.Windows.UIAutomation.resources.dll
+lib/net11.0-windows7.0/zh-Hant/MSTest.Windows.UIAutomation.resources.dll
+package/services/metadata/core-properties/{guid}.psmdcp

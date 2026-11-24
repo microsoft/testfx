@@ -2,8 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading.Tasks;
 
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
@@ -12,6 +15,8 @@ namespace WinUIMtpUnpackagedApp;
 [TestClass]
 public partial class UnitTest1
 {
+    public TestContext TestContext { get; set; } = null!;
+
     /// <summary>
     /// Asserts the property that defines this sample: the app runs with no MSIX package identity.
     /// <c>Package.Current</c> is only available to a packaged app and throws otherwise.
@@ -50,5 +55,31 @@ public partial class UnitTest1
 
         Assert.IsNotNull(grid.DispatcherQueue);
         Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess, "The Grid was not created on the UI thread.");
+    }
+
+    [UITestMethod]
+    [Timeout(10000, CooperativeCancellation = true)]
+    public async Task UITestMethodWithTimeoutLoadsUI()
+    {
+        var grid = new Grid { Background = new SolidColorBrush(Microsoft.UI.Colors.Red) };
+        var loaded = new TaskCompletionSource<bool>();
+        RoutedEventHandler onLoaded = (_, _) => loaded.TrySetResult(true);
+        Window window = UnitTestApp.GetWindow();
+        UIElement? previousContent = window.Content;
+        grid.Loaded += onLoaded;
+        try
+        {
+            window.Content = grid;
+            await loaded.Task.WaitAsync(TestContext.CancellationToken);
+
+            Assert.IsTrue(grid.IsLoaded);
+            Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess, "The continuation did not resume on the UI thread.");
+            Assert.AreSame(grid, window.Content);
+        }
+        finally
+        {
+            grid.Loaded -= onLoaded;
+            window.Content = previousContent;
+        }
     }
 }

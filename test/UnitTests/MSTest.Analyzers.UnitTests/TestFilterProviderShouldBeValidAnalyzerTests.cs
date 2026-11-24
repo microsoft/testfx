@@ -103,19 +103,13 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
     // waved through by the struct exemption on the constructor check. It is byref-like though, so it
     // cannot be boxed and Activator.CreateInstance always fails: registration dies with UTA077 at run
     // time. It belongs with the other non-instantiable types.
-    //
-    // The test harness compiles against net8.0 reference assemblies, where implementing an interface on a
-    // ref struct is itself a compiler error, so CS8343 is expected alongside MSTEST0081. Roslyn still
-    // models the interface as implemented, which is why the analyzer sees — and correctly rejects — the
-    // type. If the harness ever moves to net9.0+ references this test will fail on the now-absent CS8343;
-    // dropping that expectation is then the right fix, and MSTEST0081 alone becomes the whole assertion.
     [TestMethod]
     public async Task WhenFilterTypeIsRefStruct_Diagnostic()
     {
         string code = Header + """
             [assembly: {|#0:TestFilterProvider(typeof(MyFilter))|}]
 
-            public ref struct MyFilter : {|#1:ITestFilter|}
+            public ref struct MyFilter : ITestFilter
             {
                 public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
             }
@@ -125,8 +119,7 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
             code,
             VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.NotInstantiableRule)
                 .WithLocation(0)
-                .WithArguments("MyFilter"),
-            DiagnosticResult.CompilerError("CS8343").WithLocation(1).WithArguments("MyFilter"));
+                .WithArguments("MyFilter"));
     }
 
     [TestMethod]

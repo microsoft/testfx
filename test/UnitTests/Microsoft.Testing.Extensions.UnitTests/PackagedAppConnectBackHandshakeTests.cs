@@ -5,7 +5,10 @@
 #if !NETFRAMEWORK
 
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -29,6 +32,7 @@ public sealed class PackagedAppConnectBackHandshakeTests
             };
 
             PackagedAppConnectBackHandshake.Write(filePath, entries);
+            Assert.HasCount(entries.Count, File.ReadAllLines(filePath));
 
             IReadOnlyDictionary<string, string?>? read = PackagedAppConnectBackHandshake.ReadAndDelete(filePath);
 
@@ -58,6 +62,38 @@ public sealed class PackagedAppConnectBackHandshakeTests
         string filePath = Path.Combine(Path.GetTempPath(), "PackagedAppHandshakeTests", Guid.NewGuid().ToString("N"), "missing.handshake");
 
         Assert.IsNull(PackagedAppConnectBackHandshake.ReadAndDelete(filePath));
+    }
+
+    [TestMethod]
+    public void ReadAndDelete_IgnoresLinesWithoutCompleteKeyValueEnvelope()
+    {
+        string filePath = Path.Combine(Path.GetTempPath(), nameof(PackagedAppConnectBackHandshakeTests), Guid.NewGuid().ToString("N"), "malformed.handshake");
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        try
+        {
+            File.WriteAllLines(
+                filePath,
+                [
+                    "NO_SEPARATOR",
+                    "=VdmFsdWU=",
+                    "MISSING_VALUE=",
+                    "VALID=VdmFsdWU=",
+                ]);
+
+            IReadOnlyDictionary<string, string?>? read = PackagedAppConnectBackHandshake.ReadAndDelete(filePath);
+
+            Assert.IsNotNull(read);
+            Assert.HasCount(1, read);
+            Assert.AreEqual("value", read["VALID"]);
+        }
+        finally
+        {
+            string? directory = Path.GetDirectoryName(filePath);
+            if (directory is not null && Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
     }
 
     [TestMethod]
@@ -108,6 +144,16 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.AreEqual("9876", PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(arguments));
     }
 
+    [DataRow("=")]
+    [DataRow(":")]
+    [TestMethod]
+    public void TryGetTestHostControllerPid_ReturnsValue_WhenOptionIsInline(string separator)
+    {
+        string[] arguments = [$"--internal-testhostcontroller-pid{separator}9876"];
+
+        Assert.AreEqual("9876", PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(arguments));
+    }
+
     [TestMethod]
     public void TryGetTestHostControllerPid_ReturnsNull_WhenOptionAbsent()
     {
@@ -139,6 +185,112 @@ public sealed class PackagedAppConnectBackHandshakeTests
     }
 
     [TestMethod]
+    public void TryGetHandshakeId_UsesInlineRetryPipeName_WhenControllerPidIsAbsent()
+    {
+        string[] arguments = [@"--internal-retry-pipename=LOCAL\testingplatform.pipe.retry"];
+
+        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments);
+
+        Assert.IsNotNull(handshakeId);
+        Assert.StartsWith("retry-", handshakeId);
+        Assert.DoesNotContain(@"\", handshakeId);
+    }
+
+    [TestMethod]
+    public void TryGetHandshakeId_ReturnsNull_WhenRetryPipeNameOptionIsLastWithoutValue()
+    {
+        string[] arguments = ["--internal-retry-pipename"];
+
+        Assert.IsNull(PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
+    }
+
+    [TestMethod]
+    public async Task AddPackagedAppDeployment_RetryChild_DoesNotRegisterLauncher()
+    {
+        string[] arguments = ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(arguments);
+
+        PackagedAppExtensions.AddPackagedAppDeployment(builder, arguments);
+
+        ITestHostLauncher? launcher =
+            await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        Assert.IsNull(launcher);
+    }
+
+    [TestMethod]
+    public async Task AddPackagedAppDeployment_Controller_RegistersLauncher()
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
+        List<string> operations = [];
+
+        AddPackagedAppDeploymentForTest(
+            builder,
+            [],
+            _ => operations.Add("apply"),
+            _ =>
+            {
+                operations.Add("handshake");
+                return null;
+            },
+            () =>
+            {
+                operations.Add("launcher");
+                return new PackagedAppTestHostLauncher(Path.GetTempPath(), static _ => null);
+            });
+
+        _ = await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        string[] expectedOperations = ["apply", "handshake", "launcher"];
+        Assert.AreSequenceEqual(expectedOperations, operations);
+    }
+
+    [TestMethod]
+    public async Task AddPackagedAppDeployment_ActivatedChild_AppliesEnvironmentBeforeSkippingLauncher()
+    {
+        string[] arguments = ["--internal-testhostcontroller-pid", "1234"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(arguments);
+        List<string> operations = [];
+
+        AddPackagedAppDeploymentForTest(
+            builder,
+            arguments,
+            receivedArguments =>
+            {
+                Assert.AreSame(arguments, receivedArguments);
+                operations.Add("apply");
+            },
+            receivedArguments =>
+            {
+                Assert.AreSame(arguments, receivedArguments);
+                operations.Add("handshake");
+                return "1234";
+            },
+            () => throw new InvalidOperationException("An activated child must not create another launcher."));
+
+        ITestHostLauncher? launcher =
+            await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        string[] expectedOperations = ["apply", "handshake"];
+        Assert.AreSequenceEqual(expectedOperations, operations);
+        Assert.IsNull(launcher);
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_RetryChild_AddsControllerSkipMarker()
+    {
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"],
+            new Dictionary<string, string?>(),
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
+
+        Assert.HasCount(1, environment);
+        Assert.AreEqual(
+            "1",
+            environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION"]);
+    }
+
+    [TestMethod]
     public void GetConnectBackEnvironment_IncludesRetryAttemptAndExcludesUnrelatedValues()
     {
         var context = new TestHostLaunchContext(
@@ -147,6 +299,7 @@ public sealed class PackagedAppConnectBackHandshakeTests
             new Dictionary<string, string?>
             {
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"] = "controller-pipe",
+                ["testingplatform_dotnettest_executionid"] = "execution-id",
                 ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2",
                 ["TRXNAMEDPIPENAME"] = @"LOCAL\trx-pipe",
                 ["TESTINGPLATFORM_HANGDUMP_PIPENAME"] = @"LOCAL\hangdump-pipe",
@@ -158,8 +311,16 @@ public sealed class PackagedAppConnectBackHandshakeTests
 
         var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
 
-        Assert.HasCount(6, environment);
+        Assert.HasCount(7, environment);
         Assert.AreEqual("controller-pipe", environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"]);
+        Assert.AreEqual("execution-id", environment["testingplatform_dotnettest_executionid"]);
+        Assert.HasCount(
+            1,
+            environment.Keys.Where(
+                static key => string.Equals(
+                    key,
+                    "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
+                    StringComparison.OrdinalIgnoreCase)));
         Assert.AreEqual("2", environment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
         Assert.AreEqual(@"LOCAL\trx-pipe", environment["TRXNAMEDPIPENAME"]);
         Assert.AreEqual(@"LOCAL\hangdump-pipe", environment["TESTINGPLATFORM_HANGDUMP_PIPENAME"]);
@@ -167,6 +328,73 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.AreEqual("logical-run", environment["testingplatform_logical_run_id"]);
         Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_TESTCONFIGURATION"));
     }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_ForAppContainer_RedirectsRetryArtifactManifest()
+    {
+        const string RedirectedManifestPath = @"C:\PackageLocalState\MtpTestHost\retry-recovered-artifacts.manifest";
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            [],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] = @"C:\ControllerTemp\retry.txt",
+            },
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher
+            .GetConnectBackEnvironment(context, RedirectedManifestPath)
+            .ToDictionary();
+
+        Assert.AreEqual(
+            RedirectedManifestPath,
+            environment["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"]);
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_WithDuplicateSkipMarkers_DoesNotAppendAnotherMarker()
+    {
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            ["--internal-retry-pipename", @"LOCAL\retry-pipe"],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION"] = "first",
+                ["testingplatform_testhostcontroller_skipextension"] = "second",
+            },
+            workingDirectory: null);
+
+        KeyValuePair<string, string?>[] environment =
+            [.. PackagedAppTestHostLauncher.GetConnectBackEnvironment(context)];
+
+        Assert.HasCount(2, environment);
+        Assert.Contains("first", environment.Select(static entry => entry.Value));
+        Assert.Contains("second", environment.Select(static entry => entry.Value));
+    }
+
+    private static void AddPackagedAppDeploymentForTest(
+        ITestApplicationBuilder builder,
+        IReadOnlyList<string> processArguments,
+        Action<IReadOnlyList<string>> applyConnectBackEnvironment,
+        Func<IReadOnlyList<string>, string?> getHandshakeId,
+        Func<ITestHostLauncher> createLauncher)
+        => typeof(PackagedAppExtensions)
+            .GetMethod(
+                "AddPackagedAppDeployment",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static,
+                binder: null,
+                types:
+                [
+                    typeof(ITestApplicationBuilder),
+                    typeof(IReadOnlyList<string>),
+                    typeof(Action<IReadOnlyList<string>>),
+                    typeof(Func<IReadOnlyList<string>, string>),
+                    typeof(Func<ITestHostLauncher>),
+                ],
+                modifiers: null)!
+            .Invoke(
+                null,
+                [builder, processArguments, applyConnectBackEnvironment, getHandshakeId, createLauncher]);
 }
 
 #endif

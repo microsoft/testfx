@@ -4,15 +4,36 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer,
     MSTest.Analyzers.UseCIConditionAttributeInsteadOfEnvironmentCheckFixer>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
 public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTests
 {
+    [TestMethod]
+    [DataRow("Environment.GetEnvironmentVariable(\"TF_BUILD\") == \"false\"", DisplayName = "ValueComparison")]
+    [DataRow("Environment.GetEnvironmentVariable(\"TF_BUILD\") is \"true\"", DisplayName = "ValuePattern")]
+    [DataRow("Environment.GetEnvironmentVariable(\"TF_BUILD\") is not \"true\"", DisplayName = "NegatedValuePattern")]
+    public async Task ValueSensitiveEnvironmentChecks_AreNotEquivalentToTheSupportedNullCheck(string condition)
+    {
+        string source = $$"""
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    if ({{condition}})
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
     [TestMethod]
     public async Task WhenNoEnvironmentCheckUsed_NoDiagnostic()
     {
@@ -618,69 +639,6 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTest
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
-
-    [TestMethod]
-    public async Task WhenVariableIsNothing_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    [|If Environment.GetEnvironmentVariable("CI") Is Nothing Then
-                        Return
-                    End If|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenVariableIsNotNothing_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    [|If Environment.GetEnvironmentVariable("CI") IsNot Nothing Then
-                        Return
-                    End If|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenVariableIsNotACIVariable_VisualBasic_NoDiagnostic()
-    {
-        string code = """
-            Imports System
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    If Environment.GetEnvironmentVariable("MY_CUSTOM_VARIABLE") Is Nothing Then
-                        Return
-                    End If
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]

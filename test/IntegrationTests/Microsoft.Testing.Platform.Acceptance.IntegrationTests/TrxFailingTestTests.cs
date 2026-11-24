@@ -6,13 +6,16 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class TrxFailingTestTests : AcceptanceTestBase<TrxFailingTestTests.TestAssetFixture>
 {
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public static IEnumerable<(string TargetFramework, string Mode)> Modes =>
+        TargetFrameworks.All.SelectMany(tfm => new[] { (tfm, string.Empty), (tfm, "--trx-mode:in-process") });
+
+    [DynamicData(nameof(Modes))]
     [TestMethod]
-    public async Task Trx_WhenTestFails_ContainsExceptionInfoInOutput(string tfm)
+    public async Task Trx_WhenTestFails_ContainsExceptionInfoInOutput(string tfm, string mode)
     {
         string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx {mode}", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 

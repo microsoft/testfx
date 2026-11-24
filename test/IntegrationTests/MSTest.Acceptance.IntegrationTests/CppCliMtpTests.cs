@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -208,9 +208,6 @@ public class HarvestPlaceholder
     </Reference>
     <Reference Include="MSTest.TestFramework">
       <HintPath>$(ClosureDir)\MSTest.TestFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="MSTest.TestFramework.Extensions">
-      <HintPath>$(ClosureDir)\MSTest.TestFramework.Extensions.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

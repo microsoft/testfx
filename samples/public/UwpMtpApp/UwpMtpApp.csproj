@@ -1,0 +1,44 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <PublishAot>true</PublishAot>
+    <MSTestVersion>$(MSTestPreviewVersion)</MSTestVersion>
+    <MicrosoftTestingPlatformVersion Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'">$(MicrosoftTestingExtensionsPackagedAppVersion)</MicrosoftTestingPlatformVersion>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <UseUwp>true</UseUwp>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <EnableMicrosoftTestingExtensionsPackagedApp Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == ''">false</EnableMicrosoftTestingExtensionsPackagedApp>
+    <DefineConstants Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'">$(DefineConstants);PACKAGED_APP_TESTING</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Remove="MainPage.xaml" />
+    <ApplicationDefinition Include="App.xaml"
+                           Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
+    <Page Include="MainPage.xaml"
+          Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
+  </ItemGroup>
+
+  <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="TargetFramework=$(TargetFramework);UseUwpTools=$(UseUwpTools);UseWinUI=$(UseWinUI);MSBuildRuntimeType=$(MSBuildRuntimeType);NETCoreSdkVersion=$(NETCoreSdkVersion);NuGetPackageRoot=$(NuGetPackageRoot)"
+      Overwrite="true" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="@(ReferencePath->'%(FullPath)')"
+      Overwrite="false" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-runtime-assets.txt"
+      Lines="@(ReferenceCopyLocalPaths->'%(DestinationSubDirectory)%(Filename)%(Extension)|%(FullPath)')"
+      Overwrite="true" />
+  </Target>
+</Project>

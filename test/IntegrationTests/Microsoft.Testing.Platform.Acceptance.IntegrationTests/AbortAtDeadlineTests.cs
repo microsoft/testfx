@@ -66,9 +66,9 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
             $"--report-html --report-html-filename {reportFileName}",
             environmentVariables: new()
             {
+                ["TESTINGPLATFORM_DEADLINE"] = DateTimeOffset.UtcNow.AddMinutes(-5).ToString("o"),
                 ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
                 ["TESTINGPLATFORM_HOTRELOAD_ENABLED"] = "1",
-                ["TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START"] = "1",
                 ["WAIT_FOR_STOP"] = "1",
             },
             cancellationToken: TestContext.CancellationToken);
@@ -85,15 +85,18 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
     }
 
     [TestMethod]
-    public async Task WhenDeadlineStopsIdleHotReload_ReportersFinalize()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task WhenDeadlineStopsIdleHotReload_ReportersFinalize(bool deadlineAlreadyExpired)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
             {
+                ["TESTINGPLATFORM_DEADLINE"] = deadlineAlreadyExpired ? DateTimeOffset.UtcNow.AddMinutes(-5).ToString("o") : null,
                 ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
                 ["TESTINGPLATFORM_HOTRELOAD_ENABLED"] = "1",
-                ["TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START"] = "1",
+                ["TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START"] = deadlineAlreadyExpired ? null : "1",
                 ["REJECT_STOP_AFTER_EXECUTION"] = "1",
             },
             cancellationToken: TestContext.CancellationToken);
@@ -273,6 +276,8 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
             new TestNode() { Uid = "1", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
 
+        GracefulStop.Instance.NotifyExecutionStarted();
+
         // When asked to, block until the deadline-driven graceful stop is requested. This mimics a
         // long-running suite whose remaining tests are cut short by the approaching CI deadline. Cap
         // the wait so a broken stop path fails the assertions fast instead of hanging until the harness
@@ -319,28 +324,41 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionResultCapability
 
     public static GracefulStop Instance { get; } = new();
 
-    public TaskCompletionSource TCS { get; } = new();
+    public TaskCompletionSource TCS { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    private bool _executionCompleted;
+    private readonly TaskCompletionSource _executionStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource _executionCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    public void NotifyExecutionStarted()
+        => _executionStarted.TrySetResult();
 
     public void NotifyExecutionCompleted()
-        => _executionCompleted = true;
+        => _executionCompleted.TrySetResult();
 
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
         => TryStopTestExecutionAsync(cancellationToken);
 
-    public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
+    public async Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
     {
         if (Environment.GetEnvironmentVariable("REJECT_STOP") == "1")
         {
-            return Task.FromResult(false);
+            return false;
         }
 
-        return Task.FromResult(
-            Environment.GetEnvironmentVariable("REJECT_STOP_AFTER_EXECUTION") != "1"
-            || !_executionCompleted
-                ? TCS.TrySetResult()
-                : false);
+        if (Environment.GetEnvironmentVariable("REJECT_STOP_AFTER_EXECUTION") == "1")
+        {
+            // Startup can outlast the deadline. Reach the completed execution before testing the idle-stop fallback.
+            await _executionCompleted.Task.WaitAsync(cancellationToken);
+            return false;
+        }
+
+        if (Environment.GetEnvironmentVariable("WAIT_FOR_STOP") == "1")
+        {
+            // An expired deadline can arrive before hot reload starts. This fixture must exercise an active run.
+            await _executionStarted.Task.WaitAsync(cancellationToken);
+        }
+
+        return TCS.TrySetResult();
     }
 }
 

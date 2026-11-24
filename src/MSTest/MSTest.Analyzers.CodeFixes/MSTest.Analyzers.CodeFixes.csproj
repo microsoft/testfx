@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>MSTest.Analyzers</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Roslyn is provided by the compiler host and must not flow to consumers (see MSTest.Analyzers.csproj). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
+    <!-- Pin the analyzer-authoring analyzers to the repo-wide version so a transitively-resolved newer version
+         (which has a known RS1024 false positive on new HashSet<ISymbol>(SymbolEqualityComparer.Default)) can never
+         win. PrivateAssets="all": it is a development-time analyzer and must not flow to consumers. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers\MSTest.Analyzers.csproj" />
+  </ItemGroup>
+
+</Project>

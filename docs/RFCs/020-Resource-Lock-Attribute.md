@@ -1,5 +1,14 @@
 # RFC 020 - Resource Lock Attribute
 
+> **Current implementation note (2026-10-09):** The keyed read/write, chunk-union,
+> sorted-acquisition and sequential-tail boundaries described here have implementation/test evidence.
+> The scheduler is now `TestExecutionManager.ParallelExecution.cs`, not `Parallelization.cs`.
+> Configured/attribute workers `0` normalize to processor count; absence of parallelization is different.
+> Cross-process coordination, dynamic lock providers and lock-aware dispatch remain outside the current implementation.
+> See [MSTEST-010](../specifications/mstest.md#mstest-010--in-assembly-parallelism-is-chunk-based)
+> and [MSTEST-011](../specifications/mstest.md#mstest-011--resource-locks-apply-to-scheduling-chunks).
+> This audit does not ratify proposals, verify all fairness/cancellation paths or prove migration recommendations safe.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation
@@ -281,7 +290,7 @@ interleave; when rows are not unfolded, all rows share one acquisition.
 ## Implementation
 
 The scheduler lives in
-`src/Adapter/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.Parallelization.cs`.
+`src/MSTest/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.Parallelization.cs`.
 It is a `ConcurrentQueue<IEnumerable<UnitTestElement>>` drained by *N* worker `Task`s, chunked
 per-method or per-class depending on `ExecutionScope`. Before dispatching a chunk, the worker
 acquires the union of that chunk's declared locks (in sorted key order) from a per-run keyed

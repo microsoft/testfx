@@ -19,6 +19,576 @@ public sealed class TerminalTestReporterTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    [TestMethod]
+    public void WriteModuleMessage_WhenContextualOutputIsDisabled_PreservesStandaloneOutput()
+    {
+        bool displayNameWasSelected = false;
+        var console = new StringBuilderConsole();
+        TerminalTestReporterOptions options = new()
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowProgress = () => false,
+            ModuleDisplayName = (_, _) =>
+            {
+                displayNameWasSelected = true;
+                return "renamed module";
+            },
+        };
+        using var reporter = new TerminalTestReporter(console, options);
+
+        Assert.IsFalse(options.ContextualModuleOutput);
+        reporter.WriteModuleMessage("module.dll", "net9.0", "x64", "standalone output");
+
+        Assert.AreEqual($"standalone output{Environment.NewLine}", console.Output);
+        Assert.IsFalse(displayNameWasSelected);
+    }
+
+    [TestMethod]
+    [DataRow(ConsoleColor.Red, "\u001B[91m", DisplayName = "ErrorSeverity")]
+    [DataRow(ConsoleColor.Yellow, "\u001B[93m", DisplayName = "WarningSeverity")]
+    public void WriteModuleMessage_ContextualOutput_PrefixesOrdinaryLinesAndPreservesCommands(
+        ConsoleColor severityColor,
+        string ansiColor)
+    {
+        const string assembly = "module.dll";
+        const string identity = "\u001B[35m[Module net9.0|x64]\u001B[m ";
+        const string azureDevOpsCommand = "##vso[task.logissue type=error;]azure failure";
+        const string githubCommand = "::error title=workflow::github failure";
+        const string indentedGithubCommand = "  ::warning::github warning";
+        const string legacyGithubCommand = "prefix ##[warning]legacy";
+        const string azureDevOpsGroupCommand = "##[group]build output";
+        string text = $"ordinary before global::Example.Type\r\n{azureDevOpsCommand}\n{githubCommand}\r\n{indentedGithubCommand}\n{legacyGithubCommand}\n{azureDevOpsGroupCommand}\nordinary after";
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowProgress = () => false,
+            ModuleDisplayName = (_, _) => "Module",
+        });
+
+        reporter.WriteModuleMessage(
+            assembly,
+            "net9.0",
+            "x64",
+            text,
+            new Microsoft.Testing.Platform.OutputDevice.SystemConsoleColor { ConsoleColor = severityColor });
+
+        string expected =
+            $"{identity}{ansiColor}ordinary before global::Example.Type\u001B[m\r\n\u001B[m{Environment.NewLine}"
+            + $"{azureDevOpsCommand}\n"
+            + $"{githubCommand}\r\n"
+            + $"{indentedGithubCommand}\n"
+            + $"{legacyGithubCommand}\n"
+            + $"{azureDevOpsGroupCommand}\n"
+            + $"{identity}{ansiColor}ordinary after\u001B[m{Environment.NewLine}";
+        Assert.AreEqual(expected, console.Output);
+        string[] outputLines = Regex.Split(console.Output, "\r\n|\n");
+        Assert.Contains(azureDevOpsCommand, outputLines);
+        Assert.Contains(githubCommand, outputLines);
+        Assert.Contains(indentedGithubCommand, outputLines);
+        Assert.Contains(legacyGithubCommand, outputLines);
+        Assert.Contains(azureDevOpsGroupCommand, outputLines);
+    }
+
+    [TestMethod]
+    public void TestCompleted_ContextualOutput_UsesSelectorToDisambiguateDuplicateModuleNames()
+    {
+        const string firstAssembly = "first/Shared.Tests.dll";
+        const string secondAssembly = "second/Shared.Tests.dll";
+        List<(string Assembly, string? TargetFramework)> selectedModules = [];
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowProgress = () => false,
+            ModuleDisplayName = (assembly, targetFramework) =>
+            {
+                selectedModules.Add((assembly, targetFramework));
+                return targetFramework == "net8.0" ? "Shared net8" : "Shared net9";
+            },
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted(firstAssembly, "net8.0", "x64", "execution-net8", "instance-net8");
+        reporter.AssemblyRunStarted(secondAssembly, "net9.0", "x64", "execution-net9", "instance-net9");
+
+        reporter.TestCompleted(
+            firstAssembly, "net8.0", "x64", "execution-net8", "instance-net8",
+            testNodeUid: "failure-net8", displayName: "first failure", informativeMessage: null, outcome: TestOutcome.Fail,
+            duration: TimeSpan.Zero, exceptions: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        reporter.TestCompleted(
+            secondAssembly, "net9.0", "x64", "execution-net9", "instance-net9",
+            testNodeUid: "failure-net9", displayName: "second failure", informativeMessage: null, outcome: TestOutcome.Fail,
+            duration: TimeSpan.Zero, exceptions: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        Assert.AreEqual(2, reporter.TotalTests);
+        Assert.AreSequenceEqual(
+            [(firstAssembly, (string?)"net8.0"), (secondAssembly, (string?)"net9.0")],
+            selectedModules);
+        string[] outputLines = NormalizeTerminalOutput(console.Output).Split('\n');
+        Assert.Contains("[Shared net8 net8.0|x64] failed first failure (0ms)", outputLines);
+        Assert.Contains("[Shared net9 net9.0|x64] failed second failure (0ms)", outputLines);
+        Assert.IsTrue(Regex.IsMatch(console.Output, @"\x1b\[(35|36|95|96)m\[Shared net8 net8\.0\|x64\]\x1b\[m \x1b\[31mfailed"));
+        Assert.IsTrue(Regex.IsMatch(console.Output, @"\x1b\[(35|36|95|96)m\[Shared net9 net9\.0\|x64\]\x1b\[m \x1b\[31mfailed"));
+    }
+
+    [TestMethod]
+    public void AssemblyRunNotSelected_ContextualOutput_PreservesKnownAndUnknownFrameworkIdentity()
+    {
+        const string knownAssembly = "known/Shared.Tests.dll";
+        const string unknownAssembly = "unknown/Shared.Tests.dll";
+        List<(string Assembly, string? TargetFramework)> selectedModules = [];
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+            ModuleDisplayName = (assembly, targetFramework) =>
+            {
+                selectedModules.Add((assembly, targetFramework));
+                return assembly == knownAssembly ? "Shared net8" : "Shared unknown";
+            },
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunNotSelected(knownAssembly, "net8.0", "x64");
+        reporter.AssemblyRunNotSelected(unknownAssembly, targetFramework: null, architecture: "arm64");
+
+        Assert.AreEqual(
+            $"[Shared net8 net8.0|x64] skipped (No affected tests selected){Environment.NewLine}"
+                + $"[Shared unknown arm64] skipped (No affected tests selected){Environment.NewLine}",
+            NormalizeTerminalOutput(console.Output).Replace("\n", Environment.NewLine));
+        Assert.AreSequenceEqual(
+            [(knownAssembly, (string?)"net8.0"), (unknownAssembly, null)],
+            selectedModules);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_ContextualSummary_OrdersExitDescriptionAndSeparatesSelectionSkips()
+    {
+        const int exitCode = 1;
+        const string failedAssembly = "failed.dll";
+        const string passedAssembly = "passed.dll";
+        const string unselectedAssembly = "unselected.dll";
+        const string artifactPath = "summary-artifact.txt";
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunStarted(failedAssembly, "net9.0", "x64", "failed", "failed");
+        ReportOrchestratorTest(reporter, failedAssembly, "failed", "failed", "failed-test", TestOutcome.Fail);
+        ReportOrchestratorTest(reporter, failedAssembly, "failed", "failed", "failed-module-skip", TestOutcome.Skipped);
+        reporter.AssemblyRunCompleted("failed", exitCode, outputData: null, errorData: null);
+
+        reporter.AssemblyRunStarted(passedAssembly, "net9.0", "x64", "passed", "passed");
+        ReportOrchestratorTest(reporter, passedAssembly, "passed", "passed", "passed-test", TestOutcome.Passed);
+        ReportOrchestratorTest(reporter, passedAssembly, "passed", "passed", "passed-module-skip", TestOutcome.Skipped);
+        reporter.AssemblyRunCompleted("passed", exitCode: 0, outputData: null, errorData: null);
+
+        reporter.AssemblyRunNotSelected(unselectedAssembly, "net8.0", "arm64");
+        reporter.ArtifactAdded(
+            outOfProcess: false,
+            assembly: passedAssembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId: "passed",
+            testName: null,
+            artifactPath);
+        reporter.ArtifactAdded(
+            outOfProcess: true,
+            assembly: failedAssembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId: "failed",
+            testName: "failed-test",
+            "failure-artifact.txt");
+        Assert.AreEqual(4, reporter.TotalTests);
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode);
+
+        string output = NormalizeTerminalOutput(console.Output);
+        string exitCodeDescription = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.TestRunExitCode,
+            exitCode,
+            TerminalTestReporter.GetExitCodeDescription(exitCode));
+        int exitDescriptionIndex = output.IndexOf(exitCodeDescription, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, exitDescriptionIndex);
+
+        int groupStart = output.IndexOf("##[group]Test run summary:", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, groupStart);
+
+        int groupEnd = output.IndexOf("##[endgroup]", groupStart, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(groupStart, groupEnd);
+
+        int artifactGroupStart = output.IndexOf("##[group]Artifacts: 2", groupEnd, StringComparison.Ordinal);
+        Assert.IsGreaterThan(groupEnd, artifactGroupStart);
+
+        int artifactGroupEnd = output.IndexOf("##[endgroup]", artifactGroupStart, StringComparison.Ordinal);
+        Assert.IsGreaterThan(artifactGroupStart, artifactGroupEnd);
+
+        int totalCountIndex = output.IndexOf("  total: 4", artifactGroupEnd, StringComparison.Ordinal);
+        int failedCountIndex = output.IndexOf("  failed: 1", groupEnd, StringComparison.Ordinal);
+        int passedCountIndex = output.IndexOf("  succeeded: 1", groupEnd, StringComparison.Ordinal);
+        int skippedCountIndex = output.IndexOf("  skipped: 2", groupEnd, StringComparison.Ordinal);
+        int durationIndex = output.IndexOf("  duration: 0ms", groupEnd, StringComparison.Ordinal);
+        int verdictIndex = output.IndexOf("Test run summary: Failed!", groupEnd, StringComparison.Ordinal);
+
+        Assert.IsGreaterThan(exitDescriptionIndex, groupStart);
+        Assert.IsGreaterThan(groupStart, groupEnd);
+        Assert.IsGreaterThanOrEqualTo(groupEnd, totalCountIndex);
+        Assert.IsGreaterThan(totalCountIndex, failedCountIndex);
+        Assert.IsGreaterThan(failedCountIndex, passedCountIndex);
+        Assert.IsGreaterThan(passedCountIndex, skippedCountIndex);
+        Assert.IsGreaterThan(skippedCountIndex, durationIndex);
+        Assert.IsGreaterThan(groupEnd, verdictIndex);
+        Assert.IsGreaterThan(durationIndex, verdictIndex);
+        Assert.AreEqual("Test run summary: Failed!", output.TrimEnd().Split('\n')[^1]);
+
+        string[] groupLines = output.Substring(groupStart, groupEnd - groupStart).Split(['\n'], StringSplitOptions.RemoveEmptyEntries);
+        Assert.AreEqual(
+            "##[group]Test run summary: 1 passed, 1 failed, 1 skipped (No affected tests selected)",
+            groupLines[0]);
+        int failedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [failed.dll net9.0|x64]", StringComparison.Ordinal));
+        int unselectedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [unselected.dll net8.0|arm64]", StringComparison.Ordinal));
+        int passedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [passed.dll net9.0|x64]", StringComparison.Ordinal));
+        Assert.IsGreaterThanOrEqualTo(0, failedModuleIndex);
+        Assert.IsGreaterThan(failedModuleIndex, unselectedModuleIndex);
+        Assert.IsGreaterThan(unselectedModuleIndex, passedModuleIndex);
+        Assert.Contains("0 passed, 1 failed, 1 skipped", groupLines[failedModuleIndex]);
+        Assert.Contains("1 passed, 0 failed, 1 skipped", groupLines[passedModuleIndex]);
+        Assert.DoesNotContain("summary-artifact.txt", output.Substring(groupStart, groupEnd - groupStart));
+        string artifacts = output.Substring(artifactGroupStart, artifactGroupEnd - artifactGroupStart);
+        Assert.Contains("summary-artifact.txt", artifacts);
+        Assert.Contains("failure-artifact.txt", artifacts);
+        Assert.IsGreaterThan(artifactGroupEnd, verdictIndex);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_ContextualSummaryWithoutArtifacts_OmitsArtifactGroup()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted("module.dll", "net9.0", "x64", "execution", "instance");
+        ReportOrchestratorTest(reporter, "module.dll", "execution", "instance", "test", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("execution", exitCode: 0, outputData: null, errorData: null);
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 0);
+
+        Assert.DoesNotContain("##[group]Artifacts:", console.Output);
+        Assert.Contains("##[group]Test run summary: 1 passed, 0 failed", console.Output);
+        Assert.DoesNotContain("No affected tests selected", console.Output);
+    }
+
+    [TestMethod]
+    [DataRow(false, false, DisplayName = "RejectedHost")]
+    [DataRow(true, false, DisplayName = "RejectedRetry")]
+    [DataRow(true, true, DisplayName = "RejectedRetryWithUnselectedModule")]
+    public void TestExecutionCompleted_ContextualSummaryOmitsAmbiguousModuleTotals(bool hasRegisteredModule, bool hasUnselectedModule)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+        if (hasRegisteredModule)
+        {
+            reporter.AssemblyRunStarted("module.dll", "net9.0", "x64", "execution", "instance");
+            ReportOrchestratorTest(reporter, "module.dll", "execution", "instance", "test", TestOutcome.Passed);
+            reporter.AssemblyRunCompleted("execution", exitCode: 0, outputData: null, errorData: null);
+        }
+
+        if (hasUnselectedModule)
+        {
+            reporter.AssemblyRunNotSelected("unselected.dll", "net9.0", "x64");
+        }
+
+        reporter.HandshakeFailure("module.dll", "net9.0", 1, string.Empty, "rejected host");
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 1);
+
+        string output = NormalizeTerminalOutput(console.Output);
+        string groupLine = output.Split('\n').Single(static line => line.StartsWith("##[group]Test run summary:", StringComparison.Ordinal));
+        Assert.AreEqual(
+            hasUnselectedModule
+                ? "##[group]Test run summary: 1 skipped (No affected tests selected)"
+                : "##[group]Test run summary:",
+            groupLine);
+        Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
+        Assert.Contains("rejected host", output);
+        Assert.Contains("Test run summary: Failed!", output);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_ContextualRetrySuppressesSubsetSummaryButRetainsArtifacts()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowRunSummary = false,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+        reporter.AssemblyRunStarted("retry.dll", "net9.0", "x64", "retry", "retry");
+        ReportOrchestratorTest(reporter, "retry.dll", "retry", "retry", "retried-test", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("retry", exitCode: 0, outputData: null, errorData: null);
+        reporter.ArtifactAdded(false, "retry.dll", "net9.0", "x64", "retry", null, "retry-artifact.txt");
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 0);
+
+        Assert.DoesNotContain("Test run summary", console.Output);
+        Assert.DoesNotContain("##[group]", console.Output);
+        Assert.Contains("retry-artifact.txt", console.Output);
+    }
+
+    [TestMethod]
+    [DataRow(null, null, "")]
+    [DataRow("net8.0", null, " (net8.0)")]
+    [DataRow(null, "x64", " (x64)")]
+    [DataRow("net8.0", "x64", " (net8.0|x64)")]
+    public void ActualSimpleTerminalProgressPinsCountsIdentityAndActiveDetail(string? framework, string? architecture, string identity)
+    {
+        var fixture = new SimpleTerminalFixture();
+        var state = new TestProgressState(1, "execution.dll", framework, architecture, new StubStopwatch(), isDiscovery: false);
+        state.NotifyHandshake("instance", attemptNumber: 1);
+        state.ReportPassingTest("pass", "Passed", "instance");
+        state.ReportFailedTest("fail", "Failed", "instance");
+        state.ReportSkippedTest("skip", "Skipped", "instance");
+        state.GetOrCreateTestNodeResultsState(() => new(1))
+            .AddRunningTestNode(1, "active", "Active detail", new StubStopwatch());
+
+        fixture.Terminal.RenderProgress([null, state, null], []);
+
+        Assert.AreEqual($"[+1/x1/?1] execution.dll{identity} - Active detail (0s){Environment.NewLine}{Environment.NewLine}", fixture.Text.ToString());
+        Assert.AreSequenceEqual(
+            [ConsoleColor.DarkGreen, ConsoleColor.DarkCyan, ConsoleColor.DarkRed, ConsoleColor.DarkCyan, ConsoleColor.DarkYellow, ConsoleColor.DarkCyan],
+            fixture.Colors);
+    }
+
+    [TestMethod]
+    public void ActualSimpleTerminalDiscoveryAndEmptyRowsPreserveBlankLinePolicy()
+    {
+        var fixture = new SimpleTerminalFixture();
+        var discovery = new TestProgressState(2, "discovery.dll", null, null, new StubStopwatch(), isDiscovery: true)
+        {
+            DiscoveredTests = 7,
+        };
+        fixture.Terminal.RenderProgress([], []);
+        fixture.Terminal.RenderProgress([null, null], []);
+        Assert.AreEqual(string.Empty, fixture.Text.ToString());
+        fixture.Terminal.RenderProgress([null, discovery], []);
+        Assert.AreEqual($"[+7] discovery.dll(0s){Environment.NewLine}{Environment.NewLine}", fixture.Text.ToString());
+        Assert.AreSequenceEqual([ConsoleColor.DarkMagenta, ConsoleColor.DarkCyan], fixture.Colors);
+    }
+
+    [TestMethod]
+    public void ActualSimpleTerminalProgress_PreservesTargetAndSeparateRuntime()
+    {
+        var fixture = new SimpleTerminalFixture();
+        var state = new TestProgressState(1, "execution.dll", "net472", "x64", new StubStopwatch(), isDiscovery: false, runtimeFramework: "net481");
+
+        fixture.Terminal.RenderProgress([state], []);
+
+        const string expected = """
+            [+0/x0/?0] execution.dll (net472|x64, runtime: net481)(0s)
+
+
+            """;
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), fixture.Text.ToString().Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    [DataRow(null, "net472|x64", DisplayName = "StandaloneCompatibleOverload")]
+    [DataRow("net472", "net472|x64", DisplayName = "MatchingRuntime")]
+    [DataRow("net481", "net472|x64, runtime: net481", DisplayName = "DifferentRuntime")]
+    public void AssemblyRunStarted_RuntimeIdentityPersistsThroughStartCompletionAndSummary(string? runtimeFramework, string identity)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        if (runtimeFramework is null)
+        {
+            reporter.AssemblyRunStarted("execution.dll", "net472", "x64", "execution", "execution");
+        }
+        else
+        {
+            reporter.AssemblyRunStarted("execution.dll", "net472", "x64", "execution", "execution", attemptNumber: 1, runtimeFramework);
+        }
+
+        reporter.TestCompleted("execution", "test", "Passing test", TestOutcome.Passed, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        reporter.AssemblyRunCompleted("execution", 0, outputData: null, errorData: null);
+
+        string expected = $"""
+            Running tests from execution.dll ({identity})
+            execution.dll ({identity}) passed [+1/x0/?0] (0ms)
+
+            """;
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), console.Output.Replace("\r\n", "\n"));
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 0);
+        string summary = $"""
+            Test run summary: Passed! - execution.dll ({identity})
+              total: 1
+              failed: 0
+              succeeded: 1
+              skipped: 0
+              duration: 0ms
+
+            """;
+        Assert.AreEqual((expected + Environment.NewLine + summary).Replace("\r\n", "\n"), console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void AssemblyRunCompleted_ProcessFailureRecapKeepsRuntimeWithItsTarget()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted("crash.dll", "net472", "x64", "execution", "execution", attemptNumber: null, runtimeFramework: "net481");
+        reporter.TestCompleted("execution", "test", "Passing test", TestOutcome.Passed, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        reporter.AssemblyRunCompleted("execution", 42, outputData: "crash output", errorData: null);
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 42);
+
+        string[] identityLines = console.Output.Replace("\r\n", "\n").Split('\n')
+            .Where(line => line.StartsWith("Running tests from", StringComparison.Ordinal)
+                || line.StartsWith("crash.dll", StringComparison.Ordinal)
+                || line.StartsWith("  crash.dll", StringComparison.Ordinal))
+            .ToArray();
+        Assert.AreSequenceEqual(
+            [
+                "Running tests from crash.dll (net472|x64, runtime: net481)",
+                "crash.dll (net472|x64, runtime: net481) failed [+1/x0/?0] (0ms)",
+                "  crash.dll (net472|x64, runtime: net481)",
+            ],
+            identityLines);
+    }
+
+    [TestMethod]
+    public void AssemblyRunStarted_DefaultLiteralStillSelectsExistingAttemptOverload()
+    {
+        using var reporter = new TerminalTestReporter(new StringBuilderConsole(), new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        ArgumentOutOfRangeException exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+            () => reporter.AssemblyRunStarted("application.dll", "net472", "x64", "execution", "instance", default));
+
+        Assert.AreEqual("attemptNumber", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void ActualSimpleTerminalAppendLinkDimensionsAndColorsUseOnlySuppliedConsole()
+    {
+        var fixture = new SimpleTerminalFixture();
+        fixture.Console.SetupGet(value => value.WindowWidth).Returns(83);
+        fixture.Console.SetupGet(value => value.WindowHeight).Returns(27);
+        Assert.AreEqual(83, fixture.Terminal.Width);
+        Assert.AreEqual(27, fixture.Terminal.Height);
+        fixture.Console.SetupGet(value => value.IsOutputRedirected).Returns(true);
+        Assert.AreEqual(int.MaxValue, fixture.Terminal.Width);
+        Assert.AreEqual(int.MaxValue, fixture.Terminal.Height);
+        fixture.Terminal.Append('a');
+        fixture.Terminal.Append("b");
+        fixture.Terminal.AppendLine();
+        fixture.Terminal.AppendLine("line");
+        fixture.Terminal.AppendLink("path", null);
+        fixture.Terminal.AppendLink("source", 17);
+        Assert.AreEqual($"ab{Environment.NewLine}line{Environment.NewLine}pathsource:17", fixture.Text.ToString());
+        foreach ((TerminalColor input, ConsoleColor expected) in new[]
+        {
+            (TerminalColor.Black, ConsoleColor.Black), (TerminalColor.DarkRed, ConsoleColor.DarkRed),
+            (TerminalColor.DarkGreen, ConsoleColor.DarkGreen), (TerminalColor.DarkYellow, ConsoleColor.DarkYellow),
+            (TerminalColor.DarkBlue, ConsoleColor.DarkBlue), (TerminalColor.DarkMagenta, ConsoleColor.DarkMagenta),
+            (TerminalColor.DarkCyan, ConsoleColor.DarkCyan), (TerminalColor.Gray, ConsoleColor.White),
+            (TerminalColor.Default, ConsoleColor.DarkCyan), (TerminalColor.DarkGray, ConsoleColor.Gray),
+            (TerminalColor.Red, ConsoleColor.Red), (TerminalColor.Green, ConsoleColor.Green),
+            (TerminalColor.Yellow, ConsoleColor.Yellow), (TerminalColor.Blue, ConsoleColor.Blue),
+            (TerminalColor.Magenta, ConsoleColor.Magenta), (TerminalColor.Cyan, ConsoleColor.Cyan),
+            (TerminalColor.White, ConsoleColor.White), ((TerminalColor)999, ConsoleColor.DarkCyan),
+        })
+        {
+            fixture.Terminal.SetColor(input);
+            Assert.AreEqual(expected, fixture.Colors[fixture.Colors.Count - 1]);
+        }
+
+        fixture.Terminal.ResetColor();
+        Assert.AreEqual(ConsoleColor.DarkCyan, fixture.Colors[fixture.Colors.Count - 1]);
+    }
+
+    private sealed class SimpleTerminalFixture
+    {
+        public SimpleTerminalFixture()
+        {
+            Console.Setup(value => value.GetForegroundColor()).Returns(ConsoleColor.DarkCyan);
+            Console.Setup(value => value.SetForegroundColor(It.IsAny<ConsoleColor>())).Callback<ConsoleColor>(Colors.Add);
+            Console.Setup(value => value.Write(It.IsAny<char>())).Callback<char>(value => Text.Append(value));
+            Console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value => Text.Append(value));
+            Console.Setup(value => value.WriteLine()).Callback(() => Text.AppendLine());
+            Console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value => Text.AppendLine(value));
+            Terminal = new(Console.Object);
+        }
+
+        public Mock<IConsole> Console { get; } = new();
+
+        public StringBuilder Text { get; } = new();
+
+        public List<ConsoleColor> Colors { get; } = [];
+
+        public NonAnsiTerminal Terminal { get; }
+    }
+
     // When BOTH retry mechanisms are active the attempt pair advances on either component, so the number of
     // executions cannot be derived from the final pair alone: (host 1, retry 1) -> (host 1, retry 2) ->
     // (host 2, retry 1) is three executions, but the final pair is (2, 1) and its maximum is 2. The count is
@@ -154,8 +724,10 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
 
-            // Like --no-ansi in commandline, should disable ANSI altogether.
+            // Like --ansi off in commandline, should disable ANSI altogether.
             AnsiMode = AnsiMode.NoAnsi,
 
             ShowProgress = () => false,
@@ -222,17 +794,17 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
 
-              Out of process file artifacts produced:
-                - {folder}artifact1.txt
-              In process file artifacts produced:
-                - {folder}artifact2.txt
-
             Test run summary: Failed! - {assembly} (net8.0|x64)
               total: 5
               failed: 3
               succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
+
+              Out of process file artifacts produced: 1
+                - {folder}artifact1.txt
+              In process file artifacts produced: 1
+                - {folder}artifact2.txt
 
             """;
 
@@ -307,6 +879,8 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
 
             // Like if we autodetect that we are in CI (e.g. by looking at TF_BUILD, and we don't disable ANSI.
             AnsiMode = AnsiMode.SimpleAnsi,
@@ -375,17 +949,17 @@ public sealed class TerminalTestReporterTests
             ␛[90m  Error output
             ␛[90m    Oh no!
             ␛[m
-              Out of process file artifacts produced:
-                - {folder}artifact1.txt
-              In process file artifacts produced:
-                - {folder}artifact2.txt
-
             ␛[31mTest run summary: Failed!␛[90m - ␛[m{folder}assembly.dll (net8.0|x64)
             ␛[m  total: 5
             ␛[31m  failed: 3
             ␛[m  succeeded: 1
             ␛[33m  skipped: 1
             ␛[m  duration: 3652058d 23h 59m 59s 999ms
+
+              Out of process file artifacts produced: 1
+                - {folder}artifact1.txt
+              In process file artifacts produced: 1
+                - {folder}artifact2.txt
 
             """;
 
@@ -403,6 +977,9 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
+
             // Like if we autodetect that we are in ANSI capable terminal.
             AnsiMode = AnsiMode.ForceAnsi,
 
@@ -472,9 +1049,9 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-              Out of process file artifacts produced:
+              Out of process file artifacts produced: 1
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
-              In process file artifacts produced:
+              In process file artifacts produced: 1
                 - ␛[90m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
 
             ␛[31mTest run summary: Failed!␛[90m - ␛[m␛[90m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
@@ -511,9 +1088,13 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
 
         string escapedOutput = ShowEscape(stringBuilderConsole.Output)!;
-        string expectedSummaryLines =
-            $"\x241b[32m  succeeded: 1{Environment.NewLine}\x241b[m\x241b[33m  skipped: 1{Environment.NewLine}\x241b[m  duration:";
-        Assert.Contains(expectedSummaryLines, escapedOutput);
+        const string expectedSummaryLines =
+            """
+            ␛[32m  succeeded: 1
+            ␛[m␛[33m  skipped: 1
+            ␛[m  duration:
+            """;
+        Assert.Contains(expectedSummaryLines.Replace("\r\n", "\n"), escapedOutput.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -528,6 +1109,9 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
+
             // Like if we autodetect that we are in ANSI capable terminal.
             AnsiMode = AnsiMode.ForceAnsi,
 
@@ -923,6 +1507,15 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TerminalTestReporterOptions_Default_ShowsOutputOnlyForFailedTests()
+    {
+        var options = new TerminalTestReporterOptions();
+
+        Assert.AreEqual(OutputShowMode.Failed, options.ShowStdout);
+        Assert.AreEqual(OutputShowMode.Failed, options.ShowStderr);
+    }
+
+    [TestMethod]
     public void NonAnsiTerminal_ShowOutputNone_DoesNotShowOutput()
     {
         string targetFramework = "net8.0";
@@ -1163,9 +1756,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        Assert.Contains("Coverage Threshold Results:", console.Output);
-        Assert.Contains("Total - Line (Minimum over Module): 85.5% >= 80.0% threshold", console.Output);
-        Assert.DoesNotContain("Coverage Threshold Failures:", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line (Minimum over Module): 85.5% >= 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1179,8 +1777,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        Assert.Contains("Total - Branch (Total over Module): 75.0% < 80.0% threshold", console.Output);
-        Assert.DoesNotContain(">=", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Branch (Total over Module): 75.0% < 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1196,8 +1800,35 @@ public sealed class TerminalTestReporterTests
 
         string actual = 79.96d.ToString("G17", CultureInfo.InvariantCulture);
         string required = 80d.ToString("G17", CultureInfo.InvariantCulture);
-        Assert.Contains($"Total - Line: {actual}% < {required}% threshold", console.Output);
-        Assert.DoesNotContain("80.0% < 80.0%", console.Output);
+        Assert.AreEqual(
+            $"""
+
+              Coverage Threshold Results:
+                Total - Line: {actual}% < {required}% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenExactFailureCannotBeRepresentedAsDouble_ExplainsRounding()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = new(
+            new SessionUid("session"), CoverageMetric.Line, 49.92m, 49.920000000000000000000000001m,
+            hasCoverableData: true, producerId: "platform", passed: false);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line: Coverage is below the required threshold (the percentages round to the same value).
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1224,8 +1855,14 @@ public sealed class TerminalTestReporterTests
         reporter.AppendCoverageSummary([], [threshold]);
 
         Assert.AreEqual(expectedPassed, threshold.Passed);
-        Assert.Contains($"Total - Line: {expectedText}", console.Output);
-        Assert.DoesNotContain("%", console.Output);
+        Assert.AreEqual(
+            $"""
+
+              Coverage Threshold Results:
+                Total - Line: {expectedText}
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1240,8 +1877,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([summary], []);
 
-        Assert.Contains("Total - Line: N/A", console.Output);
-        Assert.DoesNotContain("N/A%", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line: N/A
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1255,9 +1898,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        string output = console.Output.Replace("\r\n", "\n");
-        Assert.Contains("Coverage Threshold Results:", output);
-        Assert.DoesNotContain("\n\n", output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Branch (Total over Module): 75.0% < 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1274,8 +1922,15 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [passing, failing]);
 
-        Assert.Contains("Line (Minimum over Module): 90.0% >= 80.0% threshold", console.Output);
-        Assert.Contains("Method (Average over Type): 70.0% < 80.0% threshold", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line (Minimum over Module): 90.0% >= 80.0% threshold
+                Total - Method (Average over Type): 70.0% < 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1291,8 +1946,15 @@ public sealed class TerminalTestReporterTests
         reporter.AppendCoverageSummary([], [passing, failing]);
 
         string escaped = ShowEscape(console.Output)!;
-        Assert.Contains("\x241b[32m    Total - Line:", escaped);
-        Assert.Contains("\x241b[31m    Total - Branch:", escaped);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+            ␛[32m    Total - Line: 90.0% >= 80.0% threshold
+            ␛[m␛[31m    Total - Branch: 70.0% < 80.0% threshold
+            ␛[m
+            """.Replace("\r\n", "\n"),
+            escaped.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1311,9 +1973,73 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([overall, module], []);
 
-        Assert.Contains("Code Coverage Summary:", console.Output);
-        Assert.Contains("Total - Line: 85.5%", console.Output);
-        Assert.Contains("MyModule.dll - Branch: 75.0%", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line: 85.5%
+                MyModule.dll - Branch: 75.0%
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    [DataRow((int)AnsiMode.NoAnsi)]
+    [DataRow((int)AnsiMode.ForceAnsi)]
+    public void AppendCoverageSummary_WhenScopeHasMultipleMetrics_RendersOneLinePerScope(int ansiMode)
+    {
+        var console = new StringBuilderConsole();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console, (AnsiMode)ansiMode);
+        var overall = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 508, coverableCount: 1000, producerId: "producer"),
+                new CoverageMetricResult(CoverageMetric.Block, coveredCount: 516, coverableCount: 1000, producerId: "producer"),
+            ]);
+        var module = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            [
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 3, coverableCount: 4, producerId: "producer"),
+                new CoverageMetricResult(CoverageMetric.Block, coveredCount: 0, coverableCount: 0, producerId: "producer"),
+            ]);
+
+        reporter.AppendCoverageSummary([overall, module], []);
+
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line: 50.8%, Block: 51.6%
+                MyModule.dll - Line: 75.0%, Block: N/A
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenScopeHasNoMetrics_DoesNotRenderAnEmptyEntry()
+    {
+        var console = new StringBuilderConsole();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var empty = new CoverageScopeSummary(new SessionUid("session"), CoverageScope.Overall, []);
+        var module = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 3, coverableCount: 4, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([empty, module], []);
+
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                MyModule.dll - Line: 75.0%
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1346,7 +2072,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        Assert.Contains("MyModule.dll - Line (Minimum over File): 81.0% >= 80.0% threshold", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                MyModule.dll - Line (Minimum over File): 81.0% >= 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1357,18 +2090,25 @@ public sealed class TerminalTestReporterTests
         var summary = new CoverageScopeSummary(
             new SessionUid("session"),
             new CoverageScope(CoverageScopeLevel.Module, "Module\nName"),
-            [new CoverageMetricResult(
+            [
+                new CoverageMetricResult(
                 CoverageMetric.Custom,
                 coveredCount: 1,
                 coverableCount: 2,
                 producerId: "producer",
-                customMetricName: "MC/DC\tMetric")]);
+                customMetricName: "MC/DC\tMetric"),
+            ]);
 
         reporter.AppendCoverageSummary([summary], []);
 
-        Assert.Contains("Module␊Name - MC/DC␉Metric: 50.0%", console.Output);
-        Assert.DoesNotContain("Module\nName", console.Output);
-        Assert.DoesNotContain("MC/DC\tMetric", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Module␊Name - MC/DC␉Metric: 50.0%
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1387,10 +2127,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([summary], []);
 
-        Assert.Contains("Total - Line [producer-a]: 80.0%", console.Output);
-        Assert.Contains("Total - Line [producer␊b]: 70.0%", console.Output);
-        Assert.Contains("Total - Branch: 60.0%", console.Output);
-        Assert.DoesNotContain("Branch [producer-a]", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line [producer-a]: 80.0%, Line [producer␊b]: 70.0%, Branch: 60.0%
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1427,10 +2171,16 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [first, second, unique]);
 
-        Assert.Contains("Total - Line (Total over Module) [producer-a]: 90.0% >= 80.0% threshold", console.Output);
-        Assert.Contains("Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold", console.Output);
-        Assert.Contains("Total - Branch: 90.0% >= 80.0% threshold", console.Output);
-        Assert.DoesNotContain("Branch [", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line (Total over Module) [producer-a]: 90.0% >= 80.0% threshold
+                Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold
+                Total - Branch: 90.0% >= 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1455,10 +2205,17 @@ public sealed class TerminalTestReporterTests
 
             reporter.AppendCoverageSummary([summary], [threshold]);
 
-            Assert.Contains("Total - Line: 50.0%", console.Output);
-            Assert.Contains("Total - Line: 79.5% < 80.0% threshold", console.Output);
-            Assert.DoesNotContain("50,0%", console.Output);
-            Assert.DoesNotContain("79,5%", console.Output);
+            Assert.AreEqual(
+                """
+
+                  Code Coverage Summary:
+                    Total - Line: 50.0%
+
+                  Coverage Threshold Results:
+                    Total - Line: 79.5% < 80.0% threshold
+
+                """.Replace("\r\n", "\n"),
+                console.Output.Replace("\r\n", "\n"));
         }
         finally
         {
@@ -2530,6 +3287,334 @@ public sealed class TerminalTestReporterTests
         // assembly path is never appended to the "Test run summary:" line.
         Assert.DoesNotContain(firstAssembly, output);
         Assert.DoesNotContain(secondAssembly, output);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void NonCursorSummary_FailuresPrecedeArtifactsAndSuccessfulRecapsAreNotRepeated(bool simpleAnsi)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = simpleAnsi ? AnsiMode.SimpleAnsi : AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 3, isDiscovery: false, isHelp: false, isRetry: false);
+        foreach (string module in new[] { "passing", "failing", "crashed" })
+        {
+            reporter.AssemblyRunStarted($"{module}.dll", "net9.0", "x64", module, module);
+            ReportOrchestratorTest(reporter, $"{module}.dll", module, module, module, module == "failing" ? TestOutcome.Fail : TestOutcome.Passed);
+            reporter.ArtifactAdded(false, $"{module}.dll", "net9.0", "x64", module, testName: null, $"{module}.trx");
+        }
+
+        reporter.AssemblyRunCompleted("passing", 0, outputData: null, errorData: null);
+        reporter.AssemblyRunCompleted("failing", 2, outputData: null, errorData: null);
+        reporter.AssemblyRunCompleted("crashed", 42, "crash stdout", "crash stderr");
+        reporter.HandshakeFailure("missing.dll", "net9.0", 1, "handshake stdout", "handshake stderr");
+        int summaryStart = console.Output.Length;
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: null);
+
+        string output = NormalizeTerminalOutput(console.Output);
+        TestContext.WriteLine(output);
+        const string expected = """
+
+            Test run summary: Failed!
+              error: 2
+
+              total: 3
+              failed: 1
+              succeeded: 2
+              skipped: 0
+              duration: 0ms
+
+              failing.dll (net9.0|x64) failed with 1 error(s) [+0/x1/?0] (0ms)
+              crashed.dll (net9.0|x64) failed [+1/x0/?0] (0ms)
+
+
+            Handshake failures:
+              missing.dll (net9.0)
+            Exit code: 1
+              Standard output: handshake stdout
+              Error output: handshake stderr
+
+            Errored assemblies:
+              crashed.dll (net9.0|x64)
+            Exit code: 42
+              Standard output: crash stdout
+              Error output: crash stderr
+
+              In process file artifacts produced: 3
+                - passing.trx
+                - failing.trx
+                - crashed.trx
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output.Substring(summaryStart)));
+        Assert.AreEqual(1, output.Split(["passing.dll (net9.0|x64) passed"], StringSplitOptions.None).Length - 1);
+    }
+
+    [TestMethod]
+    public void NonCursorSummary_AllPassingModules_KeepOnlyAggregateAfterCompletion()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        foreach (string module in new[] { "first", "second" })
+        {
+            reporter.AssemblyRunStarted($"{module}.dll", "net9.0", "x64", module, module);
+            ReportOrchestratorTest(reporter, $"{module}.dll", module, module, module, TestOutcome.Passed);
+            reporter.AssemblyRunCompleted(module, 0, outputData: null, errorData: null);
+        }
+
+        int summaryStart = console.Output.Length;
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 0);
+
+        const string expected = """
+
+            Test run summary: Passed!
+              total: 2
+              failed: 0
+              succeeded: 2
+              skipped: 0
+              duration: 0ms
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output.Substring(summaryStart)));
+    }
+
+    [TestMethod]
+    public void NonCursorSummary_SuppressedVerdict_KeepsFailureRecapsAndArtifacts()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowRunSummary = false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: true);
+        reporter.HandshakeFailure("missing.dll", "net9.0", 1, string.Empty, "host error");
+        reporter.ArtifactAdded(true, "missing.dll", "net9.0", "x64", "missing", testName: null, "retry.log");
+        int summaryStart = console.Output.Length;
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: null);
+
+        const string expected = """
+
+
+            Handshake failures:
+              missing.dll (net9.0)
+            Exit code: 1
+              Error output: host error
+
+              Out of process file artifacts produced: 1
+                - retry.log
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output.Substring(summaryStart)));
+    }
+
+    [TestMethod]
+    public void NonCursorProgress_CompletedWorkerSlot_IsIncludedInRunTotals()
+    {
+        long elapsedTicks = 0;
+        var stopwatch = new Mock<IStopwatch>();
+        stopwatch.SetupGet(value => value.Elapsed).Returns(() => TimeSpan.FromTicks(Interlocked.Read(ref elapsedTicks)));
+        var console = new StringBuilderConsole();
+        using var rendered = new ManualResetEventSlim();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowTestResults = TestResultVisibility.None,
+            ShowActiveTests = true,
+            SlowTestThreshold = TimeSpan.Zero,
+        })
+        {
+            CreateStopwatch = () => stopwatch.Object,
+        };
+        reporter.OnProgressStopUpdate += (_, _) =>
+        {
+            if (console.Output.Length > 0)
+            {
+                rendered.Set();
+            }
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted("finished.dll", "net9.0", "x64", "finished", "finished");
+        ReportOrchestratorTest(reporter, "finished.dll", "finished", "finished", "first", TestOutcome.Passed);
+        ReportOrchestratorTest(reporter, "finished.dll", "finished", "finished", "second", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("finished");
+        reporter.AssemblyRunStarted("active.dll", "net9.0", "x64", "active", "active");
+        ReportOrchestratorTest(reporter, "active.dll", "active", "active", "third", TestOutcome.Passed);
+        reporter.TestInProgress("active", "running", "InFlight");
+        Interlocked.Exchange(ref elapsedTicks, TimeSpan.FromSeconds(60).Ticks);
+
+        Assert.IsTrue(rendered.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "The progress refresher did not render.");
+        reporter.Dispose();
+
+        const string expected = """
+            running... 3 completed, 0 failed, active modules: 1 | last completion: 1m 00s ago | active: InFlight
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output));
+    }
+
+    private static string NormalizeTerminalOutput(string output)
+        => Regex.Replace(output, @"\x1B\[[0-9;]*m", string.Empty).Replace("\r\n", "\n");
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AssemblyRunNotSelected_ReportsStatusWithoutInventingResults(bool showAssembly)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = showAssembly,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+
+        string identity = showAssembly ? "unaffected.dll (net8.0|x64) " : string.Empty;
+        Assert.AreEqual($"{identity}skipped (No affected tests selected){Environment.NewLine}", console.Output);
+        Assert.AreEqual(0, reporter.TotalTests);
+        Assert.IsFalse(reporter.HasHandshakeFailure);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AssemblyRunNotSelected_UsesSkipColorWithDistinctReason(bool simpleAnsi)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = simpleAnsi ? AnsiMode.SimpleAnsi : AnsiMode.ForceAnsi,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+
+        Assert.AreEqual($"\u001B[39m\u001B[33mskipped\u001B[90m (No affected tests selected){Environment.NewLine}\u001B[m", console.Output);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, false)]
+    [DataRow(false, true, false)]
+    [DataRow(false, false, true)]
+    public void AssemblyRunNotSelected_InformationalOrCancelledRun_StaysSilent(bool discovery, bool help, bool cancelled)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, () => cancelled, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, discovery, help, isRetry: false);
+
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+
+        Assert.AreEqual(string.Empty, console.Output);
+        Assert.AreEqual(0, reporter.TotalTests);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
+    public void AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict(bool failed, bool frameworkSkip)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+        reporter.AssemblyRunStarted("selected.dll", "net8.0", "x64", "selected", "selected");
+        reporter.TestCompleted("selected", "test", "selected test", failed ? TestOutcome.Fail : TestOutcome.Passed, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        if (frameworkSkip)
+        {
+            reporter.TestCompleted("selected", "ignored", "ignored test", TestOutcome.Skipped, TimeSpan.Zero,
+                informativeMessage: "Ignored by the framework", errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        }
+
+        reporter.AssemblyRunCompleted("selected", failed ? 2 : 0, outputData: null, errorData: null);
+        Assert.AreEqual(frameworkSkip ? 2 : 1, reporter.TotalTests);
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, failed ? 2 : 0);
+
+        string output = console.Output;
+        Assert.Contains(failed ? "\u001B[31mTest run summary: Failed!" : "\u001B[32mTest run summary: Passed!", output);
+        string plainOutput = Regex.Replace(output, @"\x1B\[[0-9;]*m", string.Empty).Replace("\r\n", "\n");
+        string counts = $"""
+              total: {(frameworkSkip ? 2 : 1)}
+              failed: {(failed ? 1 : 0)}
+              succeeded: {(failed ? 0 : 1)}
+              skipped: {(frameworkSkip ? 1 : 0)}
+              duration: 0ms
+            """;
+        Assert.Contains(counts.Replace("\r\n", "\n"), plainOutput);
+        const string notSelected = """
+            unaffected.dll (net8.0|x64) skipped (No affected tests selected)
+
+            """;
+        Assert.StartsWith(NormalizeTerminalOutput(notSelected), plainOutput);
+        Assert.AreEqual(1, plainOutput.Split(["No affected tests selected"], StringSplitOptions.None).Length - 1);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ExpectedZeroTests_HandshakeAndProcessFailures_StayRed(bool handshakeFailure)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+            AllowZeroTests = true,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        if (!handshakeFailure)
+        {
+            reporter.AssemblyRunStarted("failed.dll", "net8.0", "x64", "failed", "failed");
+        }
+
+        reporter.AssemblyRunCompleted("failed", 1, outputData: null, errorData: null);
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 1);
+
+        string verdict = handshakeFailure ? "Failed!" : "Zero tests ran";
+        Assert.Contains($"\u001B[31mTest run summary: {verdict}", console.Output);
     }
 
     // Ported from the dotnet/sdk TerminalTestReporterTests (regression for dotnet/sdk#51608) to validate the
@@ -3968,5 +5053,168 @@ public sealed class TerminalTestReporterTests
         public void WriteLine() => _output.AppendLine();
 
         public void WriteLine(string? value) => _output.AppendLine(value);
+    }
+
+    [TestMethod]
+    [DataRow((int)CoverageMetric.Statement, "Statement")]
+    [DataRow((int)CoverageMetric.Function, "Function")]
+    [DataRow((int)CoverageMetric.Block, "Block")]
+    [DataRow((int)CoverageMetric.Instruction, "Instruction")]
+    [DataRow((int)CoverageMetric.Region, "Region")]
+    [DataRow((int)CoverageMetric.Class, "Class")]
+    [DataRow((int)CoverageMetric.Condition, "Condition")]
+    [DataRow((int)CoverageMetric.Complexity, "Complexity")]
+    public void CoverageSummary_EachMetricRendersOwnLabelAndLiteralRate(int metric, string label)
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        CoverageScopeSummary summary = new(
+            new("labels"), CoverageScope.Overall,
+            [new CoverageMetricResult((CoverageMetric)metric, 3, 8, "collector")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.AreEqual(
+            $$"""
+
+              Code Coverage Summary:
+                Total - {{label}}: 37.5%
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    [DataRow((int)CoverageScopeLevel.Assembly, "Assembly")]
+    [DataRow((int)CoverageScopeLevel.Namespace, "Namespace")]
+    public void CoverageThreshold_MaximumAndPopulationLabelsRemainDistinct(int population, string label)
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Maximum, 81, 80, (CoverageScopeLevel)population);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.AreEqual(
+            $$"""
+
+              Coverage Threshold Results:
+                Total - Line (Maximum over {{label}}): 81.0% >= 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void PrintOutOfProcessArtifacts_EmptyThenCollectedArtifactsUseIndentedLinks()
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        reporter.PrintOutOfProcessArtifacts();
+        Assert.AreEqual(string.Empty, console.Output);
+        reporter.ArtifactAdded(true, null, null, null, null, null, "first.log");
+        reporter.ArtifactAdded(false, "assembly.dll", "net8.0", "x64", "execution", "test", "second.log");
+
+        reporter.PrintOutOfProcessArtifacts();
+
+        Assert.AreEqual(
+            """
+              Out of process file artifacts produced: 2
+                - first.log
+                - second.log
+
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void FlakyTests_MultipleAssembliesGroupOnlyRecoveredTestsUnderOneHeader()
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = new(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 3, false, false, true);
+        foreach (string name in new[] { "Recovered.One", "Recovered.Two" })
+        {
+            reporter.AssemblyRunStarted(name + ".dll", "net8.0", "x64", name, name + "-first", 1);
+            ReportOrchestratorTest(reporter, name + ".dll", name, name + "-first", name + ".Case", TestOutcome.Fail);
+            reporter.AssemblyRunStarted(name + ".dll", "net8.0", "x64", name, name + "-second", 2);
+            ReportOrchestratorTest(reporter, name + ".dll", name, name + "-second", name + ".Case", TestOutcome.Passed);
+            reporter.AssemblyRunCompleted(name, 0, null, null);
+        }
+
+        reporter.AssemblyRunStarted("Clean.dll", "net8.0", "x64", "clean", "clean-first", 1);
+        ReportOrchestratorTest(reporter, "Clean.dll", "clean", "clean-first", "ordinary", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("clean", 0, null, null);
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 0);
+
+        string output = console.Output.Replace("\r\n", "\n");
+        int section = output.IndexOf("Flaky tests:", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, section);
+        Assert.AreEqual(
+            """
+            Flaky tests:
+              Recovered.One.dll (net8.0|x64)
+                Recovered.One.Case failed -> passed (2 attempts)
+              Recovered.Two.dll (net8.0|x64)
+                Recovered.Two.Case failed -> passed (2 attempts)
+
+            """.Replace("\r\n", "\n"),
+            output[section..]);
+        Assert.AreEqual(0, reporter.TotalTests, "Completion resets per-run state after rendering.");
+        Assert.Contains("  total: 3\n  failed: 0\n  succeeded: 3\n  skipped: 0", output);
+    }
+
+    [TestMethod]
+    [DataRow(ConsoleColor.Black, 30)]
+    [DataRow(ConsoleColor.DarkBlue, 34)]
+    [DataRow(ConsoleColor.DarkGreen, 32)]
+    [DataRow(ConsoleColor.DarkCyan, 36)]
+    [DataRow(ConsoleColor.DarkRed, 31)]
+    [DataRow(ConsoleColor.DarkMagenta, 35)]
+    [DataRow(ConsoleColor.DarkYellow, 33)]
+    [DataRow(ConsoleColor.Gray, 37)]
+    [DataRow(ConsoleColor.DarkGray, 90)]
+    [DataRow(ConsoleColor.Blue, 94)]
+    [DataRow(ConsoleColor.Green, 92)]
+    [DataRow(ConsoleColor.Cyan, 96)]
+    [DataRow(ConsoleColor.Red, 91)]
+    [DataRow(ConsoleColor.Magenta, 95)]
+    [DataRow(ConsoleColor.Yellow, 93)]
+    [DataRow(ConsoleColor.White, 97)]
+    [DataRow((ConsoleColor)999, 39)]
+    public void WriteMessage_ConsoleColorsMapToExactAnsiSequences(ConsoleColor color, int code)
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console, AnsiMode.ForceAnsi);
+
+        reporter.WriteMessage("accent", new Microsoft.Testing.Platform.OutputDevice.SystemConsoleColor { ConsoleColor = color });
+
+        Assert.AreEqual("\u001b[" + code.ToString(CultureInfo.InvariantCulture) + "maccent" + Environment.NewLine + "\u001b[m", console.Output);
+    }
+
+    [TestMethod]
+    public void Reporter_InvalidModesAndUnknownExecutionFailBeforeWriting()
+    {
+        StringBuilderConsole console = new();
+        Assert.ThrowsExactly<UnreachableException>(() => new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = (AnsiMode)999,
+            ShowProgress = () => false,
+        }));
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        Assert.ThrowsExactly<UnreachableException>(() => reporter.TestInProgress("missing-execution", "uid", "display"));
+        Assert.AreEqual(string.Empty, console.Output);
     }
 }

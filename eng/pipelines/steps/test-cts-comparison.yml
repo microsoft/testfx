@@ -1,0 +1,20 @@
+steps:
+- pwsh: |
+    dotnet tool restore --tool-manifest .config\cts\dotnet-tools.json --configfile NuGet.config
+    exit $LASTEXITCODE
+  displayName: Restore pinned CTS tool
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
+- pwsh: .\eng\collect-cts-comparison.ps1 -Configuration $(_BuildConfig)
+  name: CollectCTS
+  displayName: Test and collect CTS comparison
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
+- task: PublishTestResults@2
+  displayName: Publish CTS comparison test results
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '**/*.trx'
+    searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/CTS'
+    testRunTitle: '$(System.JobName)-cts'
+  condition: succeededOrFailed()

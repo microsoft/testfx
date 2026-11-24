@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -65,10 +66,11 @@ public class CtrfReportEngineTests
         JsonElement root = document.RootElement;
 
         Assert.AreEqual("CTRF", root.GetProperty("reportFormat").GetString());
-        Assert.AreEqual("0.0.0", root.GetProperty("specVersion").GetString());
+        Assert.AreEqual("0.2.0", root.GetProperty("specVersion").GetString());
         Assert.IsGreaterThan(0, root.GetProperty("reportId").GetString()!.Length);
         Assert.IsGreaterThan(0, root.GetProperty("timestamp").GetString()!.Length);
         Assert.IsTrue(root.GetProperty("generatedBy").GetString()!.StartsWith("Microsoft.Testing.Extensions.CtrfReport", StringComparison.Ordinal));
+        Assert.AreEqual("execution", root.GetProperty("extra").GetProperty("microsoft.testingplatform").GetProperty("documentRole").GetString());
 
         JsonElement results = root.GetProperty("results");
 
@@ -84,6 +86,11 @@ public class CtrfReportEngineTests
 
         JsonElement testArray = results.GetProperty("tests");
         Assert.AreEqual(3, testArray.GetArrayLength());
+        Assert.AreSequenceEqual(
+            ["p1", "f1", "s1"],
+            testArray.EnumerateArray().Select(test => test.GetProperty("testId").GetString()!).ToArray());
+        Assert.IsTrue(testArray.EnumerateArray().All(test => Guid.TryParse(test.GetProperty("executionId").GetString(), out _)));
+        Assert.HasCount(3, testArray.EnumerateArray().Select(test => test.GetProperty("executionId").GetString()).Distinct());
     }
 
     [TestMethod]
@@ -162,6 +169,123 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
+    public async Task TestResultCapture_LongUidsRemainDistinctThroughRetryCollapsing()
+    {
+        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string firstUid = sharedPrefix + "\uD800";
+        string secondUid = sharedPrefix + "\uD801";
+        string hashShapedUid = ComputeTestId(firstUid);
+        string escapePrefixedUid = "uid:" + hashShapedUid;
+        TestNode firstNode = new()
+        {
+            Uid = firstUid,
+            DisplayName = "First",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode secondNode = new()
+        {
+            Uid = secondUid,
+            DisplayName = "Second",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode hashShapedNode = new()
+        {
+            Uid = hashShapedUid,
+            DisplayName = "Hash-shaped",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode escapePrefixedNode = new()
+        {
+            Uid = escapePrefixedUid,
+            DisplayName = "Escape-prefixed",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+
+        CapturedTestResult first = TestResultCapture.TryCapture(firstNode)!;
+        CapturedTestResult second = TestResultCapture.TryCapture(secondNode)!;
+        CapturedTestResult hashShaped = TestResultCapture.TryCapture(hashShapedNode)!;
+        CapturedTestResult escapePrefixed = TestResultCapture.TryCapture(escapePrefixedNode)!;
+
+        Assert.AreEqual(first.Uid, second.Uid, "The capped compatibility UIDs intentionally collide in this scenario.");
+        Assert.AreNotEqual(first.TestId, second.TestId);
+        Assert.StartsWith("sha256:", first.TestId);
+        Assert.StartsWith("sha256:", second.TestId);
+        Assert.AreEqual(ComputeTestId(firstUid), first.TestId);
+        Assert.AreEqual(first.TestId, TestResultCapture.TryCapture(firstNode)!.TestId, "The derived testId must be deterministic.");
+        Assert.AreEqual("uid:" + hashShapedUid, hashShaped.TestId);
+        Assert.AreEqual("uid:" + escapePrefixedUid, escapePrefixed.TestId);
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync([first, second, hashShaped, escapePrefixed]);
+
+        string report = memoryStream.GetUtf8Content();
+        using var document = JsonDocument.Parse(report);
+        JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(4, tests.Select(test => test.GetProperty("testId").GetString()).Distinct());
+        Assert.AreEqual(
+            tests[0].GetProperty("extra").GetProperty("uid").GetString(),
+            tests[1].GetProperty("extra").GetProperty("uid").GetString());
+
+        using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts));
+        Assert.AreEqual(4, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_CollapsesInterleavedLongUidRetrySequences()
+    {
+        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string firstUid = sharedPrefix + "A";
+        string secondUid = sharedPrefix + "B";
+
+        CapturedTestResult[] tests =
+        [
+            CaptureRetry(firstUid, "First", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 1, isSuperseded: true),
+            CaptureRetry(secondUid, "Second", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 1, isSuperseded: true),
+            CaptureRetry(secondUid, "Second", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 2, isSuperseded: false),
+            CaptureRetry(firstUid, "First", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 2, isSuperseded: false),
+        ];
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement[] reportedTests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(2, reportedTests);
+        Assert.AreSequenceEqual(["First", "Second"], reportedTests.Select(test => test.GetProperty("name").GetString()).ToArray());
+        Assert.ContainsOnly(test => test.GetProperty("retries").GetInt32() == 1, reportedTests);
+        Assert.AreNotEqual(reportedTests[0].GetProperty("testId").GetString(), reportedTests[1].GetProperty("testId").GetString());
+    }
+
+    private static CapturedTestResult CaptureRetry(
+        string uid,
+        string name,
+        TestNodeStateProperty state,
+        int attemptNumber,
+        bool isSuperseded)
+        => TestResultCapture.TryCapture(new TestNode
+        {
+            Uid = uid,
+            DisplayName = name,
+            Properties = new(state, new RetryAttemptProperty(attemptNumber, isSuperseded)),
+        })!;
+
+    private static string ComputeTestId(string uid)
+    {
+        using var sha256 = SHA256.Create();
+        byte[] bytes = new byte[uid.Length * sizeof(char)];
+        for (int i = 0; i < uid.Length; i++)
+        {
+            char value = uid[i];
+            bytes[i * 2] = (byte)value;
+            bytes[(i * 2) + 1] = (byte)(value >> 8);
+        }
+
+        return "sha256:" + string.Concat(
+            sha256.ComputeHash(bytes)
+                .Select(value => value.ToString("x2", CultureInfo.InvariantCulture)));
+    }
+
+    [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
         string huge = new('a', MaxStandardStreamLength + 7);
@@ -236,7 +360,7 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public void TestResultCapture_TruncatesAttachmentFieldsWithoutSplittingSurrogatePairs()
+    public void TestResultCapture_TruncatesAttachmentMetadataWithoutSplittingSurrogatePairs()
     {
         string name = new string('n', MaxIdentityFieldLength - 1) + "\U0001F642-name";
         string path = new string('p', MaxIdentityFieldLength - 1) + "\U0001F642-path.json";
@@ -250,7 +374,7 @@ public class CtrfReportEngineTests
         Assert.IsNotNull(attachments);
         Assert.HasCount(1, attachments);
         AssertTruncated(attachments[0].Name, MaxIdentityFieldLength - 1);
-        AssertTruncated(attachments[0].Path, MaxIdentityFieldLength - 1);
+        Assert.AreEqual(path, attachments[0].Path);
         Assert.IsNotNull(attachments[0].Description);
         AssertTruncated(attachments[0].Description!, MaxMessageLength - 1);
 
@@ -261,6 +385,38 @@ public class CtrfReportEngineTests
             Assert.DoesNotContain("\uFFFD", value);
             Assert.Contains("[truncated, original length:", value);
         }
+    }
+
+    [TestMethod]
+    [DataRow(-1)]
+    [DataRow(0)]
+    [DataRow(1)]
+    public async Task TestResultCapture_PreservesAttachmentPathInFinalAndRetryReports(int lengthOffset)
+    {
+        string path = new string('p', MaxIdentityFieldLength + lengthOffset - ".json".Length) + ".json";
+        var properties = new PropertyBag(new FileArtifactProperty(new FileInfo("artifact.json"), "Evidence"));
+        IReadOnlyList<CapturedAttachment>? attachments = CaptureAttachmentsForTest(properties, _ => path);
+
+        Assert.IsNotNull(attachments);
+        Assert.AreEqual(path, Assert.ContainsSingle(attachments).Path);
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync(
+        [
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true, attachments: attachments),
+            Captured("retry", "Retrying", "passed", retryAttemptNumber: 2, attachments: attachments),
+        ]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("passed", test.GetProperty("status").GetString());
+        Assert.AreEqual(1, test.GetProperty("retries").GetInt32());
+        JsonElement finalAttachment = Assert.ContainsSingle(test.GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual(path, finalAttachment.GetProperty("path").GetString());
+        JsonElement priorAttempt = Assert.ContainsSingle(test.GetProperty("retryAttempts").EnumerateArray());
+        Assert.AreEqual("failed", priorAttempt.GetProperty("status").GetString());
+        JsonElement priorAttachment = Assert.ContainsSingle(priorAttempt.GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual(path, priorAttachment.GetProperty("path").GetString());
     }
 
     [DataRow("artifact.BMP", "image/bmp")]
@@ -336,6 +492,8 @@ public class CtrfReportEngineTests
     {
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(true);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns("coordinated-retry");
         CapturedTestResult[] tests =
         [
             Captured("dup", "Row A", "failed", errorMessage: "first failure"),
@@ -360,9 +518,43 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(
             ["Row A", "Row B", "Row C", "Solo"],
             testArray.EnumerateArray().Select(t => t.GetProperty("name").GetString()!).ToArray());
+        Assert.AreSequenceEqual(
+            ["dup", "dup", "dup", "unique"],
+            testArray.EnumerateArray().Select(t => t.GetProperty("testId").GetString()!).ToArray());
+        Assert.HasCount(
+            4,
+            testArray.EnumerateArray().Select(t => t.GetProperty("executionId").GetString()).Distinct());
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("flaky", out _)));
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_RetryMerge_PreservesAmbiguousDuplicateUids()
+    {
+        async Task<string> GenerateAsync(CapturedTestResult[] tests)
+        {
+            using var memoryStream = new MemoryFileStream();
+            CtrfReportEngine engine = CreateEngine(memoryStream);
+            _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(true);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns("retry-workflow");
+            await engine.GenerateReportAsync(tests);
+            return memoryStream.GetUtf8Content();
+        }
+
+        string firstReport = await GenerateAsync(
+            [Captured("same", "First", "failed"), Captured("same", "Second", "passed")]);
+        string retryReport = await GenerateAsync([Captured("same", "First", "passed")]);
+        using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([firstReport, retryReport], CtrfMergeMode.CollapseRetryAttempts));
+        JsonElement results = merged.RootElement.GetProperty("results");
+        JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+
+        Assert.HasCount(3, tests);
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreSequenceEqual(["First", "Second", "First"], tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
+        Assert.AreSequenceEqual(["failed", "passed", "passed"], tests.Select(test => test.GetProperty("status").GetString()!).ToArray());
+        Assert.HasCount(3, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
+        Assert.ContainsOnly(test => !test.TryGetProperty("retryAttempts", out _), tests);
     }
 
     [TestMethod]
@@ -409,6 +601,9 @@ public class CtrfReportEngineTests
         Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
 
         JsonElement retry = results.GetProperty("tests")[0];
+        Assert.AreEqual("retry", retry.GetProperty("testId").GetString());
+        string executionId = retry.GetProperty("executionId").GetString()!;
+        Assert.IsTrue(Guid.TryParse(executionId, out _));
         Assert.AreEqual("passed", retry.GetProperty("status").GetString());
         Assert.AreEqual(2, retry.GetProperty("retries").GetInt32());
         Assert.IsTrue(retry.GetProperty("flaky").GetBoolean());
@@ -420,6 +615,11 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(
             ["first failure", "second failure"],
             priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
+        Assert.IsTrue(retry.TryGetProperty("attemptId", out JsonElement finalAttemptId), "The final attempt must have a native CTRF identity.");
+        string[] attemptIds = [finalAttemptId.GetString()!, .. priorAttempts.Select(attempt => attempt.GetProperty("attemptId").GetString()!)];
+        Assert.ContainsOnly(attemptId => Guid.TryParse(attemptId, out _), attemptIds);
+        Assert.HasCount(3, attemptIds.Distinct());
+        Assert.DoesNotContain(executionId, attemptIds);
 
         JsonElement attachment = Assert.ContainsSingle(priorAttempts[0].GetProperty("attachments").EnumerateArray());
         Assert.AreEqual("first.log", attachment.GetProperty("name").GetString());
@@ -526,6 +726,9 @@ public class CtrfReportEngineTests
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
         JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+
+        Assert.AreEqual("id-1", test.GetProperty("testId").GetString());
+        Assert.IsTrue(Guid.TryParse(test.GetProperty("executionId").GetString(), out _));
 
         // CTRF spec required fields per test: name, status, duration.
         Assert.AreEqual("MyTest", test.GetProperty("name").GetString());
@@ -1130,21 +1333,21 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_RunId_FallsBackToTheDotnetTestExecutionId()
+    [DataRow(null)]
+    [DataRow("")]
+    public async Task GenerateReportAsync_RunId_IsOmitted_WhenOnlyTheModuleExecutionIdIsKnown(string? logicalRunId)
     {
-        // The execution id identifies this test application's own process tree. It is per root test application,
-        // not per 'dotnet test' invocation, so it correlates a module with its child processes — not with the
-        // sibling modules of a multi-project run, which legitimately report different logical runs.
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
-        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns(logicalRunId);
         _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
 
         await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
-        Assert.AreEqual("execution-7", document.RootElement.GetProperty("runId").GetString());
+        Assert.IsFalse(document.RootElement.TryGetProperty("runId", out _));
         Assert.AreNotEqual("execution-7", document.RootElement.GetProperty("reportId").GetString());
+        Assert.AreEqual("execution-7", _environmentMock.Object.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"));
     }
 
     [TestMethod]
@@ -1162,6 +1365,79 @@ public class CtrfReportEngineTests
         string runId = document.RootElement.GetProperty("runId").GetString()!;
         Assert.IsTrue(Guid.TryParse(runId, out _), $"Expected a generated id, got '{runId}'.");
         Assert.AreNotEqual(document.RootElement.GetProperty("reportId").GetString(), runId);
+    }
+
+    [TestMethod]
+    [DataRow(null, true)]
+    [DataRow("", true)]
+    [DataRow("retry-workflow", true)]
+    [DataRow("inherited-trx-run", false)]
+    public async Task GenerateReportAsync_ExecutionIdentity_UsesOnlyCoordinatedRetryScope(string? retryScope, bool isRetryChild)
+    {
+        async Task<string> GenerateAsync(string status)
+        {
+            using var memoryStream = new MemoryFileStream();
+            CtrfReportEngine engine = CreateEngine(memoryStream);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("shared-ci-run");
+            _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(isRetryChild);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns(retryScope);
+            await engine.GenerateReportAsync([Captured("case-1", "First", status), Captured("case-2", "Second", "passed")]);
+            return memoryStream.GetUtf8Content();
+        }
+
+        string firstReport = await GenerateAsync("failed");
+        string secondReport = await GenerateAsync("passed");
+        using var first = JsonDocument.Parse(firstReport);
+        using var second = JsonDocument.Parse(secondReport);
+        JsonElement firstCase = first.RootElement.GetProperty("results").GetProperty("tests")[0];
+        JsonElement secondCase = second.RootElement.GetProperty("results").GetProperty("tests")[0];
+        Assert.IsTrue(firstCase.TryGetProperty("attemptId", out JsonElement firstAttempt), "CTRF 0.2.0 must expose the final attempt identity.");
+        Assert.IsTrue(secondCase.TryGetProperty("attemptId", out JsonElement secondAttempt), "CTRF 0.2.0 must expose the final attempt identity.");
+        string firstExecutionId = firstCase.GetProperty("executionId").GetString()!;
+        string secondExecutionId = secondCase.GetProperty("executionId").GetString()!;
+        string firstAttemptId = firstAttempt.GetString()!;
+        string secondAttemptId = secondAttempt.GetString()!;
+
+        Assert.IsTrue(Guid.TryParse(firstExecutionId, out _));
+        Assert.IsTrue(Guid.TryParse(firstAttemptId, out _));
+        Assert.IsTrue(Guid.TryParse(secondAttemptId, out _));
+        Assert.AreNotEqual(firstAttemptId, secondAttemptId);
+        Assert.AreNotEqual(firstExecutionId, firstAttemptId);
+        Assert.IsFalse(firstCase.GetProperty("extra").TryGetProperty("mtpAttemptId", out _));
+        Assert.AreNotEqual(first.RootElement.GetProperty("reportId").GetString(), second.RootElement.GetProperty("reportId").GetString());
+        Assert.AreNotEqual(firstExecutionId, first.RootElement.GetProperty("results").GetProperty("tests")[1].GetProperty("executionId").GetString());
+        if (!isRetryChild || string.IsNullOrEmpty(retryScope))
+        {
+            Assert.AreNotEqual(firstExecutionId, secondExecutionId, "A shared CI runId does not establish a retry relationship.");
+        }
+        else
+        {
+            Assert.AreEqual(firstExecutionId, secondExecutionId);
+            using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([firstReport, secondReport], CtrfMergeMode.CollapseRetryAttempts));
+            JsonElement mergedCase = merged.RootElement.GetProperty("results").GetProperty("tests")[0];
+            Assert.AreEqual(firstExecutionId, mergedCase.GetProperty("executionId").GetString());
+            Assert.AreEqual(secondAttemptId, mergedCase.GetProperty("attemptId").GetString());
+            Assert.AreEqual(firstAttemptId, mergedCase.GetProperty("retryAttempts")[0].GetProperty("attemptId").GetString());
+        }
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_ExecutionIdentity_DistinguishesRetryWorkflowsWithinOneRun()
+    {
+        var executionIds = new List<string>();
+        foreach (string scope in new[] { "module-workflow-1", "module-workflow-2" })
+        {
+            using var memoryStream = new MemoryFileStream();
+            CtrfReportEngine engine = CreateEngine(memoryStream);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("shared-ci-run");
+            _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(true);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns(scope);
+            await engine.GenerateReportAsync([Captured("case-1", "Same case UID", "passed")]);
+            using var report = JsonDocument.Parse(memoryStream.GetUtf8Content());
+            executionIds.Add(report.RootElement.GetProperty("results").GetProperty("tests")[0].GetProperty("executionId").GetString()!);
+        }
+
+        Assert.HasCount(2, executionIds.Distinct(StringComparer.Ordinal));
     }
 
     private CtrfReportEngine CreateEngine(MemoryFileStream stream, bool isIncomplete = false)

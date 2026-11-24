@@ -34,6 +34,130 @@ public sealed class CtrfReportGeneratorLifecycleTests
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
 
     [TestMethod]
+    [DataRow(-1, 0, true)]
+    [DataRow(0, 0, true)]
+    [DataRow(1, 1, false)]
+    public async Task ControllerChild_ByteBudgetAcceptsExactBoundaryAndReservesCompletionAsync(int boundaryOffset, int expectedDropped, bool expectedResultRecord)
+    {
+        var completed = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var timeout = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Func<Task>? writer = null;
+        var task = new Mock<ITask>();
+        task.Setup(value => value.RunLongRunning(It.IsAny<Func<Task>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<Func<Task>, string, CancellationToken>((action, _, _) => writer = action)
+            .Returns(completed.Task);
+        task.Setup(value => value.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>())).Returns(timeout.Task);
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, task: task.Object);
+        var session = new TestSessionContextStub();
+        await context.Generator.OnTestSessionStartingAsync(session);
+        await context.Generator.ConsumeAsync(null!, CreateMessage("passed", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        Type generatorBase = context.Generator.GetType().BaseType!;
+        Type handler = typeof(CtrfReportEngine).Assembly.GetType("Microsoft.Testing.Extensions.ReportProcessLifetimeHandler`2", true)!;
+        long maximum = Convert.ToInt64(handler.GetField("MaxJournalBytes", BindingFlags.Static | BindingFlags.NonPublic)!.GetRawConstantValue(), CultureInfo.InvariantCulture);
+        int reserve = (int)generatorBase.GetField("JournalCompletionReserveBytes", BindingFlags.Static | BindingFlags.NonPublic)!.GetRawConstantValue()!;
+        var queue = (System.Collections.IEnumerable)generatorBase.GetField("_journalQueue", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(context.Generator)!;
+        MethodInfo serialize = context.Generator.GetType().GetMethod("SerializeJournalRecord", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        int dataBytes = queue.Cast<object>().Sum(record => Encoding.UTF8.GetByteCount((string)serialize.Invoke(context.Generator, [record])!) + 1);
+        generatorBase.GetField("_journalBytesWritten", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(context.Generator, maximum - reserve - dataBytes + boundaryOffset);
+
+        Task finish = context.Generator.OnTestSessionFinishingAsync(session);
+        Assert.IsNotNull(writer);
+        await writer();
+        completed.SetResult(null);
+        await finish;
+        context.Generator.Dispose();
+
+        Assert.ContainsSingle(context.PublishedArtifacts);
+        using var report = JsonDocument.Parse(context.ReportStream.GetUtf8Content());
+        Assert.AreEqual(1, report.RootElement.GetProperty("results").GetProperty("summary").GetProperty("passed").GetInt32());
+        string[] records = context.JournalStream.GetUtf8Content().Split(['\n'], StringSplitOptions.RemoveEmptyEntries);
+        using var completion = JsonDocument.Parse(records[^1]);
+        Assert.AreEqual(2, completion.RootElement.GetProperty("Type").GetInt32());
+        Assert.AreEqual(expectedDropped, completion.RootElement.GetProperty("DroppedJournalRecords").GetInt32());
+        Assert.AreEqual(expectedResultRecord, records.Any(record => record.Contains("\"Type\":1", StringComparison.Ordinal)));
+        Assert.IsLessThanOrEqualTo(maximum, (long)generatorBase.GetField("_journalBytesWritten", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(context.Generator)!);
+        Assert.IsTrue(context.JournalStream.IsDisposed);
+    }
+
+    [TestMethod]
+    [DataRow(3, 0, true)]
+    [DataRow(2, 1, false)]
+    [DataRow(1, 2, false)]
+    public async Task ControllerChild_RecordBudgetReservesCompletionAndPreservesNormalReportAsync(int availableRecords, int expectedDropped, bool expectedResultRecord)
+    {
+        var completed = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var timeout = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Func<Task>? writer = null;
+        var task = new Mock<ITask>();
+        task.Setup(value => value.RunLongRunning(It.IsAny<Func<Task>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<Func<Task>, string, CancellationToken>((action, _, _) => writer = action)
+            .Returns(completed.Task);
+        task.Setup(value => value.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>())).Returns(timeout.Task);
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, task: task.Object);
+        Type handler = typeof(CtrfReportEngine).Assembly.GetType("Microsoft.Testing.Extensions.ReportProcessLifetimeHandler`2", true)!;
+        int maximum = (int)handler.GetField("MaxJournalRecordCount", BindingFlags.Static | BindingFlags.NonPublic)!.GetRawConstantValue()!;
+        Type generatorBase = context.Generator.GetType().BaseType!;
+        generatorBase.GetField("_journalRecordsWritten", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(context.Generator, maximum - availableRecords);
+        var session = new TestSessionContextStub();
+
+        await context.Generator.OnTestSessionStartingAsync(session);
+        await context.Generator.ConsumeAsync(null!, CreateMessage("passed", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        Task finish = context.Generator.OnTestSessionFinishingAsync(session);
+        Assert.IsNotNull(writer);
+        await writer();
+        completed.SetResult(null);
+        await finish;
+        context.Generator.Dispose();
+
+        Assert.ContainsSingle(context.PublishedArtifacts);
+        using var report = JsonDocument.Parse(context.ReportStream.GetUtf8Content());
+        Assert.AreEqual(1, report.RootElement.GetProperty("results").GetProperty("summary").GetProperty("passed").GetInt32());
+        string[] records = context.JournalStream.GetUtf8Content().Split(['\n'], StringSplitOptions.RemoveEmptyEntries);
+        using var completion = JsonDocument.Parse(records[^1]);
+        Assert.AreEqual(2, completion.RootElement.GetProperty("Type").GetInt32());
+        Assert.AreEqual(expectedDropped, completion.RootElement.GetProperty("DroppedJournalRecords").GetInt32());
+        Assert.AreEqual(expectedResultRecord, records.Any(record => record.Contains("\"Type\":1", StringComparison.Ordinal)));
+        Assert.AreEqual(maximum, (int)generatorBase.GetField("_journalRecordsWritten", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(context.Generator)!);
+        Assert.IsTrue(context.JournalStream.IsDisposed);
+    }
+
+    [TestMethod]
+    public async Task ControllerChild_CompletionTimeoutPreservesPublishedReportAndCanDrainCapturedWriterAsync()
+    {
+        var completed = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Func<Task>? writer = null;
+        var task = new Mock<ITask>();
+        task.Setup(value => value.RunLongRunning(It.IsAny<Func<Task>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<Func<Task>, string, CancellationToken>((action, _, _) => writer = action)
+            .Returns(completed.Task);
+        task.Setup(value => value.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, task: task.Object);
+        var session = new TestSessionContextStub();
+
+        await context.Generator.OnTestSessionStartingAsync(session);
+        await context.Generator.ConsumeAsync(null!, CreateMessage("passed", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        await context.Generator.OnTestSessionFinishingAsync(session);
+
+        Assert.ContainsSingle(context.PublishedArtifacts);
+        using var report = JsonDocument.Parse(context.ReportStream.GetUtf8Content());
+        Assert.AreEqual(1, report.RootElement.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32());
+        context.LoggerMock.Verify(
+            value => value.LogAsync(
+                LogLevel.Warning,
+                It.Is<string>(message => message.Contains("writer did not drain within the hang timeout", StringComparison.Ordinal)),
+                null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
+        context.Generator.Dispose();
+        context.Generator.Dispose();
+        Assert.IsNotNull(writer);
+        await writer();
+        completed.SetResult(null);
+        Assert.IsTrue(context.JournalStream.IsDisposed);
+        Assert.Contains("\"Type\":2", context.JournalStream.GetUtf8Content());
+    }
+
+    [TestMethod]
     public async Task IsEnabledAsync_ReturnsTrue_WhenOptionIsSetAsync()
     {
         GeneratorTestContext context = CreateGenerator(optionIsSet: true);
@@ -228,7 +352,8 @@ public sealed class CtrfReportGeneratorLifecycleTests
         bool optionIsSet,
         bool isControllerChild = false,
         bool journalWriteFails = false,
-        bool blockJournalWrites = false)
+        bool blockJournalWrites = false,
+        ITask? task = null)
     {
         var reportStream = new MemoryFileStream();
         var journalStream = new MemoryFileStream(journalWriteFails, blockJournalWrites);
@@ -302,7 +427,7 @@ public sealed class CtrfReportGeneratorLifecycleTests
         serviceProvider.AddService(_testFrameworkMock.Object);
         serviceProvider.AddService(testApplicationProcessExitCodeMock.Object);
         serviceProvider.AddService(loggerFactoryMock.Object);
-        serviceProvider.AddService(new SystemTask());
+        serviceProvider.AddService(task ?? new SystemTask());
 
         return new(
             new CtrfReportGenerator(serviceProvider),

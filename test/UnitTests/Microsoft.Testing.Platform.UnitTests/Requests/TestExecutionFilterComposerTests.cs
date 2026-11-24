@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -364,6 +365,54 @@ public sealed class TestExecutionFilterComposerTests
         => Assert.ThrowsExactly<ArgumentException>(
             () => new CompositeTestExecutionFilter(TestExecutionFilterOperator.And, new NopFilter(), null!));
 
+    [TestMethod]
+    public async Task ComposeAsync_UidIntersection_IsOrdinalDeduplicatedAndDeterministicallyOrdered()
+    {
+        TestNodeUidListFilter request = new([new("a"), new("A"), new("B"), new("B"), new("b")]);
+        StubFilterProvider provider = new("provider", new TestNodeUidListFilter([new("a"), new("B"), new("c")]));
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            request, [provider], RunConsoleContext, allowProviderContributions: true, CancellationToken.None);
+
+        AssertUidFilter(result, "B", "a");
+        Assert.AreSequenceEqual(new[] { "a", "A", "B", "B", "b" }, request.TestNodeUids.Select(uid => uid.Value));
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_CancellationDuringProvider_DoesNotUseItsResultOrInvokeLaterProviders()
+    {
+        using CancellationTokenSource cancellation = new();
+        StubFilterProvider first = new("first", (_, _) =>
+        {
+            cancellation.Cancel();
+            return Task.FromResult<ITestExecutionFilter?>(new TestNodeUidListFilter([new("would constrain")]));
+        });
+        bool laterInvoked = false;
+        StubFilterProvider later = new("later", (_, _) =>
+        {
+            laterInvoked = true;
+            return Task.FromResult<ITestExecutionFilter?>(new NopFilter());
+        });
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
+            TestExecutionFilterComposer.ComposeAsync(new NopFilter(), [first, later], RunConsoleContext, true, cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
+        Assert.IsFalse(laterInvoked);
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_ConjunctionContainingOnlyNopLeaves_DoesNotDiscardRequestConstraint()
+    {
+        StubFilterProvider provider = new("empty-conjunction", new CompositeTestExecutionFilter(
+            TestExecutionFilterOperator.And, new NopFilter(), new NopFilter()));
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            new TestNodeUidListFilter([new("z"), new("A"), new("z")]), [provider], RunConsoleContext, true, CancellationToken.None);
+
+        AssertUidFilter(result, "A", "z");
+    }
+
     private static void AssertUidFilter(ITestExecutionFilter filter, params string[] expectedUids)
     {
         TestNodeUidListFilter uidFilter = Assert.IsInstanceOfType<TestNodeUidListFilter>(filter);
@@ -416,5 +465,74 @@ public sealed class TestExecutionFilterComposerTests
         }
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+    }
+
+    [TestMethod]
+    public void GetLeafFilters_NestedConjunctionPreservesDepthFirstIdentityAndOrder()
+    {
+        TreeNodeFilter first = new("/Assembly/**");
+        TestNodeUidListFilter second = new([new("uid-b"), new("uid-a")]);
+        NopFilter third = new();
+        TreeNodeFilter fourth = new("/Assembly/Namespace/Class/Case");
+        CompositeTestExecutionFilter root = new(
+            TestExecutionFilterOperator.And,
+            first,
+            new CompositeTestExecutionFilter(
+                TestExecutionFilterOperator.And,
+                second,
+                new CompositeTestExecutionFilter(TestExecutionFilterOperator.And, third, fourth)));
+
+        Assert.AreSequenceEqual<ITestExecutionFilter>([first, second, third, fourth], TestExecutionFilterComposer.GetLeafFilters(root));
+        Assert.AreSame(first, Assert.ContainsSingle(TestExecutionFilterComposer.GetLeafFilters(first)));
+        Assert.AreSequenceEqual(["uid-b", "uid-a"], second.TestNodeUids.Select(uid => uid.Value));
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_OnlyNopConstraintsProducesUnconstrainedFilter()
+    {
+        StubFilterProvider provider = new(
+            "unconstrained",
+            new CompositeTestExecutionFilter(TestExecutionFilterOperator.And, new NopFilter(), new NopFilter()));
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            new NopFilter(), [provider], RunConsoleContext, true, CancellationToken.None);
+
+        Assert.IsInstanceOfType<NopFilter>(result);
+        Assert.AreSame(result, Assert.ContainsSingle(TestExecutionFilterComposer.GetLeafFilters(result)));
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_WithUnsupportedRequestFilter_ReportsTheRequestFilterTypeWithoutNamingAProvider()
+    {
+        StubFilterProvider provider = new("provider-a", new TestNodeUidListFilter([new("A")]));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestExecutionFilterComposer.ComposeAsync(
+                new CustomFilter(),
+                [provider],
+                RunConsoleContext,
+                allowProviderContributions: true,
+                CancellationToken.None));
+
+        // Unlike the error about a filter returned by a provider, the one about the request filter names no provider.
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("UnsupportedRequestTestExecutionFilter"), typeof(CustomFilter).FullName),
+            exception.Message);
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_CancellationRequestedByTheOnlyProvider_DoesNotUseItsResult()
+    {
+        using CancellationTokenSource cancellation = new();
+        StubFilterProvider provider = new("only", (_, _) =>
+        {
+            cancellation.Cancel();
+            return Task.FromResult<ITestExecutionFilter?>(new TestNodeUidListFilter([new("would constrain")]));
+        });
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
+            TestExecutionFilterComposer.ComposeAsync(new NopFilter(), [provider], RunConsoleContext, true, cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
     }
 }

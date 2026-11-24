@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
@@ -12,6 +13,105 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class FormatterUtilitiesTests
 {
+    [TestMethod]
+    [DataRow(JsonRpcMethods.ClientLog)]
+    [DataRow(JsonRpcMethods.ClientShowMessage)]
+    public async Task Serialize_OutputNotificationsKeepTheSamePayload(string method)
+    {
+        string json = await _formatter.SerializeAsync(new NotificationMessage(
+            method, new LogEventArgs(new ServerLogMessage(LogLevel.Information, "plain μ"))));
+        IDictionary<string, object?> properties =
+#if NETCOREAPP
+            Deserialize<IDictionary<string, object?>>(json);
+#else
+            Assert.IsInstanceOfType<IDictionary<string, object?>>(Jsonite.Json.Deserialize(json));
+#endif
+        Assert.AreEqual(method, properties[JsonRpcStrings.Method]);
+        var parameters = (IDictionary<string, object?>)properties[JsonRpcStrings.Params]!;
+        Assert.HasCount(2, parameters);
+        Assert.AreEqual("Information", parameters[JsonRpcStrings.Level]);
+        Assert.AreEqual("plain μ", parameters[JsonRpcStrings.Message]);
+    }
+
+    [TestMethod]
+    [DataRow("", null)]
+    [DataRow("\"showMessage\":null,", null)]
+    [DataRow("\"showMessage\":false,", false)]
+    [DataRow("\"showMessage\":true,", true)]
+    public void Deserialize_ShowMessage_RequestPreservesOptionalValue(string capability, bool? expected)
+    {
+        string json = $$"""
+            {"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{ "testing":{ {{capability}} "debuggerProvider":false} } }
+            """;
+
+        Assert.AreEqual(expected, Deserialize<InitializeRequestArgs>(json).Capabilities.ShowMessage);
+    }
+
+    [TestMethod]
+    [DataRow("\"true\"")]
+    [DataRow("1")]
+    [DataRow("{}")]
+    [DataRow("[]")]
+    public void Deserialize_ShowMessage_InvalidRequestValueIsRejected(string value)
+    {
+        string json = $$"""
+            {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"testing":{"showMessage":{{value}},"debuggerProvider":false} } } }
+            """;
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(Deserialize<RpcMessage>(json));
+        InvalidRequestParamsArgs error = Assert.IsInstanceOfType<InvalidRequestParamsArgs>(request.Params);
+        Assert.AreEqual(ErrorCodes.InvalidParams, error.ErrorCode);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Serialize_ShowMessage_ResponseRoundTripsOptionalAcknowledgement(bool? applied)
+    {
+        ServerCapabilities capabilities = new(new ServerTestingCapabilities(true, false, false, true, false)
+        {
+            ShowMessage = applied,
+        });
+
+        string json = await _formatter.SerializeAsync(capabilities);
+        Assert.AreEqual(applied, Deserialize<ServerCapabilities>(json).TestingCapabilities.ShowMessage);
+        Assert.AreEqual(applied.HasValue, json.Contains("\"showMessage\""));
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(capabilities);
+        Assert.IsFalse(properties.ContainsKey(JsonRpcStrings.ShowMessage));
+        IDictionary<string, object?> testing = Assert.IsInstanceOfType<IDictionary<string, object?>>(properties[JsonRpcStrings.Testing]);
+        Assert.AreEqual(applied.HasValue, testing.ContainsKey(JsonRpcStrings.ShowMessage));
+        Assert.AreEqual(applied, SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.ShowMessage);
+        if (applied is null)
+        {
+            testing[JsonRpcStrings.ShowMessage] = null;
+            Assert.IsNull(SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.ShowMessage);
+            string explicitNull = json.Replace(" ", string.Empty).Replace("\"testing\":{", "\"testing\":{\"showMessage\":null,");
+            Assert.Contains("\"showMessage\":null", explicitNull);
+            Assert.IsNull(Deserialize<ServerCapabilities>(explicitNull).TestingCapabilities.ShowMessage);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("true")]
+    [DataRow("false")]
+    [DataRow("null")]
+    [DataRow("\"ignored\"")]
+    public async Task ShowMessage_TopLevelPropertyIsIgnored(string value)
+    {
+        string request = $$"""
+            {"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"showMessage":{{value}},"testing":{"debuggerProvider":false} } }
+            """;
+        Assert.IsNull(Deserialize<InitializeRequestArgs>(request).Capabilities.ShowMessage);
+
+        ServerCapabilities capabilities = new(new ServerTestingCapabilities(true, false, false, true, false));
+        string response = await _formatter.SerializeAsync(capabilities);
+        Assert.IsNull(Deserialize<ServerCapabilities>(response.Insert(1, $"\"showMessage\":{value},")).TestingCapabilities.ShowMessage);
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(capabilities);
+        properties[JsonRpcStrings.ShowMessage] = true;
+        Assert.IsNull(SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.ShowMessage);
+    }
+
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
     public static IEnumerable<object[]> SerializerTypesForDynamicData
@@ -370,6 +470,110 @@ public sealed class FormatterUtilitiesTests
     }
 
     [TestMethod]
+    [DataRow(-32700)]
+    [DataRow(-32600)]
+    [DataRow(-31001)]
+    public void Deserialize_NullIdError_PreservesUncorrelatedPayload(int code)
+    {
+        string json = $$$$"""
+            {"jsonrpc":"2.0","id":null,"error":{"code":{{{{code}}}},"message":"remote-error","data":{"detail":"preserved"}}}
+            """;
+
+        ErrorMessage error = Assert.IsInstanceOfType<ErrorMessage>(Deserialize<RpcMessage>(json));
+
+        Assert.IsNull(error.Id);
+        Assert.IsNull(error.StringId);
+        Assert.AreEqual(code, error.ErrorCode);
+        Assert.AreEqual("remote-error", error.Message);
+        IDictionary<string, object?> data = Assert.IsInstanceOfType<IDictionary<string, object?>>(error.Data);
+        Assert.AreEqual("preserved", data["detail"]);
+        Assert.HasCount(1, data);
+    }
+
+    [TestMethod]
+    public async Task Serialize_NullIdError_EmitsExplicitNullId()
+    {
+        ErrorMessage error = new(null, ErrorCodes.ParseError, "parse-error", null);
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(error);
+
+        Assert.ContainsEntry(JsonRpcStrings.Id, null, properties);
+        Assert.AreEqual(
+            """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"data":{},"message":"parse-error"}}""",
+            (await _formatter.SerializeAsync(error)).Replace(" ", string.Empty));
+    }
+
+    [TestMethod]
+    [DataRow("0", 0, null)]
+    [DataRow("\"0\"", 0, "0")]
+    [DataRow("-2147483648", int.MinValue, null)]
+    [DataRow("\"-2147483648\"", int.MinValue, "-2147483648")]
+    [DataRow("2147483647", int.MaxValue, null)]
+    [DataRow("\"2147483647\"", int.MaxValue, "2147483647")]
+    public void Deserialize_CorrelatedError_PreservesIdKind(string rawId, int expectedId, string? expectedStringId)
+    {
+        string json = $$$"""
+            {"jsonrpc":"2.0","id":{{{rawId}}},"error":{"code":-32700,"message":"parse-error"}}
+            """;
+
+        ErrorMessage error = Assert.IsInstanceOfType<ErrorMessage>(Deserialize<RpcMessage>(json));
+
+        Assert.AreEqual(expectedId, error.Id);
+        Assert.AreEqual(expectedStringId, error.StringId);
+    }
+
+    [TestMethod]
+    [DataRow("result")]
+    [DataRow("method")]
+    [DataRow("null-method")]
+    [DataRow("null-error")]
+    [DataRow("array-error")]
+    [DataRow("missing-code")]
+    [DataRow("null-code")]
+    [DataRow("string-code")]
+    [DataRow("fractional-code")]
+    [DataRow("out-of-range-code")]
+    [DataRow("missing-message")]
+    [DataRow("null-message")]
+    [DataRow("non-string-message")]
+    public void Deserialize_NullIdError_RejectsInvalidEnvelope(string scenario)
+    {
+        string json = scenario switch
+        {
+            "result" => """{"jsonrpc":"2.0","id":null,"result":null,"error":{"code":-32700,"message":"parse-error"}}""",
+            "method" => """{"jsonrpc":"2.0","id":null,"method":"custom","error":{"code":-32700,"message":"parse-error"}}""",
+            "null-method" => """{"jsonrpc":"2.0","id":null,"method":null,"error":{"code":-32700,"message":"parse-error"}}""",
+            "null-error" => """{"jsonrpc":"2.0","id":null,"error":null}""",
+            "array-error" => """{"jsonrpc":"2.0","id":null,"error":[]}""",
+            "missing-code" => """{"jsonrpc":"2.0","id":null,"error":{"message":"parse-error"}}""",
+            "null-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":null,"message":"parse-error"}}""",
+            "string-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":"-32700","message":"parse-error"}}""",
+            "fractional-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700.5,"message":"parse-error"}}""",
+            "out-of-range-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":2147483648,"message":"parse-error"}}""",
+            "missing-message" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700}}""",
+            "null-message" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":null}}""",
+            "non-string-message" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":42}}""",
+            _ => throw new ArgumentOutOfRangeException(nameof(scenario)),
+        };
+
+        Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(json));
+        Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<ErrorMessage>(json));
+    }
+
+    [TestMethod]
+    public void Deserialize_MissingErrorId_RemainsInvalid()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
+            """{"jsonrpc":"2.0","error":{"code":-32700,"message":"parse-error"}}"""));
+
+    [TestMethod]
+    public void Deserialize_NullSuccessId_RemainsInvalid()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
+            """{"jsonrpc":"2.0","id":null,"result":null}"""));
+
+    [TestMethod]
+    public void Deserialize_NullCancellationId_RemainsInvalid()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<CancelRequestArgs>("""{"id":null}"""));
+
+    [TestMethod]
     public void DeserializeInitializeResponse_NonStringProtocolVersion_Throws()
     {
         const string Json = """
@@ -414,6 +618,52 @@ public sealed class FormatterUtilitiesTests
 
         Assert.Contains("\"retry.attempt\":2", serialized, serialized);
         Assert.Contains("\"retry.is-superseded\":false", serialized, serialized);
+    }
+
+    [TestMethod]
+    [DynamicData(
+        nameof(TestNodeTimingData.Cases),
+        typeof(TestNodeTimingData),
+        DynamicDataDisplayName = nameof(TestNodeTimingData.GetDisplayName),
+        DynamicDataDisplayNameDeclaringType = typeof(TestNodeTimingData))]
+    public async Task Serialize_TestNodeTiming_PreservesUtcPresenceDurationAndState(string caseName)
+    {
+        var data = TestNodeTimingData.Create(caseName);
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            // CurrentCulture is ExecutionContext-local on all these TFMs, including net462.
+            // Do not change the process-wide default or serialize otherwise independent tests.
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(data.CultureName);
+
+            // On .NET the formatter overrides this serializer. Assert the dictionary directly so both
+            // implementations are covered there, as well as real Jsonite formatting on net462.
+            string serialized = await _formatter.SerializeAsync(data.TestNode);
+            IDictionary<string, object?> properties = SerializerUtilities.Serialize(data.TestNode);
+            Assert.AreEqual(data.ExpectedDuration.HasValue, properties.ContainsKey("time.duration-ms"), caseName);
+            if (data.ExpectedDuration is { } duration)
+            {
+                Assert.AreEqual(duration, properties["time.duration-ms"], caseName);
+            }
+
+            Assert.AreEqual(data.ExpectedStartUtc is not null, properties.ContainsKey("time.start-utc"), caseName);
+            if (data.ExpectedStartUtc is { } startUtc)
+            {
+                Assert.AreEqual(startUtc, properties["time.start-utc"], caseName);
+            }
+
+            Assert.AreEqual(data.ExpectedStopUtc is not null, properties.ContainsKey("time.stop-utc"), caseName);
+            if (data.ExpectedStopUtc is { } stopUtc)
+            {
+                Assert.AreEqual(stopUtc, properties["time.stop-utc"], caseName);
+            }
+
+            Assert.AreEqual(data.ExpectedJson, serialized, caseName);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
     }
 
     [TestMethod]
@@ -567,15 +817,12 @@ public sealed class FormatterUtilitiesTests
         string expectedMessage = $"explanation{Environment.NewLine} ---> {typeof(FixedStackTraceException).FullName}: inner";
         string expectedStackTrace = $"outer-stack{Environment.NewLine}--- Inner exception stack trace ({typeof(FixedStackTraceException).FullName}) ---{Environment.NewLine}inner-stack";
 
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
         (TestNodeStateProperty State, string ExecutionState)[] states =
         [
             (new FailedTestNodeStateProperty(exception, "explanation"), "failed"),
             (new ErrorTestNodeStateProperty(exception, "explanation"), "error"),
             (new TimeoutTestNodeStateProperty(exception, "explanation"), "timed-out"),
-            (new CancelledTestNodeStateProperty(exception, "explanation"), "canceled"),
         ];
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         foreach ((TestNodeStateProperty state, string executionState) in states)
         {
@@ -790,7 +1037,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNode))
         {
-            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual(TestNodeTimingData.EscapeUtcOffsets("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""").Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -802,7 +1049,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNodeUpdateMessage))
         {
-            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual(TestNodeTimingData.EscapeUtcOffsets("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""").Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -1043,7 +1290,7 @@ public sealed class FormatterUtilitiesTests
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    }
+                    },
                 ],
                 null);
         }
@@ -1058,7 +1305,7 @@ public sealed class FormatterUtilitiesTests
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    }
+                    },
                 ],
                 null);
         }

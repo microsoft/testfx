@@ -92,6 +92,69 @@ public partial class AssertTests : TestContainer
         _ = obj.ToString(); // No potential NRE warning
     }
 
+    // Keep these statement calls in async methods: returning the checked Task would introduce CS4014.
+    public async Task IsNotNull_WhenPendingTasks_DoesNotAwaitAndLearnsNotNull()
+    {
+        TaskCompletionSource<int> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? task = GetTask();
+        Task<int>? resultTask = GetResultTask();
+
+        Assert.IsNotNull(task);
+        Assert.IsNotNull(resultTask);
+        task.IsCompleted.Should().BeFalse();
+        resultTask.IsCompleted.Should().BeFalse();
+
+        completion.SetResult(42);
+        await task;
+        (await resultTask).Should().Be(42);
+
+        Task? GetTask() => completion.Task;
+
+        Task<int>? GetResultTask() => completion.Task;
+    }
+
+    public async Task IsNotNull_WhenPendingTasksAndMessage_DoesNotAwaitAndLearnsNotNull()
+    {
+        TaskCompletionSource<int> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? task = GetTask();
+        Task<int>? resultTask = GetResultTask();
+
+        Assert.IsNotNull(task, "pending task");
+        Assert.IsNotNull(resultTask, "pending task");
+        task.IsCompleted.Should().BeFalse();
+        resultTask.IsCompleted.Should().BeFalse();
+
+        completion.SetResult(42);
+        await task;
+        (await resultTask).Should().Be(42);
+
+        Task? GetTask() => completion.Task;
+
+        Task<int>? GetResultTask() => completion.Task;
+    }
+
+    public async Task IsNotNull_WhenPendingTasksAndInterpolatedStringMessage_DoesNotAwaitAndLearnsNotNull()
+    {
+        TaskCompletionSource<int> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? task = GetTask();
+        Task<int>? resultTask = GetResultTask();
+        DummyClassTrackingToStringCalls message = new();
+
+        Assert.IsNotNull(task, $"pending task {message}");
+        Assert.IsNotNull(resultTask, $"pending task {message}");
+        task.IsCompleted.Should().BeFalse();
+        resultTask.IsCompleted.Should().BeFalse();
+        message.WasToStringCalled.Should().BeFalse();
+
+        completion.SetResult(42);
+        await task;
+        (await resultTask).Should().Be(42);
+
+        Task? GetTask() => completion.Task;
+
+        Task<int>? GetResultTask() => completion.Task;
+    }
+
     public void IsNotNull_PassNull_ShouldFail()
     {
         Action action = () => Assert.IsNotNull(null);

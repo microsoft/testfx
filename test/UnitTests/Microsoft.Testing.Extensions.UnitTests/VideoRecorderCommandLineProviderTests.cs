@@ -13,6 +13,33 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class VideoRecorderCommandLineProviderTests
 {
     [TestMethod]
+    public void Constructor_ExposesStableMetadata()
+    {
+        VideoRecorderCommandLineProvider provider = new();
+
+        Assert.AreEqual("VideoRecorderCommandLineProvider", provider.Uid);
+        AssertVersionMatchesAssembly(provider.Version, typeof(VideoRecorderCommandLineProvider).Assembly);
+        Assert.AreEqual(VideoRecorderResources.ExtensionDisplayName, provider.DisplayName);
+        Assert.AreEqual(VideoRecorderResources.CommandLineProviderDescription, provider.Description);
+    }
+
+    [TestMethod]
+    public void GetCommandLineOptions_ReturnsExpectedVisibleOptions()
+    {
+        VideoRecorderCommandLineProvider provider = new();
+
+        CommandLineOption[] options = [.. provider.GetCommandLineOptions()];
+
+        Assert.HasCount(6, options);
+        AssertOption(options[0], VideoRecorderCommandLineProvider.EnableOptionName, VideoRecorderResources.OptionDescriptionCaptureVideo, ArgumentArity.ZeroOrOne);
+        AssertOption(options[1], VideoRecorderCommandLineProvider.SourceOptionName, VideoRecorderResources.OptionDescriptionSource, ArgumentArity.ExactlyOne);
+        AssertOption(options[2], VideoRecorderCommandLineProvider.GranularityOptionName, VideoRecorderResources.OptionDescriptionGranularity, ArgumentArity.ExactlyOne);
+        AssertOption(options[3], VideoRecorderCommandLineProvider.ArgsOptionName, VideoRecorderResources.OptionDescriptionArgs, ArgumentArity.ExactlyOne);
+        AssertOption(options[4], VideoRecorderCommandLineProvider.MaxDurationOptionName, VideoRecorderResources.OptionDescriptionMaxDuration, ArgumentArity.ExactlyOne);
+        AssertOption(options[5], VideoRecorderCommandLineProvider.ChaptersOptionName, VideoRecorderResources.OptionDescriptionChapters, ArgumentArity.ExactlyOne);
+    }
+
+    [TestMethod]
     [DataRow(VideoRecorderCommandLineProvider.ModeAlways)]
     [DataRow(VideoRecorderCommandLineProvider.ModeOnFailure)]
     [DataRow("ALWAYS")]
@@ -255,5 +282,27 @@ public sealed class VideoRecorderCommandLineProviderTests
         ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([])).ConfigureAwait(false);
 
         Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    private static void AssertOption(CommandLineOption option, string name, string description, ArgumentArity arity)
+    {
+        Assert.AreEqual(name, option.Name);
+        Assert.AreEqual(description, option.Description);
+        Assert.AreEqual(arity, option.Arity);
+        Assert.IsFalse(option.IsHidden);
+    }
+
+    private static void AssertVersionMatchesAssembly(string reportedVersion, Assembly extensionAssembly)
+    {
+        string expectedVersion = extensionAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? extensionAssembly.GetName().Version?.ToString()
+            ?? string.Empty;
+        int plusIndex = expectedVersion.LastIndexOf('+');
+        if (plusIndex >= 0)
+        {
+            expectedVersion = expectedVersion[..plusIndex];
+        }
+
+        Assert.AreEqual(expectedVersion, reportedVersion);
     }
 }

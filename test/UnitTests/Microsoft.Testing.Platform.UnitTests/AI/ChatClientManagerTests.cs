@@ -66,6 +66,41 @@ public sealed class ChatClientManagerTests
         Assert.AreSame(provider, serviceProvider.GetService(typeof(IChatClientProvider)));
     }
 
+    [TestMethod]
+    public void BuildChatClients_AfterRejectedDuplicate_UsesOnlyTheOriginalFactory()
+    {
+        ChatClientManager manager = new();
+        ServiceProvider services = new();
+        TestChatClientProvider original = new();
+        bool replacementInvoked = false;
+        manager.AddChatClientProvider(_ => original);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => manager.AddChatClientProvider(_ =>
+        {
+            replacementInvoked = true;
+            return new TestChatClientProvider();
+        }));
+        manager.BuildChatClients(services);
+
+        Assert.AreSame(original, services.GetService(typeof(IChatClientProvider)));
+        Assert.IsFalse(replacementInvoked);
+    }
+
+    [TestMethod]
+    public void BuildChatClients_FactoryThrows_PropagatesOriginalFailureWithoutRegisteringAProvider()
+    {
+        ChatClientManager manager = new();
+        ServiceProvider services = new();
+        InvalidOperationException expectedFailure = new("provider construction failed");
+        manager.AddChatClientProvider(_ => throw expectedFailure);
+
+        InvalidOperationException actualFailure = Assert.ThrowsExactly<InvalidOperationException>(
+            () => manager.BuildChatClients(services));
+
+        Assert.AreSame(expectedFailure, actualFailure);
+        Assert.IsNull(services.GetService(typeof(IChatClientProvider)));
+    }
+
     private sealed class TestChatClientProvider : IChatClientProvider
     {
         public bool IsAvailable => true;

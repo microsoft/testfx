@@ -303,6 +303,56 @@ public class UnitTestDiscovererTests : TestContainer
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Never);
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Never);
     }
+
+    public async Task DiscoveryWarningsAreReportedWithoutLosingDiscoveredCount()
+    {
+        MSTestSettings.PopulateSettings(
+            "<RunSettings><MSTest><TreatDiscoveryWarningsAsErrors>false</TreatDiscoveryWarningsAsErrors></MSTest></RunSettings>", null, null);
+        _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsInfoEnabled).Returns(true);
+        var discoverer = new WarningDiscoverer([_test], ["one warning", "second warning"], 7);
+        var logger = new Mock<IAdapterMessageLogger>(MockBehavior.Strict);
+        List<UnitTestElement> published = [];
+        var sink = new Mock<IUnitTestElementSink>();
+        sink.Setup(value => value.SendTestElementAsync(It.IsAny<UnitTestElement>()))
+            .Callback<UnitTestElement>(published.Add).Returns(Task.CompletedTask);
+        logger.Setup(value => value.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, Source, "one warning")));
+        logger.Setup(value => value.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, Source, "second warning")));
+
+        await discoverer.DiscoverTestsInSourceAsync(Source, logger.Object, sink.Object, null, null, true);
+
+        published.Should().Equal(_test);
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Info(
+            "MSTestDiscoverer: Found {0} tests from source {1}", 7, Source), Times.Once);
+        logger.Verify(value => value.SendMessage(MessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
+        logger.VerifyNoOtherCalls();
+    }
+
+    public async Task DiscoveryWarningErrorModeRejectsBeforePublishing()
+    {
+        MSTestSettings.PopulateSettings(
+            "<RunSettings><MSTest><TreatDiscoveryWarningsAsErrors>true</TreatDiscoveryWarningsAsErrors></MSTest></RunSettings>", null, null);
+        var discoverer = new WarningDiscoverer([_test], ["one warning", "second warning"], 7);
+        var logger = new Mock<IAdapterMessageLogger>(MockBehavior.Strict);
+        var sink = new Mock<IUnitTestElementSink>(MockBehavior.Strict);
+        Func<Task> run = () => discoverer.DiscoverTestsInSourceAsync(Source, logger.Object, sink.Object, null, null, true);
+
+        (await run.Should().ThrowExactlyAsync<MSTestException>()).WithMessage(string.Format(
+            CultureInfo.CurrentCulture, Resource.DiscoveryErrors, Source, 2, "one warning" + Environment.NewLine + "second warning"));
+        logger.VerifyNoOtherCalls();
+        sink.VerifyNoOtherCalls();
+    }
+
+    private sealed class WarningDiscoverer(UnitTestElement[] elements, string[] diagnosticWarnings, int total) : UnitTestDiscoverer(new Mock<ITestSourceHandler>().Object)
+    {
+        internal override ICollection<UnitTestElement>? GetTestElements(string source, string? settingsXml, bool isMTP,
+            out List<string> warnings, out int discoveredTestCount)
+        {
+            warnings = [.. diagnosticWarnings];
+            discoveredTestCount = total;
+            return elements;
+        }
+    }
 }
 
 internal class DummyNavigationData

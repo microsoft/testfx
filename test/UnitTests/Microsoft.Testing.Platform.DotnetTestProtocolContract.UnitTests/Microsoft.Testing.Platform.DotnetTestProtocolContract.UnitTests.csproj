@@ -32,6 +32,6 @@
     set is sufficient for dotnet/sdk. It is not a substitute for a restricted-usings compile check; today the shared
     source only uses namespaces present in both sets.
   -->
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
+  <Import Project="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
 
 </Project>

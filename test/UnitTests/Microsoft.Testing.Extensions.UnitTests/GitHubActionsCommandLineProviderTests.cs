@@ -25,6 +25,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAttachments, DisplayName = "Attachments require report-gh")]
     public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSubOptionIsUsedWithoutReportGhAsync(string subOption)
     {
         GitHubActionsCommandLineProvider provider = new();
@@ -47,6 +48,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistory)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAttachments, DisplayName = "Attachments with report-gh")]
     public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenSubOptionIsUsedWithReportGhAsync(string subOption)
     {
         GitHubActionsCommandLineProvider provider = new();
@@ -57,6 +59,113 @@ public sealed class GitHubActionsCommandLineProviderTests
         })).ConfigureAwait(false);
 
         Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void GetCommandLineOptions_AttachmentsDirectory_IsVisibleAndRequiresOneArgument()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+
+        CommandLineOption option = Assert.ContainsSingle(provider.GetCommandLineOptions().Where(
+            option => option.Name == GitHubActionsCommandLineOptions.GitHubActionsAttachments));
+
+        Assert.AreEqual("report-gh-attachments", option.Name);
+        Assert.AreEqual(ArgumentArity.ExactlyOne, option.Arity);
+        Assert.IsFalse(option.IsHidden);
+        Assert.AreEqual(GitHubActionsResources.AttachmentsOptionDescription, option.Description);
+    }
+
+    [TestMethod]
+    [DataRow("", DisplayName = "Empty attachment directory")]
+    [DataRow(" ", DisplayName = "Whitespace attachment directory")]
+    [DataRow("\0", DisplayName = "NUL attachment directory")]
+    [DataRow("attachments", DisplayName = "Relative attachment directory")]
+    [DataRow("../attachments", DisplayName = "Parent-relative attachment directory")]
+    [DataRow("C:attachments", DisplayName = "Drive-relative attachment directory")]
+    [DataRow("\\attachments", DisplayName = "Current-drive-rooted attachment directory")]
+    public async Task ValidateOptionArgumentsAsync_AttachmentsRejectInvalidPaths(string path)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(
+            option => option.Name == GitHubActionsCommandLineOptions.GitHubActionsAttachments);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [path]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(GitHubActionsResources.InvalidAttachmentsPath, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Missing attachment path")]
+    [DataRow(true, DisplayName = "Multiple attachment paths")]
+    public async Task ValidateOptionArgumentsAsync_AttachmentsRejectMissingOrMultiplePaths(bool multiple)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(
+            option => option.Name == GitHubActionsCommandLineOptions.GitHubActionsAttachments);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, multiple ? ["one", "two"] : []);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(GitHubActionsResources.InvalidAttachmentsPath, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "New attachment directory")]
+    [DataRow(true, DisplayName = "Existing attachment directory")]
+    public async Task ValidateOptionArgumentsAsync_AttachmentsAcceptDirectoryWithoutCreatingOutput(bool exists)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-attachment-validation-{Guid.NewGuid():N}");
+        if (exists)
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        try
+        {
+            GitHubActionsCommandLineProvider provider = new();
+            CommandLineOption option = provider.GetCommandLineOptions().Single(
+                option => option.Name == GitHubActionsCommandLineOptions.GitHubActionsAttachments);
+
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [directory]);
+
+            Assert.IsTrue(result.IsValid, result.ErrorMessage);
+            Assert.AreEqual(exists, Directory.Exists(directory));
+            if (exists)
+            {
+                Assert.IsEmpty(Directory.GetFileSystemEntries(directory));
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_AttachmentsRejectExistingFileAndPreserveBytes()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"github-attachment-validation-{Guid.NewGuid():N}.log");
+        File.WriteAllText(path, "existing file must remain intact");
+        try
+        {
+            GitHubActionsCommandLineProvider provider = new();
+            CommandLineOption option = provider.GetCommandLineOptions().Single(
+                option => option.Name == GitHubActionsCommandLineOptions.GitHubActionsAttachments);
+
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [path]);
+
+            Assert.IsFalse(result.IsValid);
+            Assert.AreEqual(GitHubActionsResources.InvalidAttachmentsPath, result.ErrorMessage);
+            Assert.AreEqual("existing file must remain intact", File.ReadAllText(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [TestMethod]
@@ -104,9 +213,9 @@ public sealed class GitHubActionsCommandLineProviderTests
     }
 
     [TestMethod]
-    [DataRow("")]
-    [DataRow(" ")]
-    [DataRow("\0")]
+    [DataRow("", DisplayName = "Empty history path")]
+    [DataRow(" ", DisplayName = "Whitespace history path")]
+    [DataRow("\0", DisplayName = "NUL history path")]
     public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenHistoryPathIsEmptyAsync(string value)
     {
         GitHubActionsCommandLineProvider provider = new();

@@ -24,9 +24,12 @@ Options:
         Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
+    --coverage-threshold-branch
+        Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
+    --coverage-threshold-line
+        Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
     --debug
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
@@ -63,18 +66,13 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --no-ansi
-        Disable outputting ANSI escape characters to screen.
-    --no-progress
-        [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
         Preset the per-test result blocks shown in the terminal.
         Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
-        This option takes precedence over the deprecated --no-progress flag.
+        'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
     --results-directory
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
@@ -87,10 +85,10 @@ Options:
         Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-stdout
         Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-test-results
         Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
         Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
@@ -142,7 +140,7 @@ Options:
 Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
 Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
-Command line: --no-ansi --progress off -{UnknownOption}
+Command line: --ansi off --progress off -{UnknownOption}
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -190,6 +188,14 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig\.json file\.
+      --coverage-threshold-branch
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall branch coverage percentage, from 0 to 100\. Requires non-empty coverage data from a compatible collector\.
+      --coverage-threshold-line
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall line coverage percentage, from 0 to 100\. Requires non-empty coverage data from a compatible collector\.
       --debug
         Arity: 0
         Hidden: False
@@ -261,6 +267,10 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Display \.NET test application information\.
+      --internal-appmodel-activation-payload
+        Arity: 1
+        Hidden: True
+        Description: Specifies the app-model activation payload\.
       --internal-testhostcontroller-pid
         Arity: 0\.\.1
         Hidden: True
@@ -313,15 +323,6 @@ Built-in command line providers:
         Description: Control whether ANSI escape characters are emitted\.
         Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\)\.
         'on' forces ANSI escape codes \(including cursor movement\) even when stdout is redirected; pair it with --progress off if you only want colors\.
-        When both --ansi and --no-ansi are provided, --ansi wins\.
-      --no-ansi
-        Arity: 0
-        Hidden: False
-        Description: Disable outputting ANSI escape characters to screen.
-      --no-progress
-        Arity: 0
-        Hidden: False
-        Description: \[Deprecated, use '--progress off' instead\] Disable reporting progress to screen.
       --output
         Arity: 1
         Hidden: False
@@ -332,8 +333,7 @@ Built-in command line providers:
         Hidden: False
         Description: Control whether progress is reported to screen.
         Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
-        'auto' shows progress unless the terminal cannot update in place \(for example with --no-ansi or in CI\).
-        This option takes precedence over the deprecated --no-progress flag.
+        'auto' shows progress unless the terminal cannot update in place \(for example with --ansi off or in CI\).
       --show-flaky-tests
         Arity: 0..1
         Hidden: False
@@ -348,12 +348,12 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' \(or 'Failed' when an LLM/AI agent environment is detected\).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
       --show-stdout
         Arity: 1
         Hidden: False
         Description: Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' \(or 'Failed' when an LLM/AI agent environment is detected\).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
       --show-test-results
         Arity: 1..N
         Hidden: False

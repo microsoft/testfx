@@ -93,14 +93,14 @@ public sealed class TerminalReporterExitCodeTests : AcceptanceTestBase<TerminalR
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
             string repoRoot = RootFinder.Find().Replace('\\', '/').TrimEnd('/');
-            string terminalResourcesResx = $"{repoRoot}/src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/TerminalResources.resx";
+            string terminalResourcesResx = $"{repoRoot}/src/MTP/Microsoft.Testing.Platform/OutputDevice/Terminal/TerminalResources.resx";
             string code = Sources
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$PolyfillsPath$", $"{repoRoot}/src/Polyfills")
                 .PatchCodeWithReplace(
                     "$TerminalReporterContractProps$",
-                    $"{repoRoot}/src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/TerminalReporterContract.props")
+                    $"{repoRoot}/src/MTP/Microsoft.Testing.Platform/OutputDevice/Terminal/TerminalReporterContract.props")
                 .PatchCodeWithReplace("$TerminalResourcesResx$", terminalResourcesResx);
 
             return (

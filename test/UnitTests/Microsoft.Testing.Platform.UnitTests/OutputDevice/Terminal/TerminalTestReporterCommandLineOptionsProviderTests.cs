@@ -62,15 +62,8 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
-    public void GetCommandLineOptions_StillIncludesNoAnsiOption()
-    {
-        // Validate backward compatibility: --no-ansi is preserved alongside --ansi.
-        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
-
-        Assert.AreEqual(ArgumentArity.Zero, option.Arity);
-        Assert.IsFalse(option.IsHidden);
-        Assert.IsTrue(option.IsBuiltIn);
-    }
+    public void GetCommandLineOptions_DoesNotIncludeNoAnsiOption()
+        => Assert.DoesNotContain(static option => option.Name == "no-ansi", _provider.GetCommandLineOptions());
 
     [TestMethod]
     [DataRow("auto")]
@@ -120,15 +113,8 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
-    public void GetCommandLineOptions_StillIncludesNoProgressOption()
-    {
-        // Validate backward compatibility: --no-progress is preserved alongside --progress.
-        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
-
-        Assert.AreEqual(ArgumentArity.Zero, option.Arity);
-        Assert.IsFalse(option.IsHidden);
-        Assert.IsTrue(option.IsBuiltIn);
-    }
+    public void GetCommandLineOptions_DoesNotIncludeNoProgressOption()
+        => Assert.DoesNotContain(static option => option.Name == "no-progress", _provider.GetCommandLineOptions());
 
     [TestMethod]
     [DataRow("minimal")]
@@ -175,32 +161,9 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
-    public void IsProgressEnabled_NoProgressOption_ReturnsFalse()
-    {
-        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
-        {
-            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
-        });
-
-        Assert.IsFalse(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
-    }
-
-    [TestMethod]
     public void IsProgressEnabled_NoProgressOptions_ReturnsTrue()
     {
         var options = new Helpers.TestCommandLineOptions([]);
-
-        Assert.IsTrue(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
-    }
-
-    [TestMethod]
-    public void IsProgressEnabled_ProgressOption_TakesPrecedenceOverNoProgressOption()
-    {
-        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
-        {
-            [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["on"],
-            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
-        });
 
         Assert.IsTrue(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
     }
@@ -561,4 +524,65 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
 
     private CommandLineOption GetOption(string name)
         => _provider.GetCommandLineOptions().Single(o => o.Name == name);
+
+    [TestMethod]
+    [DataRow("show-stdout", "All", true)]
+    [DataRow("show-stdout", "fAiLeD", true)]
+    [DataRow("show-stdout", "NONE", true)]
+    [DataRow("show-stderr", "All", true)]
+    [DataRow("show-stderr", "fAiLeD", true)]
+    [DataRow("show-stderr", "NONE", true)]
+    [DataRow("show-stdout", "sometimes", false)]
+    [DataRow("show-stderr", "sometimes", false)]
+    public async Task ValidateOutputOptions_AllowedSelectionAndExactInvalidDiagnostics(string name, string argument, bool valid)
+    {
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(GetOption(name), [argument]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("show-stdout", 0)]
+    [DataRow("show-stdout", 2)]
+    [DataRow("show-stderr", 0)]
+    [DataRow("show-stderr", 2)]
+    public async Task ValidateOutputOptions_WrongArityRejectsEvenValidIndividualValues(string name, int count)
+    {
+        string[] arguments = count == 0 ? [] : ["All", "None"];
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(GetOption(name), arguments);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("bare", true)]
+    [DataRow("on", true)]
+    [DataRow("off", true)]
+    [DataRow("invalid", false)]
+    [DataRow("extra", false)]
+    public async Task ValidateFlakyOutput_BareBooleanAndInvalidPartitionsHaveExactDiagnostics(string kind, bool valid)
+    {
+        string[] arguments = kind switch
+        {
+            "bare" => [],
+            "extra" => ["on", "off"],
+            "invalid" => ["auto"],
+            _ => [kind],
+        };
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(GetOption("show-flaky-tests"), arguments);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(valid ? null : "--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("no-ansi", DisplayName = "Removed no-ansi option is unregistered")]
+    [DataRow("not-registered", DisplayName = "Unknown option is unregistered")]
+    public Task ValidateOutputOptions_UnregisteredOptionThrows(string name)
+        => Assert.ThrowsExactlyAsync<UnreachableException>(
+            () => _provider.ValidateOptionArgumentsAsync(new(name, "unregistered", ArgumentArity.Zero, isHidden: false), []));
 }

@@ -1,0 +1,46 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
+
+using Microsoft.Testing.Extensions.Policy;
+using Microsoft.Testing.Extensions.Policy.Resources;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
+
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
+namespace Microsoft.Testing.Extensions;
+
+/// <summary>
+/// Extension methods for adding the retry provider to the test application.
+/// </summary>
+public static class RetryExtensions
+{
+    /// <summary>
+    /// Adds the retry provider to the test application.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
+    public static void AddRetryProvider(this ITestApplicationBuilder builder)
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(ExtensionResources.RetryExtensionNotSupportedOnBrowserErrorMessage);
+        }
+
+        builder.CommandLine.AddProvider(() => new RetryCommandLineOptionsProvider());
+
+        builder.TestHost.AddTestHostApplicationLifetime(serviceProvider
+            => new RetryLifecycleCallbacks(serviceProvider));
+
+        CompositeExtensionFactory<RetryDataConsumer> compositeExtensionFactory
+            = new(serviceProvider => new RetryDataConsumer(serviceProvider));
+        builder.TestHost.AddDataConsumer(compositeExtensionFactory);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeExtensionFactory);
+
+        builder.TestHostOrchestrator
+            .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(serviceProvider));
+    }
+}

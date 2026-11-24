@@ -2,6 +2,8 @@
 #
 # Assumes the consuming job declares:
 #   - the matrix variable `_BuildConfig` (Debug or Release)
+#   - the artifact discriminator `_TestArtifactsName`
+#   - `_CollectAffectedTests=true` only for the dedicated main collection matrix entry
 #   - the job-level environment variables from eng/pipelines/variables/test-env-vars.yml
 parameters:
 - name: enableAffectedTests
@@ -14,11 +16,30 @@ parameters:
   - disabled
   - collect
   - run
-- name: affectedTestsCacheVersion
-  type: string
-  default: v1
 
 steps:
+- pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+  displayName: Validate generated coverage settings
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
+- pwsh: .\eng\test-build-incrementality.ps1 -ArtifactsDirectory "$(Agent.TempDirectory)\testfx-build-incrementality" -PackageRoot "$(Build.SourcesDirectory)\.packages"
+  displayName: Validate coverage and WinUI build incrementality
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))
+
+- pwsh: |
+    $evidenceDirectory = "$(Agent.TempDirectory)\testfx-build-incrementality"
+    $hasEvidence = if (Test-Path -LiteralPath $evidenceDirectory -PathType Container) { "true" } else { "false" }
+    Write-Host "##vso[task.setvariable variable=HasBuildIncrementalityEvidence]$hasEvidence"
+  displayName: Check for build incrementality evidence
+  condition: and(always(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish build incrementality evidence
+  inputs:
+    PathtoPublish: '$(Agent.TempDirectory)\testfx-build-incrementality'
+    ArtifactName: BuildIncrementality_Windows_$(_TestArtifactsName)_Attempt$(System.JobAttempt)
+  condition: and(always(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'), eq(variables.HasBuildIncrementalityEvidence, 'true'))
+
 # Because the build step is using -ci, restore is done in a local .packages directory.
 # NUGET_PACKAGES must point to that directory so test project evaluation imports the restored package props/targets.
 #
@@ -36,65 +57,34 @@ steps:
       # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-# These branches are intentionally disabled at their call sites. They can be enabled only after the affected-test
-# extension package and its local-filesystem storage schema have flowed into this repository. The SDK owns
-# DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
+# These branches share affected-test execution with the non-Windows template.
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
-  - task: Cache@2
-    displayName: Restore and publish affected-test map
-    inputs:
-      key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
-      restoreKeys: |
-        "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
-      path: '$(Pipeline.Workspace)\affected-test-map'
-      cacheHitVar: AffectedTestsMapCacheRestored
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+  - template: /eng/pipelines/steps/test-affected-tests.yml
+    parameters:
+      solution: TestFx.slnx
+      affectedTestsMode: collect
 
+  # Map collection owns code-coverage instrumentation and launches discovery children with --list-tests, so
+  # ordinary coverage and report options cannot participate in that invocation. The ordinary Release matrix
+  # entry owns full testing and coverage; it does not share the collection entry's timeout or failure state.
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed --collect-test-map
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
     name: Test
-    displayName: Test and collect affected-test map
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    displayName: Test
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'))
     env:
-      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
-  - task: Cache@2
-    displayName: Restore affected-test map
-    inputs:
-      key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
-      restoreKeys: |
-        "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
-      path: '$(Pipeline.Workspace)\affected-test-map'
-      cacheHitVar: AffectedTestsMapCacheRestored
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
+  - template: /eng/pipelines/steps/test-affected-tests.yml
+    parameters:
+      solution: TestFx.slnx
+      affectedTestsMode: run
 
-  - pwsh: |
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed --affected-tests
-      $exitCode = $LASTEXITCODE
-      if ($exitCode -eq 0) {
-        Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
-        exit 0
-      }
-
-      if ($exitCode -in 2, 8) {
-        Write-Host "##vso[task.logissue type=error]Affected-test execution failed with exit code $exitCode."
-        exit $exitCode
-      }
-
-      Write-Host "##vso[task.logissue type=warning]Affected-test selection failed; running the full test suite."
-      exit 0
-    name: TestAffected
-    displayName: Test affected changes
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsMapCacheRestored'], 'false'))
-    env:
-      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-  # Scheduled and manual runs keep their full-validation contract. PRs also fall back when the cache is absent or the
-  # extension rejects a missing, stale, or incompatible map.
+  # Scheduled and manual runs keep their full-validation contract. PRs use this explicit fallback only when the
+  # affected-test command fails; missing, stale, incompatible, or inaccessible maps are handled inside the extension
+  # by running all tests.
   - pwsh: |
       Write-Host "##vso[task.setvariable variable=PublishCoverageReport]true"
 
@@ -104,11 +94,11 @@ steps:
           Remove-Item -Force
       }
 
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestFallback.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
       exit $LASTEXITCODE
     name: Test
     displayName: Test (affected-test fallback)
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['AffectedTestsMapCacheRestored'], 'false'), ne(variables['AffectedTestsSucceeded'], 'true')))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsSucceeded'], 'true')))
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -136,7 +126,7 @@ steps:
     searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
     testRunTitle: '$(System.JobName)-trx'
   continueOnError: true
-  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
+  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
 
 # Publish a portable, compact report separately from the large TestResults artifact so external consumers can
 # retrieve it without downloading every test result and binary .coverage file.

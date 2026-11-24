@@ -30,9 +30,12 @@ Options:
         Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
+    --coverage-threshold-branch
+        Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
+    --coverage-threshold-line
+        Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
     --debug
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
@@ -69,18 +72,13 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --no-ansi
-        Disable outputting ANSI escape characters to screen.
-    --no-progress
-        [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
         Preset the per-test result blocks shown in the terminal.
         Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
-        This option takes precedence over the deprecated --no-progress flag.
+        'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
     --results-directory
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
@@ -93,10 +91,10 @@ Options:
         Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-stdout
         Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-test-results
         Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
         Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
@@ -112,6 +110,8 @@ Extension options:
         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
     --maximum-failed-tests
         Specifies a maximum number of test failures that, when exceeded, will abort the test run.
+    --partition
+        Run partition 'index/count' of the tests, keeping test classes and dependencies together.
     --settings
         The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.
     --test-parameter
@@ -144,6 +144,10 @@ Extension options:
         Arity: 1
         Hidden: False
         Description: Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+      --partition
+        Arity: 1
+        Hidden: False
+        Description: Run partition 'index/count' of the tests, keeping test classes and dependencies together.
       --test-parameter
         Arity: 1..N
         Hidden: False

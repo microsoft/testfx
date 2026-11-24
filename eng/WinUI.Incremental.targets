@@ -1,0 +1,92 @@
+<Project>
+
+  <PropertyGroup>
+    <_TestFxWinRTRegistrationTargets>$(MSBuildThisFileFullPath)</_TestFxWinRTRegistrationTargets>
+  </PropertyGroup>
+
+  <!-- The pinned Windows App SDK batches CreateItem once per payload file. -->
+  <Target Name="AddMicrosoftWindowsAppSDKPayloadFilesFromComponents"
+          BeforeTargets="AssignTargetPaths;CoreCompile"
+          DependsOnTargets="GetWindowsAppSDKNativePlatform"
+          Condition="'$(MSBuildProjectExtension)' != '.wapproj' and '$(MicrosoftWindowsAppSDKPackageDir)' == ''">
+    <PropertyGroup>
+      <MicrosoftWindowsAppSDKPFrameworkSubFolder>runtimes-framework\win-$(NativePlatform)\native</MicrosoftWindowsAppSDKPFrameworkSubFolder>
+      <MicrosoftWindowsAppSDKMetadataSubFolder Condition="'$(TargetPlatformVersion)' == '10.0.17763.0'">10.0.17763.0</MicrosoftWindowsAppSDKMetadataSubFolder>
+      <MicrosoftWindowsAppSDKMetadataSubFolder Condition="'$(MicrosoftWindowsAppSDKMetadataSubFolder)' == ''">10.0.18362.0</MicrosoftWindowsAppSDKMetadataSubFolder>
+    </PropertyGroup>
+    <ItemGroup>
+      <MicrosoftWindowsAppSDKDllFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\*.dll" />
+      <MicrosoftWindowsAppSDKFiles Include="@(MicrosoftWindowsAppSDKDllFiles)" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\workloads*.json" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\restartAgent.exe" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\map.html" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\*.mui" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\*.png" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)metadata\*.winmd" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)metadata\$(MicrosoftWindowsAppSDKMetadataSubFolder)\*.winmd" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\*.winmd" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\*.xaml" />
+      <MicrosoftWindowsAppSDKFiles Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\*.xbf" />
+      <MicrosoftWindowsAppSDKFiles Remove="@(MicrosoftWindowsAppSDKFilesExcluded)" />
+      <MicrosoftWindowsAppSDKFilesRes Include="%(WindowsAppSdkComponentPackages.Identity)$(MicrosoftWindowsAppSDKPFrameworkSubFolder)\**\*.pri" />
+      <None Include="@(MicrosoftWindowsAppSDKFiles)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>%(MicrosoftWindowsAppSDKFiles.RecursiveDir)%(MicrosoftWindowsAppSDKFiles.Filename)%(MicrosoftWindowsAppSDKFiles.Extension)</Link>
+      </None>
+      <ReferenceCopyLocalPaths Include="@(MicrosoftWindowsAppSDKFilesRes)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>%(MicrosoftWindowsAppSDKFilesRes.RecursiveDir)%(MicrosoftWindowsAppSDKFilesRes.Filename)%(MicrosoftWindowsAppSDKFilesRes.Extension)</Link>
+      </ReferenceCopyLocalPaths>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PrepareTestFxWinRTRegistration"
+          DependsOnTargets="GetNewAppManifestValues;AddMicrosoftWindowsAppSDKPayloadFilesFromComponents">
+    <PropertyGroup>
+      <WindowsAppSDKAppManifest>$(SelfContainedIntermediateOutputPath)Manifests\WindowsAppSDK.manifest</WindowsAppSDKAppManifest>
+      <WindowsAppSDKRedirectDlls>false</WindowsAppSDKRedirectDlls>
+      <WindowsAppSDKRedirectDlls Condition="'$(PublishSingleFile)' == 'true'">true</WindowsAppSDKRedirectDlls>
+      <_TestFxWinRTRegistrationCache>$(SelfContainedIntermediateOutputPath)Manifests\registration.inputs</_TestFxWinRTRegistrationCache>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TestFxWinRTRegistrationInput Include="$(UserApplicationManifest)" />
+      <_TestFxWinRTRegistrationInput Include="@(WindowsAppSdkComponentPackages->'%(Identity)\runtimes-framework\package.appxfragment')" />
+      <_TestFxWinRTRegistrationInput Include="@(MicrosoftWindowsAppSDKDllFiles);@(MtMergeInputs);$(MSBuildProjectFullPath);$(MSBuildAllProjects);$(_TestFxWinRTRegistrationTargets)" />
+      <_TestFxWinRTRegistrationInput Include="$(ProjectAssetsFile)" Condition="'$(ProjectAssetsFile)' != ''" />
+      <_TestFxWinRTRegistrationInput Include="$(ManifestTool)" Condition="Exists('$(ManifestTool)')" />
+      <_TestFxWinRTRegistrationState Include="@(_TestFxWinRTRegistrationInput->'%(FullPath)')" />
+      <_TestFxWinRTRegistrationState Include="RedirectDlls=$(WindowsAppSDKRedirectDlls)" />
+      <_TestFxWinRTRegistrationState Include="ApplicationManifest=$(ApplicationManifest)" />
+      <_TestFxWinRTRegistrationState Include="ManifestTool=$(ManifestTool)" />
+    </ItemGroup>
+    <!-- A removed or older-added input must invalidate the timestamp check too. -->
+    <WriteLinesToFile File="$(_TestFxWinRTRegistrationCache)"
+                      Lines="@(_TestFxWinRTRegistrationState)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_TestFxWinRTRegistrationCache);$(ApplicationManifest);$(WindowsAppSDKAppManifest)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Package directories are not file inputs; track the files consumed by the generators instead. -->
+  <Target Name="CreateWinRTRegistration"
+          BeforeTargets="AssignTargetPaths;CoreCompile"
+          DependsOnTargets="_PrepareTestFxWinRTRegistration"
+          Inputs="@(_TestFxWinRTRegistrationInput);$(_TestFxWinRTRegistrationCache)"
+          Outputs="$(ApplicationManifest);$(WindowsAppSDKAppManifest)"
+          Condition="'$(MSBuildProjectExtension)' != '.wapproj'">
+    <GenerateAppManifestFromAppxFragments RedirectDlls="$(WindowsAppSDKRedirectDlls)"
+                                         FrameworkDlls="@(MicrosoftWindowsAppSDKDllFiles)"
+                                         AppxFragments="@(WindowsAppSdkComponentPackages->'%(Identity)\runtimes-framework\package.appxfragment')"
+                                         OutAppManifest="$(WindowsAppSDKAppManifest)" />
+    <ItemGroup>
+      <MtMergeInputs Include="$(WindowsAppSDKAppManifest);$(UserApplicationManifest)" />
+      <UpToDateCheckInput Include="$(UserApplicationManifest)" />
+    </ItemGroup>
+    <Exec Command="&quot;$(ManifestTool)&quot; -nologo -manifest @(MtMergeInputs->'&quot;%(Identity)&quot;', ' ') -out:&quot;$(ApplicationManifest)&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Touch Files="$(ApplicationManifest)" />
+  </Target>
+
+</Project>

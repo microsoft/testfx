@@ -59,9 +59,9 @@ public sealed class RandomIdTests
         Assert.HasCount(IdLength, id);
         foreach (char character in id)
         {
-            bool isValidCharacter = character is >= '0' and <= '9'
-                or >= 'A' and <= 'Z'
-                or >= 'a' and <= 'z';
+            bool isValidCharacter = character is (>= '0' and <= '9')
+                or (>= 'A' and <= 'Z')
+                or (>= 'a' and <= 'z');
             Assert.IsTrue(isValidCharacter, $"Unexpected character '{character}' in ID '{id}'.");
         }
     }

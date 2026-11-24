@@ -4,15 +4,56 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UndeclaredProcessGlobalStateMutationAnalyzer,
     MSTest.Analyzers.AddResourceLockFixer>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.UndeclaredProcessGlobalStateMutationAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
 public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
 {
+    [TestMethod]
+    public async Task NestedLocalFunctionAndLambda_AreStillPartOfTheEnclosingTest()
+    {
+        const string source = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    void Local() { {|#0:Environment.SetEnvironmentVariable("fixture", "value")|}; }
+                    Action nested = () => { {|#1:Environment.SetEnvironmentVariable("fixture", "value")|}; };
+                    Local();
+                    nested();
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(
+            source,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(0).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(1).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task OlderFrameworkWithoutResourceLocks_StillReportsTheUncoordinatedMutation()
+    {
+        const string source = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { {|#0:Environment.SetEnvironmentVariable("fixture", "value")|}; }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, useMSTestV4: true,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(0).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
     [TestMethod]
     public async Task WhenTestMethodSetsEnvironmentVariable_Diagnostic()
     {
@@ -462,31 +503,6 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodSetsEnvironmentVariable_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <Assembly: Parallelize(Workers:=0, Scope:=ExecutionScope.MethodLevel)>
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|}
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
-    }
-
-    [TestMethod]
     public async Task WhenTestMethodHasMethodLevelDoNotParallelize_NoDiagnostic()
     {
         // A [DoNotParallelize] on the test method itself opts that method out of parallelization,
@@ -575,8 +591,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     [TestMethod]
     public async Task WhenDerivedDoNotParallelizeOnClass_NoDiagnostic()
     {
-        // A user attribute deriving from DoNotParallelizeAttribute must be honored the same way the adapter
-        // honors it (it matches derived attributes), so the mutation stays silent.
+        // v4 consumers can derive from DoNotParallelizeAttribute. Preserve their opt-out even though v5 seals it.
         string code = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -599,7 +614,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(code, code, useMSTestV4: true);
     }
 
     [TestMethod]

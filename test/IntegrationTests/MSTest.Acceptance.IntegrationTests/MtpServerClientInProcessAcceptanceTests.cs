@@ -304,9 +304,9 @@ internal static class Program
         string[] matches = Directory
             .GetFiles(Constants.ArtifactsPackagesShipping, prefix + "*" + extension, SearchOption.TopDirectoryOnly)
             .Where(path => !path.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
-            .Select(path => (path, name: Path.GetFileName(path)))
-            .Where(tuple => tuple.name.Length > prefix.Length && char.IsDigit(tuple.name[prefix.Length]))
-            .Select(tuple => tuple.path)
+            .Select(path => (Path: path, Name: Path.GetFileName(path)))
+            .Where(tuple => tuple.Name.Length > prefix.Length && char.IsDigit(tuple.Name[prefix.Length]))
+            .Select(tuple => tuple.Path)
             .ToArray();
 
         if (matches.Length != 1)

@@ -15,12 +15,12 @@ public sealed class ArgumentArityTests
 {
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
     [
-        new PlatformCommandLineProvider()
+        new PlatformCommandLineProvider(),
     ];
 
     private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders =
     [
-        new ExtensionCommandLineProviderMockOptionsWithDifferentArity()
+        new ExtensionCommandLineProviderMockOptionsWithDifferentArity(),
     ];
 
     [TestMethod]
@@ -204,11 +204,35 @@ public sealed class ArgumentArityTests
                 new("zeroOrOneArgumentsOption", "Show command line zeroOrOneArgumentsOption.", ArgumentArity.ZeroOrOne, false),
                 new("zeroOrMoreArgumentsOption", "Show command line zeroOrMoreArgumentsOption.", ArgumentArity.ZeroOrMore, false),
                 new("exactlyOneArgumentsOption", "Show command line exactlyOneArgumentsOption.", ArgumentArity.ExactlyOne, false),
-                new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false)
+                new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false),
             ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+    }
+
+    [TestMethod]
+    public void Equality_UsesBothBoundsAndRejectsOtherObjectTypes()
+    {
+        ArgumentArity arity = new(2, 5);
+        object boxedEqual = new ArgumentArity(2, 5);
+        Assert.IsTrue(arity.Equals(boxedEqual));
+        Assert.IsFalse(arity.Equals(null));
+        Assert.IsFalse(arity.Equals("2..5"));
+        Assert.AreSequenceEqual(
+            [true, true, false],
+            new[] { arity != new ArgumentArity(3, 5), arity != new ArgumentArity(2, 6), arity != new ArgumentArity(2, 5) });
+
+        Dictionary<ArgumentArity, string> values = new()
+        {
+            [arity] = "bounded",
+            [new(3, 5)] = "different minimum",
+            [new(2, 6)] = "different maximum",
+        };
+        Assert.ContainsEntry(new ArgumentArity(2, 5), "bounded", values);
+        Assert.ContainsEntry(new ArgumentArity(3, 5), "different minimum", values);
+        Assert.ContainsEntry(new ArgumentArity(2, 6), "different maximum", values);
+        Assert.HasCount(3, values);
     }
 }

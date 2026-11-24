@@ -1,0 +1,459 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Collections.Immutable;
+
+using Analyzer.Utilities.Extensions;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
+
+using MSTest.Analyzers.Helpers;
+
+namespace MSTest.Analyzers;
+
+/// <summary>
+/// MSTEST0014: <inheritdoc cref="Resources.DataRowShouldBeValidTitle"/>.
+/// </summary>
+[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
+public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
+{
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.DataRowShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.DataRowShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DataRowShouldBeValidMessageFormat_OnTestMethod), Resources.ResourceManager, typeof(Resources));
+
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidTitle" />
+    public static readonly DiagnosticDescriptor DataRowOnTestMethodRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.DataRowShouldBeValidRuleId,
+        Title,
+        MessageFormat,
+        Description,
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch" />
+    public static readonly DiagnosticDescriptor ArgumentCountMismatchRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch), Resources.ResourceManager, typeof(Resources)));
+
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" />
+    public static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
+
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" />
+    public static readonly DiagnosticDescriptor GenericTypeArgumentNotResolvedRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved), Resources.ResourceManager, typeof(Resources)));
+
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes" />
+    public static readonly DiagnosticDescriptor GenericTypeArgumentConflictingTypesRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes), Resources.ResourceManager, typeof(Resources)));
+
+    /// <inheritdoc />
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
+        = ImmutableArray.Create(
+            DataRowOnTestMethodRule,
+            ArgumentCountMismatchRule,
+            ArgumentTypeMismatchRule,
+            GenericTypeArgumentNotResolvedRule,
+            GenericTypeArgumentConflictingTypesRule);
+
+    /// <inheritdoc />
+    public override void Initialize(AnalysisContext context)
+    {
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+
+        context.RegisterCompilationStartAction(context =>
+        {
+            // No need to register any action if we don't find the TestMethodAttribute symbol since
+            // the current analyzer checks if the DataRow attribute is applied on test methods. No
+            // test methods, nothing to check.
+            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(
+                WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute,
+                out INamedTypeSymbol? testMethodAttributeSymbol))
+            {
+                return;
+            }
+
+            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(
+                WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute,
+                out INamedTypeSymbol? dataRowAttributeSymbol))
+            {
+                return;
+            }
+
+            context.RegisterSymbolAction(
+                context => AnalyzeSymbol(context, testMethodAttributeSymbol, dataRowAttributeSymbol),
+                SymbolKind.Method);
+        });
+    }
+
+    private static void AnalyzeSymbol(
+        SymbolAnalysisContext context,
+        INamedTypeSymbol testMethodAttributeSymbol,
+        INamedTypeSymbol dataRowAttributeSymbol)
+    {
+        var methodSymbol = (IMethodSymbol)context.Symbol;
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
+
+        bool isTestMethod = methodAttributes.IsTestMethod(testMethodAttributeSymbol);
+        List<AttributeData> dataRowAttributes = [];
+        foreach (AttributeData methodAttribute in methodAttributes)
+        {
+            if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, dataRowAttributeSymbol))
+            {
+                dataRowAttributes.Add(methodAttribute);
+            }
+        }
+
+        // Check if attribute is set on a test method.
+        if (!isTestMethod)
+        {
+            if (dataRowAttributes.Count > 0)
+            {
+                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(DataRowOnTestMethodRule));
+            }
+
+            return;
+        }
+
+        // Check each data row attribute.
+        foreach (AttributeData attribute in dataRowAttributes)
+        {
+            AnalyzeAttribute(context, attribute, methodSymbol);
+        }
+    }
+
+    private static void AnalyzeAttribute(SymbolAnalysisContext context, AttributeData attribute, IMethodSymbol methodSymbol)
+    {
+        if (attribute.ApplicationSyntaxReference?.GetSyntax() is not { } dataRowSyntax)
+        {
+            return;
+        }
+
+        int constructorArgumentCount = attribute.ConstructorArguments.Length;
+        ImmutableArray<TypedConstant> constructorArguments = attribute.ConstructorArguments;
+        if (attribute.AttributeConstructor?.Parameters.FirstOrDefault()?.IsParams is true)
+        {
+            constructorArguments = constructorArguments[0].Values;
+        }
+
+        ImmutableArray<IParameterSymbol> methodParameters = methodSymbol.Parameters;
+        if (methodParameters.Length > 0
+            && methodParameters[^1].RefKind == RefKind.None
+            && SymbolEqualityComparer.Default.Equals(
+                methodParameters[^1].Type,
+                context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingCancellationToken))
+            && !(constructorArguments.Length == methodParameters.Length && constructorArguments[^1].IsNull
+                && (methodParameters is not [{ Type: IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object } }, _]
+                    || constructorArguments[0].IsNull
+                    || constructorArguments[0].Type.IsAssignableTo(methodParameters[0].Type, context.Compilation))))
+        {
+            methodParameters = methodParameters.RemoveAt(methodParameters.Length - 1);
+            constructorArgumentCount = constructorArguments.Length;
+        }
+
+        bool isCancellationTokenOmitted = methodParameters.Length < methodSymbol.Parameters.Length;
+        bool canExpandSingleArray = methodParameters is [{ Type: IArrayTypeSymbol arrayType }]
+            && (!isCancellationTokenOmitted || arrayType.ElementType.SpecialType == SpecialType.System_Object);
+
+        // An omitted token does not prevent optional data parameters from using their defaults.
+        if (constructorArgumentCount == 0
+            && (methodParameters.Length == 0
+                || (isCancellationTokenOmitted && methodParameters.All(parameter => parameter.IsOptional))))
+        {
+            AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, methodParameters, constructorArguments);
+            return;
+        }
+
+        // Count mismatch since there's zero method parameters but there's at least one DataRow
+        // constructor argument.
+        if (methodParameters.Length == 0)
+        {
+            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
+                ArgumentCountMismatchRule,
+                constructorArgumentCount,
+                methodParameters.Length));
+            return;
+        }
+
+        // Possible count mismatch depending on whether last method parameter is an array or not.
+        if (constructorArgumentCount == 0)
+        {
+            if (methodParameters[^1].Type.Kind != SymbolKind.ArrayType
+                || (isCancellationTokenOmitted && !canExpandSingleArray))
+            {
+                context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
+                    ArgumentCountMismatchRule,
+                    constructorArgumentCount,
+                    methodParameters.Length));
+            }
+
+            return;
+        }
+
+        if (IsArgumentCountMismatch(constructorArguments.Length, methodParameters, canExpandSingleArray))
+        {
+            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
+                ArgumentCountMismatchRule,
+                constructorArguments.Length,
+                methodParameters.Length));
+            return;
+        }
+
+        AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, methodParameters, constructorArguments);
+
+        // Check constructor argument types match method parameter types.
+        List<(string ParameterName, string ExpectedType, string ActualType)> typeMismatches = [];
+        for (int currentArgumentIndex = 0; currentArgumentIndex < constructorArguments.Length; currentArgumentIndex++)
+        {
+            // Null is considered as default for non-nullable types.
+            if (constructorArguments[currentArgumentIndex].IsNull)
+            {
+                continue;
+            }
+
+            ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
+            ITypeSymbol paramType = GetParameterType(
+                methodParameters,
+                currentArgumentIndex,
+                canExpandSingleArray && (isCancellationTokenOmitted || constructorArguments.Length > 1));
+            if (paramType.TypeKind == TypeKind.TypeParameter ||
+                paramType is IArrayTypeSymbol { ElementType.TypeKind: TypeKind.TypeParameter })
+            {
+                // That means the actual type cannot be determined. We should have issued a separate
+                // diagnostic for that in AnalyzeGenericMethod call above.
+                continue;
+            }
+
+            if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
+            {
+                int parameterIndex = Math.Min(currentArgumentIndex, methodParameters.Length - 1);
+                string parameterName = methodParameters[parameterIndex].Name;
+                string expectedType = paramType.ToDisplayString();
+                string actualType = argumentType.ToDisplayString();
+                typeMismatches.Add((parameterName, expectedType, actualType));
+            }
+        }
+
+        // Report diagnostics if there's any type mismatch.
+        if (typeMismatches.Count > 0)
+        {
+            // Format all mismatches into a single message
+            string mismatchMessage;
+            if (typeMismatches.Count == 1)
+            {
+                (string parameterName, string expectedType, string actualType) = typeMismatches[0];
+                mismatchMessage = string.Format(CultureInfo.InvariantCulture, Resources.DataRowShouldBeValidMessageFormat_ParameterMismatch, parameterName, expectedType, actualType);
+            }
+            else
+            {
+                IEnumerable<string> mismatchDescriptions = typeMismatches.Select(m =>
+                    string.Format(CultureInfo.InvariantCulture, Resources.DataRowShouldBeValidMessageFormat_ParameterMismatch, m.ParameterName, m.ExpectedType, m.ActualType));
+                mismatchMessage = string.Join("; ", mismatchDescriptions);
+            }
+
+            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
+                ArgumentTypeMismatchRule,
+                mismatchMessage));
+        }
+    }
+
+    private static Type GetSystemType(ITypeSymbol type)
+    {
+        if (type is INamedTypeSymbol
+            {
+                Name: nameof(Type),
+                Arity: 0,
+                ContainingType: null,
+                ContainingNamespace: { Name: WellKnownTypeNames.System, ContainingNamespace.IsGlobalNamespace: true },
+            })
+        {
+            return typeof(Type);
+        }
+
+        if (type.TypeKind == TypeKind.Enum)
+        {
+            if (((INamedTypeSymbol)type).EnumUnderlyingType is { } underlyingType)
+            {
+                type = underlyingType;
+            }
+            else
+            {
+                // If this is reachable, it will be an error scenario.
+                return typeof(int);
+            }
+        }
+
+        return type.SpecialType switch
+        {
+            SpecialType.System_Boolean => typeof(bool),
+            SpecialType.System_Byte => typeof(byte),
+            SpecialType.System_Char => typeof(char),
+            SpecialType.System_Decimal => typeof(decimal),
+            SpecialType.System_Double => typeof(double),
+            SpecialType.System_Int16 => typeof(short),
+            SpecialType.System_Int32 => typeof(int),
+            SpecialType.System_Int64 => typeof(long),
+            SpecialType.System_IntPtr => typeof(IntPtr),
+            SpecialType.System_Object => typeof(object),
+            SpecialType.System_SByte => typeof(sbyte),
+            SpecialType.System_Single => typeof(float),
+            SpecialType.System_String => typeof(string),
+            SpecialType.System_UInt16 => typeof(ushort),
+            SpecialType.System_UInt32 => typeof(uint),
+            SpecialType.System_UInt64 => typeof(ulong),
+            SpecialType.System_UIntPtr => typeof(UIntPtr),
+            // All types that can be constants should hopefully be handled above.
+            _ => throw new ArgumentException($"Unexpected SpecialType '{type.SpecialType}'."),
+        };
+    }
+
+    private static void AnalyzeGenericMethod(
+        SymbolAnalysisContext context,
+        SyntaxNode dataRowSyntax,
+        IMethodSymbol methodSymbol,
+        ImmutableArray<IParameterSymbol> methodParameters,
+        ImmutableArray<TypedConstant> constructorArguments)
+    {
+        if (!methodSymbol.IsGenericMethod)
+        {
+            return;
+        }
+
+        var parameterTypesSubstitutions = new Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>(SymbolEqualityComparer.Default);
+        foreach (IParameterSymbol parameter in methodParameters)
+        {
+            if (parameter.Ordinal >= constructorArguments.Length)
+            {
+                break;
+            }
+
+            TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
+
+            // This happens for [DataRow(null)] which ends up being resolved
+            // to DataRow(string?[]? stringArrayData) constructor.
+            // It also happens with [DataRow((object[]?)null)] which resolves
+            // to the params object[] constructor
+            // In this case, the argument is simply "null".
+            if (constructorArgument.Kind == TypedConstantKind.Array && constructorArgument.IsNull)
+            {
+                continue;
+            }
+
+            if (constructorArgument.Type is null)
+            {
+                // That's an error scenario. The compiler will be complaining about something already.
+                continue;
+            }
+
+            bool inferArrayElement = constructorArgument.Kind == TypedConstantKind.Array && parameter.Type is IArrayTypeSymbol;
+            ITypeSymbol parameterType = inferArrayElement
+                ? ((IArrayTypeSymbol)parameter.Type).ElementType
+                : parameter.Type;
+            if (parameterType.Kind != SymbolKind.TypeParameter)
+            {
+                continue;
+            }
+
+            Type? argumentType = constructorArgument.Kind switch
+            {
+                TypedConstantKind.Array => GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType),
+                TypedConstantKind.Type => GetSystemType(constructorArgument.Type),
+                _ => constructorArgument.Value?.GetType(),
+            };
+
+            if (argumentType is null)
+            {
+                continue;
+            }
+
+            if (constructorArgument.Kind == TypedConstantKind.Array && !inferArrayElement)
+            {
+                argumentType = argumentType.MakeArrayType();
+            }
+
+            ITypeSymbol argumentSymbol = inferArrayElement
+                ? ((IArrayTypeSymbol)constructorArgument.Type).ElementType
+                : constructorArgument.Type;
+            if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
+            {
+                if (existingType.SystemType.IsAssignableFrom(argumentType))
+                {
+                    continue;
+                }
+                else if (argumentType.IsAssignableFrom(existingType.SystemType))
+                {
+                    parameterTypesSubstitutions[parameterType] = (argumentSymbol, argumentType);
+                }
+                else
+                {
+                    string existingTypeName = existingType.Symbol is IArrayTypeSymbol ? existingType.Symbol.ToDisplayString() : existingType.Symbol.Name;
+                    string argumentTypeName = argumentSymbol is IArrayTypeSymbol ? argumentSymbol.ToDisplayString() : argumentSymbol.Name;
+                    context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentConflictingTypesRule, parameterType.Name, existingTypeName, argumentTypeName));
+                }
+            }
+            else
+            {
+                parameterTypesSubstitutions.Add(parameterType, (argumentSymbol, argumentType));
+            }
+        }
+
+        foreach (ITypeParameterSymbol typeParameter in methodSymbol.TypeParameters)
+        {
+            if (!parameterTypesSubstitutions.ContainsKey(typeParameter))
+            {
+                context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentNotResolvedRule, typeParameter.Name));
+            }
+        }
+    }
+
+    private static ITypeSymbol GetParameterType(ImmutableArray<IParameterSymbol> parameters, int currentArgumentIndex, bool expandSingleArray)
+    {
+        if (currentArgumentIndex >= parameters.Length - 1)
+        {
+            IParameterSymbol lastParameter = parameters[^1];
+
+            // When last parameter is params, we want to check that the extra arguments match the type of the array
+            if (lastParameter.IsParams)
+            {
+                return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
+            }
+
+            if (expandSingleArray)
+            {
+                return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
+            }
+        }
+
+        return parameters[currentArgumentIndex].Type;
+    }
+
+    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters, bool canExpandSingleArray)
+    {
+        int optionalParametersCount = methodParameters.Count(x => x.HasExplicitDefaultValue);
+        bool isLastParameterParams = methodParameters[^1].IsParams;
+        if (canExpandSingleArray)
+        {
+            return false;
+        }
+
+        // When there is a params parameter, we should only check if the minimal number of arguments is matched.
+        if (isLastParameterParams)
+        {
+            return constructorArgumentsLength < methodParameters.Length - 1 /* params can be empty */ - optionalParametersCount;
+        }
+
+        // When there are some optional parameters (and no params), we are invalid if:
+        // - there are too many arguments
+        // - less than non-optional parameters
+        if (optionalParametersCount > 0)
+        {
+            return constructorArgumentsLength > methodParameters.Length
+                || constructorArgumentsLength < methodParameters.Length - optionalParametersCount;
+        }
+
+        // Strict check
+        return constructorArgumentsLength != methodParameters.Length;
+    }
+}

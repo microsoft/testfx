@@ -5,9 +5,12 @@ Alternatively, if you don't want to use the `global.json` file for versions, you
 -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- Source generation is prerelease and requires its matching framework and adapter. -->
+    <MSTestVersion>$(MSTestPreviewVersion)</MSTestVersion>
 
     <!-- When MSTest Sdk detects PublishAot=true, it references the required packages to ensure Native AOT support -->
     <PublishAot>true</PublishAot>
@@ -21,7 +24,7 @@ Below is the equivalent project configuration when not using MSTest.Sdk
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -33,10 +36,10 @@ Below is the equivalent project configuration when not using MSTest.Sdk
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(CodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MTPVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MTPVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
   </ItemGroup>

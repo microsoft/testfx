@@ -1,0 +1,174 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
+
+internal static partial class ManagedNameHelper
+{
+    public static void GetManagedNameAndHierarchy(MethodBase method, out string managedTypeName, out string managedMethodName, out string?[] hierarchyValues)
+    {
+        _ = method ?? throw new ArgumentNullException(nameof(method));
+
+        if (method.MemberType != MemberTypes.Method)
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        Type semanticType = method.ReflectedType ?? throw ApplicationStateGuard.Unreachable();
+
+        if (semanticType.IsGenericType)
+        {
+            // The type might have some of its generic parameters specified, so make
+            // sure we are working with the open form of the generic type.
+            semanticType = semanticType.GetGenericTypeDefinition();
+
+            // The method might have some of its parameters specified by the original closed type
+            // declaration. Here we use the method handle (basically metadata token) to create
+            // a new method reference using the open form of the reflected type. The intent is
+            // to strip all generic type parameters.
+            RuntimeMethodHandle methodHandle = method.MethodHandle;
+            method = MethodBase.GetMethodFromHandle(methodHandle, semanticType.TypeHandle)!;
+        }
+
+        managedTypeName = semanticType.FullName!;
+
+        if (method.IsGenericMethod)
+        {
+            // If this method is generic, then convert to the generic method definition
+            // so that we get the open generic type definitions for parameters.
+            method = ((MethodInfo)method).GetGenericMethodDefinition();
+        }
+
+        var methodBuilder = new StringBuilder();
+
+        // Method Name with method arity
+        int arity = method.GetGenericArguments().Length;
+        AppendMethodString(methodBuilder, method.Name, arity);
+        if (arity > 0)
+        {
+            methodBuilder.Append('`');
+            methodBuilder.Append(arity);
+        }
+
+        // Type Parameters
+        ParameterInfo[] paramList = method.GetParameters();
+        if (paramList.Length != 0)
+        {
+            methodBuilder.Append('(');
+            foreach (ParameterInfo p in paramList)
+            {
+                // closedType is always true here by RFC
+                AppendTypeString(methodBuilder, p.ParameterType, closedType: true);
+                methodBuilder.Append(',');
+            }
+
+            // Replace the last ',' with ')'
+            methodBuilder[methodBuilder.Length - 1] = ')';
+        }
+
+        managedMethodName = methodBuilder.ToString();
+
+        hierarchyValues = new string[HierarchyConstants.Levels.TotalLevelCount];
+        hierarchyValues[HierarchyConstants.Levels.TestGroupIndex] = managedMethodName;
+
+        if (semanticType.Namespace is { } @semanticTypeNamespace)
+        {
+            int lastIndexOfDot = semanticType.FullName!.LastIndexOf('.');
+            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = semanticType.FullName!.Substring(lastIndexOfDot + 1);
+            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = semanticTypeNamespace;
+        }
+        else
+        {
+            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = semanticType.FullName;
+            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = null;
+        }
+
+        hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodBase"/> object with the specified <paramref name="managedTypeName"/>
+    /// and <paramref name="managedMethodName"/> in the <paramref name="assembly"/> instance.
+    /// </summary>
+    /// <param name="assembly">
+    /// An <see cref="Assembly" /> instance to search in.
+    /// </param>
+    /// <param name="managedTypeName">
+    /// The fully qualified managed name of the type.
+    /// The format is defined in <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md#managedtype-property">the RFC</see>.
+    /// </param>
+    /// <param name="managedMethodName">
+    /// The fully qualified managed name of the method.
+    /// The format is defined in <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md#managedmethod-property">the RFC</see>.
+    /// </param>
+    /// <returns>
+    /// A <see cref="MethodBase" /> object that represents specified parameters, throws if null.
+    /// </returns>
+    /// <exception cref="InvalidManagedNameException">
+    /// Values specified with <paramref name="managedTypeName"/> and <paramref name="managedMethodName"/>
+    /// does not correspond to a method in the <paramref name="assembly"/> instance, or malformed.
+    /// </exception>
+    /// <remarks>
+    /// More information about <paramref name="managedTypeName"/> and <paramref name="managedMethodName"/> can be found in
+    /// <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md">the RFC</see>.
+    /// </remarks>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = "Reflection-based name resolution is used by the legacy VSTest bridge for managed-name lookup. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
+    public static MethodInfo GetMethod(Assembly assembly, string managedTypeName, string managedMethodName)
+    {
+        Type type = assembly.GetType(managedTypeName, throwOnError: false, ignoreCase: false)
+            ?? throw new InvalidManagedNameException();
+
+        MethodInfo? method = null;
+        ManagedNameParser.ParseManagedMethodName(managedMethodName, out string methodName, out int methodArity, out string[]? parameterTypes);
+
+        if (!string.IsNullOrWhiteSpace(methodName))
+        {
+            method = FindMethod(type, methodName, methodArity, parameterTypes);
+        }
+
+        return method ?? throw new InvalidManagedNameException();
+    }
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based name resolution is used by the legacy VSTest bridge for managed-name lookup. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
+    private static MethodInfo? FindMethod(Type type, string methodName, int methodArity, string[]? parameterTypes)
+    {
+        bool Filter(MemberInfo mbr, object? param)
+        {
+            if (mbr is not MethodInfo method || method.Name != methodName || method.GetGenericArguments().Length != methodArity)
+            {
+                return false;
+            }
+
+            ParameterInfo[] paramList = method.GetParameters();
+            if (paramList.Length == 0 && parameterTypes is null)
+            {
+                return true;
+            }
+            else if (parameterTypes is null || paramList.Length != parameterTypes.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < paramList.Length; i++)
+            {
+                string parameterType = GetTypeString(paramList[i].ParameterType, closedType: true);
+                if (parameterType != parameterTypes[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        MemberInfo[] methods = type.FindMembers(MemberTypes.Method, bindingFlags, Filter, null);
+
+        return (MethodInfo?)(methods.Length switch
+        {
+            1 => methods[0],
+            > 1 => methods.SingleOrDefault(i => i.DeclaringType == type),
+            _ => null,
+        });
+    }
+}

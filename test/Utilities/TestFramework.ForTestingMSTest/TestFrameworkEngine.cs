@@ -246,7 +246,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
     private static bool IsTestContainer(Type typeInfo)
     {
         Type? currentType = typeInfo;
-        while (currentType != null)
+        while (currentType is not null)
         {
             if (currentType == typeof(TestContainer))
             {

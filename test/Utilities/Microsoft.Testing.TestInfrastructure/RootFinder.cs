@@ -23,7 +23,7 @@ internal static class RootFinder
     /// <exception cref="InvalidOperationException">Thrown if a Git repository is not found in the application's base directory or any of its parent directories.</exception>
     public static string Find()
     {
-        if (s_root != null)
+        if (s_root is not null)
         {
             return s_root;
         }

@@ -1,0 +1,2 @@
+T:Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert; Use Assert instead.
+T:Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert; Use Assert instead.

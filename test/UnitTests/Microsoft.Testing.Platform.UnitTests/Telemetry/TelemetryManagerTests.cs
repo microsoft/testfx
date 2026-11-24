@@ -16,6 +16,37 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TelemetryManagerTests
 {
+    [TestMethod]
+    [DataRow(null, false)]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, true)]
+    [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, true)]
+    public async Task TelemetryManager_WhenDisabled_DoesNotCreateContextCollector(string? optOutVariable, bool enableTelemetry)
+    {
+        Mock<IEnvironment> environment = new();
+        if (optOutVariable is not null)
+        {
+            environment.Setup(x => x.GetEnvironmentVariable(optOutVariable)).Returns("1");
+        }
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(environment.Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        bool collectorCreated = false;
+        TelemetryManager manager = new();
+        manager.AddTelemetryCollectorProvider(_ =>
+        {
+            collectorCreated = true;
+            return new NopTelemetryService(false);
+        });
+
+        await manager.BuildTelemetryAsync(serviceProvider, loggerFactory.Object, new TestApplicationOptions { EnableTelemetry = enableTelemetry });
+
+        Assert.IsFalse(collectorCreated);
+        Assert.IsFalse(serviceProvider.GetRequiredService<ITelemetryInformation>().IsEnabled);
+        environment.Verify(x => x.GetEnvironmentVariable("COPILOT_AGENT_SESSION_ID"), Times.Never);
+    }
+
     // When set to 1 or true it should suppress the message.
     [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "1")]
     [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "true")]
@@ -182,6 +213,7 @@ public sealed class TelemetryManagerTests
         outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);
 
         // And sentinel was written to filesystem.
+        fileSystemMock.Verify(f => f.CreateDirectory(Path.GetDirectoryName(path)!), Times.Once);
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Once);
 
         // Act - on next run the file already exists.

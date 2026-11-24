@@ -336,9 +336,6 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult? failed = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("failed", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), startTime, timing), "tests.dll")?.Result;
         AzureDevOpsTestCaseResult? skipped = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("skipped", new SkippedTestNodeStateProperty("skip"), startTime, timing), "tests.dll")?.Result;
         AzureDevOpsTestCaseResult? timeout = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("timeout", new TimeoutTestNodeStateProperty("too slow"), startTime, timing), "tests.dll")?.Result;
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-        AzureDevOpsTestCaseResult? cancelled = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("cancelled", new CancelledTestNodeStateProperty("stopped"), startTime, timing), "tests.dll")?.Result;
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, passed?.Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, passed?.State);
@@ -353,9 +350,6 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, timeout?.Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, timeout?.State);
         Assert.AreEqual("Timeout: too slow", timeout?.ErrorMessage);
-        Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestOutcome, cancelled?.Outcome);
-        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, cancelled?.State);
-        Assert.AreEqual("stopped", cancelled?.ErrorMessage);
     }
 
     [TestMethod]
@@ -376,6 +370,243 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult publishedResult = result!;
         Assert.AreEqual("My.Namespace.MyType.MyMethod", publishedResult.AutomatedTestName);
         Assert.AreEqual("MyMethod", publishedResult.TestCaseTitle);
+        Assert.IsNull(publishedResult.Comment);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, DisplayName = "Native unfolded rows")]
+    [DataRow(true, true, DisplayName = "Native folded rows")]
+    [DataRow(false, false, DisplayName = "VSTest unfolded rows")]
+    [DataRow(false, true, DisplayName = "VSTest folded rows")]
+    public void CreateTestCaseResult_DataDrivenRowsHaveDistinctAutomatedTestNames(bool useTestMethodIdentifier, bool shareUid)
+    {
+        TestNode firstRow = CreateRow("first-row", """MyMethod ("nonExistentUser","password")""", 1593);
+        TestNode secondRow = CreateRow(shareUid ? "first-row" : "second-row", """MyMethod ("administrator","wrongPassword")""", 1434);
+
+        AzureDevOpsTestCaseResult? firstResult = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(firstRow, "tests.dll")?.Result;
+        AzureDevOpsTestCaseResult? secondResult = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(secondRow, "tests.dll")?.Result;
+
+        Assert.IsNotNull(firstResult);
+        Assert.IsNotNull(secondResult);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod (MyMethod ("nonExistentUser","password"))""", firstResult.AutomatedTestName);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod (MyMethod ("administrator","wrongPassword"))""", secondResult.AutomatedTestName);
+        Assert.AreEqual(firstRow.DisplayName, firstResult.TestCaseTitle);
+        Assert.AreEqual(secondRow.DisplayName, secondResult.TestCaseTitle);
+        Assert.AreEqual(1593L, firstResult.DurationInMs);
+        Assert.AreEqual(1434L, secondResult.DurationInMs);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", firstResult.Comment);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", secondResult.Comment);
+
+        TestNode CreateRow(string uid, string displayName, int durationInMs)
+        {
+            IProperty identity = useTestMethodIdentifier
+                ? new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, ["System.String", "System.String"], "System.Void")
+                : new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "My.Namespace.MyType.MyMethod");
+            var duration = TimeSpan.FromMilliseconds(durationInMs);
+            return new TestNode
+            {
+                Uid = new TestNodeUid(uid),
+                DisplayName = displayName,
+                Properties = new PropertyBag(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    identity,
+                    new TimingProperty(new TimingInfo(RetryTestStartTime, RetryTestStartTime + duration, duration))),
+            };
+        }
+    }
+
+    [TestMethod]
+    public void CreateTestCaseResult_OrdinaryDottedMethod_PreservesIdentity()
+    {
+        TestNode node = new()
+        {
+            Uid = "method",
+            DisplayName = "Verify.thing",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "Verify.thing", 0, [], "System.Void")),
+        };
+
+        AzureDevOpsTestCaseResult result = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(node, "tests.dll")!.Result;
+
+        Assert.AreEqual("My.Namespace.MyType.Verify.thing", result.AutomatedTestName);
+        Assert.AreEqual("Verify.thing", result.TestCaseTitle);
+        Assert.IsNull(result.Comment);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Native custom row title remains distinct")]
+    [DataRow(false, DisplayName = "Bridge custom row title remains distinct")]
+    public void CreateTestCaseResult_CustomRowNamesDoNotCollapse(bool nativeMetadata)
+    {
+        IProperty identity = nativeMetadata
+            ? new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, ["System.Int32"], "System.Void")
+            : new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "My.Namespace.MyType.MyMethod");
+        AzureDevOpsTestCaseResult normal = CreateRow("MyMethod (1)");
+        AzureDevOpsTestCaseResult custom = CreateRow("1");
+
+        Assert.AreNotEqual(normal.AutomatedTestName, custom.AutomatedTestName);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethod (1))", normal.AutomatedTestName);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (1)", custom.AutomatedTestName);
+        Assert.AreEqual("MyMethod (1)", normal.TestCaseTitle);
+        Assert.AreEqual("1", custom.TestCaseTitle);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", normal.Comment);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", custom.Comment);
+
+        AzureDevOpsTestCaseResult CreateRow(string title)
+            => AzureDevOpsTestResultsPublisher.CreateTestCaseResult(
+                new TestNode
+                {
+                    Uid = "shared-row-uid",
+                    DisplayName = title,
+                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, identity),
+                }, "tests.dll")!.Result;
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Canonical metadata is saved")]
+    [DataRow(true, DisplayName = "Metadata failure never republishes accepted results")]
+    public async Task DataRows_PatchCanonicalMetadataWithoutCreatingRerunAttempts(bool failMetadata)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            new AzureDevOpsTestResultsPublisherOptions(1, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1)),
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out CollectingLogger logger);
+        int createCount = 0;
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) =>
+        {
+            createCount++;
+            return Task.FromResult<IReadOnlyList<int>?>([401]);
+        };
+        if (failMetadata)
+        {
+            client.UpdateTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("metadata failed"));
+        }
+
+        TestNode row = new()
+        {
+            Uid = "row",
+            DisplayName = "MyMethod (1)",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void")),
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(row), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.AreEqual(1, createCount);
+        AzureDevOpsTestCaseResult update = Assert.ContainsSingle(Assert.ContainsSingle(client.UpdateTestResultsCalls).Results);
+        Assert.AreEqual(401, update.Id);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethod (1))", update.AutomatedTestName);
+        Assert.AreEqual("MyMethod (1)", update.TestCaseTitle);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", update.Comment);
+        Assert.IsNull(update.ResultGroupType);
+        Assert.IsNull(update.SubResults);
+        Assert.IsNull(update.CustomFields);
+        if (failMetadata)
+        {
+            Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed, string.Join(Environment.NewLine, logger.Logs));
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, false, DisplayName = "Shutdown saves accepted row metadata")]
+    [DataRow(true, false, DisplayName = "Shutdown metadata failure is reported")]
+    [DataRow(false, true, DisplayName = "Inherited shutdown saves accepted row metadata")]
+    [DataRow(true, true, DisplayName = "Metadata failure preserves remaining results")]
+    public async Task DataRows_ShutdownDuringMetadataPatch_RetriesOnlyCanonicalMetadata(bool failFinalMetadata, bool inheritedRun)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId(inheritedRun ? "123:42" : null);
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            new AzureDevOpsTestResultsPublisherOptions(20, TimeSpan.FromMilliseconds(20), 2, TimeSpan.FromMilliseconds(1)),
+            out FakeAzureDevOpsTestResultsClient client,
+            out FakeClock clock,
+            out CollectingLogger logger,
+            environment: environment);
+        TaskCompletionSource<bool> patchStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releasePatch = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var rendezvousTimeout = TimeSpan.FromSeconds(30);
+        int creates = 0;
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) =>
+        {
+            creates++;
+            return Task.FromResult<IReadOnlyList<int>?>([400 + creates]);
+        };
+        client.UpdateTestResultsAsyncFunc = async (_, _, _, token) =>
+        {
+            patchStarted.TrySetResult(true);
+            using (token.Register(() => releasePatch.TrySetResult(true)))
+            {
+                await releasePatch.Task;
+            }
+
+            token.ThrowIfCancellationRequested();
+        };
+        if (failFinalMetadata)
+        {
+            client.UpdateTestResultMetadataAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("metadata failed"));
+        }
+
+        Task? finishing = null;
+        Task? remaining = null;
+        try
+        {
+            await StartPublisherAsync(publisher);
+            await publisher.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(new TestNode
+                {
+                    Uid = "row",
+                    DisplayName = "MyMethod (1)",
+                    Properties = new PropertyBag(
+                        PassedTestNodeStateProperty.CachedInstance,
+                        new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void")),
+                }),
+                CancellationToken.None);
+            clock.UtcNow += TimeSpan.FromSeconds(1);
+            Assert.AreSame(patchStarted.Task, await Task.WhenAny(patchStarted.Task, Task.Delay(rendezvousTimeout, CancellationToken.None)));
+            await patchStarted.Task;
+
+            if (inheritedRun)
+            {
+                remaining = publisher.ConsumeAsync(
+                    Mock.Of<IDataProducer>(),
+                    CreateMessage(CreateNode("ordinary", PassedTestNodeStateProperty.CachedInstance, RetryTestStartTime)),
+                    CancellationToken.None);
+            }
+
+            finishing = publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+            Assert.AreSame(finishing, await Task.WhenAny(finishing, Task.Delay(rendezvousTimeout, CancellationToken.None)));
+            await finishing;
+            if (remaining is not null)
+            {
+                await remaining;
+            }
+
+            Assert.AreEqual(inheritedRun ? 2 : 1, creates, string.Join(Environment.NewLine, logger.Logs));
+            IReadOnlyDictionary<int, string> metadata = Assert.ContainsSingle(client.MetadataUpdateCalls);
+            Assert.HasCount(1, metadata);
+            Assert.AreEqual("MTP.CanonicalTestName/1:28", metadata[401]);
+            Assert.AreEqual(
+                failFinalMetadata,
+                logger.Logs.Any(log => log.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed)));
+        }
+        finally
+        {
+            releasePatch.TrySetResult(true);
+            await (finishing ?? publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None)));
+            if (remaining is not null)
+            {
+                await remaining;
+            }
+        }
     }
 
     [TestMethod]
@@ -545,6 +776,28 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(3, pipelineReference.GetProperty("phaseReference").GetProperty("attempt").GetInt32());
         Assert.AreEqual("Test_Linux", pipelineReference.GetProperty("jobReference").GetProperty("jobName").GetString());
         Assert.AreEqual(4, pipelineReference.GetProperty("jobReference").GetProperty("attempt").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_MetadataUpdate_PreservesAllOtherResultFields()
+    {
+        string? body = null;
+        QueueHttpMessageHandler handler = new(async (request, token) =>
+        {
+            Assert.AreEqual("PATCH", request.Method.Method);
+            body = await ReadRequestBodyAsync(request, token);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}", Encoding.UTF8, "application/json"),
+            };
+        });
+        using HttpClient httpClient = new(handler);
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+
+        await client.UpdateTestResultMetadataAsync(configuration, 42, new Dictionary<int, string> { [401] = "MTP.CanonicalTestName/1:28" }, CancellationToken.None);
+
+        Assert.AreEqual("""[{"id":401,"comment":"MTP.CanonicalTestName/1:28"}]""", body);
     }
 
     [TestMethod]
@@ -979,7 +1232,7 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
-    public async Task ConsumeAsync_SkipsOversizedFileAttachment()
+    public async Task ConsumeAsync_PassesFileAttachmentsToClientForValidation()
     {
         using TestDirectory directory = CreateTestDirectory();
         string smallPath = Path.Combine(directory.Path, "small.txt");
@@ -992,9 +1245,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(204);
-        // The publisher still queues the oversized attachment; the client side TryBuildAttachmentRequest
-        // drops it. In this fake we just record the call regardless — the contract is exercised end-to-end
-        // when running against the real client. For the unit test we only assert what the publisher sends.
+        // This fake only records forwarding. The real client's size/error handling is tested separately.
         client.UploadTestResultAttachmentAsyncFunc = (_, _, _, _, attachment, _) => Task.CompletedTask;
 
         TestNode node = CreateNode("failed-test", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), clock.UtcNow);
@@ -1004,12 +1255,153 @@ public sealed class AzureDevOpsLivePublishingTests
         await StartPublisherAsync(publisher);
         await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
 
-        // The publisher passes both attachments through; the client's TryBuildAttachmentRequest is what
-        // skips oversized ones. We sanity-check that the publisher does forward both names so the client
-        // gets a chance to filter.
         Assert.HasCount(2, client.UploadTestResultAttachmentCalls);
         Assert.Contains(c => c.Attachment.FileName == "small.txt", client.UploadTestResultAttachmentCalls);
         Assert.Contains(c => c.Attachment.FileName == "big.bin", client.UploadTestResultAttachmentCalls);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task Attachments_OversizedFileWarnsAndCountsFailureWithoutPreventingNextUpload(bool runAttachment)
+    {
+        const long attachmentSizeLimit = 75L * 1024 * 1024;
+        using TestDirectory directory = CreateTestDirectory();
+        string bigPath = Path.Combine(directory.Path, "big.coverage");
+        using (FileStream file = File.OpenWrite(bigPath))
+        {
+            file.SetLength(attachmentSizeLimit + 1);
+        }
+
+        string smallPath = Path.Combine(directory.Path, "small.coverage");
+        File.WriteAllText(smallPath, "small content");
+        int httpRequests = 0;
+        using HttpResponseMessage response = new(HttpStatusCode.OK) { Content = new StringContent("{}") };
+        using HttpClient httpClient = new(new QueueHttpMessageHandler((_, _) =>
+        {
+            httpRequests++;
+            return Task.FromResult(response);
+        }));
+        CollectingOutputDevice output = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _, outputDevice: output);
+        AzureDevOpsTestResultsClient realClient = new(httpClient, new FakeTask(), clock);
+        client.UploadTestRunAttachmentAsyncFunc = realClient.UploadTestRunAttachmentAsync;
+        client.UploadTestResultAttachmentAsyncFunc = realClient.UploadTestResultAttachmentAsync;
+
+        await StartPublisherAsync(publisher);
+        if (runAttachment)
+        {
+            SessionUid session = new("coverage-session");
+            await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), new SessionFileArtifact(session, new FileInfo(bigPath), "coverage"), CancellationToken.None);
+            await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), new SessionFileArtifact(session, new FileInfo(smallPath), "coverage"), CancellationToken.None);
+        }
+        else
+        {
+            TestNode node = CreateNode("failed-test", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), clock.UtcNow);
+            node.Properties.Add(new FileArtifactProperty(new FileInfo(bigPath), "big"));
+            node.Properties.Add(new FileArtifactProperty(new FileInfo(smallPath), "small"));
+            await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+        }
+
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.AreEqual(1, httpRequests);
+        string detail = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentTooLarge, "big.coverage", attachmentSizeLimit + 1, attachmentSizeLimit);
+        Assert.Contains(warning => warning.Contains(detail), output.Warnings);
+        Assert.Contains(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 1), output.Warnings);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, Assert.ContainsSingle(client.UpdateTestRunStateCalls).State);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task AzureDevOpsTestResultsClient_MissingAttachmentThrowsBeforeSending(bool runAttachment)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        using HttpClient httpClient = new(new QueueHttpMessageHandler());
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        var attachment = AzureDevOpsTestResultAttachment.FromFile(Path.Combine(directory.Path, "missing.coverage"), AzureDevOpsAttachmentTypes.CodeCoverage);
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => runAttachment
+            ? client.UploadTestRunAttachmentAsync(configuration, 42, attachment, CancellationToken.None)
+            : client.UploadTestResultAttachmentAsync(configuration, 42, 7, null, attachment, CancellationToken.None));
+
+        Assert.IsInstanceOfType<FileNotFoundException>(exception.InnerException);
+        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentReadFailed, attachment.FileName, exception.InnerException.Message), exception.Message);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_UnreadableAttachmentThrowsBeforeSending()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string path = Path.Combine(directory.Path, "locked.coverage");
+        File.WriteAllText(path, "coverage");
+        using FileStream lockedFile = new(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        using HttpClient httpClient = new(new QueueHttpMessageHandler());
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+            client.UploadTestRunAttachmentAsync(configuration, 42, AzureDevOpsTestResultAttachment.FromFile(path, AzureDevOpsAttachmentTypes.CodeCoverage), CancellationToken.None));
+
+        Assert.IsInstanceOfType<IOException>(exception.InnerException);
+        Assert.Contains("locked.coverage", exception.Message);
+    }
+
+    // Each row near the 75 MiB limit transiently buffers the attachment several times (raw bytes, base64,
+    // JSON payload, request content, and the decoded copy below). Running the rows concurrently with
+    // method-level parallelization peaks at several GB and can get the test host OOM-killed on CI agents.
+    [TestMethod]
+    [DoNotParallelize]
+    [DataRow(0L, true)]
+    [DataRow(0L, false)]
+    [DataRow(34_360_600L, true)]
+    [DataRow(34_360_600L, false)]
+    [DataRow((75L * 1024 * 1024) - 1, true)]
+    [DataRow((75L * 1024 * 1024) - 1, false)]
+    [DataRow(75L * 1024 * 1024, true)]
+    [DataRow(75L * 1024 * 1024, false)]
+    public async Task AzureDevOpsTestResultsClient_AttachmentAtOrBelowSizeLimitIsUploaded(long size, bool runAttachment)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string path = Path.Combine(directory.Path, "accepted.coverage");
+        using (FileStream file = File.OpenWrite(path))
+        {
+            file.SetLength(size);
+        }
+
+        long? uploadedSize = null;
+        using HttpClient httpClient = new(new QueueHttpMessageHandler(async (request, cancellationToken) =>
+        {
+#if NET
+            byte[] body = await request.Content!.ReadAsByteArrayAsync(cancellationToken);
+#else
+            cancellationToken.ThrowIfCancellationRequested();
+            byte[] body = await request.Content!.ReadAsByteArrayAsync();
+#endif
+            using var payload = JsonDocument.Parse(body);
+            uploadedSize = payload.RootElement.GetProperty("stream").GetBytesFromBase64().LongLength;
+            Assert.AreEqual("accepted.coverage", payload.RootElement.GetProperty("fileName").GetString());
+            Assert.AreEqual(
+                runAttachment ? "/org/project/_apis/test/runs/42/attachments" : "/org/project/_apis/test/runs/42/results/7/attachments",
+                request.RequestUri!.AbsolutePath);
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") };
+        }));
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+
+        var attachment = AzureDevOpsTestResultAttachment.FromFile(path, AzureDevOpsAttachmentTypes.CodeCoverage);
+        if (runAttachment)
+        {
+            await client.UploadTestRunAttachmentAsync(configuration, 42, attachment, CancellationToken.None);
+        }
+        else
+        {
+            await client.UploadTestResultAttachmentAsync(configuration, 42, 7, null, attachment, CancellationToken.None);
+        }
+
+        Assert.AreEqual(size, uploadedSize);
     }
 
     [TestMethod]
@@ -1157,6 +1549,316 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(88, joinerRun.RunId);
         Assert.IsFalse(joinerRun.IsOwner);
         Assert.IsTrue(File.Exists(Path.Combine(directory.Path, "azdo-runid.123.json")));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunIdCoordinator_FinalizeRunAsync_LateJoinerWaitsForCleanupAndCreatesSuccessor(bool completionFails)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsRunIdCoordinator owner = new(new SystemFileSystem(), new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(101), CancellationToken.None);
+
+        TaskCompletionSource<bool> completeRequest = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> lockContended = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> retryAdmission = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ITask> peerTask = new();
+        peerTask.Setup(task => task.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>())).Returns(() =>
+        {
+            lockContended.TrySetResult(true);
+            return retryAdmission.Task;
+        });
+        AzureDevOpsRunIdCoordinator peer = new(new SystemFileSystem(), peerTask.Object, clock, CreateEnvironmentMock(processId: int.MaxValue).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+
+        Task finalization = owner.FinalizeRunAsync(ownedRun, async _ =>
+        {
+            await completeRequest.Task;
+            if (completionFails)
+            {
+                throw new HttpRequestException("Completion failed");
+            }
+        }, CancellationToken.None);
+        Task<AzureDevOpsCoordinatedRun> admission = peer.AcquireRunAsync(configuration, _ => Task.FromResult(102), CancellationToken.None);
+        try
+        {
+            Assert.IsTrue(lockContended.Task.IsCompleted, "The late joiner must wait on the gate, not acquire the closing run.");
+            Assert.IsFalse(admission.IsCompleted);
+            Assert.IsFalse(File.Exists(Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue}.json")));
+            completeRequest.SetResult(true);
+            if (completionFails)
+            {
+                await Assert.ThrowsExactlyAsync<HttpRequestException>(() => finalization);
+            }
+            else
+            {
+                await finalization;
+            }
+
+            retryAdmission.SetResult(true);
+            AzureDevOpsCoordinatedRun successor = await admission;
+            Assert.IsTrue(successor.IsOwner);
+            Assert.AreEqual(102, successor.RunId);
+            AzureDevOpsRunIdFile? persisted = JsonSerializer.Deserialize<AzureDevOpsRunIdFile>(File.ReadAllText(successor.RunIdFilePath));
+            Assert.IsNotNull(persisted);
+            Assert.AreEqual(102, persisted.RunId);
+            await peer.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
+        }
+        finally
+        {
+            completeRequest.TrySetResult(true);
+            retryAdmission.TrySetResult(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_LockedGateTimesOutWithoutRegisteringThenRecovers()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        FakeTask task = new(delay => clock.UtcNow += delay);
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromSeconds(5), 2, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMilliseconds(10));
+        AzureDevOpsRunIdCoordinator coordinator = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), options);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        string lockPath = Path.Combine(directory.Path, "azdo-runid.123.lock");
+        using (FileStream gate = new(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+        {
+            TimeoutException exception = await Assert.ThrowsExactlyAsync<TimeoutException>(
+                () => coordinator.AcquireRunAsync(configuration, _ => throw new InvalidOperationException("Must not create a run"), CancellationToken.None));
+            Assert.AreEqual(
+                string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingCoordinationLockTimedOut, lockPath, options.CoordinationJoinerMaxWaitTime),
+                exception.Message);
+            Assert.IsEmpty(Directory.GetFiles(directory.Path, "*.json"));
+            Assert.IsFalse(File.Exists(Path.Combine(directory.Path, "azdo-runid.123.owner")));
+        }
+
+        AzureDevOpsCoordinatedRun run = await coordinator.AcquireRunAsync(configuration, _ => Task.FromResult(103), CancellationToken.None);
+        Assert.IsTrue(run.IsOwner);
+        await coordinator.FinalizeRunAsync(run, _ => Task.CompletedTask, CancellationToken.None);
+        Assert.IsTrue(File.Exists(lockPath), "The gate file must retain its identity across run generations.");
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_CancellationWhileGateLockedDoesNotRegister()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        using CancellationTokenSource cancellation = new();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        FakeTask task = new(_ => cancellation.Cancel());
+        AzureDevOpsRunIdCoordinator coordinator = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        using FileStream gate = new(Path.Combine(directory.Path, "azdo-runid.123.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => coordinator.AcquireRunAsync(configuration, _ => throw new InvalidOperationException("Must not create a run"), cancellation.Token));
+
+        Assert.IsEmpty(Directory.GetFiles(directory.Path, "*.json"));
+        Assert.IsFalse(File.Exists(Path.Combine(directory.Path, "azdo-runid.123.owner")));
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_CleanupHoldsGateAcrossBothDeletes()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        UndeletableFileSystem fileSystem = new();
+        AzureDevOpsRunIdCoordinator coordinator = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsCoordinatedRun run = await coordinator.AcquireRunAsync(configuration, _ => Task.FromResult(104), CancellationToken.None);
+        List<string> cleanup = [];
+        fileSystem.AfterDelete = path =>
+        {
+            if (path == run.OwnerFilePath || path == run.RunIdFilePath)
+            {
+                cleanup.Add(path);
+                Assert.ThrowsExactly<IOException>(() =>
+                {
+                    using FileStream competingGate = new(Path.Combine(directory.Path, "azdo-runid.123.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                });
+            }
+        };
+
+        await coordinator.FinalizeRunAsync(run, _ => Task.CompletedTask, CancellationToken.None);
+
+        Assert.AreSequenceEqual(new[] { run.OwnerFilePath, run.RunIdFilePath }, cleanup);
+        fileSystem.AfterDelete = null;
+        AzureDevOpsCoordinatedRun successor = await coordinator.AcquireRunAsync(configuration, _ => Task.FromResult(105), CancellationToken.None);
+        Assert.AreEqual(105, successor.RunId);
+        Assert.IsTrue(File.Exists(successor.RunIdFilePath));
+        await coordinator.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
+    }
+
+    [TestMethod]
+    [DataRow(false, false, false)]
+    [DataRow(true, false, false)]
+    [DataRow(false, true, false)]
+    [DataRow(true, true, false)]
+    [DataRow(true, false, true)]
+    [DataRow(true, true, true)]
+    public async Task RunIdCoordinator_FinalizeRunAsync_DeleteFailureIsRecoveredBeforeSuccessorAdmission(bool ownerDeleteFails, bool completionFails, bool allDeletesFail)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        UndeletableFileSystem fileSystem = new();
+        CollectingLogger logger = new();
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsRunIdCoordinator owner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, logger, AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(106), CancellationToken.None);
+        string blockedPath = ownerDeleteFails ? ownedRun.OwnerFilePath : ownedRun.RunIdFilePath;
+        fileSystem.BlockedDeletePath = blockedPath;
+        fileSystem.FailDeletes = allDeletesFail;
+        Task finalization = owner.FinalizeRunAsync(
+            ownedRun,
+            _ => completionFails ? throw new HttpRequestException("Completion failed") : Task.CompletedTask,
+            CancellationToken.None);
+        if (completionFails)
+        {
+            await Assert.ThrowsExactlyAsync<HttpRequestException>(() => finalization);
+        }
+        else
+        {
+            await finalization;
+        }
+
+        Assert.IsTrue(File.Exists(blockedPath), "The test must leave an undeletable coordination file behind.");
+        Assert.AreEqual(allDeletesFail, File.Exists(ownerDeleteFails ? ownedRun.RunIdFilePath : ownedRun.OwnerFilePath));
+        Assert.Contains($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {blockedPath}", string.Join(Environment.NewLine, logger.Logs));
+        fileSystem.HideBlockedFile = true;
+        Assert.IsFalse(fileSystem.ExistFile(blockedPath), "Recovery must tolerate File.Exists reporting an access error as a missing file.");
+        string successorParticipantPath = Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue}.json");
+        FakeTask retryTask = new(delay =>
+        {
+            Assert.IsFalse(File.Exists(successorParticipantPath), "A successor must not register before the old files are removed.");
+            clock.UtcNow += delay;
+            fileSystem.BlockedDeletePath = null;
+            fileSystem.FailDeletes = false;
+        });
+        AzureDevOpsRunIdCoordinator peer = new(fileSystem, retryTask, clock, CreateEnvironmentMock(processId: int.MaxValue).Object, logger, AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun successor = await peer.AcquireRunAsync(configuration, _ =>
+        {
+            Assert.IsNull(fileSystem.BlockedDeletePath, "A successor must retry the failed delete instead of joining or replacing the closing run.");
+            Assert.IsFalse(File.Exists(ownedRun.RunIdFilePath));
+            Assert.IsFalse(File.Exists(ownedRun.ParticipantFilePath), "The successor must not wait on a surviving participant from the completed run.");
+            return Task.FromResult(107);
+        }, CancellationToken.None);
+
+        Assert.HasCount(1, retryTask.DelayCalls);
+        Assert.IsTrue(successor.IsOwner);
+        Assert.AreEqual(107, successor.RunId);
+        AzureDevOpsRunIdFile? persisted = JsonSerializer.Deserialize<AzureDevOpsRunIdFile>(File.ReadAllText(successor.RunIdFilePath));
+        Assert.IsNotNull(persisted);
+        Assert.AreEqual(107, persisted.RunId);
+        AzureDevOpsRunIdCoordinator joiner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId() + 1).Object, logger, AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun joined = await joiner.AcquireRunAsync(configuration, _ => throw new InvalidOperationException("The successor must not be deleted by stale cleanup"), CancellationToken.None);
+        Assert.AreEqual(107, joined.RunId);
+        Assert.IsFalse(joined.IsOwner);
+        await joiner.FinalizeRunAsync(joined, _ => Task.CompletedTask, CancellationToken.None);
+        await peer.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
+    public async Task RunIdCoordinator_AcquireRunAsync_PendingCleanupTimesOutOrCancelsWithoutRegisteringThenRecovers(bool ownerDeleteFails, bool cancel)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        using CancellationTokenSource cancellation = new();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        UndeletableFileSystem fileSystem = new();
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromSeconds(5), 0, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMilliseconds(2));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsRunIdCoordinator owner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(108), CancellationToken.None);
+        string blockedPath = ownerDeleteFails ? ownedRun.OwnerFilePath : ownedRun.RunIdFilePath;
+        fileSystem.BlockedDeletePath = blockedPath;
+        await owner.FinalizeRunAsync(ownedRun, _ => Task.CompletedTask, CancellationToken.None);
+        FakeTask retryTask = new(delay =>
+        {
+            clock.UtcNow += delay;
+            if (cancel)
+            {
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+                cancellation.Cancel();
+#pragma warning restore VSTHRD103
+            }
+        });
+        AzureDevOpsRunIdCoordinator peer = new(fileSystem, retryTask, clock, CreateEnvironmentMock(processId: int.MaxValue).Object, new CollectingLogger(), options);
+        Func<Task> admission = () => peer.AcquireRunAsync(configuration, _ => throw new InvalidOperationException("Must not create or join a run during pending cleanup"), cancellation.Token);
+        if (cancel)
+        {
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(admission);
+        }
+        else
+        {
+            TimeoutException exception = await Assert.ThrowsExactlyAsync<TimeoutException>(admission);
+            Assert.AreEqual($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {blockedPath}", exception.Message);
+        }
+
+        Assert.IsTrue(File.Exists(blockedPath));
+        Assert.IsFalse(File.Exists(Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue}.json")));
+        fileSystem.BlockedDeletePath = null;
+        AzureDevOpsCoordinatedRun successor = await peer.AcquireRunAsync(configuration, _ => Task.FromResult(109), CancellationToken.None);
+        Assert.IsTrue(successor.IsOwner);
+        Assert.AreEqual(109, successor.RunId);
+        await peer.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_UnwritableCleanupMarkerDoesNotCompleteTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        using MemoryStream readOnlyGate = new([], writable: false);
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        string ownerPath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        string runIdPath = Path.Combine(directory.Path, "azdo-runid.123.json");
+        File.WriteAllText(ownerPath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(GetAliveProcessId(), 123, clock.UtcNow.AddHours(1))));
+        File.WriteAllText(runIdPath, JsonSerializer.Serialize(new AzureDevOpsRunIdFile(111, 123, "https://dev.azure.com/org/", "project", clock.UtcNow.AddHours(1))));
+        Mock<IFileStream> gate = new();
+        gate.SetupGet(stream => stream.Stream).Returns(readOnlyGate);
+        Mock<IFileSystem> fileSystem = new(MockBehavior.Strict);
+        fileSystem.Setup(system => system.ExistFile(It.IsAny<string>())).Returns<string>(File.Exists);
+        fileSystem.Setup(system => system.DeleteFile(It.IsAny<string>())).Callback<string>(File.Delete);
+        fileSystem.Setup(system => system.GetFiles(directory.Path, It.IsAny<string>(), SearchOption.TopDirectoryOnly)).Returns([]);
+        fileSystem.Setup(system => system.NewFileStream(It.IsAny<string>(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None)).Returns(gate.Object);
+        AzureDevOpsRunIdCoordinator coordinator = new(fileSystem.Object, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun run = new(111, true, 123, directory.Path, runIdPath, ownerPath, Path.Combine(directory.Path, "participant.json"));
+        bool completed = false;
+
+        await Assert.ThrowsExactlyAsync<NotSupportedException>(() => coordinator.FinalizeRunAsync(run, _ =>
+        {
+            completed = true;
+            return Task.CompletedTask;
+        }, CancellationToken.None));
+
+        Assert.IsFalse(completed, "The run must remain active if its closing state cannot be persisted.");
+        Assert.IsTrue(File.Exists(ownerPath));
+        Assert.IsTrue(File.Exists(runIdPath));
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_FailedCreationWithUndeletableOwnerDoesNotBlockSuccessor()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        string ownerPath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        UndeletableFileSystem fileSystem = new() { BlockedDeletePath = ownerPath };
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsRunIdCoordinator owner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+
+        await Assert.ThrowsExactlyAsync<HttpRequestException>(
+            () => owner.AcquireRunAsync(configuration, _ => throw new HttpRequestException("Creation failed"), CancellationToken.None));
+
+        Assert.IsTrue(File.Exists(ownerPath));
+        fileSystem.BlockedDeletePath = null;
+        AzureDevOpsRunIdCoordinator peer = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: int.MaxValue).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun successor = await peer.AcquireRunAsync(configuration, _ => Task.FromResult(110), CancellationToken.None);
+        Assert.IsTrue(successor.IsOwner);
+        Assert.AreEqual(110, successor.RunId);
+        await peer.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
     }
 
     [TestMethod]
@@ -2225,6 +2927,15 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.Outcome);
         Assert.AreEqual(3_000L, parent.DurationInMs);
+        Assert.IsNotNull(parent.CustomFields);
+        Assert.AreEqual(1, parent.CustomFields.Single(field => field.FieldName == "AttemptId").Value);
+        Assert.AreEqual("true", parent.CustomFields.Single(field => field.FieldName == "IsTestResultFlaky").Value);
+        Assert.IsNotNull(parent.SubResults);
+        Assert.IsNull(parent.SubResults[0].CustomFields);
+        Assert.IsNotNull(parent.SubResults[1].CustomFields);
+        AzureDevOpsCustomTestField retryAttemptId = Assert.ContainsSingle(parent.SubResults[1].CustomFields!);
+        Assert.AreEqual("AttemptId", retryAttemptId.FieldName);
+        Assert.AreEqual(1, retryAttemptId.Value);
         Assert.HasCount(2, service.SubResults);
         Assert.AreEqual("Attempt# 0 - MyTest", service.SubResults[0].DisplayName);
         Assert.AreEqual("Attempt# 1 - MyTest", service.SubResults[1].DisplayName);
@@ -2416,8 +3127,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual("row B first", created[1].ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[2].Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[3].Outcome);
-        Assert.IsTrue(created.All(result => result.SubResults is null));
-        Assert.IsEmpty(client.UpdateTestResultsCalls);
+        Assert.ContainsOnly(result => result.SubResults is null, created);
+        AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 100, 101, 102, 103);
         Assert.HasCount(2, client.UploadTestResultAttachmentCalls);
         Assert.AreEqual(100, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
         Assert.AreEqual("row A output", client.UploadTestResultAttachmentCalls[0].Attachment.InlineContent);
@@ -2549,6 +3260,9 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = secondClient.UpdateTestResultsCalls[0].Results.Single();
         Assert.AreEqual(777, parent.Id, "The update has to address the result the first attempt created.");
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.RerunResultGroupType, parent.ResultGroupType);
+        Assert.IsNotNull(parent.CustomFields);
+        Assert.AreEqual(1, parent.CustomFields.Single(field => field.FieldName == "AttemptId").Value);
+        Assert.AreEqual("true", parent.CustomFields.Single(field => field.FieldName == "IsTestResultFlaky").Value);
 
         // Latest attempt wins: the test ultimately passed, which is what the pipeline's exit code says too.
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.Outcome);
@@ -2563,6 +3277,9 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(2, parent.SubResults[1].SequenceId);
         Assert.AreEqual("Attempt# 1 - MyTest", parent.SubResults[1].DisplayName);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.SubResults[1].Outcome);
+        Assert.IsNull(parent.SubResults[0].CustomFields);
+        Assert.IsNotNull(parent.SubResults[1].CustomFields);
+        Assert.AreEqual(1, parent.SubResults[1].CustomFields!.Single().Value);
     }
 
     [TestMethod]
@@ -2586,6 +3303,9 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.Outcome);
         Assert.AreEqual("second", parent.ErrorMessage, "The parent reports the attempt that decided the outcome.");
+        Assert.IsNotNull(parent.CustomFields);
+        Assert.AreEqual(1, parent.CustomFields.Single(field => field.FieldName == "AttemptId").Value);
+        Assert.AreEqual("false", parent.CustomFields.Single(field => field.FieldName == "IsTestResultFlaky").Value);
         Assert.IsNotNull(parent.SubResults);
         IReadOnlyList<AzureDevOpsTestSubResult> subResults = parent.SubResults;
         Assert.HasCount(2, subResults);
@@ -2694,6 +3414,10 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsNull(createdResult.SubResults);
         Assert.IsNotNull(seededResult);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.RerunResultGroupType, seededResult.ResultGroupType);
+        Assert.IsNotNull(seededResult.CustomFields);
+        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(seededResult.CustomFields);
+        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
+        Assert.AreEqual("false", customField.Value);
         Assert.IsNotNull(seededResult.SubResults);
         Assert.ContainsSingle(seededResult.SubResults);
         Assert.AreEqual(1, seededResult.SubResults[0].SequenceId);
@@ -2917,7 +3641,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(2, created);
-        Assert.IsEmpty(secondClient.UpdateTestResultsCalls, "Ambiguous rows must never be PATCHed to a guessed parent.");
+        AssertMetadataOnlyUpdates(secondClient.UpdateTestResultsCalls.SelectMany(call => call.Results), 413, 414);
     }
 
     [TestMethod]
@@ -2956,7 +3680,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(2, created);
-        Assert.IsEmpty(client.UpdateTestResultsCalls, "Repeated matches to one parent must never produce duplicate PATCH ids.");
+        AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 422, 423);
     }
 
     [TestMethod]
@@ -2993,7 +3717,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(2, created);
-        Assert.IsEmpty(client.UpdateTestResultsCalls, "A parent created in this attempt must never be reused by another row.");
+        AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 471, 472);
     }
 
     [TestMethod]
@@ -3983,9 +4707,12 @@ public sealed class AzureDevOpsLivePublishingTests
             CancellationToken.None);
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
-        Assert.HasCount(1, client.UpdateTestResultsCalls, "The persisted parent may be updated only once in this attempt.");
+        AzureDevOpsTestCaseResult[] updatedResults = [.. client.UpdateTestResultsCalls.SelectMany(call => call.Results)];
+        AzureDevOpsTestCaseResult retried = Assert.ContainsSingle(updatedResults.Where(result => result.SubResults is not null));
+        Assert.AreEqual(461, retried.Id, "Only the original parent may receive another attempt.");
+        AssertMetadataOnlyUpdates(updatedResults.Where(result => result.SubResults is null), 462);
         Assert.HasCount(1, created);
-        Assert.AreEqual("SharedUid", created[0].AutomatedTestName);
+        Assert.AreEqual("SharedUid (Duplicate title)", created[0].AutomatedTestName);
     }
 
     [TestMethod]
@@ -4141,10 +4868,18 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             Id = 777,
             ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+            CustomFields =
+            [
+                new AzureDevOpsCustomTestField("AttemptId", 1),
+                new AzureDevOpsCustomTestField("IsTestResultFlaky", "true"),
+            ],
             SubResults =
             [
                 new AzureDevOpsTestSubResult(1, "MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 3, "boom", "at Foo()", null, null),
-                new AzureDevOpsTestSubResult(2, "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null),
+                new AzureDevOpsTestSubResult(2, "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null)
+                {
+                    CustomFields = [new AzureDevOpsCustomTestField("AttemptId", 1)],
+                },
             ],
         };
 
@@ -4164,12 +4899,21 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
 
+        JsonElement customFields = result.GetProperty("customFields");
+        Assert.AreEqual(2, customFields.GetArrayLength());
+        Assert.AreEqual("AttemptId", customFields[0].GetProperty("fieldName").GetString());
+        Assert.AreEqual(1, customFields[0].GetProperty("value").GetInt32());
+        Assert.AreEqual("IsTestResultFlaky", customFields[1].GetProperty("fieldName").GetString());
+        Assert.AreEqual("true", customFields[1].GetProperty("value").GetString());
+
         JsonElement subResults = result.GetProperty("subResults");
         Assert.AreEqual(2, subResults.GetArrayLength());
         Assert.AreEqual(1, subResults[0].GetProperty("sequenceId").GetInt32());
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[0].GetProperty("outcome").GetString());
         Assert.AreEqual("boom", subResults[0].GetProperty("errorMessage").GetString());
+        Assert.IsFalse(subResults[0].TryGetProperty("customFields", out _));
         Assert.AreEqual(2, subResults[1].GetProperty("sequenceId").GetInt32());
+        Assert.AreEqual(1, subResults[1].GetProperty("customFields")[0].GetProperty("value").GetInt32());
         Assert.IsNotNull(publishedResults);
         Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 1, out int firstSubResultId));
         Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 2, out int secondSubResultId));
@@ -4578,6 +5322,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, created.GetProperty("state").GetString());
         Assert.IsFalse(created.TryGetProperty("id", out _));
         Assert.IsFalse(created.TryGetProperty("resultGroupType", out _));
+        Assert.IsFalse(created.TryGetProperty("customFields", out _));
         Assert.IsFalse(created.TryGetProperty("subResults", out _));
         Assert.IsFalse(created.TryGetProperty("errorMessage", out _));
         Assert.IsFalse(created.TryGetProperty("stackTrace", out _));
@@ -4823,6 +5568,10 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool ExistFile(string path) => _inner.ExistFile(path);
 
+        public bool IsRegularFile(string path) => _inner.IsRegularFile(path);
+
+        public IFileStream? OpenReadRegularFile(string path) => _inner.OpenReadRegularFile(path);
+
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 
         public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false)
@@ -4864,14 +5613,21 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool FailDeletes { get; set; }
 
+        public string? BlockedDeletePath { get; set; }
+
+        public bool HideBlockedFile { get; set; }
+
+        public Action<string>? AfterDelete { get; set; }
+
         public void DeleteFile(string path)
         {
-            if (FailDeletes)
+            if (FailDeletes || path == BlockedDeletePath)
             {
                 throw new IOException($"The process cannot access the file '{path}' because it is being used by another process.");
             }
 
             _inner.DeleteFile(path);
+            AfterDelete?.Invoke(path);
         }
 
         public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.CopyFile(sourceFileName, destFileName, overwrite);
@@ -4880,7 +5636,11 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
 
-        public bool ExistFile(string path) => _inner.ExistFile(path);
+        public bool ExistFile(string path) => !(HideBlockedFile && path == BlockedDeletePath) && _inner.ExistFile(path);
+
+        public bool IsRegularFile(string path) => _inner.IsRegularFile(path);
+
+        public IFileStream? OpenReadRegularFile(string path) => _inner.OpenReadRegularFile(path);
 
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 
@@ -5018,6 +5778,22 @@ public sealed class AzureDevOpsLivePublishingTests
         }
     }
 
+    private static void AssertMetadataOnlyUpdates(IEnumerable<AzureDevOpsTestCaseResult> results, params int[] expectedIds)
+    {
+        AzureDevOpsTestCaseResult[] updates = [.. results];
+        Assert.AreSequenceEqual(
+            expectedIds.Select(id => (int?)id).OrderBy(id => id),
+            updates.Select(result => result.Id).OrderBy(id => id),
+            "Metadata may target only the exact newly created result IDs, never an ambiguous prior parent.");
+        foreach (AzureDevOpsTestCaseResult update in updates)
+        {
+            Assert.AreEqual("MTP.CanonicalTestName/1:9", update.Comment);
+            Assert.IsNull(update.ResultGroupType);
+            Assert.IsNull(update.SubResults);
+            Assert.IsNull(update.CustomFields);
+        }
+    }
+
     private sealed class FakeAzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
     {
         public Func<AzureDevOpsPublishConfiguration, CancellationToken, Task<int>> CreateTestRunAsyncFunc { get; set; } = (_, _) => Task.FromResult(1);
@@ -5041,6 +5817,10 @@ public sealed class AzureDevOpsLivePublishingTests
         public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken, Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?>>? UpdateTestResultsWithSubResultsAsyncFunc { get; set; }
 
         public List<(int RunId, IReadOnlyList<AzureDevOpsTestCaseResult> Results)> UpdateTestResultsCalls { get; } = [];
+
+        public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyDictionary<int, string>, CancellationToken, Task> UpdateTestResultMetadataAsyncFunc { get; set; } = (_, _, _, _) => Task.CompletedTask;
+
+        public List<IReadOnlyDictionary<int, string>> MetadataUpdateCalls { get; } = [];
 
         public Func<AzureDevOpsPublishConfiguration, int, int, int?, AzureDevOpsTestResultAttachment, CancellationToken, Task> UploadTestResultAttachmentAsyncFunc { get; set; } = (_, _, _, _, _, _) => Task.CompletedTask;
 
@@ -5092,6 +5872,12 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             UpdateTestRunStateCalls.Add((configuration, runId, state));
             return UpdateTestRunStateAsyncFunc(configuration, runId, state, cancellationToken);
+        }
+
+        public Task UpdateTestResultMetadataAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyDictionary<int, string> metadata, CancellationToken cancellationToken)
+        {
+            MetadataUpdateCalls.Add(metadata.ToDictionary(static entry => entry.Key, static entry => entry.Value));
+            return UpdateTestResultMetadataAsyncFunc(configuration, runId, metadata, cancellationToken);
         }
 
         public Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)

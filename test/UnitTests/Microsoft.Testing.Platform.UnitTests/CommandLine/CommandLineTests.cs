@@ -26,41 +26,43 @@ public sealed class CommandLineTests
     [DynamicData(nameof(ParserTestsData), DynamicDataDisplayName = nameof(ParserTestDataFormat))]
     public void ParserTests(int testNum, string[] args, (string RspFileName, string RspFileContent)[]? rspFiles, CommandLineParseResultWrapper parseResultWrapper)
     {
+        string directory = CreateResponseFileDirectory();
         try
         {
-            if (rspFiles is not null)
+            Dictionary<string, string> responseFilePaths = [];
+            foreach ((string rspFileName, _) in rspFiles ?? [])
             {
-                foreach ((string rspFileName, string rspFileContent) in rspFiles)
-                {
-                    File.WriteAllText(rspFileName, rspFileContent);
-                }
+                responseFilePaths[rspFileName] = Path.Combine(directory, rspFileName);
             }
 
-            CommandLineParseResult result = CommandLineParser.Parse(args, new SystemEnvironment());
+            foreach ((string rspFileName, string rspFileContent) in rspFiles ?? [])
+            {
+                IEnumerable<string> lines = rspFileContent
+                    .Split(["\r\n", "\n"], StringSplitOptions.None)
+                    .Select(line => ResolveResponseFileReference(line, responseFilePaths, quote: true));
+                File.WriteAllText(responseFilePaths[rspFileName], string.Join(Environment.NewLine, lines));
+            }
+
+            string[] resolvedArgs = [.. args.Select(arg => ResolveResponseFileReference(arg, responseFilePaths, quote: false))];
+            CommandLineParseResult result = CommandLineParser.Parse(resolvedArgs, new SystemEnvironment());
             Assert.AreEqual(parseResultWrapper.Result, result, $"Test num '{testNum}' failed");
         }
         finally
         {
-            if (rspFiles is not null)
-            {
-                foreach ((string rspFileName, _) in rspFiles)
-                {
-                    File.Delete(rspFileName);
-                }
-            }
+            Directory.Delete(directory, recursive: true);
         }
     }
 
     [TestMethod]
     public void Parser_NestedResponseFiles_ProvidesExpandedArgumentsForProcessRelaunch()
     {
-        string id = Guid.NewGuid().ToString("N");
-        string outerResponseFile = $"{id}-outer.rsp";
-        string nestedResponseFile = $"{id}-nested.rsp";
+        string directory = CreateResponseFileDirectory();
+        string outerResponseFile = Path.Combine(directory, "outer.rsp");
+        string nestedResponseFile = Path.Combine(directory, "nested.rsp");
 
         try
         {
-            File.WriteAllText(outerResponseFile, $"--inside b{Environment.NewLine}@{nestedResponseFile}");
+            File.WriteAllText(outerResponseFile, $"--inside b{Environment.NewLine}\"@{nestedResponseFile}\"");
             File.WriteAllText(nestedResponseFile, "--nested c");
 
             CommandLineParseResult result = CommandLineParser.Parse(
@@ -74,19 +76,19 @@ public sealed class CommandLineTests
         }
         finally
         {
-            File.Delete(outerResponseFile);
-            File.Delete(nestedResponseFile);
+            Directory.Delete(directory, recursive: true);
         }
     }
 
     [TestMethod]
     public void Parser_RecursiveResponseFile_ReturnsError()
     {
-        string responseFile = $"{Guid.NewGuid():N}.rsp";
+        string directory = CreateResponseFileDirectory();
+        string responseFile = Path.Combine(directory, "recursive.rsp");
 
         try
         {
-            File.WriteAllText(responseFile, $"@{responseFile}");
+            File.WriteAllText(responseFile, $"\"@{responseFile}\"");
 
             CommandLineParseResult result = CommandLineParser.Parse([$"@{responseFile}"], new SystemEnvironment());
 
@@ -95,9 +97,70 @@ public sealed class CommandLineTests
         }
         finally
         {
-            File.Delete(responseFile);
+            Directory.Delete(directory, recursive: true);
         }
     }
+
+    [TestMethod]
+    [DataRow("-")]
+    [DataRow("--")]
+    public void Parser_DashOnlyArgumentAfterOption_IsAnArgumentNotAnOption(string argument)
+    {
+        CommandLineParseResult result = CommandLineParser.Parse(["--option1", argument], new SystemEnvironment());
+
+        Assert.AreEqual(new CommandLineParseResult(null, [new CommandLineParseOption("option1", [argument])], []), result);
+    }
+
+    [TestMethod]
+    [DataRow("'abc", "'abc")]
+    [DataRow("abc'", "abc'")]
+    [DataRow("'abc'", "abc")]
+    [DataRow("\"abc", "\"abc")]
+    [DataRow("abc\"", "abc\"")]
+    [DataRow("\"abc\"", "abc")]
+    [DataRow("\"a\\`b\"", "a`b")]
+    public void Parser_QuotesAreOnlyStrippedWhenBothEndsAreQuoted(string argument, string expected)
+    {
+        CommandLineParseResult result = CommandLineParser.Parse(["--option1", argument], new SystemEnvironment());
+
+        Assert.AreEqual(new CommandLineParseResult(null, [new CommandLineParseOption("option1", [expected])], []), result);
+    }
+
+    [TestMethod]
+    public void Parser_MissingResponseFileAfterSensitiveOption_DoesNotLeakItsPath()
+    {
+        string missing = $"{Guid.NewGuid():N}-missing.rsp";
+
+        CommandLineParseResult result = CommandLineParser.Parse(
+            [$"--{PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey}", $"@{missing}"],
+            new SystemEnvironment());
+
+        Assert.IsTrue(result.HasError);
+        Assert.Contains("***REDACTED***", result.Errors[0]);
+        Assert.DoesNotContain(missing, result.Errors[0]);
+    }
+
+    [TestMethod]
+    public void Parser_MissingResponseFile_ReportsItsPathWithoutAtSign()
+    {
+        string missing = $"{Guid.NewGuid():N}-missing.rsp";
+
+        CommandLineParseResult result = CommandLineParser.Parse(["--option1", $"@{missing}"], new SystemEnvironment());
+
+        Assert.IsTrue(result.HasError);
+        Assert.Contains(missing, result.Errors[0]);
+        Assert.DoesNotContain($"@{missing}", result.Errors[0]);
+    }
+
+    // MSTest uses the test application directory as the working directory, which can be read-only
+    // (for example, in a Bazel sandbox), so response files live in a unique temporary directory.
+    private static string CreateResponseFileDirectory()
+        => Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).FullName;
+
+    private static string ResolveResponseFileReference(string argument, Dictionary<string, string> responseFilePaths, bool quote)
+        => argument.StartsWith("@", StringComparison.Ordinal) && responseFilePaths.TryGetValue(argument[1..], out string? path)
+            ? quote ? $"\"@{path}\"" : $"@{path}"
+            : argument;
 
     public static string ParserTestDataFormat(MethodInfo methodInfo, object?[]? data)
     {
@@ -141,12 +204,14 @@ public sealed class CommandLineTests
         yield return (21, ["--option1:a=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a=a"]) }.ToArray(), []));
         yield return (22, ["--option1:a:a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a:a"]) }.ToArray(), []));
         yield return (23, ["--option1:a:a", "--option1:a=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a:a"]), new("option1", ["a=a"]) }.ToArray(), []));
-        yield return (24, ["--option1", "a", "@test.rsp", "--option5", "e"], [("test.rsp",
+        yield return (24, ["--option1", "a", "@test.rsp", "--option5", "e"], [
+            ("test.rsp",
             """
             --option2 b
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -165,7 +230,8 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -179,7 +245,8 @@ public sealed class CommandLineTests
             """
             --option1 a
             --option2 b
-            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -191,7 +258,8 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -205,7 +273,8 @@ public sealed class CommandLineTests
             --option2 b
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -222,7 +291,8 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -240,7 +310,8 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -251,7 +322,8 @@ public sealed class CommandLineTests
             ("31_test.rsp",
             """
             mytool --option1 a
-            """)], new CommandLineParseResultWrapper("mytool", new List<CommandLineParseOption>
+            """),
+        ], new CommandLineParseResultWrapper("mytool", new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
         }.ToArray(), []));

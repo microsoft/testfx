@@ -6,6 +6,18 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class HelpInfoAllExtensionsTests : AcceptanceTestBase<HelpInfoAllExtensionsTests.TestAssetFixture>
 {
+    [TestMethod]
+    public async Task CoverageThreshold_WithProcessRetries_FailsConfigurationValidation()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--coverage-threshold-line 80 --retry-failed-tests 1",
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        result.AssertOutputContains("Coverage from separate process attempts must be merged before evaluating an overall threshold.");
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task Help_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
@@ -24,9 +36,12 @@ Options:
         Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
+    --coverage-threshold-branch
+        Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
+    --coverage-threshold-line
+        Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
     --debug
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
@@ -63,18 +78,13 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --no-ansi
-        Disable outputting ANSI escape characters to screen.
-    --no-progress
-        [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
         Preset the per-test result blocks shown in the terminal.
         Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
-        This option takes precedence over the deprecated --no-progress flag.
+        'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
     --results-directory
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
@@ -87,10 +97,10 @@ Options:
         Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-stdout
         Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-test-results
         Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
         Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
@@ -135,7 +145,7 @@ Extension options:
         Generate a dump file if the test process hangs.
     --hangdump-filename
         Specify the name of the dump file.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
     --hangdump-timeout
         Specify the timeout after which the dump will be generated.
         The timeout value is specified in one of the following formats:
@@ -198,6 +208,8 @@ Extension options:
         Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
     --report-gh-annotations
         Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-attachments
+        Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.
     --report-gh-failure-details
         Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-groups
@@ -240,6 +252,8 @@ Extension options:
         Disable retry mechanism if the percentage of failed tests is greater than the specified value.
     --retry-failed-tests-max-tests
         Disable retry mechanism if the number of failed tests is greater than the specified value.
+    --trx-mode
+        TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
@@ -303,6 +317,14 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig.json file.
+      --coverage-threshold-branch
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
+      --coverage-threshold-line
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
       --debug
         Arity: 0
         Hidden: False
@@ -374,6 +396,10 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Display .NET test application information.
+      --internal-appmodel-activation-payload
+        Arity: 1
+        Hidden: True
+        Description: Specifies the app-model activation payload.
       --internal-testhostcontroller-pid
         Arity: 0..1
         Hidden: True
@@ -426,15 +452,6 @@ Built-in command line providers:
         Description: Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
-      --no-ansi
-        Arity: 0
-        Hidden: False
-        Description: Disable outputting ANSI escape characters to screen.
-      --no-progress
-        Arity: 0
-        Hidden: False
-        Description: [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
       --output
         Arity: 1
         Hidden: False
@@ -445,8 +462,7 @@ Built-in command line providers:
         Hidden: False
         Description: Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
-        This option takes precedence over the deprecated --no-progress flag.
+        'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
       --show-flaky-tests
         Arity: 0..1
         Hidden: False
@@ -461,12 +477,12 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
       --show-stdout
         Arity: 1
         Hidden: False
         Description: Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
       --show-test-results
         Arity: 1..N
         Hidden: False
@@ -613,6 +629,10 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-attachments
+        Arity: 1
+        Hidden: False
+        Description: Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.
       --report-gh-failure-details
         Arity: 1
         Hidden: False
@@ -658,7 +678,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Specify the name of the dump file.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
       --hangdump-timeout
         Arity: 1
         Hidden: False
@@ -760,6 +780,10 @@ Registered command line providers:
         Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: 'MyReport_{tfm}.trx'.
+      --trx-mode
+        Arity: 1
+        Hidden: False
+        Description: TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.
   VideoRecorderCommandLineProvider
     Name: Video recorder
     Version: *

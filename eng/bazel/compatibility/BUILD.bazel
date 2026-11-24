@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "paket.dependencies",
+    "paket.lock",
+])
+
+config_setting(
+    name = "netstandard2_0",
+    flag_values = {"@rules_dotnet//dotnet:target_framework": "netstandard2.0"},
+)
+
+config_setting(
+    name = "net462",
+    flag_values = {"@rules_dotnet//dotnet:target_framework": "net462"},
+)

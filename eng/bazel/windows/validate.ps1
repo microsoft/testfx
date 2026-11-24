@@ -1,0 +1,290 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+#requires -Version 7.2
+
+[CmdletBinding()]
+param([string] $ArtifactsDirectory)
+
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
+if (-not $IsWindows) { throw 'Windows consumer validation must run on Windows.' }
+$root = Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
+$bazel = Join-Path $root 'eng\bazel.ps1'
+$outputBase = & $bazel info output_base
+if ($LASTEXITCODE -ne 0) { throw 'Could not locate the isolated Bazel output root.' }
+$outputBase = $outputBase.Replace('/', '\')
+if (-not $ArtifactsDirectory) {
+    $ArtifactsDirectory = Join-Path (Split-Path $outputBase -Parent) 'windows-validation'
+}
+$run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
+$directory = Join-Path $ArtifactsDirectory $run
+New-Item -ItemType Directory -Path $directory | Out-Null
+$steps = [Collections.Generic.List[object]]::new()
+$consumers = [Collections.Generic.List[object]]::new()
+$coreHashes = @{}
+$sharedAdapterHashes = @{}
+$succeeded = $false
+$inputHashes = @(Get-FileHash -Algorithm SHA256 -LiteralPath @(
+    (Join-Path $root 'MODULE.bazel'), (Join-Path $root 'BUILD.bazel'),
+    (Join-Path $root 'eng\bazel\windows.bzl'), (Join-Path $root 'eng\bazel\patches\windows-targeting.patch'),
+    (Join-Path $root 'eng\bazel\patches\public-signing.patch'), (Join-Path $root 'eng\bazel\defs.bzl'),
+    (Join-Path $root 'eng\bazel\compatibility.bzl'), (Join-Path $root 'eng\bazel\tests.bzl'),
+    (Join-Path $root 'eng\bazel\analyzer-tests.bzl'), (Join-Path $root 'eng\bazel\extension-tests.bzl'),
+    (Join-Path $root 'eng\bazel\extra-tests.bzl'), (Join-Path $root 'eng\bazel\mstest.bzl'),
+    (Join-Path $root 'test\Utilities\TestFxOpenTelemetry.cs'),
+    (Join-Path $PSScriptRoot 'validate.ps1'),
+    (Join-Path $PSScriptRoot 'paket.lock'), (Join-Path $PSScriptRoot 'LibraryProbe.cs'),
+    (Join-Path $PSScriptRoot 'targeting_tests.bzl'), (Join-Path $PSScriptRoot 'asset_selection_tests.bzl'),
+    (Join-Path $PSScriptRoot 'winrt.globalconfig'), (Join-Path $PSScriptRoot 'windows.MODULE.bazel')
+))
+
+function Assert-ExpandedTrx([string] $Path) {
+    [xml]$report = Get-Content -LiteralPath $Path -Raw
+    $results = @($report.SelectNodes('//*[local-name()="UnitTestResult"]'))
+    $passed = @($results | Where-Object outcome -EQ 'Passed')
+    $skipped = @($results | Where-Object outcome -In @('NotExecuted', 'Skipped'))
+    $unexpected = @($results | Where-Object outcome -NotIn @('Passed', 'NotExecuted', 'Skipped'))
+    $counters = $report.SelectSingleNode('//*[local-name()="Counters"]')
+    if (-not $counters -or $results.Count -eq 0 -or [int]$counters.total -ne $results.Count -or
+        $passed.Count -eq 0 -or $unexpected.Count -ne 0) {
+        throw "Unexpected or incomplete test results in $Path (passed=$($passed.Count), skipped=$($skipped.Count), unexpected=$($unexpected.Count))."
+    }
+
+    return [pscustomobject]@{ Passed = $passed.Count; Skipped = $skipped.Count; Total = $results.Count }
+}
+
+function Invoke-BazelStep([string] $Name, [string[]] $Arguments) {
+    $log = Join-Path $directory "$Name.log"
+    & $bazel @Arguments *> $log
+    $code = $LASTEXITCODE
+    $steps.Add([pscustomobject]@{ Name = $Name; Arguments = $Arguments; ExitCode = $code })
+    if ($code -ne 0) {
+        Get-Content -LiteralPath $log -Tail 50 | Write-Host
+        throw "$Name returned $code. See $log"
+    }
+    Write-Host "$Name`: exit $code"
+}
+
+function Invoke-Consumer([string] $Name, [string] $Executable, [string] $Layout) {
+    $startInfo = [Diagnostics.ProcessStartInfo]::new($Executable)
+    $startInfo.UseShellExecute = $false
+    $startInfo.WorkingDirectory = $Layout
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $startInfo.Environment['DOTNET_ROOT'] = Join-Path $directory 'missing-runtime'
+    $startInfo.Environment['DOTNET_ROOT_X64'] = $startInfo.Environment['DOTNET_ROOT']
+    $startInfo.Environment['DOTNET_MULTILEVEL_LOOKUP'] = '0'
+    $process = [Diagnostics.Process]::Start($startInfo)
+    try {
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        if (-not $process.WaitForExit(120000)) {
+            $process.Kill($true)
+            if (-not $process.WaitForExit(30000)) { throw "$Name did not terminate after cancellation." }
+            throw "$Name exceeded the two-minute consumer timeout."
+        }
+        $output = $stdout.GetAwaiter().GetResult()
+        $errorOutput = $stderr.GetAwaiter().GetResult()
+        $output + $errorOutput | Set-Content -LiteralPath (Join-Path $directory "$Name.log") -Encoding utf8
+        $steps.Add([pscustomobject]@{ Name = $Name; Executable = $Executable; ExitCode = $process.ExitCode })
+        if ($process.ExitCode -ne 0) { throw "$Name returned $($process.ExitCode). See its retained log." }
+        $matches = [regex]::Matches($output, '(?m)^BAZEL_WINDOWS_PROBE: ([^\r\n]+)')
+        if ($matches.Count -ne 1) { throw "$Name did not emit exactly one Windows consumer report." }
+        return $matches[0].Groups[1].Value | ConvertFrom-Json
+    }
+    finally {
+        $process.Dispose()
+    }
+}
+
+$probes = @(
+    @{ Name = 'windows_probe_packaged_net10'; Scenario = 'packaged'; Major = 10; Platform = '10.0.19041.0' },
+    @{ Name = 'windows_probe_packaged_net11'; Scenario = 'packaged'; Major = 11; Platform = '10.0.19041.0' },
+    @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 10; Platform = '7.0' },
+    @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.18362.0' },
+    @{ Name = 'windows_probe_winui'; Scenario = 'winui'; Major = 10; Platform = '10.0.18362.0' }
+)
+Push-Location $root
+try {
+    $revision = git rev-parse HEAD
+    if ($LASTEXITCODE -ne 0) { throw 'Could not record the source revision.' }
+    $sourceState = @(git status --porcelain)
+    if ($LASTEXITCODE -ne 0) { throw 'Could not record the working tree state.' }
+    git diff --binary HEAD "--output=$(Join-Path $directory 'source.patch')"
+    if ($LASTEXITCODE -ne 0) { throw 'Could not preserve the tracked source patch.' }
+    Invoke-BazelStep 'compatibility-build' @('build', '//:managed_compatibility', '--jobs=2', '--noshow_progress', '--show_result=0')
+    Invoke-BazelStep 'windows-build' @('build', '//:windows_libraries', '//:windows_probes', '--jobs=2', '--noshow_progress', '--show_result=0')
+    Invoke-BazelStep 'windows-targeting' @('test', '//:windows_targeting_test', '//:windows_asset_selection_test', '--jobs=2', '--nocache_test_results', '--noshow_progress', '--show_result=0')
+    $expandedTests = @('msbuild_tests', 'server_client_tests', 'terminal_contract_tests', 'self_real_tests')
+    $testArguments = @('test') + @($expandedTests | ForEach-Object { "//:$_" }) + @('--jobs=2', '--nocache_test_results', '--noshow_progress', '--show_result=0')
+    $testLogs = & $bazel info bazel-testlogs
+    if ($LASTEXITCODE -ne 0) { throw 'Could not locate the analysis-test report.' }
+    $testLogs = $testLogs.Replace('/', '\')
+    $testStart = [DateTime]::UtcNow
+    try {
+        Invoke-BazelStep 'expanded-unit-tests' $testArguments
+    }
+    finally {
+        # Preserve this run's reports before outcome validation so failed suites remain in the uploaded evidence.
+        foreach ($name in $expandedTests) {
+            $testReport = Join-Path $testLogs "$name\test.outputs\tests.trx"
+            try {
+                if ((Test-Path -LiteralPath $testReport) -and (Get-Item -LiteralPath $testReport).LastWriteTimeUtc -ge $testStart) {
+                    Copy-Item -LiteralPath $testReport -Destination (Join-Path $directory "$name.trx")
+                }
+            }
+            catch {
+                Write-Warning "Could not preserve $testReport`: $_"
+            }
+        }
+    }
+
+    $executionRoot = & $bazel info execution_root
+    if ($LASTEXITCODE -ne 0) { throw 'Could not locate the native execution root.' }
+    $executionRoot = $executionRoot.Replace('/', '\')
+
+    $compatibilityInventories = [ordered]@{}
+    foreach ($framework in @('netstandard2_0', 'net462')) {
+        $files = @(& $bazel cquery "//:managed_$framework" --output=files --noshow_progress)
+        if ($LASTEXITCODE -ne 0) { throw "Could not locate the $framework compatibility inventory." }
+        $inventoryPaths = @($files | Where-Object { $_.EndsWith("/managed_$framework.json", [StringComparison]::Ordinal) })
+        if ($inventoryPaths.Count -ne 1) { throw "Expected one $framework compatibility inventory." }
+        $inventoryPath = Join-Path $executionRoot $inventoryPaths[0].Replace('/', '\')
+        $inventory = @(Get-Content -LiteralPath $inventoryPath -Raw | ConvertFrom-Json)
+        $expectedCount = if ($framework -eq 'netstandard2_0') { 27 } else { 5 }
+        $expectedFramework = if ($framework -eq 'netstandard2_0') { 'netstandard2.0' } else { 'net462' }
+        if ($inventory.Count -ne $expectedCount -or
+            @($inventory | Where-Object target_framework -NE $expectedFramework).Count -ne 0) {
+            throw "The $framework inventory did not contain exactly $expectedCount exact-framework assemblies."
+        }
+        Copy-Item -LiteralPath $inventoryPath -Destination (Join-Path $directory "managed_$framework.json")
+        $compatibilityInventories[$framework] = $inventory.Count
+    }
+
+    $testCounts = [ordered]@{}
+    foreach ($name in $expandedTests) {
+        $testReport = Join-Path $directory "$name.trx"
+        if (-not (Test-Path -LiteralPath $testReport)) { throw "$name did not produce a test report in this run." }
+        $testCounts[$name] = Assert-ExpandedTrx $testReport
+    }
+
+    foreach ($test in @('windows_targeting_test', 'windows_asset_selection_test')) {
+        $testReport = Join-Path $testLogs "$test\test.xml"
+        [xml]$testXml = Get-Content -LiteralPath $testReport -Raw
+        if (@($testXml.SelectNodes('//testcase')).Count -ne 1 -or @($testXml.SelectNodes('//failure | //error | //skipped')).Count -ne 0) {
+            throw "$test did not execute successfully."
+        }
+        Copy-Item -LiteralPath $testReport -Destination (Join-Path $directory "$test.xml")
+    }
+
+    foreach ($probe in $probes) {
+        $paths = @(& $bazel cquery "//:$($probe.Name)" --output=files --noshow_progress)
+        if ($LASTEXITCODE -ne 0) { throw "Could not locate $($probe.Name)'s declared publish files." }
+        $executables = @($paths | Where-Object { $_.EndsWith('/TestFx.Bazel.WindowsProbe.exe', [StringComparison]::Ordinal) })
+        if ($executables.Count -ne 1) { throw "Expected one real apphost for $($probe.Name)." }
+        $original = Join-Path $executionRoot $executables[0].Replace('/', '\')
+        $originalLayout = Split-Path $original -Parent
+        $layout = Join-Path $directory "$($probe.Name) with spaces!"
+        New-Item -ItemType Directory -Path $layout | Out-Null
+        foreach ($path in $paths) {
+            $source = Join-Path $executionRoot $path.Replace('/', '\')
+            $relative = [IO.Path]::GetRelativePath($originalLayout, $source)
+            if ($relative.StartsWith('..') -or [IO.Path]::IsPathRooted($relative)) {
+                throw "Publish file is outside the declared apphost layout: $source"
+            }
+            $destination = Join-Path $layout $relative
+            New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+            Copy-Item -LiteralPath $source -Destination $destination
+        }
+        $report = Invoke-Consumer $probe.Name (Join-Path $layout 'TestFx.Bazel.WindowsProbe.exe') $layout
+        if ($report.Scenario -cne $probe.Scenario -or ([Version]$report.Runtime).Major -ne $probe.Major) {
+            throw "Consumer scenario/runtime mismatch for $($probe.Name)."
+        }
+        $expectedAssemblies = switch ($probe.Scenario) {
+            'packaged' { @('Microsoft.Testing.Extensions.PackagedApp', 'Microsoft.Testing.Platform') }
+            'desktop' { @('MSTest.Windows.UIAutomation', 'MSTest.TestFramework', 'MSTest.TestFramework.Extensions') }
+            'uwp' { @('MSTest.Uwp', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter', 'MSTest.TestFramework.Extensions') }
+            'winui' { @('MSTest.WinUI', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter', 'MSTest.TestFramework.Extensions') }
+        }
+        $actualAssemblies = @($report.SourceAssemblies.Name)
+        if ($actualAssemblies.Count -ne $expectedAssemblies.Count -or
+            (Compare-Object ($expectedAssemblies | Sort-Object -CaseSensitive) ($actualAssemblies | Sort-Object -CaseSensitive) -CaseSensitive)) {
+            throw "Unexpected source assembly identities for $($probe.Name)."
+        }
+        if (@($report.SourceAssemblies | Where-Object PublicKeyToken -CNE 'b03f5f7f11d50a3a').Count -ne 0) {
+            throw "Source assembly public-signing identity mismatch for $($probe.Name)."
+        }
+        foreach ($assembly in @($report.SourceAssemblies) + @($report.RuntimeAssemblies)) {
+            $relative = [IO.Path]::GetRelativePath($layout, $assembly.Path)
+            if ($relative -cne "$($assembly.Name).dll") { throw "A consumer loaded '$($assembly.Path)' outside its staged layout." }
+            $native = Join-Path $originalLayout $relative
+            if ((Get-FileHash -LiteralPath $native -Algorithm SHA256).Hash -cne $assembly.Sha256) {
+                throw "Loaded $($assembly.Name) does not match the native producer."
+            }
+        }
+        $windowsAssemblies = @($report.SourceAssemblies | Where-Object {
+            $_.Name -in @('Microsoft.Testing.Extensions.PackagedApp', 'MSTest.Windows.UIAutomation') -or
+            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.Uwp', 'MSTest.WinUI', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
+        })
+        foreach ($assembly in $windowsAssemblies) {
+            $minimum = if ($assembly.Name -eq 'MSTest.WinUI') { '10.0.17763.0' } else { $probe.Platform }
+            if ($assembly.Framework -cne ".NETCoreApp,Version=v$($probe.Major).0" -or
+                $assembly.Platform -cne "Windows$($probe.Platform)" -or $assembly.SupportedOS -cne "windows$minimum") {
+                throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."
+            }
+            if ($assembly.Name -in @('MSTestAdapter.PlatformServices', 'MSTest.TestAdapter')) {
+                # Modern UWP and WinUI consume one shared adapter build.
+                if ($sharedAdapterHashes.ContainsKey($assembly.Name) -and $sharedAdapterHashes[$assembly.Name] -cne $assembly.Sha256) {
+                    throw "UWP and WinUI consumers did not load the same native $($assembly.Name) payload."
+                }
+                $sharedAdapterHashes[$assembly.Name] = $assembly.Sha256
+            }
+        }
+        foreach ($core in @($report.SourceAssemblies | Where-Object { $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions') })) {
+            $expectedCoreFramework = ".NETCoreApp,Version=v$($probe.Major).0"
+            # Portable native shared assemblies can omit this attribute; Windows metadata is never valid here.
+            if (($core.Framework -and $core.Framework -cne $expectedCoreFramework) -or $core.Platform -or $core.SupportedOS) {
+                throw "A UI-specific $($core.Name) was selected instead of the ordinary shared assembly."
+            }
+            $key = "$($core.Name)|$expectedCoreFramework"
+            if ($coreHashes.ContainsKey($key) -and $coreHashes[$key] -cne $core.Sha256) {
+                throw "Desktop and UI consumers did not load the same native $($core.Name) payload."
+            }
+            $coreHashes[$key] = $core.Sha256
+        }
+        if ($probe.Scenario -eq 'packaged' -and (Test-Path -LiteralPath (Join-Path $layout 'Microsoft.Windows.UI.Xaml.dll'))) {
+            throw 'The ordinary WinRT profile leaked the UWP XAML projection.'
+        }
+        $consumers.Add($report)
+    }
+
+    $graphPath = Join-Path $directory 'windows-actions.json'
+    & $bazel aquery 'deps(//:windows_libraries)' --output=jsonproto --noshow_progress > $graphPath 2> (Join-Path $directory 'windows-actions.log')
+    if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the Windows producer action graph.' }
+    $graph = Get-Content -LiteralPath $graphPath -Raw | ConvertFrom-Json
+    $compilerCount = @($graph.actions | Where-Object mnemonic -eq 'CSharpCompile').Count
+    if ($compilerCount -eq 0) { throw 'The Windows library matrix has no native compiler actions.' }
+    foreach ($action in $graph.actions) {
+        foreach ($argument in $action.arguments) {
+            if ($argument -match '(?i)(^|[\s/\\])(MSBuild(\.exe|\.dll)?|dotnet(\.exe)?\s+(build|test|msbuild))(\s|$)') {
+                throw "An MSBuild invocation appeared in the native producer graph: $argument"
+            }
+        }
+    }
+    $succeeded = $true
+    Write-Host "Native compatibility and Windows libraries, $($consumers.Count) consumers, and four additional unit suites passed. No app registration or XAML compilation was exercised. Evidence: $directory"
+}
+finally {
+    [pscustomobject]@{
+        Succeeded = $succeeded
+        Revision = $revision
+        WorkingTree = $sourceState
+        Inputs = $inputHashes
+        CompatibilityInventories = $compatibilityInventories
+        Consumers = $consumers
+        Tests = $testCounts
+        Steps = $steps
+    } | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8
+    Pop-Location
+}

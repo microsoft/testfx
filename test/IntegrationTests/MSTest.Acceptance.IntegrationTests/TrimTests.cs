@@ -23,6 +23,8 @@ public class TrimTests : AcceptanceTestBase<NopAssetFixture>
         <PublishTrimmed>true</PublishTrimmed>
         <!-- Show individual trim warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <!-- Keep input symbols for warning locations, but avoid Mono.Cecil's native PDB writer. -->
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
@@ -109,6 +111,8 @@ public class UnitTest1
         <PublishTrimmed>true</PublishTrimmed>
         <!-- Show individual trim warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <!-- Keep input symbols for warning locations, but avoid Mono.Cecil's native PDB writer. -->
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />

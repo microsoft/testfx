@@ -1,5 +1,14 @@
 # testconfig.json JSON schema
 
+> **Current implementation note (2026-10-09):** The scoped MSTest source audit found that
+> `mstest:execution:treatDiscoveryWarningsAsErrors` defaults to **true**; the JSON schema description
+> has been corrected accordingly. Timeout and diagnostic-capture topics were compared with current
+> parsers/writer and existing tests; MTP-owned configuration sections are outside this MSTest audit.
+> See [MSTEST-013](specifications/mstest.md#mstest-013--mstest-settings-have-an-explicit-format-boundary),
+> [MSTEST-015](specifications/mstest.md#mstest-015--outcome-defaults-are-not-discovery-inclusion-rules)
+> and [MSTEST-020](specifications/mstest.md#mstest-020--assertion-diagnostic-snapshots-are-opt-in-and-bounded).
+> Editor schema validation is not proof of runtime execution; no tests were executed.
+
 [`testconfig.schema.json`](./testconfig.schema.json) is the JSON Schema (draft-07) for the
 `testconfig.json` configuration file consumed by Microsoft.Testing.Platform (MTP) and MSTest.
 
@@ -134,13 +143,13 @@ There are two layers of versioning to keep in mind:
 The schema must track the keys actually read by the configuration parsers. The source of truth is:
 
 - `MSTestSettings.SetSettingsFromConfig` and the `Parse*Setting` helpers in
-  [`src/Adapter/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs`](../src/Adapter/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs);
+  [`src/MSTest/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs`](../src/MSTest/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs);
 - `MSTestAdapterSettings.ToSettings(IConfiguration)` and `ReadAssemblyResolutionPath` in
-  [`src/Adapter/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs`](../src/Adapter/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs);
+  [`src/MSTest/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs`](../src/MSTest/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs);
 - `RunConfigurationSettings.SetRunConfigurationSettingsFromConfig` in
-  [`src/Adapter/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs`](../src/Adapter/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs);
+  [`src/MSTest/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs`](../src/MSTest/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs);
 - `PlatformConfigurationConstants` in
-  [`src/Platform/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs`](../src/Platform/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs).
+  [`src/MTP/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs`](../src/MTP/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs).
 
 When you add, rename, or remove a configuration key in any of those, update
 `testconfig.schema.json` in the same change.
