@@ -74,10 +74,11 @@ try {
     $mappable = @(Get-MappableCollectionModule -Modules @(
         [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net462"; RelativePath = "a" },
         [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net48"; RelativePath = "b" },
-        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net10.0"; RelativePath = "c" },
-        [pscustomobject]@{ Project = "TestFramework.UnitTests"; Framework = "net48"; RelativePath = "d" }
+        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net10.0-windows10.0.18362.0"; RelativePath = "c" },
+        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net10.0"; RelativePath = "d" },
+        [pscustomobject]@{ Project = "TestFramework.UnitTests"; Framework = "net10.0-windows10.0.18362.0"; RelativePath = "e" }
     ) 6>$null)
-    if (($mappable.RelativePath -join ",") -ne "c,d") {
+    if (($mappable.RelativePath -join ",") -ne "d,e") {
         throw "ModulePoolSkipsOnlyOversizedMaps: only the module/TFM maps above the collector's 128-MiB limit may be skipped."
     }
     Write-PassedCheck "ModulePoolSkipsOnlyOversizedMaps"

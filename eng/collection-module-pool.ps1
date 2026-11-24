@@ -38,10 +38,10 @@ function Get-CollectionModuleConcurrency {
 }
 
 # The pinned collector refuses to persist a map larger than its fixed 128-MiB limit and fails that module.
-# These module/TFM maps reached 127.64 MiB at 1,620 tests and exceeded the limit at 1,626, so they are not collected;
-# without a shard, PR selection conservatively runs all of their tests. See docs/affected-test-selection.md.
+# These specific module/TFM maps exceeded the limit in CI. Without a shard, PR selection
+# conservatively runs all of their tests. See docs/affected-test-selection.md.
 $script:CollectionMapSizeExclusions = @(
-    [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Frameworks = @("net462", "net48") }
+    [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Frameworks = @("net462", "net48", "net10.0-windows10.0.18362.0") }
 )
 
 function Get-MappableCollectionModule {
