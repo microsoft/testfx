@@ -6348,4 +6348,213 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     #endregion
+
+    #region Type, reference and regex checks
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseWithTypeCheck_SuggestsInstanceOfTypeAssertions()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = new MyClass();
+                    {|#0:Assert.IsTrue(x is MyClass)|};
+                    {|#1:Assert.IsFalse(x is string, "not a string")|};
+                    {|#2:Assert.IsTrue(x is not string)|};
+                    {|#3:Assert.IsTrue(x is not MyClass)|};
+                    {|#4:Assert.IsFalse(x is not System.IO.Stream)|};
+                    {|#5:Assert.IsTrue((x is string))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = new MyClass();
+                    Assert.IsInstanceOfType<MyClass>(x);
+                    Assert.IsNotInstanceOfType<string>(x, "not a string");
+                    Assert.IsNotInstanceOfType<string>(x);
+                    Assert.IsNotInstanceOfType<MyClass>(x);
+                    Assert.IsInstanceOfType<System.IO.Stream>(x);
+                    Assert.IsInstanceOfType<string>(x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsInstanceOfType", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsNotInstanceOfType", "IsFalse"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsNotInstanceOfType", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsNotInstanceOfType", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("IsInstanceOfType", "IsFalse"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("IsInstanceOfType", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseWithReferenceEquals_SuggestsSameAssertions()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string first = "a";
+                    object second = first;
+                    {|#0:Assert.IsTrue(ReferenceEquals(first, second))|};
+                    {|#1:Assert.IsFalse(object.ReferenceEquals(second, first), "different")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string first = "a";
+                    object second = first;
+                    Assert.AreSame(first, second);
+                    Assert.AreNotSame(second, first, "different");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreSame", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreNotSame", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseWithRegexIsMatch_SuggestsRegexAssertions()
+    {
+        string code = """
+            using System.Text.RegularExpressions;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string input = "abc";
+                    var regex = new Regex("b");
+                    {|#0:Assert.IsTrue(Regex.IsMatch(input, "^a"))|};
+                    {|#1:Assert.IsFalse(Regex.IsMatch(input, "^z"), "no match")|};
+                    {|#2:Assert.IsTrue(regex.IsMatch(input))|};
+                    {|#3:Assert.IsFalse(regex.IsMatch("xyz"))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Text.RegularExpressions;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string input = "abc";
+                    var regex = new Regex("b");
+                    Assert.MatchesRegex("^a", input);
+                    Assert.DoesNotMatchRegex("^z", input, "no match");
+                    Assert.MatchesRegex(regex, input);
+                    Assert.DoesNotMatchRegex(regex, "xyz");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("MatchesRegex", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("DoesNotMatchRegex", "IsFalse"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("MatchesRegex", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("DoesNotMatchRegex", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithUnsupportedTypeReferenceOrRegexChecks_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Text.RegularExpressions;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public interface IFirst
+            {
+            }
+
+            public interface ISecond
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "a";
+                    int number = 1;
+                    IFirst first = null;
+                    ISecond second = null;
+                    string input = "abc";
+                    Assert.IsTrue(x is string s && s.Length > 0);
+                    Assert.IsTrue(x is string { Length: 1 });
+                    Assert.IsTrue(ReferenceEquals(number, number));
+                    Assert.IsTrue(ReferenceEquals(x, null));
+                    Assert.IsTrue(ReferenceEquals(first, second));
+                    Assert.IsTrue(Regex.IsMatch(input, "^A", RegexOptions.IgnoreCase));
+                    Assert.IsTrue(new Regex("b").IsMatch(input, 1));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    #endregion
 }

@@ -73,6 +73,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             case UseProperAssertMethodsAnalyzer.CodeFixModeSimple:
                 createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeSimpleWithTypeArgument:
+                createChangedDocument = ct => FixAssertMethodForSimpleWithTypeArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], root, simpleNameSyntax, properAssertMethodName, ct);
+                break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeAddArgument:
                 createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
@@ -133,6 +136,67 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForSimpleWithTypeArgumentModeAsync(Document document, Location conditionLocation, Location valueLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    {
+        SyntaxNode conditionExpression = root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true);
+        if (conditionExpression.FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNode ||
+            root.FindNode(valueLocation.SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax valueExpression ||
+            GetCheckedType(conditionExpression) is not { } checkedType)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        editor.ReplaceNode(
+            simpleNameSyntax,
+            SyntaxFactory.GenericName(
+                SyntaxFactory.Identifier(properAssertMethodName),
+                SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(checkedType.WithoutTrivia())))
+            .WithTriviaFrom(simpleNameSyntax));
+
+        editor.ReplaceNode(
+            conditionNode,
+            SyntaxFactory.Argument(
+                valueExpression
+                    .WithLeadingTrivia(conditionNode.GetLeadingTrivia())
+                    .WithoutTrailingTrivia()));
+
+        return editor.GetChangedDocument();
+
+        static TypeSyntax? GetCheckedType(SyntaxNode condition)
+        {
+            while (condition is ParenthesizedExpressionSyntax parenthesized)
+            {
+                condition = parenthesized.Expression;
+            }
+
+            return condition switch
+            {
+                BinaryExpressionSyntax { RawKind: (int)SyntaxKind.IsExpression, Right: TypeSyntax type } => type,
+                IsPatternExpressionSyntax { Pattern: UnaryPatternSyntax { Pattern: var pattern } } => GetPatternType(pattern),
+                _ => null,
+            };
+        }
+
+        static TypeSyntax? GetPatternType(PatternSyntax pattern)
+        {
+            while (pattern is ParenthesizedPatternSyntax parenthesized)
+            {
+                pattern = parenthesized.Pattern;
+            }
+
+            return pattern switch
+            {
+                TypePatternSyntax typePattern => typePattern.Type,
+
+                // A type in a pattern can be parsed as a constant pattern and bound as a type.
+                ConstantPatternSyntax { Expression: TypeSyntax type } => type,
+                ConstantPatternSyntax { Expression: MemberAccessExpressionSyntax memberAccess } => SyntaxFactory.ParseTypeName(memberAccess.ToString()),
+                _ => null,
+            };
+        }
     }
 
     private static async Task<Document> FixAssertMethodForAddArgumentModeAsync(Document document, Location conditionLocation, Location expectedLocation, Location actualLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)

@@ -59,6 +59,60 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             return;
         }
 
+        // Check for type patterns: x is T, x is not T
+        TypeCheckStatus typeCheckStatus = RecognizeTypeCheck(context.Compilation, conditionArgument, out SyntaxNode? typeCheckValueExpr);
+        if (typeCheckStatus != TypeCheckStatus.Unknown)
+        {
+            string properAssertMethod = (typeCheckStatus == TypeCheckStatus.IsType) == isTrueInvocation
+                ? "IsInstanceOfType"
+                : "IsNotInstanceOfType";
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeSimpleWithTypeArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), typeCheckValueExpr!.GetLocation()],
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
+        // Check for reference equality: object.ReferenceEquals(a, b)
+        if (RecognizeReferenceEqualsCheck(context.Compilation, conditionArgument, out SyntaxNode? referenceEqualsFirstExpr, out SyntaxNode? referenceEqualsSecondExpr))
+        {
+            string properAssertMethod = isTrueInvocation ? "AreSame" : "AreNotSame";
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), referenceEqualsFirstExpr.GetLocation(), referenceEqualsSecondExpr.GetLocation()],
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
+        // Check for regular expression matches: Regex.IsMatch(input, pattern), regex.IsMatch(input)
+        if (RecognizeRegexIsMatchCheck(conditionArgument, out SyntaxNode? regexPatternExpr, out SyntaxNode? regexInputExpr))
+        {
+            string properAssertMethod = isTrueInvocation ? "MatchesRegex" : "DoesNotMatchRegex";
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), regexPatternExpr.GetLocation(), regexInputExpr.GetLocation()],
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
         // Check for LINQ predicate patterns that suggest Contains/DoesNotContain
         LinqPredicateCheckStatus linqStatus = RecognizeLinqPredicateCheck(
             conditionArgument,

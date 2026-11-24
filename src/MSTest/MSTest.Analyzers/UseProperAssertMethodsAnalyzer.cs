@@ -111,6 +111,26 @@ namespace MSTest.Analyzers;
 /// </item>
 /// <item>
 /// <description>
+/// <code>Assert.[IsTrue|IsFalse](myEnumerable.Any(predicate))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.[IsTrue|IsFalse](x [is|is not] T)</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.[IsTrue|IsFalse](ReferenceEquals(x, y))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.[IsTrue|IsFalse]([Regex.IsMatch(input, pattern)|regex.IsMatch(input)])</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
 /// <code>Assert.IsTrue(myEnumerable.Contains(item, comparer))</code>
 /// </description>
 /// </item>
@@ -156,6 +176,20 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// <para>Optionally, more additional locations will also be interpreted as "replace" operations.</para>
     /// </summary>
     internal const string CodeFixModeSimple = nameof(CodeFixModeSimple);
+
+    /// <summary>
+    /// This mode means the codefix operation is as follows:
+    /// <list type="number">
+    /// <item>Find the right assert method name from the properties bag using <see cref="ProperAssertMethodNameKey"/>.</item>
+    /// <item>Replace the identifier syntax for the invocation with a generic name of the right assert method, using the type checked by the condition from the first additional location as type argument.</item>
+    /// <item>Replace the syntax node from the first additional locations with the node from second additional locations.</item>
+    /// </list>
+    /// <para>Example: For <c>Assert.IsTrue(x is string)</c>, it will become <c>Assert.IsInstanceOfType&lt;string&gt;(x)</c>.</para>
+    /// <para>The value for ProperAssertMethodNameKey is "IsInstanceOfType".</para>
+    /// <para>The first additional location will point to the "x is string" node.</para>
+    /// <para>The second additional location will point to the "x" node.</para>
+    /// </summary>
+    internal const string CodeFixModeSimpleWithTypeArgument = nameof(CodeFixModeSimpleWithTypeArgument);
 
     /// <summary>
     /// This mode means the codefix operation is as follows:
