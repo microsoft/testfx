@@ -67,6 +67,12 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 ? "IsInstanceOfType"
                 : "IsNotInstanceOfType";
 
+            if (!CanRewriteNewAssertion(assertion) ||
+                !HasCompatibleAssertion(assertTypeSymbol, properAssertMethod, arity: 1, SpecialType.System_Object))
+            {
+                return;
+            }
+
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
             properties.Add(CodeFixModeKey, CodeFixModeSimpleWithTypeArgument);
@@ -84,6 +90,13 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         {
             string properAssertMethod = isTrueInvocation ? "AreSame" : "AreNotSame";
 
+            if (!CanRewriteNewAssertion(assertion) ||
+                !CanRewriteReferenceEqualsWithoutReorderingEffects(conditionArgument) ||
+                !HasCompatibleSameAssertion(assertTypeSymbol, properAssertMethod))
+            {
+                return;
+            }
+
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
             properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
@@ -100,6 +113,13 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         if (RecognizeRegexIsMatchCheck(conditionArgument, out SyntaxNode? regexPatternExpr, out SyntaxNode? regexInputExpr))
         {
             string properAssertMethod = isTrueInvocation ? "MatchesRegex" : "DoesNotMatchRegex";
+
+            if (!CanRewriteNewAssertion(assertion) ||
+                !CanRewriteRegexWithoutReorderingEffects(assertion, conditionArgument) ||
+                !HasCompatibleRegexAssertion(assertTypeSymbol, properAssertMethod, (IInvocationOperation)conditionArgument))
+            {
+                return;
+            }
 
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);

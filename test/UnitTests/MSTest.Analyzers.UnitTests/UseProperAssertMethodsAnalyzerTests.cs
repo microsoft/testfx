@@ -6556,5 +6556,90 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
+    public async Task WhenNewAssertionRewriteChangesEvaluationOrArguments_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Text.RegularExpressions;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Source
+            {
+                public static implicit operator Target(Source value) => new Target();
+            }
+
+            public class Target { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "a";
+                    string input = "abc";
+                    string pattern = "a";
+                    Assert.IsTrue(Regex.IsMatch(GetInput(), GetPattern()));
+                    Assert.IsTrue(Regex.IsMatch(input, GetPattern()));
+                    Assert.IsTrue(Regex.IsMatch(input, pattern), $"{GetMessage()}");
+                    Assert.IsTrue(new Regex(pattern).IsMatch(input), $"{GetMessage()}");
+                    Assert.IsTrue(Regex.IsMatch(null, "a"));
+                    Assert.IsFalse(Regex.IsMatch(input, null));
+                    Assert.IsTrue(((Regex)null).IsMatch(input));
+                    Assert.IsTrue(ReferenceEquals(objB: GetObject(), objA: GetObject()));
+                    Assert.IsTrue(ReferenceEquals(new Source(), new Target()));
+                    Assert.IsTrue(message: "detail", condition: x is string);
+                    Assert.IsTrue(x is string, conditionExpression: "original");
+                }
+
+                private static string GetInput() => "abc";
+                private static string GetPattern() => "a";
+                private static string GetMessage() => "detail";
+                private static object GetObject() => new object();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenReplacementAssertionApisAreUnavailable_NoDiagnostic()
+    {
+        string code = """
+            using System.Text.RegularExpressions;
+
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public static class Assert
+                {
+                    public static void IsTrue(bool condition) { }
+                    public static void IsFalse(bool condition) { }
+                }
+            }
+
+            public class MyTestClass
+            {
+                public void MyTestMethod()
+                {
+                    object x = "abc";
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(x is string);
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(x is string);
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(object.ReferenceEquals(x, x));
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(object.ReferenceEquals(x, x));
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(Regex.IsMatch("abc", "a"));
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(Regex.IsMatch("abc", "z"));
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test(useMSTestV4: true)
+        {
+            ReferenceAssemblies = AnalyzerTestReferenceAssemblies.Default,
+            TestCode = code,
+        };
+        await test.RunAsync(CancellationToken.None);
+    }
+
     #endregion
 }

@@ -19,6 +19,75 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         IsNotType,
     }
 
+    private static bool CanRewriteNewAssertion(IInvocationOperation assertion)
+        => assertion.Arguments.TakeWhile(argument => argument.Parameter?.Ordinal != 0).All(argument => argument.IsImplicit) &&
+            assertion.Arguments.All(argument => argument.IsImplicit || argument.Parameter?.Ordinal is 0 or 1);
+
+    private static bool HasCompatibleAssertion(INamedTypeSymbol assertType, string name, int arity, SpecialType firstParameterType)
+        => assertType.GetMembers(name).OfType<IMethodSymbol>().Any(method =>
+            method.IsStatic &&
+            method.DeclaredAccessibility == Accessibility.Public &&
+            method.Arity == arity &&
+            method.Parameters.Length >= 2 &&
+            method.Parameters[0].Type.SpecialType == firstParameterType &&
+            method.Parameters[1].Type.SpecialType == SpecialType.System_String &&
+            method.Parameters[1].IsOptional);
+
+    private static bool HasCompatibleSameAssertion(INamedTypeSymbol assertType, string name)
+        => assertType.GetMembers(name).OfType<IMethodSymbol>().Any(method =>
+            method.IsStatic &&
+            method.DeclaredAccessibility == Accessibility.Public &&
+            method.Parameters.Length >= 3 &&
+            method.Parameters[2].Type.SpecialType == SpecialType.System_String &&
+            method.Parameters[2].IsOptional &&
+            ((method.Arity == 1 &&
+              SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, method.TypeParameters[0]) &&
+              SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type, method.TypeParameters[0])) ||
+             (method.Arity == 0 &&
+              method.Parameters[0].Type.SpecialType == SpecialType.System_Object &&
+              method.Parameters[1].Type.SpecialType == SpecialType.System_Object)));
+
+    private static bool HasCompatibleRegexAssertion(INamedTypeSymbol assertType, string name, IInvocationOperation regexInvocation)
+        => assertType.GetMembers(name).OfType<IMethodSymbol>().Any(method =>
+            method.IsStatic &&
+            method.DeclaredAccessibility == Accessibility.Public &&
+            method.Arity == 0 &&
+            method.Parameters.Length >= 3 &&
+            (regexInvocation.TargetMethod.IsStatic
+                ? method.Parameters[0].Type.SpecialType == SpecialType.System_String
+                : SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, regexInvocation.TargetMethod.ContainingType)) &&
+            method.Parameters[1].Type.SpecialType == SpecialType.System_String &&
+            method.Parameters[2].Type.SpecialType == SpecialType.System_String &&
+            method.Parameters[2].IsOptional);
+
+    private static bool CanRewriteReferenceEqualsWithoutReorderingEffects(IOperation operation)
+        => operation is IInvocationOperation invocation &&
+            (invocation.Arguments.FirstOrDefault(argument => !argument.IsImplicit)?.Parameter?.Ordinal == 0 ||
+             (TryGetArgumentForParameterOrdinal(invocation, 0, out IArgumentOperation? first) &&
+              TryGetArgumentForParameterOrdinal(invocation, 1, out IArgumentOperation? second) &&
+              IsStableAssertionArgument(first.Value) &&
+              IsStableAssertionArgument(second.Value)));
+
+    private static bool CanRewriteRegexWithoutReorderingEffects(IInvocationOperation assertion, IOperation operation)
+        => operation is IInvocationOperation invocation &&
+            assertion.Arguments.All(argument =>
+                argument.Parameter?.Ordinal == 0 ||
+                argument.IsImplicit ||
+                argument.Value.ConstantValue.HasValue) &&
+            (!invocation.TargetMethod.IsStatic ||
+             (TryGetArgumentForParameterOrdinal(invocation, 0, out IArgumentOperation? input) &&
+              TryGetArgumentForParameterOrdinal(invocation, 1, out IArgumentOperation? pattern) &&
+              IsStableAssertionArgument(input.Value) &&
+              IsStableAssertionArgument(pattern.Value)));
+
+    private static bool IsStableAssertionArgument(IOperation operation)
+        => operation switch
+        {
+            IConversionOperation { IsImplicit: true, OperatorMethod: null } conversion => IsStableAssertionArgument(conversion.Operand),
+            ILocalReferenceOperation or IParameterReferenceOperation => true,
+            _ => operation.ConstantValue.HasValue,
+        };
+
     /// <summary>
     /// Recognizes <c>x is T</c> and <c>x is not T</c>.
     /// </summary>
@@ -85,8 +154,10 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         }
 
         // AreSame<T>(T, T) requires inferring T from both operands.
-        if (!compilation.ClassifyCommonConversion(first.Type!, second.Type!).IsImplicit &&
-            !compilation.ClassifyCommonConversion(second.Type!, first.Type!).IsImplicit)
+        CommonConversion firstToSecond = compilation.ClassifyCommonConversion(first.Type!, second.Type!);
+        CommonConversion secondToFirst = compilation.ClassifyCommonConversion(second.Type!, first.Type!);
+        if (!(firstToSecond.IsImplicit && !firstToSecond.IsUserDefined) &&
+            !(secondToFirst.IsImplicit && !secondToFirst.IsUserDefined))
         {
             return false;
         }
@@ -112,7 +183,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         if (operation is not IInvocationOperation { TargetMethod: { Name: "IsMatch" } targetMethod } invocation ||
             targetMethod.ContainingType.ToDisplayString() != RegexFullTypeName ||
             !targetMethod.Parameters.All(parameter => parameter.Type.SpecialType == SpecialType.System_String) ||
-            !TryGetArgumentValueWithoutImplicitConversions(invocation, 0, out IOperation? input))
+            !TryGetArgumentValueWithoutImplicitConversions(invocation, 0, out IOperation? input) ||
+            IsConstantNull(input))
         {
             return false;
         }
@@ -120,7 +192,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         if (targetMethod.IsStatic)
         {
             if (targetMethod.Parameters.Length != 2 ||
-                !TryGetArgumentValueWithoutImplicitConversions(invocation, 1, out IOperation? pattern))
+                !TryGetArgumentValueWithoutImplicitConversions(invocation, 1, out IOperation? pattern) ||
+                IsConstantNull(pattern))
             {
                 return false;
             }
@@ -130,7 +203,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         else
         {
             if (targetMethod.Parameters.Length != 1 ||
-                invocation.Instance is null or { IsImplicit: true })
+                invocation.Instance is null or { IsImplicit: true } ||
+                IsConstantNull(invocation.Instance))
             {
                 return false;
             }
@@ -141,6 +215,9 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         inputExpression = input.Syntax;
         return true;
     }
+
+    private static bool IsConstantNull(IOperation operation)
+        => operation.ConstantValue.HasValue && operation.ConstantValue.Value is null;
 
     private static bool TryGetArgumentValueWithoutImplicitConversions(IInvocationOperation operation, int ordinal, [NotNullWhen(true)] out IOperation? argumentValue)
     {
@@ -154,6 +231,12 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         argumentValue = argument.Value;
         while (argumentValue is IConversionOperation { IsImplicit: true } conversion)
         {
+            if (conversion.OperatorMethod is not null)
+            {
+                argumentValue = null;
+                return false;
+            }
+
             argumentValue = conversion.Operand;
         }
 
