@@ -659,7 +659,11 @@ Media is inapplicable to these CI and test fixes.
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
-  storage for the public `microsoft.testfx` pipeline.
+  storage for the public `microsoft.testfx` pipeline. Selection ignores shipped and unshipped `PublicAPI` and
+  `InternalAPI` text baselines; build-time API checks still run. Six public baselines are test inputs:
+  [`AssertSourceCompatibilityTests`](../test/IntegrationTests/MSTest.Acceptance.IntegrationTests/AssertSourceCompatibilityTests.cs)
+  reads the shipped and unshipped files in `src/MSTest/TestFramework/PublicAPI` and its `net` and `net10.0` subdirectories.
+  Their exact paths therefore use `forceAllTests`, which takes precedence over `ignore`.
 - The trusted main-branch Windows Release entry runs full tests and publishes coverage. When affected tests are enabled,
   a separate `WindowsAffectedTests` job runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
   collection owns its instrumentation and launches discovery children with `--list-tests`. A collection failure
