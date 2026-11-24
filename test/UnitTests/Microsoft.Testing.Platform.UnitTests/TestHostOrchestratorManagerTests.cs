@@ -6,6 +6,8 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
 
+using Moq;
+
 using BackCompat = Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using PublicApi = Microsoft.Testing.Platform.TestHostOrchestrator;
 
@@ -34,18 +36,122 @@ public sealed class TestHostOrchestratorManagerTests
     }
 
     [TestMethod]
-    public async Task AddTestHostOrchestrator_ViaInterfaceAndConcreteManager_PreservesRegistrationOrder()
+    public async Task AddTestHostOrchestrator_ViaInterfaceAndConcreteManager_SelectsByStage()
     {
         PublicApi.TestHostOrchestratorManager manager = new();
 
         PublicApi.ITestHostOrchestratorManager publicManager = manager;
-        publicManager.AddTestHostOrchestrator(_ => new FakeOrchestrator("public"));
+        publicManager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("recovery", BackCompat.TestHostExecutionOrchestratorStage.Recovery));
 
-        manager.AddTestHostOrchestrator(_ => new FakeOrchestrator("concrete"));
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("selection", BackCompat.TestHostExecutionOrchestratorStage.Selection));
 
         PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
 
-        Assert.AreSequenceEqual(new[] { "public", "concrete" }, config.TestHostOrchestrators.Select(orchestrator => orchestrator.Uid));
+        Assert.AreEqual("selection", Assert.ContainsSingle(config.TestHostOrchestrators).Uid);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_ComposableOrchestrators_SelectsOutermostStageInsteadOfRegistrationOrder()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("recovery", BackCompat.TestHostExecutionOrchestratorStage.Recovery));
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("selection", BackCompat.TestHostExecutionOrchestratorStage.Selection));
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreEqual("selection", Assert.ContainsSingle(config.TestHostOrchestrators).Uid);
+        Assert.IsTrue(config.IsCompositionActive);
+        Assert.IsTrue(config.IsOutermostProcess);
+        Assert.IsEmpty(config.ConsumedOrchestratorUids);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_ComposableOrchestratorsWithDuplicateStage_RejectsBothUids()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("first-recovery", BackCompat.TestHostExecutionOrchestratorStage.Recovery));
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("second-recovery", BackCompat.TestHostExecutionOrchestratorStage.Recovery));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => manager.BuildAsync(_serviceProvider));
+
+        Assert.Contains("first-recovery", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("second-recovery", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(BackCompat.TestHostExecutionOrchestratorStage.Recovery), exception.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_MixedComposableAndLegacyOrchestrators_RejectsBothUids()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => new FakeOrchestrator("legacy"));
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("selection", BackCompat.TestHostExecutionOrchestratorStage.Selection));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => manager.BuildAsync(_serviceProvider));
+
+        Assert.Contains("legacy", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("selection", exception.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_SingleComposableOrchestrator_IgnoresItsStage()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        FakeComposableOrchestrator orchestrator = new("standalone", (BackCompat.TestHostExecutionOrchestratorStage)(-1));
+        manager.AddTestHostOrchestrator(_ => orchestrator);
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreSame(orchestrator, Assert.ContainsSingle(config.TestHostOrchestrators));
+        Assert.IsFalse(config.IsCompositionActive);
+        Assert.IsTrue(config.IsOutermostProcess);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_InnerProcess_ConsumesOuterUidAndDoesNotBuildMiddleware()
+    {
+        string chain = EncodeOrchestratorChain("selection");
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("selection", BackCompat.TestHostExecutionOrchestratorStage.Selection));
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("recovery", BackCompat.TestHostExecutionOrchestratorStage.Recovery));
+        manager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("outer-middleware"));
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider, chain);
+
+        Assert.AreEqual("recovery", Assert.ContainsSingle(config.TestHostOrchestrators).Uid);
+        Assert.AreSequenceEqual(new[] { "selection" }, config.ConsumedOrchestratorUids);
+        Assert.IsFalse(config.IsOutermostProcess);
+        Assert.IsTrue(config.IsCompositionActive);
+        Assert.IsEmpty(config.Middleware);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_InnerProcessWithLegacyOrchestrator_RejectsComposition()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => new FakeOrchestrator("legacy"));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => manager.BuildAsync(_serviceProvider, EncodeOrchestratorChain("selection")));
+
+        Assert.Contains("legacy", exception.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_ConsumedOrchestrator_IsNotQueriedForEnablement()
+    {
+        Mock<BackCompat.ITestHostExecutionOrchestrator> consumedOrchestrator = new();
+        consumedOrchestrator.SetupGet(orchestrator => orchestrator.Uid).Returns("selection");
+        consumedOrchestrator.Setup(orchestrator => orchestrator.IsEnabledAsync()).ReturnsAsync(true);
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => consumedOrchestrator.Object);
+        manager.AddTestHostOrchestrator(_ => new FakeComposableOrchestrator("recovery", BackCompat.TestHostExecutionOrchestratorStage.Recovery));
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider, EncodeOrchestratorChain("selection"));
+
+        Assert.AreEqual("recovery", Assert.ContainsSingle(config.TestHostOrchestrators).Uid);
+        consumedOrchestrator.Verify(orchestrator => orchestrator.IsEnabledAsync(), Moq.Times.Never);
     }
 
     [TestMethod]
@@ -304,9 +410,11 @@ public sealed class TestHostOrchestratorManagerTests
 
         IExtension[] result = await BuildAsync(kind, manager);
 
-        Assert.AreSequenceEqual(new IExtension[] { first, second }, result);
+        Assert.AreSequenceEqual(kind == "orchestrator" ? new IExtension[] { first } : new IExtension[] { first, second }, result);
         Assert.AreSequenceEqual(
-            new[] { "factory:first", "enabled:first", "initialize:first", "factory:second", "enabled:second", "initialize:second" },
+            kind == "orchestrator"
+                ? new[] { "factory:first", "enabled:first", "factory:second", "enabled:second", "initialize:first" }
+                : new[] { "factory:first", "enabled:first", "initialize:first", "factory:second", "enabled:second", "initialize:second" },
             events);
     }
 
@@ -339,7 +447,7 @@ public sealed class TestHostOrchestratorManagerTests
     [DataRow("lifetime", "factory")]
     [DataRow("lifetime", "enabled")]
     [DataRow("lifetime", "initialize")]
-    public async Task Build_ExtensionFailure_PreservesExceptionAndStopsLaterFactories(string kind, string stage)
+    public async Task Build_ExtensionFailure_PreservesExceptionAndStopsAtFailingStage(string kind, string stage)
     {
         var manager = new PublicApi.TestHostOrchestratorManager();
         var failure = new InvalidOperationException("extension failed");
@@ -353,8 +461,8 @@ public sealed class TestHostOrchestratorManagerTests
         });
         Register(kind, manager, _ =>
         {
-            events.Add("factory:unreachable");
-            return new InitializableExtension("unreachable", events);
+            events.Add("factory:second");
+            return new InitializableExtension("second", events);
         });
 
         InvalidOperationException observed = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
@@ -365,6 +473,7 @@ public sealed class TestHostOrchestratorManagerTests
         {
             "factory" => ["factory:first"],
             "enabled" => ["factory:first", "enabled:first"],
+            "initialize" when kind == "orchestrator" => ["factory:first", "enabled:first", "factory:second", "enabled:second", "initialize:first"],
             _ => ["factory:first", "enabled:first", "initialize:first"],
         };
         Assert.AreSequenceEqual(expected, events);
@@ -378,14 +487,20 @@ public sealed class TestHostOrchestratorManagerTests
     {
         var manager = new PublicApi.TestHostOrchestratorManager();
         int generation = 0;
+        int secondFactoryCount = 0;
         Register(kind, manager, _ => new InitializableExtension($"first-{++generation}", []));
-        Register(kind, manager, _ => new InitializableExtension($"second-{generation}", []));
+        Register(kind, manager, _ =>
+        {
+            secondFactoryCount++;
+            return new InitializableExtension($"second-{generation}", []);
+        });
 
         IExtension[] first = await BuildAsync(kind, manager);
         IExtension[] second = await BuildAsync(kind, manager);
 
-        Assert.AreSequenceEqual(new[] { "first-1", "second-1" }, first.Select(x => x.Uid));
-        Assert.AreSequenceEqual(new[] { "first-2", "second-2" }, second.Select(x => x.Uid));
+        Assert.AreSequenceEqual(kind == "orchestrator" ? new[] { "first-1" } : new[] { "first-1", "second-1" }, first.Select(x => x.Uid));
+        Assert.AreSequenceEqual(kind == "orchestrator" ? new[] { "first-2" } : new[] { "first-2", "second-2" }, second.Select(x => x.Uid));
+        Assert.AreEqual(2, secondFactoryCount);
         Assert.AreNotSame(first, second);
     }
 
@@ -396,7 +511,7 @@ public sealed class TestHostOrchestratorManagerTests
     [DataRow("middleware", true)]
     [DataRow("lifetime", false)]
     [DataRow("lifetime", true)]
-    public async Task Build_AsynchronousLifecycle_WaitsBeforeBuildingNextExtension(string kind, bool initialize)
+    public async Task Build_AsynchronousLifecycle_WaitsForEnablementAndSelectedInitialization(string kind, bool initialize)
     {
         var manager = new PublicApi.TestHostOrchestratorManager();
         var events = new List<string>();
@@ -419,15 +534,18 @@ public sealed class TestHostOrchestratorManagerTests
         {
             Assert.IsFalse(build.IsCompleted);
             Assert.AreSequenceEqual(
-                initialize ? new[] { "enabled:first", "initialize:first" } : new[] { "enabled:first" },
+                !initialize ? new[] { "enabled:first" }
+                    : kind == "orchestrator" ? new[] { "enabled:first", "factory:second", "enabled:second", "initialize:first" }
+                    : new[] { "enabled:first", "initialize:first" },
                 events);
 
             gate.SetResult(true);
             IExtension[] result = await build.WaitAsync(CompletionLimit, TestContext.CancellationToken);
 
-            Assert.AreSequenceEqual(new IExtension[] { first, second }, result);
+            Assert.AreSequenceEqual(kind == "orchestrator" ? new IExtension[] { first } : new IExtension[] { first, second }, result);
             Assert.AreSequenceEqual(
-                new[] { "enabled:first", "initialize:first", "factory:second", "enabled:second", "initialize:second" },
+                kind == "orchestrator" ? new[] { "enabled:first", "factory:second", "enabled:second", "initialize:first" }
+                    : new[] { "enabled:first", "initialize:first", "factory:second", "enabled:second", "initialize:second" },
                 events);
         }
         catch (Exception exception)
@@ -548,6 +666,25 @@ public sealed class TestHostOrchestratorManagerTests
         }
     }
 
+    [TestMethod]
+    public async Task Build_AlreadyEnabledUid_RejectsDuplicateBeforeQueryingItsEnablement()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => new FakeOrchestrator("duplicate"));
+        Mock<BackCompat.ITestHostExecutionOrchestrator> duplicate = new();
+        duplicate.SetupGet(x => x.Uid).Returns("duplicate");
+        duplicate.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
+        manager.AddTestHostOrchestrator(_ => duplicate.Object);
+
+        InvalidOperationException error = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(_serviceProvider));
+
+        Assert.Contains("duplicate", error.Message);
+        duplicate.Verify(x => x.IsEnabledAsync(), Moq.Times.Never);
+    }
+
+    private static string EncodeOrchestratorChain(params string[] uids)
+        => string.Join(".", uids.Select(uid => Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(uid))));
+
     private static void Register(
         string kind,
         PublicApi.TestHostOrchestratorManager manager,
@@ -586,7 +723,7 @@ public sealed class TestHostOrchestratorManagerTests
         Exception? failure = null,
         Task<bool>? enablement = null,
         Task? initialization = null) :
-        BackCompat.ITestHostExecutionOrchestrator,
+        BackCompat.IComposableTestHostExecutionOrchestrator,
         BackCompat.ITestHostOrchestratorApplicationLifetime,
         BackCompat.ITestHostExecutionOrchestratorMiddleware,
         IAsyncInitializableExtension
@@ -598,6 +735,11 @@ public sealed class TestHostOrchestratorManagerTests
         public string DisplayName => uid;
 
         public string Description => uid;
+
+        public BackCompat.TestHostExecutionOrchestratorStage Stage
+            => uid.StartsWith("second", StringComparison.Ordinal)
+                ? BackCompat.TestHostExecutionOrchestratorStage.Distribution
+                : BackCompat.TestHostExecutionOrchestratorStage.Selection;
 
         public Task<bool> IsEnabledAsync()
         {
@@ -632,6 +774,25 @@ public sealed class TestHostOrchestratorManagerTests
         public string DisplayName => Uid;
 
         public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
+            => Task.FromResult(0);
+    }
+
+    private sealed class FakeComposableOrchestrator(string uid, BackCompat.TestHostExecutionOrchestratorStage stage)
+        : BackCompat.IComposableTestHostExecutionOrchestrator
+    {
+        public string Uid => uid;
+
+        public string Version => PlatformVersion.Version;
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public BackCompat.TestHostExecutionOrchestratorStage Stage => stage;
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

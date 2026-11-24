@@ -7,16 +7,31 @@ namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
 internal sealed class TestHostOrchestratorConfiguration(
     ITestHostExecutionOrchestrator[] testHostOrchestrators,
-    ITestHostExecutionOrchestratorMiddleware[] middleware)
+    ITestHostExecutionOrchestratorMiddleware[] middleware,
+    string[] consumedOrchestratorUids,
+    bool isCompositionActive)
 {
     // Kept for compatibility with existing (test) call sites that only care about orchestrators, without
     // requiring every caller to also decide on a middleware array.
     internal TestHostOrchestratorConfiguration(ITestHostExecutionOrchestrator[] testHostOrchestrators)
-        : this(testHostOrchestrators, [])
+        : this(testHostOrchestrators, [], [], isCompositionActive: false)
+    {
+    }
+
+    internal TestHostOrchestratorConfiguration(
+        ITestHostExecutionOrchestrator[] testHostOrchestrators,
+        ITestHostExecutionOrchestratorMiddleware[] middleware)
+        : this(testHostOrchestrators, middleware, [], isCompositionActive: false)
     {
     }
 
     public ITestHostExecutionOrchestrator[] TestHostOrchestrators { get; } = testHostOrchestrators;
+
+    public string[] ConsumedOrchestratorUids { get; } = consumedOrchestratorUids;
+
+    public bool IsCompositionActive { get; } = isCompositionActive;
+
+    public bool IsOutermostProcess => ConsumedOrchestratorUids.Length == 0;
 
     /// <summary>
     /// Gets the single-invocation middleware to compose around <see cref="TestHostOrchestrators"/>,

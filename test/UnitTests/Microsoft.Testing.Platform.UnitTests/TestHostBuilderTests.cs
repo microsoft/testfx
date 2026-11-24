@@ -239,7 +239,74 @@ public sealed class TestHostBuilderTests
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => builder.BuildAsync());
 
-        Assert.Contains($"Found {orchestratorCount} orchestrator(s) instead.", exception.Message, StringComparison.Ordinal);
+        if (orchestratorCount == 0)
+        {
+            Assert.Contains("Found 0 orchestrator(s) instead.", exception.Message, StringComparison.Ordinal);
+        }
+        else
+        {
+            Assert.Contains("orchestrator-0", exception.Message, StringComparison.Ordinal);
+            Assert.Contains("orchestrator-1", exception.Message, StringComparison.Ordinal);
+            Assert.Contains(nameof(BackCompat.IComposableTestHostExecutionOrchestrator), exception.Message, StringComparison.Ordinal);
+        }
+    }
+
+    [TestMethod]
+    public async Task BuilderRegistrationWithMultipleLegacyOrchestrators_RejectsBeforeBuildingLifetimes()
+    {
+        var builder = new TestApplicationBuilder(
+            new ApplicationLoggingState(LogLevel.None, new CommandLineParseResult(null, [], [])),
+            DateTimeOffset.UtcNow,
+            new TestApplicationOptions(),
+            Mock.Of<IUnhandledExceptionsHandler>(),
+            ["--no-banner"]);
+        builder.RegisterTestFramework(
+            _ => new TestFrameworkCapabilities(),
+            (_, _) => Mock.Of<ITestFramework>());
+        var orchestratorManager = (PublicApi.TestHostOrchestratorManager)((ITestApplicationBuilder)builder).TestHostOrchestrator;
+        orchestratorManager.AddTestHostOrchestrator(_ => CreateEnabledOrchestrator("first-legacy"));
+        orchestratorManager.AddTestHostOrchestrator(_ => CreateEnabledOrchestrator("second-legacy"));
+
+        bool lifetimeFactoryInvoked = false;
+        orchestratorManager.AddTestHostOrchestratorApplicationLifetime(_ =>
+        {
+            lifetimeFactoryInvoked = true;
+            return Mock.Of<BackCompat.ITestHostOrchestratorApplicationLifetime>();
+        });
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => builder.BuildAsync());
+
+        Assert.Contains("first-legacy", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("second-legacy", exception.Message, StringComparison.Ordinal);
+        Assert.IsFalse(lifetimeFactoryInvoked);
+    }
+
+    private static BackCompat.ITestHostExecutionOrchestrator CreateEnabledOrchestrator(string uid)
+    {
+        Mock<BackCompat.ITestHostExecutionOrchestrator> orchestrator = new();
+        orchestrator.SetupGet(x => x.Uid).Returns(uid);
+        orchestrator.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+        return orchestrator.Object;
+    }
+
+    [TestMethod]
+    public async Task Discovery_WithTwoLegacyOrchestrators_DoesNotBuildAnOrchestratorHost()
+    {
+        var builder = new TestApplicationBuilder(
+            new ApplicationLoggingState(LogLevel.None, new CommandLineParseResult(null, [new CommandLineParseOption("list-tests", [])], [])),
+            DateTimeOffset.UtcNow,
+            new TestApplicationOptions(),
+            Mock.Of<IUnhandledExceptionsHandler>(),
+            ["--list-tests"]);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => Mock.Of<ITestFramework>());
+        PublicApi.ITestHostOrchestratorManager manager = ((ITestApplicationBuilder)builder).TestHostOrchestrator;
+        int factoriesInvoked = 0;
+        manager.AddTestHostOrchestrator(_ => CreateEnabledOrchestrator($"one-{++factoriesInvoked}"));
+        manager.AddTestHostOrchestrator(_ => CreateEnabledOrchestrator($"two-{++factoriesInvoked}"));
+
+        using ITestApplication application = await builder.BuildAsync();
+        Assert.AreEqual(0, factoriesInvoked);
     }
 
     private static TestHostControllerInfo CreateTestHostControllerInfo(int? testHostControllerPid)

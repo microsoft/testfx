@@ -1,4 +1,12 @@
 #nullable enable
+Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.get -> string?
+Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.set -> void
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManager.BuildAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider, string? orchestratorChain) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration!>!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.ConsumedOrchestratorUids.get -> string![]!
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.IsCompositionActive.get -> bool
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.IsOutermostProcess.get -> bool
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.TestHostOrchestratorConfiguration(Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator![]! testHostOrchestrators, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware![]! middleware, string![]! consumedOrchestratorUids, bool isCompositionActive) -> void
 const Microsoft.Testing.Platform.Telemetry.TelemetryProperties.IsLLMPropertyName = "is llm" -> string!
 const Microsoft.Testing.Platform.Telemetry.TelemetryProperties.CopilotAgentSessionIdPropertyName = "CopilotAgentSessionId" -> string!
 Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.AddDataConsumerWhenControllerStarts<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void

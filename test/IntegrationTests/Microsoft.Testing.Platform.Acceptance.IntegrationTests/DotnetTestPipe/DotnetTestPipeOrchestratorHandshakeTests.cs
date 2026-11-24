@@ -22,6 +22,7 @@ public class DotnetTestPipeOrchestratorHandshakeTests : AcceptanceTestBase<Dotne
 
     // The retry orchestrator extension Uid, sent as the OrchestratorFeature value.
     private const string RetryOrchestratorFeature = "RetryOrchestrator";
+    private const string SelectionOrchestratorFeature = "SelectionOrchestrator";
 
     public TestContext TestContext { get; set; } = null!;
 
@@ -78,6 +79,53 @@ public class DotnetTestPipeOrchestratorHandshakeTests : AcceptanceTestBase<Dotne
             "Test host handshakes should not carry the OrchestratorFeature property.");
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DotnetTestPipe_ComposedOrchestrators_EachProcessHandshakesWithItsUid(bool useController)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string resultDirectory = Directory.CreateDirectory(Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"))).FullName;
+        string arguments = $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\"";
+        if (useController)
+        {
+            string config = Path.Combine(resultDirectory, "testconfig.json");
+            await File.WriteAllTextAsync(config, """{"environmentVariables":{"COMPOSED_CONTROLLER_CHILD":"1"}}""", TestContext.CancellationToken);
+            arguments += $" --config-file \"{config}\"";
+        }
+
+        FakeDotnetTestSdkMultiConnectionResult result = await FakeDotnetTestSdkMultiConnection.RunAsync(
+            testHost,
+            extraArguments: arguments,
+            environmentVariables: new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "RETRY_MARKER_DIRECTORY", resultDirectory },
+                { "COMPOSED_SELECTION_ORCHESTRATOR", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        Assert.AreSequenceEqual(
+            new[] { RetryOrchestratorFeature, SelectionOrchestratorFeature },
+            result.HandshakesWithHostType(TestHostOrchestratorHostType)
+                .Select(handshake => handshake[DotnetTestPipeProtocol.HandshakeProperties.OrchestratorFeature]).Order(StringComparer.Ordinal));
+        Assert.HasCount(useController ? 2 : 0, result.HandshakesWithHostType("TestHostController"));
+        Assert.ContainsSingle(result.ReceivedHandshakes.Select(h => h[DotnetTestPipeProtocol.HandshakeProperties.ExecutionId]).Distinct());
+        Assert.HasCount(result.ReceivedHandshakes.Count, result.ReceivedHandshakes.Select(h => h[DotnetTestPipeProtocol.HandshakeProperties.InstanceId]).Distinct());
+
+        Dictionary<byte, string>[] testHostHandshakes =
+        [
+            .. result.HandshakesWithHostType(TestHostHostType)
+                .OrderBy(handshake => int.Parse(handshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber], CultureInfo.InvariantCulture)),
+        ];
+        Assert.HasCount(2, testHostHandshakes);
+        Assert.AreEqual("1", testHostHandshakes[0][DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber]);
+        Assert.AreEqual("2", testHostHandshakes[1][DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber]);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetCode = """
@@ -103,7 +151,10 @@ using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+
+#pragma warning disable TPEXP // The asset deliberately exercises the experimental orchestrator-composition API.
 
 public class Program
 {
@@ -111,9 +162,66 @@ public class Program
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
+        builder.TestHostOrchestrator.AddTestHostOrchestrator(_ => new SelectionOrchestrator());
         builder.AddRetryProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
+    }
+}
+
+public class SelectionOrchestrator : IComposableTestHostExecutionOrchestrator
+{
+    public const string UidValue = "SelectionOrchestrator";
+
+    public string Uid => UidValue;
+    public string Version => "1.0.0";
+    public string DisplayName => UidValue;
+    public string Description => UidValue;
+    public TestHostExecutionOrchestratorStage Stage => TestHostExecutionOrchestratorStage.Selection;
+
+    public Task<bool> IsEnabledAsync()
+        => Task.FromResult(Environment.GetEnvironmentVariable("COMPOSED_SELECTION_ORCHESTRATOR") == "1");
+
+    public async Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
+    {
+        if (Environment.GetEnvironmentVariable("COMPOSED_SELECTION_STARTED") == "1")
+        {
+            throw new InvalidOperationException("The child reactivated the consumed Selection orchestrator.");
+        }
+
+        string executablePath = Environment.ProcessPath
+            ?? throw new InvalidOperationException("The current test application executable path is unavailable.");
+        System.Diagnostics.ProcessStartInfo startInfo = new(executablePath)
+        {
+            UseShellExecute = false,
+        };
+        startInfo.Environment["COMPOSED_SELECTION_STARTED"] = "1";
+        if (Path.GetFileNameWithoutExtension(executablePath).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo.ArgumentList.Add(typeof(Program).Assembly.Location);
+        }
+        foreach (string argument in Environment.GetCommandLineArgs().Skip(1))
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using System.Diagnostics.Process child = System.Diagnostics.Process.Start(startInfo)
+            ?? throw new InvalidOperationException("The child test application process could not be started.");
+        try
+        {
+            await child.WaitForExitAsync(cancellationToken);
+            return child.ExitCode;
+        }
+        catch (OperationCanceledException)
+        {
+            if (!child.HasExited)
+            {
+                child.Kill(entireProcessTree: true);
+                await child.WaitForExitAsync();
+            }
+
+            throw;
+        }
     }
 }
 
@@ -131,6 +239,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN") is not null)
+        {
+            throw new InvalidOperationException("The test host leaked the consumed orchestrator chain to test code.");
+        }
+
         string markerDirectory = Environment.GetEnvironmentVariable("RETRY_MARKER_DIRECTORY")!;
         Directory.CreateDirectory(markerDirectory);
         string markerPath = Path.Combine(markerDirectory, "first-attempt.failed");
@@ -156,6 +269,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         context.Complete();
     }
 }
+
 """;
 
         public string TargetAssetPath => GetAssetPath(AssetName);

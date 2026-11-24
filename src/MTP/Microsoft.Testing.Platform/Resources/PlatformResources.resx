@@ -1090,6 +1090,21 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</value>
     <comment>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</comment>
   </data>
+  <data name="TestHostExecutionOrchestratorsMustBeComposableErrorMessage" xml:space="preserve">
+    <value>Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</value>
+    <comment>{0} is the list of orchestrator Uids. {Locked="IComposableTestHostExecutionOrchestrator"}</comment>
+  </data>
+  <data name="TestHostExecutionOrchestratorsMustUseDistinctStagesErrorMessage" xml:space="preserve">
+    <value>Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</value>
+    <comment>{0} is a TestHostExecutionOrchestratorStage value. {1} is the list of orchestrator Uids.</comment>
+  </data>
+  <data name="TestHostExecutionOrchestratorStageIsInvalidErrorMessage" xml:space="preserve">
+    <value>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</value>
+    <comment>{0} is an orchestrator Uid. {1} is an invalid TestHostExecutionOrchestratorStage value.</comment>
+  </data>
+  <data name="TestHostExecutionOrchestratorChainIsInvalidErrorMessage" xml:space="preserve">
+    <value>The internal test host orchestrator chain value is invalid.</value>
+  </data>
   <data name="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage" xml:space="preserve">
     <value>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</value>
     <comment>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</comment>

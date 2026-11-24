@@ -76,6 +76,8 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
 
     internal TimeSpan TestHostCooperativeShutdownTimeout { get; private set; }
 
+    internal string? OrchestratorChain { get; set; }
+
     internal static TimeSpan GetTestHostCooperativeShutdownTimeout(IReadOnlyEnvironmentVariables environmentVariables)
     {
         environmentVariables.TryGetVariable(

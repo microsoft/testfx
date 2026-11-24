@@ -1,6 +1,8 @@
 # Multiple test orchestrators: research and decisions
 
-Status: proposed design. This record does not include an implementation.
+Status: implemented for opt-in orchestrators in MTP 3.x, including Retry.
+Distribution and Repetition are extension points, not new built-in orchestrators.
+Adoption by the independently shipped AffectedTests extension is not part of this change.
 
 ## Problem and contract
 
@@ -12,7 +14,7 @@ should run as one deterministic invocation instead of crashing. Example:
 combined with retry. Extension authors need a documented contract that covers
 ordering, exit codes, cancellation, artifacts, and the `dotnet test` handshake.
 
-### Current behavior
+### Behavior before composition
 
 Source state: `be3cf477a83f9b94e416b0401163a48580e389aa`.
 
@@ -23,7 +25,7 @@ Source state: `be3cf477a83f9b94e416b0401163a48580e389aa`.
   (`RetryOrchestrator.cs:38-39`).
 - Mode selection prefers the orchestrator host over the test host controllers
   and the test host. It skips the orchestrator host when nothing is enabled or
-  when `--discover-tests` is set (`TestHostBuilder.Modes.cs:96-100,126-139`).
+  when `--list-tests` is set (`TestHostBuilder.Modes.cs:96-100,126-139`).
 - When two orchestrators are enabled, `TestHostOrchestratorHost.RunAsync`
   throws the unlocalized `NotSupportedException("Multiple test orchestrator not
   supported")`. The throw happens after the process role has been set and the
@@ -36,13 +38,13 @@ Source state: `be3cf477a83f9b94e416b0401163a48580e389aa`.
 
 ### Confirmed requirement
 
-The only confirmed requirement is the user's request: "design how to enable
-having multiple test orchestrators registered with MTP (today we limit to one)."
-Everything else in this record is an assumption or a proposal.
+Enable several registered orchestrators to participate in one invocation
+without silently dropping a requested behavior. Keep the existing standalone
+contract for extensions that do not opt in.
 
 ### Assumptions
 
-These are unverified. Each one must be resolved before the related phase ships.
+These were the assumptions at design time; executed checks are recorded below.
 
 - **A1:** The motivating combinations are an orchestrator that narrows or
   reshapes the work (affected-test selection, local shard fan-out, or
@@ -75,11 +77,11 @@ These are unverified. Each one must be resolved before the related phase ships.
 
 ### Non-goals
 
-- Implementing any phase in this change.
+- Shipping new selection, distribution, or repetition extensions.
 - Turning Retry into middleware, or moving Retry's engine into the platform.
 - Orchestration in IDE or JSON-RPC server mode. Retry already rejects server
   mode unless the `dotnet test` pipe is in use.
-- Composing orchestrators under `--discover-tests`.
+- Composing orchestrators under `--list-tests`.
 - A general workflow or DAG engine.
 
 ### Affected consumers
@@ -112,8 +114,9 @@ The design must answer each of the following:
 
 ## Research and experiments
 
-No experiments were executed. Every entry below comes from code and document
-reading at the stated source states.
+The initial design entries are based on code and document reading at the
+stated source states. The implementation validation below distinguishes
+executed scenarios from proposed follow-up work.
 
 ### 2026-11-23: orchestrator host and builder
 
@@ -263,7 +266,7 @@ flowchart LR
 With local shard fan-out, P0 would be a `Distribution` orchestrator. It would
 launch one Retry process per shard, and each shard would retry its own failures.
 
-**Proposed experimental API** (MTP, `PublicAPI.Unshipped.txt`). Both types carry
+**Experimental API** (MTP, `PublicAPI.Unshipped.txt`). Both types carry
 the experimental remark, and no `init` accessors are used:
 
 ```csharp
@@ -317,7 +320,7 @@ involved.
 4. Each member's existing environment rejections still apply. For example,
    Retry rejects hot reload and server mode without the `dotnet test` pipe. If
    any member rejects the environment, the whole combination fails.
-5. `--discover-tests` keeps skipping the orchestrator host.
+5. `--list-tests` skips orchestrator and middleware composition.
 
 **Child-launch contract for every stage except the innermost:**
 
@@ -331,17 +334,16 @@ involved.
   distinct `--results-directory` under its own results directory.
 - Do not set Retry-owned variables: the attempt number, or the deferred TRX
   variables.
-- The platform should provide an internal helper extracted from
-  `RetryTestHostRunner` that launches the current application with modified
-  arguments and kills the process tree on cancellation. It could become
-  experimental public API later, after a second consumer needs it.
+- The extension owns its launch and teardown. A shared launcher or aggregation
+  helper can be evaluated when a second production extension needs one.
 
 **Internal chain guard (not public API).** When composition is active, the
 platform sets an internal environment variable before running the active
 orchestrator. The variable holds the ordered list of consumed Uids, and children
 inherit it. At startup, every process reads the variable and removes it from its
-own environment, then treats the listed Uids as disabled. Removing it keeps it
-away from tests and from leaf processes. The guard has three uses:
+own environment, then skips the listed Uids before querying enablement. If a
+test host controller must restart an attempt, it forwards the chain explicitly
+in the child's launch environment. Test code does not inherit it. The guard has three uses:
 
 - It prevents re-activation, even when an orchestrator was enabled by
   configuration rather than by a command-line option it can strip.
@@ -387,9 +389,9 @@ a bounded wait as Retry does. The cancellation surfaces as
 `TestSessionAborted`, consistent with `TestHostOchestratorHost.cs:84-89`.
 
 **Handshake.** Each orchestrator process sends its own handshake, with
-`HostType=TestHostOrchestrator` and ID 11 set to its own Uid. Phase 2 needs no
-protocol change, provided A3 is confirmed by an end-to-end test against the
-shipping SDK. Retry processes for different shards can be on different attempt
+`HostType=TestHostOrchestrator` and ID 11 set to its own Uid. The Selection +
+Retry run below required no protocol change in either released SDK tested.
+Retry processes for different shards can be on different attempt
 numbers at the same time. The protocol already allows multiple instances per
 attempt, but how the SDK renders that is not yet proven.
 
@@ -413,17 +415,13 @@ question).
 
 Each of these processes repeats platform initialization.
 
-**Implementation map:**
-
-- `TestHostBuilder.Modes.cs`: read the chain, validate the stages, choose the
-  active orchestrator, detect the outermost process, and adjust the middleware
-  validation.
-- `TestHostOchestratorHost.cs`: use the active orchestrator instead of `[0]`,
-  skip lifetimes and middleware in inner processes, and set the chain variable.
-- `RetryOrchestrator`: declare `Recovery`.
-- Add new RESX errors.
-- Update PublicAPI and InternalAPI.
-- Update the multi-process section of protocol 004 and the glossary.
+**Implementation:** `TestHostOrchestratorManager` validates the enabled set and
+selects the active stage before initializing composable orchestrators.
+`TestHostBuilder` consumes the chain and bypasses composition during discovery.
+`TestHostOrchestratorHost` publishes the child chain only around the selected
+orchestrator's execution, not around lifetime callbacks or short-circuiting
+middleware. Each extension remains responsible for its exit code and artifacts;
+the platform does not implement the proposed fan-out aggregation policy.
 
 ### Phase 3 (conditional)
 
@@ -442,12 +440,42 @@ Each of these processes repeats platform initialization.
 
 ## Validation and demonstration
 
-This change is documentation only. No product build, test, red/green comparison,
-or media applies. The markdownlint result for this file is recorded in the
-commit and handoff.
+The release pack and focused unit/acceptance runs use the repository-pinned
+SDK. The generated `DotnetTestPipeOrchestratorHandshake` app references
+`Microsoft.Testing.Platform` and `Microsoft.Testing.Extensions.Retry`
+(`3.0.0-dev`); the outer acceptance runner is not the package consumer.
 
-Planned end-to-end coverage for the implementation phases. Each case must run
-against packed shipping packages and, where noted, the shipping `dotnet test`:
+### Executed on Windows x64, 2026-11-24
+
+| Boundary | Observation |
+| --- | --- |
+| Selection and lifecycle | 93 focused manager, builder and host cases passed on each of `net10.0`, `net11.0` and `net462`. These include discovery with incompatible orchestrators, pre-enablement duplicate-Uid rejection, stage ordering and selected-only initialization. |
+| Wire and restart | `DotnetTestPipe_Orchestrator_HandshakesWithFeature` and both rows of `DotnetTestPipe_ComposedOrchestrators_EachProcessHandshakesWithItsUid` passed. The composed rows check both feature Uids, one execution id, distinct instance ids, and attempts 1 and 2, with zero or two controller handshakes respectively. |
+| Counterfactual | With the original composition implementation, the direct row and Retry alone passed; the controller row failed: `The child reactivated the consumed Selection orchestrator.` The controller had dropped the consumed chain on relaunch. The same three cases passed after the fix (suite exit 2 → 0). This isolates a restart regression, not every aspect of composition. |
+| Released SDKs | SDKs `10.0.404` and `11.0.100` each ran the packaged `net11.0` apphost with Selection, Retry and a controller restart. Both reported `FlakyTest` failed on try 1, passed on try 2, and returned 0 for one logical test. SDK 11 also reported `flaky: 1 (passed after retry)`. |
+| Mixed modules | SDK `11.0.100` ran the pre-fix and fixed apphosts in one invocation. The fixed module passed after retry, the previous module failed at its controller child, and the SDK returned 1. |
+
+The generated project's `project.assets.json` resolved `lib/net11.0` for both
+packages. SHA-256 comparisons matched the actual apphost-directory DLLs to
+the corresponding NUPKG entries in both the red and green runs:
+
+| Release NUPKG | Pre-fix SHA-256 | Fixed SHA-256 |
+| --- | --- | --- |
+| `Microsoft.Testing.Platform.3.0.0-dev` | `D8CC9D273F2BC730A1A79E5E83C304AB6F3AD2BD80E486FBE161B8B0C4A96E6B` | `4D2365A4BC3431B2036CA88B42B8CBC954CC2B60EDA0603696D746B4DD2424A1` |
+| `Microsoft.Testing.Extensions.Retry.3.0.0-dev` | `F2173BB1CDB11FDC088850245CCE5E2EB5D9D8DCE16E58485B8CD34EE742DBBC` | `C164E843F0063755C7F77A3A1A0B14EE0AD8F0DE9EFD759AA9C7F3EF2772C556` |
+
+Reproduce the packed assertions from the repository root:
+
+```powershell
+.\build.cmd -pack -c Release -bl
+$project = 'test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --no-restore -p:UsingDotNetTest=true -- --filter 'FullyQualifiedName~DotnetTestPipeOrchestratorHandshakeTests' --show-test-results all
+```
+
+### Remaining coverage and rollout
+
+The original coverage plan below also covers future extensions. It is not a
+claim that every proposed scenario has shipped or been executed.
 
 | Requirement / risk | Planned automated E2E evidence | Rendered check / gap |
 | --- | --- | --- |
@@ -463,9 +491,8 @@ against packed shipping packages and, where noted, the shipping `dotnet test`:
 
 ## Open questions
 
-1. dotnet/sdk owners: confirm several orchestrator handshakes per module (A3),
-   how concurrent per-shard attempts render, and whether Phase 3 properties are
-   needed.
+1. Sequential orchestration handshakes work with the released SDKs above.
+   Concurrent per-shard attempts and any need for Phase 3 properties remain open.
 2. AffectedTests owners: will they adopt `IComposableTestHostExecutionOrchestrator`
    and confirm argument stripping (A2)? Do they launch through
    `ITestHostLauncher`? Which stage fits `RefreshMappingsOrchestrator`, or

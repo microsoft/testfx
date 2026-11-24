@@ -190,6 +190,12 @@ internal sealed partial class TestHostControllersTestHost
 
         TestHostCooperativeShutdownTimeout = GetTestHostCooperativeShutdownTimeout(environmentVariables);
 
+        if (OrchestratorChain is not null)
+        {
+            // The controller is a relay, not another stage. Its test host must skip the same consumed orchestrators.
+            processStartInfo.EnvironmentVariables[EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN] = OrchestratorChain;
+        }
+
         if (ownsCoverage)
         {
             processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY}_{currentPid}"] = "1";
