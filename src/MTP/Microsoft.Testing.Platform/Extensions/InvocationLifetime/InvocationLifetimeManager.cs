@@ -47,7 +47,7 @@ internal sealed class InvocationLifetimeManager : IInvocationLifetimeManager
                 {
                     await DisposeHelper.DisposeAsync(current).ConfigureAwait(false);
                 }
-                catch (Exception)
+                catch (Exception ex) when (IsNonFatal(ex))
                 {
                     // Preserve the build failure and continue releasing the other handlers.
                 }
@@ -59,7 +59,7 @@ internal sealed class InvocationLifetimeManager : IInvocationLifetimeManager
                 {
                     await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
                 }
-                catch (Exception)
+                catch (Exception ex) when (IsNonFatal(ex))
                 {
                     // A failed disposal must not prevent releasing the remaining handlers.
                 }
@@ -70,4 +70,13 @@ internal sealed class InvocationLifetimeManager : IInvocationLifetimeManager
 
         return handlers;
     }
+
+    private static bool IsNonFatal(Exception exception)
+        => exception is AggregateException aggregateException
+            ? aggregateException.Flatten().InnerExceptions.All(IsNonFatal)
+            : exception is not OutOfMemoryException
+                and not StackOverflowException
+                and not AccessViolationException
+                and not AppDomainUnloadedException
+                and not BadImageFormatException;
 }

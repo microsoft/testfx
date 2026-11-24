@@ -31,6 +31,26 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class TestHostBuilderTests
 {
     [TestMethod]
+    public async Task BuildAsync_WhenTimeoutArgumentIsInvalid_ReturnsInvalidCommandLineExitCode()
+    {
+        string[] args = ["--timeout", "5", "--no-banner"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        TestApplicationBuilder builder = new(
+            new ApplicationLoggingState(LogLevel.None, parseResult),
+            DateTimeOffset.UtcNow,
+            new TestApplicationOptions(),
+            Mock.Of<IUnhandledExceptionsHandler>(),
+            args);
+        builder.RegisterTestFramework(
+            _ => new TestFrameworkCapabilities(),
+            (_, _) => Mock.Of<ITestFramework>());
+
+        using ITestApplication application = await builder.BuildAsync();
+
+        Assert.AreEqual((int)ExitCode.InvalidCommandLine, await application.RunAsync());
+    }
+
+    [TestMethod]
     public async Task ControllerPreLaunch_StartsLifetimeHandlersBeforePublishingEnvironment()
     {
         string endpoint = "unqualified";
@@ -284,6 +304,56 @@ public sealed class TestHostBuilderTests
                 () => builder.BuildAsync());
 
             Assert.Contains("Found 0 orchestrator(s) instead.", exception.Message, StringComparison.Ordinal);
+            disposable.Verify(d => d.Dispose(), Times.Once);
+            handler.Verify(
+                h => h.OnInvocationCompletedAsync(It.IsAny<InvocationCompletedContext>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+        finally
+        {
+            environment.SetEnvironmentVariable(ownerVariable, originalOwnerValue);
+        }
+    }
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task BuilderHostConstructionFailure_PropagatesFatalHandlerDisposalException()
+    {
+        const string ownerVariable = EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER;
+        SystemEnvironment environment = new();
+        string? originalOwnerValue = environment.GetEnvironmentVariable(ownerVariable);
+        environment.SetEnvironmentVariable(ownerVariable, null);
+
+        try
+        {
+            var builder = new TestApplicationBuilder(
+                new ApplicationLoggingState(LogLevel.None, new CommandLineParseResult(null, [], [])),
+                DateTimeOffset.UtcNow,
+                new TestApplicationOptions(),
+                Mock.Of<IUnhandledExceptionsHandler>(),
+                ["--no-banner"]);
+            builder.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, _) => Mock.Of<ITestFramework>());
+            Mock<IInvocationLifetimeHandler> handler = new();
+            handler.SetupGet(h => h.Uid).Returns("invocation");
+            handler.Setup(h => h.IsEnabledAsync()).ReturnsAsync(true);
+            Mock<IDisposable> disposable = handler.As<IDisposable>();
+            disposable.Setup(d => d.Dispose()).Throws(new OutOfMemoryException("Fatal disposal failure."));
+            builder.InvocationLifetime.AddInvocationLifetimeHandler(_ => handler.Object);
+            ((PublicApi.TestHostOrchestratorManager)((ITestApplicationBuilder)builder).TestHostOrchestrator)
+                .AddTestHostExecutionOrchestratorMiddleware(_ =>
+                {
+                    Mock<BackCompat.ITestHostExecutionOrchestratorMiddleware> middleware = new();
+                    middleware.SetupGet(x => x.Uid).Returns("middleware");
+                    middleware.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+                    return middleware.Object;
+                });
+
+            OutOfMemoryException exception = await Assert.ThrowsExactlyAsync<OutOfMemoryException>(
+                () => builder.BuildAsync());
+
+            Assert.AreEqual("Fatal disposal failure.", exception.Message);
             disposable.Verify(d => d.Dispose(), Times.Once);
             handler.Verify(
                 h => h.OnInvocationCompletedAsync(It.IsAny<InvocationCompletedContext>(), It.IsAny<CancellationToken>()),

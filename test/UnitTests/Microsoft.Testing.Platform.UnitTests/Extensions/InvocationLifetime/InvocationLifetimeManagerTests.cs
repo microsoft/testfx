@@ -123,6 +123,25 @@ public sealed class InvocationLifetimeManagerTests
         failingDisposable.Verify(d => d.Dispose(), Times.Once);
     }
 
+    [TestMethod]
+    public async Task BuildAsync_WhenCleanupDisposalThrowsFatalException_PropagatesFatalException()
+    {
+        InvocationLifetimeManager manager = new();
+        Mock<IInvocationLifetimeHandler> first = CreateHandler("a", enabled: true);
+        Mock<IDisposable> firstDisposable = first.As<IDisposable>();
+        AggregateException fatalException = new(new OutOfMemoryException());
+        firstDisposable.Setup(d => d.Dispose()).Throws(fatalException);
+        manager.AddInvocationLifetimeHandler(_ => first.Object);
+        manager.AddInvocationLifetimeHandler(_ => throw new InvalidOperationException("Build failed."));
+
+        AggregateException actualException = await Assert.ThrowsExactlyAsync<AggregateException>(
+            () => manager.BuildAsync(Mock.Of<IServiceProvider>()));
+
+        Assert.AreSame(fatalException, actualException);
+        Assert.IsInstanceOfType<OutOfMemoryException>(actualException.Flatten().InnerExceptions.Single());
+        firstDisposable.Verify(d => d.Dispose(), Times.Once);
+    }
+
     private static Mock<IInvocationLifetimeHandler> CreateHandler(string uid, bool enabled)
     {
         Mock<IInvocationLifetimeHandler> handler = new();

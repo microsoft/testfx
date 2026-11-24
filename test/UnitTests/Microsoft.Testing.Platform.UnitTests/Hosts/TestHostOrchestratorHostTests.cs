@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
@@ -540,6 +542,46 @@ public sealed class TestHostOrchestratorHostTests
         orchestrator.Verify(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()), compatible ? Times.Once() : Times.Never());
         protocol.Verify(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>()), compatible && control ? Times.Once() : Times.Never());
     }
+
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+    [TestMethod]
+    public async Task RunAsync_ProtocolHandshakeThrows_ReleasesUnstartedInvocationLifetimeHandlers()
+    {
+        Mock<IInvocationLifetimeHandler> handler = new();
+        Mock<IDisposable> disposable = handler.As<IDisposable>();
+        InvocationLifetimeRunner invocationLifetimeRunner = new(
+            [handler.Object],
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IOutputDevice>(),
+            new NopLogger(),
+            setOwnerMarker: false,
+            restoreEnvironment: false);
+        Mock<ITestHostExecutionOrchestrator> orchestrator = new();
+        orchestrator.SetupGet(o => o.Uid).Returns("wire-orchestrator");
+        IOException expectedException = new("protocol handshake failed");
+        Mock<IPushOnlyProtocol> protocol = new();
+        protocol.SetupGet(p => p.IsServerMode).Returns(true);
+        protocol.Setup(p => p.IsCompatibleProtocolAsync(It.IsAny<string>(), It.IsAny<IReadOnlyDictionary<byte, string>?>()))
+            .ThrowsAsync(expectedException);
+        ServiceProvider services = new();
+        services.AddService(new FakeApplicationCancellationTokenSource());
+        services.AddService(new NopLoggerFactory());
+        services.AddService(protocol.Object);
+        services.AddService(invocationLifetimeRunner);
+        TestHostOrchestratorHost host = new(new([orchestrator.Object]), services);
+
+        IOException actualException = await Assert.ThrowsExactlyAsync<IOException>(host.RunAsync);
+
+        Assert.AreSame(expectedException, actualException);
+        disposable.Verify(d => d.Dispose(), Times.Once);
+        handler.Verify(
+            h => h.OnInvocationStartingAsync(It.IsAny<InvocationStartingContext>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        handler.Verify(
+            h => h.OnInvocationCompletedAsync(It.IsAny<InvocationCompletedContext>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+#pragma warning restore TPEXP
 
     [TestMethod]
     public async Task RunAsync_MultipleOrchestratorsRejectBeforeLifetimeOrExecution()

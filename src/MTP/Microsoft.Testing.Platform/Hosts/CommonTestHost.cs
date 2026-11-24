@@ -306,6 +306,7 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         }
 
         // A stop request does not cancel the application token: the invocation setup observes it through this source.
+        Exception? cancellationCallbackException = null;
         try
         {
 #if NET
@@ -314,29 +315,47 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
             _gracefulSessionStopRequestedSource.Cancel();
 #endif
         }
-        catch (Exception)
+        catch (Exception ex) when (IsNonFatalStopException(ex))
         {
-            // A setup callback that throws must not prevent stopping the test execution.
+            // User callbacks can throw while setup is canceled; they must not prevent stopping test execution.
+            cancellationCallbackException = ex;
         }
 
         if (capabilities.Length > 0)
         {
             await Task.WhenAll(capabilities.Select(capability => capability.StopTestExecutionAsync(cancellationToken))).ConfigureAwait(false);
-            return;
-        }
-
-        IGracefulStopTestExecutionCapability? applicationCapability =
-            ServiceProvider.GetService<ITestFrameworkCapabilities>()?.GetCapability<IGracefulStopTestExecutionCapability>();
-
-        if (applicationCapability is not null)
-        {
-            await applicationCapability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel();
+            IGracefulStopTestExecutionCapability? applicationCapability =
+                ServiceProvider.GetService<ITestFrameworkCapabilities>()?.GetCapability<IGracefulStopTestExecutionCapability>();
+
+            if (applicationCapability is not null)
+            {
+                await applicationCapability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel();
+            }
+        }
+
+        if (cancellationCallbackException is not null)
+        {
+            await LogShutdownWarningAsync(
+                ServiceProvider,
+                $"A graceful session stop callback failed while canceling invocation setup: {cancellationCallbackException}").ConfigureAwait(false);
         }
     }
+
+    private static bool IsNonFatalStopException(Exception exception)
+        => exception is AggregateException aggregateException
+            ? aggregateException.Flatten().InnerExceptions.All(IsNonFatalStopException)
+            : exception is not OutOfMemoryException
+                and not StackOverflowException
+                and not AccessViolationException
+                and not AppDomainUnloadedException
+                and not BadImageFormatException;
 
     private async Task<int> RunTestAppAsync(IPlatformOpenTelemetryService? platformOTelService, CancellationToken testApplicationCancellationToken, List<object> alreadyDisposed)
     {

@@ -101,7 +101,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
                 await TryLogAsync(() => _logger.LogDebugAsync($"Invocation lifetime handler '{handler.Uid}' setup was canceled.")).ConfigureAwait(false);
                 return (int)ExitCode.TestSessionAborted;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (IsNonFatal(ex))
             {
                 await ReportFailureAsync(PlatformResources.InvocationLifetimeSetupFailedErrorMessage, handler.Uid, ex).ConfigureAwait(false);
                 return (int)ExitCode.GenericFailure;
@@ -152,7 +152,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
                 // Not canceled with the invocation: cleanup is exactly what must complete on cancellation.
                 await handler.OnInvocationCompletedAsync(context, CancellationToken.None).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (IsNonFatal(ex))
             {
                 failed = true;
                 await ReportFailureAsync(PlatformResources.InvocationLifetimeCleanupFailedErrorMessage, handler.Uid, ex).ConfigureAwait(false);
@@ -165,7 +165,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
             {
                 await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (IsNonFatal(ex))
             {
                 failed = true;
                 await ReportFailureAsync(PlatformResources.InvocationLifetimeCleanupFailedErrorMessage, handler.Uid, ex).ConfigureAwait(false);
@@ -223,7 +223,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
         {
             await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(message), CancellationToken.None).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex) when (IsNonFatal(ex))
         {
             // Reporting is best-effort: it must not skip the cleanup of the remaining handlers.
         }
@@ -237,9 +237,18 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
         {
             await logAsync().ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex) when (IsNonFatal(ex))
         {
             // Logging is best-effort: it must not skip the cleanup of the remaining handlers.
         }
     }
+
+    private static bool IsNonFatal(Exception exception)
+        => exception is AggregateException aggregateException
+            ? aggregateException.Flatten().InnerExceptions.All(IsNonFatal)
+            : exception is not OutOfMemoryException
+                and not StackOverflowException
+                and not AccessViolationException
+                and not AppDomainUnloadedException
+                and not BadImageFormatException;
 }

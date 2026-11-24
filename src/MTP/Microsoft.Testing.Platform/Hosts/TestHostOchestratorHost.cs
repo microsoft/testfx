@@ -35,49 +35,66 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
             throw new NotSupportedException("Multiple test orchestrator not supported");
         }
 
-        ITestHostExecutionOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
-        ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
-
-        // When connected to dotnet test through the pipe protocol, handshake from the orchestrator too.
-        // This identifies the participating orchestrator mode for the whole session; middleware that
-        // short-circuits still leaves the session in orchestrator mode and reports a non-success result.
-        // (test hosts and test host controllers already do). This lets the SDK know that an orchestrator
-        // (e.g. retry) is participating in the run, identified by the OrchestratorFeature property.
-        IPushOnlyProtocol? pushOnlyProtocol = _serviceProvider.GetService<IPushOnlyProtocol>();
-        if (pushOnlyProtocol is { IsServerMode: true })
+        ITestHostExecutionOrchestrator testHostOrchestrator;
+        ITestApplicationCancellationTokenSource applicationCancellationToken;
+        try
         {
-            Dictionary<byte, string> additionalHandshakeProperties = new()
-            {
-                [HandshakeMessagePropertyNames.OrchestratorFeature] = testHostOrchestrator.Uid,
-            };
+            testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
+            applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
 
-            bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(
-                HandshakeMessageHostTypes.TestHostOrchestrator, additionalHandshakeProperties).ConfigureAwait(false);
-            if (!isProtocolCompatible)
+            // When connected to dotnet test through the pipe protocol, handshake from the orchestrator too.
+            // This identifies the participating orchestrator mode for the whole session; middleware that
+            // short-circuits still leaves the session in orchestrator mode and reports a non-success result.
+            // (test hosts and test host controllers already do). This lets the SDK know that an orchestrator
+            // (e.g. retry) is participating in the run, identified by the OrchestratorFeature property.
+            IPushOnlyProtocol? pushOnlyProtocol = _serviceProvider.GetService<IPushOnlyProtocol>();
+            if (pushOnlyProtocol is { IsServerMode: true })
             {
-                if (invocationLifetimeRunner is not null)
+                Dictionary<byte, string> additionalHandshakeProperties = new()
                 {
-                    await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+                    [HandshakeMessagePropertyNames.OrchestratorFeature] = testHostOrchestrator.Uid,
+                };
+
+                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(
+                    HandshakeMessageHostTypes.TestHostOrchestrator, additionalHandshakeProperties).ConfigureAwait(false);
+                if (!isProtocolCompatible)
+                {
+                    if (invocationLifetimeRunner is not null)
+                    {
+                        await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+                    }
+
+                    return (int)ExitCode.IncompatibleProtocolVersion;
                 }
 
-                return (int)ExitCode.IncompatibleProtocolVersion;
+                if (pushOnlyProtocol.IsServerControlChannelSupported)
+                {
+                    // The orchestrator has no graceful-stop capability of its own; a server-initiated cancel maps to
+                    // cancelling the application token, which propagates to the orchestrated test host processes.
+                    await pushOnlyProtocol.StartServerControlChannelAsync(_ =>
+                    {
+                        applicationCancellationToken.Cancel();
+                        return Task.CompletedTask;
+                    }).ConfigureAwait(false);
+                }
             }
 
-            if (pushOnlyProtocol.IsServerControlChannelSupported)
+            await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
+        }
+        catch
+        {
+            // Handshake/control-channel failures happen before setup starts, so release the initialized handlers
+            // without invoking completion hooks and preserve the original failure.
+            if (invocationLifetimeRunner is not null)
             {
-                // The orchestrator has no graceful-stop capability of its own; a server-initiated cancel maps to
-                // cancelling the application token, which propagates to the orchestrated test host processes.
-                await pushOnlyProtocol.StartServerControlChannelAsync(_ =>
-                {
-                    applicationCancellationToken.Cancel();
-                    return Task.CompletedTask;
-                }).ConfigureAwait(false);
+                await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
             }
+
+            throw;
         }
 
         int exitCode;
         bool orchestrationCanceled = false;
-        await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
         try
         {
             // The invocation setup wraps the orchestrator lifetimes, and every test host process the orchestrator

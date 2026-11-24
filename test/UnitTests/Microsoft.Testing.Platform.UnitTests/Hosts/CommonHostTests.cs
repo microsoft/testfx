@@ -45,6 +45,42 @@ public sealed class CommonHostTests
     }
 
     [TestMethod]
+    public async Task RequestGracefulSessionStopAsync_WhenCancellationCallbackThrows_StillStopsTestExecution()
+    {
+        Mock<IGracefulStopTestExecutionCapability> capability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(capability.Object));
+        serviceProvider.AddService(new NopLoggerFactory());
+        TestableCommonHost host = new(serviceProvider);
+        CancellationTokenSource gracefulStopSource = GetGracefulSessionStopSourceForTesting(host);
+        using CancellationTokenRegistration registration = gracefulStopSource.Token.Register(
+            static () => throw new InvalidOperationException("Setup cancellation callback failed."));
+
+        await host.RequestGracefulSessionStopForTestingAsync();
+
+        Assert.IsTrue(gracefulStopSource.IsCancellationRequested);
+        capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RequestGracefulSessionStopAsync_WhenCancellationCallbackThrowsFatalException_Propagates()
+    {
+        Mock<IGracefulStopTestExecutionCapability> capability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(capability.Object));
+        TestableCommonHost host = new(serviceProvider);
+        CancellationTokenSource gracefulStopSource = GetGracefulSessionStopSourceForTesting(host);
+        using CancellationTokenRegistration registration = gracefulStopSource.Token.Register(
+            static () => throw new OutOfMemoryException("Fatal setup cancellation callback failure."));
+
+        AggregateException exception = await Assert.ThrowsExactlyAsync<AggregateException>(
+            () => host.RequestGracefulSessionStopForTestingAsync());
+
+        Assert.IsInstanceOfType<OutOfMemoryException>(exception.Flatten().InnerExceptions.Single());
+        capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task RegisterActiveGracefulStopCapabilityAsync_AfterStoppedRequestUnregisters_StopsNextRequest()
     {
         Mock<IGracefulStopTestExecutionCapability> applicationCapability = new();
@@ -427,6 +463,11 @@ public sealed class CommonHostTests
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();
     }
+
+    private static CancellationTokenSource GetGracefulSessionStopSourceForTesting(CommonHost host)
+        => (CancellationTokenSource)typeof(CommonHost)
+            .GetField("_gracefulSessionStopRequestedSource", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(host)!;
 
     private sealed class StuckData : IData
     {

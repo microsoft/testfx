@@ -173,6 +173,52 @@ public sealed class InvocationLifetimeRunnerTests
     }
 
     [TestMethod]
+    public async Task Cleanup_NonfatalCancellationFromHandlerDoesNotBlockRemainingCleanup()
+    {
+        InvocationLifetimeRunner runner = CreateRunner(
+        [
+            new RecordingHandler("a", _calls),
+            new RecordingHandler("b", _calls) { CleanupException = new OperationCanceledException("handler canceled its own cleanup") },
+        ]);
+        await runner.RunSetupAsync(CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, await runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false));
+        Assert.AreSequenceEqual(
+            ["setup:a", "setup:b", "cleanup:b(0,False)", "cleanup:a(0,False)", "dispose:a", "dispose:b"],
+            _calls);
+    }
+
+    [TestMethod]
+    public async Task Cleanup_FatalExceptionPropagates()
+    {
+        OutOfMemoryException expectedException = new("fatal cleanup failure");
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls) { CleanupException = expectedException }]);
+        await runner.RunSetupAsync(CancellationToken.None);
+
+        OutOfMemoryException actualException = await Assert.ThrowsExactlyAsync<OutOfMemoryException>(
+            () => runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false));
+
+        Assert.AreSame(expectedException, actualException);
+        Assert.AreSequenceEqual(["setup:a", "cleanup:a(0,False)"], _calls);
+    }
+
+    [TestMethod]
+    public async Task Cleanup_AggregatedFatalExceptionPropagates()
+    {
+        OutOfMemoryException fatalException = new("fatal cleanup failure");
+        AggregateException expectedException = new(fatalException);
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls) { CleanupException = expectedException }]);
+        await runner.RunSetupAsync(CancellationToken.None);
+
+        AggregateException actualException = await Assert.ThrowsExactlyAsync<AggregateException>(
+            () => runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false));
+
+        Assert.AreSame(expectedException, actualException);
+        Assert.AreSame(fatalException, actualException.Flatten().InnerExceptions.Single());
+        Assert.AreSequenceEqual(["setup:a", "cleanup:a(0,False)"], _calls);
+    }
+
+    [TestMethod]
     public async Task Cleanup_IsIdempotent_AndReturnsFirstResult()
     {
         InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls)]);

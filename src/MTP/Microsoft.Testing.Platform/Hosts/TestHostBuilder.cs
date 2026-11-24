@@ -85,7 +85,7 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     {
         ApplicationStateGuard.Ensure(TestFramework is not null);
         BuildContext context = await SetupCommonServicesAsync(loggingState, testApplicationOptions, unhandledExceptionsHandler, createBuilderStart).ConfigureAwait(false);
-        context.GlobalTestTimeout = GetGlobalTestTimeout(context.CommandLineHandler);
+        context.GlobalTestTimeout = context.EarlyHost is null ? GetGlobalTestTimeout(context.CommandLineHandler) : null;
         IHost host = await BuildHostAsync(context).ConfigureAwait(false);
 
         // The test-execution timeout belongs exclusively to the test host. Controller and orchestrator owners

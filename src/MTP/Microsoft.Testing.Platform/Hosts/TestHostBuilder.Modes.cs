@@ -314,12 +314,21 @@ internal sealed partial class TestHostBuilder
             {
                 await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
             }
-            catch (Exception)
+            catch (Exception ex) when (IsNonFatalInvocationLifetimeException(ex))
             {
                 // Host construction already failed; release every handler without replacing that failure.
             }
         }
     }
+
+    private static bool IsNonFatalInvocationLifetimeException(Exception exception)
+        => exception is AggregateException aggregateException
+            ? aggregateException.Flatten().InnerExceptions.All(IsNonFatalInvocationLifetimeException)
+            : exception is not OutOfMemoryException
+                and not StackOverflowException
+                and not AccessViolationException
+                and not AppDomainUnloadedException
+                and not BadImageFormatException;
 
     private static void ClearInvocationLifetimeEnvironmentVariables(IEnvironment environment)
     {
