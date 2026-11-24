@@ -1392,6 +1392,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">ПО промежуточного слоя "{0}" успешно завершило работу после того, как запущенный им с помощью команды "next" нисходящий процесс выполнения фактически завершился сбоем. Этот сбой не был замечен или распространен ПО промежуточного слоя, поэтому нельзя допускать, чтобы это выглядело как успешное завершение.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
+        <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
+        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
         <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>

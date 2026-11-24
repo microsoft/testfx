@@ -1392,6 +1392,11 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <target state="translated">中介軟體 '{0}' 以 'next' 啟動下游執行，而下游執行實際發生錯誤後，中介軟體仍成功返回。中介軟體未察覺或傳播該錯誤，因此不得將此結果視為成功。</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
+        <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
+        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
         <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>

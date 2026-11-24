@@ -32,7 +32,7 @@ public class DotnetTestPipeOrchestratorHandshakeTests : AcceptanceTestBase<Dotne
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
 
-        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string resultDirectory = Path.Combine(GetTestHostDirectory(testHost), Guid.NewGuid().ToString("N"));
 
         FakeDotnetTestSdkMultiConnectionResult result = await FakeDotnetTestSdkMultiConnection.RunAsync(
             testHost,
@@ -86,7 +86,7 @@ public class DotnetTestPipeOrchestratorHandshakeTests : AcceptanceTestBase<Dotne
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        string resultDirectory = Directory.CreateDirectory(Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"))).FullName;
+        string resultDirectory = Directory.CreateDirectory(Path.Combine(GetTestHostDirectory(testHost), Guid.NewGuid().ToString("N"))).FullName;
         string arguments = $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\"";
         if (useController)
         {
@@ -126,6 +126,46 @@ public class DotnetTestPipeOrchestratorHandshakeTests : AcceptanceTestBase<Dotne
         Assert.AreEqual("2", testHostHandshakes[1][DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber]);
     }
 
+    [TestMethod]
+    public async Task DotnetTestPipe_RepetitionAndRecoveryOrchestrators_AreRejectedBeforeExecution()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string resultDirectory = Directory.CreateDirectory(Path.Combine(GetTestHostDirectory(testHost), Guid.NewGuid().ToString("N"))).FullName;
+
+        FakeDotnetTestSdkMultiConnectionResult result = await FakeDotnetTestSdkMultiConnection.RunAsync(
+            testHost,
+            extraArguments: $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\"",
+            environmentVariables: new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "RETRY_MARKER_DIRECTORY", resultDirectory },
+                { "COMPOSED_REPETITION_ORCHESTRATOR", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        string[] testHostAttempts = result.HandshakesWithHostType(TestHostHostType)
+            .Select(handshake => handshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber])
+            .ToArray();
+        Assert.IsEmpty(
+            testHostAttempts,
+            $"The unsupported two-iteration run executed test hosts with attempts [{string.Join(", ", testHostAttempts)}].");
+
+        string output = result.TestHostResult.StandardOutput + result.TestHostResult.StandardError;
+        Assert.AreNotEqual((int)ExitCode.Success, result.TestHostResult.ExitCode, result.TestHostResult.ToString());
+        Assert.Contains("Repetition", output, StringComparison.Ordinal);
+        Assert.Contains("Recovery", output, StringComparison.Ordinal);
+        Assert.Contains("dotnettestcli", output, StringComparison.Ordinal);
+        Assert.IsFalse(File.Exists(Path.Combine(resultDirectory, "first-attempt.failed")));
+    }
+
+    private static string GetTestHostDirectory(global::Microsoft.Testing.TestInfrastructure.TestHost testHost)
+    {
+        string? testHostDirectory = Path.GetDirectoryName(testHost.FullName);
+        Assert.IsFalse(string.IsNullOrEmpty(testHostDirectory));
+        return testHostDirectory!;
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetCode = """
@@ -163,6 +203,7 @@ public class Program
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
         builder.TestHostOrchestrator.AddTestHostOrchestrator(_ => new SelectionOrchestrator());
+        builder.TestHostOrchestrator.AddTestHostOrchestrator(_ => new RepetitionOrchestrator());
         builder.AddRetryProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
@@ -222,6 +263,74 @@ public class SelectionOrchestrator : IComposableTestHostExecutionOrchestrator
 
             throw;
         }
+    }
+}
+
+public class RepetitionOrchestrator : IComposableTestHostExecutionOrchestrator
+{
+    public const string UidValue = "RepetitionOrchestrator";
+
+    public string Uid => UidValue;
+    public string Version => "1.0.0";
+    public string DisplayName => UidValue;
+    public string Description => UidValue;
+    public TestHostExecutionOrchestratorStage Stage => TestHostExecutionOrchestratorStage.Repetition;
+
+    public Task<bool> IsEnabledAsync()
+        => Task.FromResult(Environment.GetEnvironmentVariable("COMPOSED_REPETITION_ORCHESTRATOR") == "1");
+
+    public async Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
+    {
+        if (Environment.GetEnvironmentVariable("COMPOSED_REPETITION_STARTED") == "1")
+        {
+            throw new InvalidOperationException("The child reactivated the consumed Repetition orchestrator.");
+        }
+
+        string executablePath = Environment.ProcessPath
+            ?? throw new InvalidOperationException("The current test application executable path is unavailable.");
+        int exitCode = 0;
+        for (int iteration = 0; iteration < 2; iteration++)
+        {
+            System.Diagnostics.ProcessStartInfo startInfo = new(executablePath)
+            {
+                UseShellExecute = false,
+            };
+            startInfo.Environment["COMPOSED_REPETITION_STARTED"] = "1";
+            if (Path.GetFileNameWithoutExtension(executablePath).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
+            {
+                startInfo.ArgumentList.Add(typeof(Program).Assembly.Location);
+            }
+
+            foreach (string argument in Environment.GetCommandLineArgs().Skip(1))
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
+
+            using System.Diagnostics.Process child = System.Diagnostics.Process.Start(startInfo)
+                ?? throw new InvalidOperationException("The child test application process could not be started.");
+            try
+            {
+                await child.WaitForExitAsync(cancellationToken);
+                exitCode = child.ExitCode;
+            }
+            catch (OperationCanceledException)
+            {
+                if (!child.HasExited)
+                {
+                    child.Kill(entireProcessTree: true);
+                    await child.WaitForExitAsync();
+                }
+
+                throw;
+            }
+
+            if (exitCode != 0)
+            {
+                return exitCode;
+            }
+        }
+
+        return exitCode;
     }
 }
 

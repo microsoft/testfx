@@ -43,6 +43,12 @@ public enum TestHostExecutionOrchestratorStage
 /// enablement is evaluated in each process, but only the selected composable orchestrator is initialized.
 /// </para>
 /// <para>
+/// The consumed-orchestrator chain is carried in a process-wide environment variable. It is inherited by
+/// every child process launched while an orchestrator is running, not only the child that continues the
+/// composition. This includes helper processes and custom launcher targets. MTP consumes and clears the
+/// variable during startup; remove it from launches that must not continue the composition.
+/// </para>
+/// <para>
 /// An outer stage must launch the same test application locally with the inherited environment and
 /// forward arguments it does not own, including inner-stage, filter and server arguments. It may
 /// narrow the work but must not change which other stages are enabled. Remove its own activation

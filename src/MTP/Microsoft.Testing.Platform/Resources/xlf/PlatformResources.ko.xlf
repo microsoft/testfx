@@ -1392,6 +1392,11 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">'next'로 시작한 다운스트림 실행이 실제로 오류가 발생했음에도 불구하고 미들웨어 '{0}'은(는) 올바르게 반환되었습니다. 미들웨어에서 실패를 확인하거나 전파하지 않았으므로 이를 성공으로 간주해서는 안 됩니다.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
+        <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
+        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
         <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>

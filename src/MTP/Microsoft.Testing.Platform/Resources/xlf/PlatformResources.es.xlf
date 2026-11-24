@@ -1392,6 +1392,11 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
         <target state="translated">El middleware "{0}" se devolvió correctamente después de la ejecución de nivel inferior que se inició con el error "next". El middleware no observó ni propagó el error, por lo que no se puede permitir que parezca correcto.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
+        <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
+        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
         <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>

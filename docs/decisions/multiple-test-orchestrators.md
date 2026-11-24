@@ -66,9 +66,10 @@ These were the assumptions at design time; executed checks are recorded below.
 
 ### Constraints
 
-- When exactly one orchestrator is enabled, behavior must not change: the
-  process tree, handshake properties, exit codes, artifacts, and telemetry stay
-  identical.
+- When exactly one orchestrator is enabled during normal execution, behavior
+  must not change: the process tree, handshake properties, exit codes,
+  artifacts, and telemetry stay identical. Discovery is an intentional
+  exception, described below.
 - Handshake property ID 11 `OrchestratorFeature` is an exact-match contract with
   dotnet/sdk (see research). Changing its meaning is a cross-repository break.
 - Repository API rules apply: new public API must be experimental and carry the
@@ -311,7 +312,9 @@ Why this order:
 handshake. A violation produces a Phase 1 style error that names the Uids
 involved.
 
-1. One enabled orchestrator: behavior is unchanged, and the stage is ignored.
+1. One enabled orchestrator during normal execution: behavior is unchanged, and
+   the stage is ignored. Discovery is the intentional exception described in
+   rule 5.
 2. More than one enabled orchestrator: each one must implement
    `IComposableTestHostExecutionOrchestrator`.
 3. At most one orchestrator per stage. Ordering therefore never depends on
@@ -320,7 +323,20 @@ involved.
 4. Each member's existing environment rejections still apply. For example,
    Retry rejects hot reload and server mode without the `dotnet test` pipe. If
    any member rejects the environment, the whole combination fails.
-5. `--list-tests` skips orchestrator and middleware composition.
+5. `--list-tests` bypasses orchestration before orchestrator factories are
+   created or enablement is queried, and before orchestrators are initialized
+   or middleware is built. This applies even when only one orchestrator is
+   registered. It intentionally changes discovery behavior from before this
+   change, when enabled orchestrators and middleware were initialized during
+   discovery; the change avoids initializing execution components for test
+   listing.
+6. `Repetition` and `Recovery` cannot be composed under the `dotnettestcli`
+   named-pipe protocol. When an iteration retries, the next iteration starts
+   again at attempt 1 for the same execution and test UID. The SDK progress
+   consumer requires non-decreasing attempt numbers
+   ([`TestProgressState`](https://github.com/dotnet/sdk/blob/5db7f0f18d18c99acfa82e6663a84b1122195380/src/Cli/dotnet/Commands/Test/MTP/Terminal/TestProgressState.cs#L343)).
+   Reject this combination until iteration identity is represented in the
+   protocol. Other protocols are not restricted by this check.
 
 **Child-launch contract for every stage except the innermost:**
 
@@ -339,11 +355,16 @@ involved.
 
 **Internal chain guard (not public API).** When composition is active, the
 platform sets an internal environment variable before running the active
-orchestrator. The variable holds the ordered list of consumed Uids, and children
-inherit it. At startup, every process reads the variable and removes it from its
-own environment, then skips the listed Uids before querying enablement. If a
-test host controller must restart an attempt, it forwards the chain explicitly
-in the child's launch environment. Test code does not inherit it. The guard has three uses:
+orchestrator. The variable holds the ordered list of consumed Uids. It is
+process-wide, so every child process started while the orchestrator is running
+inherits it, not only the intended child that continues the composition. This
+includes diagnostic/helper processes and custom launcher targets. An MTP process
+consumes and clears it at startup before skipping the listed Uids; unrelated
+launches must remove it if they must not continue the composition. If a test
+host controller must restart an attempt, it forwards the chain explicitly in
+the child's launch environment. Test code in the normal MTP test process does
+not inherit it because MTP startup has already cleared it. The guard has three
+uses:
 
 - It prevents re-activation, even when an orchestrator was enabled by
   configuration rather than by a command-line option it can strip.
@@ -417,7 +438,9 @@ Each of these processes repeats platform initialization.
 
 **Implementation:** `TestHostOrchestratorManager` validates the enabled set and
 selects the active stage before initializing composable orchestrators.
-`TestHostBuilder` consumes the chain and bypasses composition during discovery.
+`TestHostBuilder` consumes the chain and bypasses orchestration during
+discovery, including factory creation and enablement checks for single-
+orchestrator runs.
 `TestHostOrchestratorHost` publishes the child chain only around the selected
 orchestrator's execution, not around lifetime callbacks or short-circuiting
 middleware. Each extension remains responsible for its exit code and artifacts;
@@ -452,6 +475,7 @@ SDK. The generated `DotnetTestPipeOrchestratorHandshake` app references
 | Selection and lifecycle | 93 focused manager, builder and host cases passed on each of `net10.0`, `net11.0` and `net462`. These include discovery with incompatible orchestrators, pre-enablement duplicate-Uid rejection, stage ordering and selected-only initialization. |
 | Wire and restart | `DotnetTestPipe_Orchestrator_HandshakesWithFeature` and both rows of `DotnetTestPipe_ComposedOrchestrators_EachProcessHandshakesWithItsUid` passed. The composed rows check both feature Uids, one execution id, distinct instance ids, and attempts 1 and 2, with zero or two controller handshakes respectively. |
 | Counterfactual | With the original composition implementation, the direct row and Retry alone passed; the controller row failed: `The child reactivated the consumed Selection orchestrator.` The controller had dropped the consumed chain on relaunch. The same three cases passed after the fix (suite exit 2 → 0). This isolates a restart regression, not every aspect of composition. |
+| Repetition with Recovery | The packed `DotnetTestPipe_RepetitionAndRecoveryOrchestrators_AreRejectedBeforeExecution` case uses a two-iteration fixture whose first test attempt fails and retries. With the pipe-mode guard removed, both the fake named-pipe consumer and SDK `11.0.100` observed the attempt reset `[1, 2, 1]`; the SDK terminated with `UnreachableException: Unexpected test result for attempt '1' while the last attempt is '2'` (exit `-2146232797`). With the guard, the packed acceptance case passed without a test-host handshake. The real-SDK run is the unguarded counterfactual; the guard path itself is verified by the packed fake named-pipe test. |
 | Released SDKs | SDKs `10.0.404` and `11.0.100` each ran the packaged `net11.0` apphost with Selection, Retry and a controller restart. Both reported `FlakyTest` failed on try 1, passed on try 2, and returned 0 for one logical test. SDK 11 also reported `flaky: 1 (passed after retry)`. |
 | Mixed modules | SDK `11.0.100` ran the pre-fix and fixed apphosts in one invocation. The fixed module passed after retry, the previous module failed at its controller child, and the SDK returned 1. |
 
@@ -484,6 +508,7 @@ claim that every proposed scenario has shipped or been executed.
 | Selection with Recovery | A Selection test asset plus Retry, with one flaky test inside the selected set. Assert exit 0, that attempt 2 runs only the failed UID, the handshake order, and the retry rendering in the SDK. | Terminal at 80 and 200 columns. The zero-selected path needs the real AffectedTests package, because the SDK recognizes only its Uids. |
 | Distribution with Recovery | A two-shard test asset with `--partition` and a flaky test in shard 1. Assert per-shard retry, distinct results directories and instance ids, attempt numbers, and the aggregated exit code. | No interleaved partial lines. SDK rendering of concurrent attempts remains a gap until it is run. |
 | Composition rules | Two orchestrators in the same stage, and an undeclared orchestrator combined with another. Assert errors that name the Uids. | Error text. |
+| Repetition with Recovery | The `dotnettestcli` pipe rejects Repetition + Recovery before any test-host handshake. The packed two-iteration counterfactual without the guard was run against SDK `11.0.100` and terminated on `[1, 2, 1]`; the guarded acceptance case verifies rejection before test-host execution. | No rendered change. The real-SDK run was the unguarded failure reproduction; the guarded path was validated with the packed fake named-pipe consumer, not a released SDK executable. |
 | Cancellation | Cancel during an inner attempt. Assert exit 3 in every process and no orphaned process ids. | Nonvisual. |
 | Lifetimes and middleware run once | Azure DevOps loopback publisher sees exactly one run created and finalized. A middleware marker file is written once. | The payload is proven; the live Azure DevOps UI remains a gap. |
 | Recursion guard | An outer orchestrator that does not strip its option. Assert the process count is bounded. | Nonvisual. |

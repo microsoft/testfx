@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
@@ -94,6 +95,19 @@ internal sealed class TestHostOrchestratorManager :
                     uids));
             }
 
+            if (IsDotnetTestPipe(serviceProvider)
+                && composableOrchestrators.Any(orchestrator => orchestrator.Stage == TestHostExecutionOrchestratorStage.Repetition)
+                && composableOrchestrators.Any(orchestrator => orchestrator.Stage == TestHostExecutionOrchestratorStage.Recovery))
+            {
+                string uids = string.Join("', '", composableOrchestrators
+                    .Where(orchestrator => orchestrator.Stage is TestHostExecutionOrchestratorStage.Repetition or TestHostExecutionOrchestratorStage.Recovery)
+                    .Select(orchestrator => orchestrator.Uid));
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    PlatformResources.TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage,
+                    uids));
+            }
+
             orchestrators = [composableOrchestrators.OrderBy(orchestrator => orchestrator.Stage).First()];
         }
 
@@ -170,4 +184,9 @@ internal sealed class TestHostOrchestratorManager :
 
         return [.. lifetimes];
     }
+
+    private static bool IsDotnetTestPipe(IServiceProvider serviceProvider)
+        => serviceProvider.GetService<CommandLineHandler>() is { } commandLineHandler
+            && commandLineHandler.HasDotnetTestServerOption()
+            && commandLineHandler.IsDotNetTestPipeInvoked();
 }
