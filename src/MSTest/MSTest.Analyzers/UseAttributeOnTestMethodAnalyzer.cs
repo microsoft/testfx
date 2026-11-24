@@ -24,6 +24,13 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
     private const string TestPropertyAttributeShortName = "TestProperty";
     private const string WorkItemAttributeShortName = "WorkItem";
     private const string ConditionBaseAttributeShortName = "ConditionBaseAttribute";
+    private const string ResourceLockAttributeShortName = "ResourceLock";
+    private const string DoNotParallelizeAttributeShortName = "DoNotParallelize";
+
+    /// <summary>
+    /// Diagnostic property set when adding <c>[TestMethod]</c> is not a valid fix, for example on fixture methods.
+    /// </summary>
+    internal const string NoAddTestMethodFixKey = "NoAddTestMethodFix";
 
     private static readonly LocalizableResourceString Description = new(nameof(Resources.UseAttributeOnTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources));
 
@@ -99,6 +106,54 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor ResourceLockOnFixtureRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ResourceLockAttributeShortName),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerFixtureMessageFormat), Resources.ResourceManager, typeof(Resources), ResourceLockAttributeShortName),
+        description: Description,
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor DoNotParallelizeOnFixtureRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), DoNotParallelizeAttributeShortName),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerFixtureMessageFormat), Resources.ResourceManager, typeof(Resources), DoNotParallelizeAttributeShortName),
+        description: Description,
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    private static readonly ImmutableDictionary<string, string?> NoAddTestMethodFixProperties =
+        ImmutableDictionary<string, string?>.Empty.Add(NoAddTestMethodFixKey, null);
+
+    // Scheduling attributes are only read from test methods (and classes/assemblies) during discovery, so on a
+    // fixture method they are silently ignored. They are only reported on fixture methods: on other non-test
+    // methods, an inherited declaration may still flow to an overriding test method.
+    private static readonly List<(string AttributeFullyQualifiedName, DiagnosticDescriptor Rule)> FixtureRuleTuples =
+    [
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingResourceLockAttribute, ResourceLockOnFixtureRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute, DoNotParallelizeOnFixtureRule),
+    ];
+
+    private static readonly string[] FixtureAttributeFullyQualifiedNames =
+    [
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute,
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute,
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute,
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute,
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute,
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute,
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute,
+        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute,
+    ];
+
     // IMPORTANT: Remember to add any new rule to the rule tuple.
     // IMPORTANT: The order is important. For example, Owner, Priority, and Description are also TestProperty. We report the first violation and then bail-out.
     //            It may be a better idea to consolidate OwnerRule, PriorityRule, DescriptionRule, and TestPropertyRule into a single rule.
@@ -119,7 +174,9 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             PriorityRule,
             DescriptionRule,
             TestPropertyRule,
-            WorkItemRule);
+            WorkItemRule,
+            ResourceLockOnFixtureRule,
+            DoNotParallelizeOnFixtureRule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -150,12 +207,35 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
                 }
             }
 
+            List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> fixtureAttributeRuleTuples = [];
+            List<INamedTypeSymbol> fixtureAttributeSymbols = [];
+            foreach ((string attributeFullyQualifiedName, DiagnosticDescriptor rule) in FixtureRuleTuples)
+            {
+                if (context.Compilation.TryGetOrCreateTypeByMetadataName(attributeFullyQualifiedName, out INamedTypeSymbol? attributeSymbol))
+                {
+                    fixtureAttributeRuleTuples.Add((attributeSymbol, rule));
+                }
+            }
+
+            if (fixtureAttributeRuleTuples.Count > 0)
+            {
+                foreach (string fixtureAttributeFullyQualifiedName in FixtureAttributeFullyQualifiedNames)
+                {
+                    if (context.Compilation.TryGetOrCreateTypeByMetadataName(fixtureAttributeFullyQualifiedName, out INamedTypeSymbol? fixtureAttributeSymbol))
+                    {
+                        fixtureAttributeSymbols.Add(fixtureAttributeSymbol);
+                    }
+                }
+            }
+
             // Should there be any test attributes present in the current assembly, we call upon
             // further analysis to make sure they are used as intended, see registered action for
             // more info.
-            if (attributeRuleTuples.Count > 0)
+            if (attributeRuleTuples.Count > 0 || (fixtureAttributeRuleTuples.Count > 0 && fixtureAttributeSymbols.Count > 0))
             {
-                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testMethodAttributeSymbol, attributeRuleTuples), SymbolKind.Method);
+                context.RegisterSymbolAction(
+                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, attributeRuleTuples, fixtureAttributeSymbols, fixtureAttributeRuleTuples),
+                    SymbolKind.Method);
             }
         });
     }
@@ -163,11 +243,15 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(
         SymbolAnalysisContext context,
         INamedTypeSymbol testMethodAttributeSymbol,
-        IEnumerable<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples)
+        IEnumerable<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples,
+        List<INamedTypeSymbol> fixtureAttributeSymbols,
+        List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> fixtureAttributeRuleTuples)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
+        bool isFixtureMethod = false;
         List<(AttributeData AttributeData, DiagnosticDescriptor Rule)> attributes = [];
+        List<(AttributeData AttributeData, DiagnosticDescriptor Rule)>? fixtureOnlyAttributes = null;
         foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
         {
             // Current method should be a test method or should inherit from the TestMethod attribute.
@@ -175,6 +259,27 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
             {
                 return;
+            }
+
+            if (!isFixtureMethod)
+            {
+                foreach (INamedTypeSymbol fixtureAttributeSymbol in fixtureAttributeSymbols)
+                {
+                    if (methodAttribute.AttributeClass.Inherits(fixtureAttributeSymbol))
+                    {
+                        isFixtureMethod = true;
+                        break;
+                    }
+                }
+            }
+
+            foreach ((INamedTypeSymbol attributeSymbol, DiagnosticDescriptor rule) in fixtureAttributeRuleTuples)
+            {
+                if (methodAttribute.AttributeClass.Inherits(attributeSymbol))
+                {
+                    (fixtureOnlyAttributes ??= []).Add((methodAttribute, rule));
+                    break;
+                }
             }
 
             // Get all test attributes decorating the current method.
@@ -202,6 +307,21 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
                 {
                     context.ReportDiagnostic(syntax.CreateDiagnostic(attribute.Rule));
                 }
+            }
+        }
+
+        if (!isFixtureMethod || fixtureOnlyAttributes is null)
+        {
+            return;
+        }
+
+        // Making a fixture method a test is never the intended fix, and moving the attribute to the class would
+        // change which tests are serialized and how long the lock is held, so no automatic fix is offered.
+        foreach ((AttributeData attributeData, DiagnosticDescriptor rule) in fixtureOnlyAttributes)
+        {
+            if (attributeData.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
+            {
+                context.ReportDiagnostic(syntax.CreateDiagnostic(rule, properties: NoAddTestMethodFixProperties));
             }
         }
     }

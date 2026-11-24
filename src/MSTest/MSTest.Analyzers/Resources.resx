@@ -534,6 +534,10 @@ The type declaring these methods should also respect the following rules:
     <value>MSTest ignores these attributes outside a test context.</value>
     <comment>{Locked="MSTest"}</comment>
   </data>
+  <data name="UseAttributeOnTestMethodAnalyzerFixtureMessageFormat" xml:space="preserve">
+    <value>[{0}] has no effect on fixture methods; apply it to test methods or to the test class</value>
+    <comment>{0} is the attribute name without brackets.</comment>
+  </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
     <comment>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</comment>

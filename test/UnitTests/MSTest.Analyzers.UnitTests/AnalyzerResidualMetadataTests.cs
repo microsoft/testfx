@@ -251,9 +251,16 @@ public sealed class AnalyzerResidualMetadataTests
                 break;
             case "UseAttribute":
                 IEnumerable<(INamedTypeSymbol, DiagnosticDescriptor)> rules = [(Contract("OwnerAttribute"), UseAttributeOnTestMethodAnalyzer.OwnerRule)];
-                ProductReflection.Call(typeof(UseAttributeOnTestMethodAnalyzer), null, "AnalyzeSymbol",
-                    [typeof(SymbolAnalysisContext), typeof(INamedTypeSymbol), typeof(IEnumerable<(INamedTypeSymbol, DiagnosticDescriptor)>)],
-                    context, Contract("TestMethodAttribute"), rules);
+                Type[] useAttributeParameters =
+                [
+                    typeof(SymbolAnalysisContext),
+                    typeof(INamedTypeSymbol),
+                    typeof(IEnumerable<(INamedTypeSymbol, DiagnosticDescriptor)>),
+                    typeof(List<INamedTypeSymbol>),
+                    typeof(List<(INamedTypeSymbol, DiagnosticDescriptor)>),
+                ];
+                ProductReflection.Call(typeof(UseAttributeOnTestMethodAnalyzer), null, "AnalyzeSymbol", useAttributeParameters,
+                    context, Contract("TestMethodAttribute"), rules, new List<INamedTypeSymbol>(), new List<(INamedTypeSymbol, DiagnosticDescriptor)>());
                 break;
         }
 

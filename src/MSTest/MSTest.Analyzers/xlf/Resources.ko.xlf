@@ -1215,6 +1215,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">MSTest는 테스트 컨텍스트 외부에서 이러한 특성을 무시합니다.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
+      <trans-unit id="UseAttributeOnTestMethodAnalyzerFixtureMessageFormat">
+        <source>[{0}] has no effect on fixture methods; apply it to test methods or to the test class</source>
+        <target state="new">[{0}] has no effect on fixture methods; apply it to test methods or to the test class</target>
+        <note>{0} is the attribute name without brackets.</note>
+      </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
         <source>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</source>
         <target state="translated">테스트 메서드에서 'CI' 환경 변수가 null인지 확인한 다음 조기에 반환하거나 'Assert.Inconclusive'를 호출한다면, 대신 '[CICondition]' 특성을 사용하세요. 이 특성은 MSTest가 알고 있는 모든 지속적 통합 공급자를 인식하고 해당 값을 구문 분석합니다. 또한 조기에 반환하는 경우와 달리 테스트를 통과로 표시하지 않고 건너뜀으로 보고합니다.</target>
