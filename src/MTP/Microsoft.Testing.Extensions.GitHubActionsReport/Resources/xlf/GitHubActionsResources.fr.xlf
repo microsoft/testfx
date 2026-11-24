@@ -217,20 +217,10 @@
         <target state="translated">Contexte historique : échec de {0} et {1} de {2} exécutions antérieures dans la fenêtre d’historique {3}-day.</target>
         <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
       </trans-unit>
-      <trans-unit id="HistoryFailureContextRuns">
-        <source>Historical context: failed {0} and flaked {1} of {2} prior run attempts within the latest {3} run attempts and {4}-day history window.</source>
-        <target state="new">Historical context: failed {0} and flaked {1} of {2} prior run attempts within the latest {3} run attempts and {4}-day history window.</target>
-        <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run-attempt count, {3} is the maximum recent run-attempt count, and {4} is the history window in days.</note>
-      </trans-unit>
       <trans-unit id="HistoryFlakyContext">
         <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
         <target state="translated">Contexte historique : {0} de {1} exécutions ayant échoué au cours de la fenêtre historique de {2} jours.</target>
         <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
-      </trans-unit>
-      <trans-unit id="HistoryFlakyContextRuns">
-        <source>Historical context: flaked {0} of {1} prior run attempts within the latest {2} run attempts and {3}-day history window.</source>
-        <target state="new">Historical context: flaked {0} of {1} prior run attempts within the latest {2} run attempts and {3}-day history window.</target>
-        <note>{0} is the flaky count, {1} is the total prior run-attempt count, {2} is the maximum recent run-attempt count, and {3} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryLoadFailedWarning">
         <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
@@ -247,11 +237,6 @@
         <target state="translated">Contexte historique : toutes les {0} exécutions précédentes ont été passées dans la fenêtre d’historique {1}-day.</target>
         <note>{0} is the total prior result count, {1} is the history window in days.</note>
       </trans-unit>
-      <trans-unit id="HistoryRegressionContextRuns">
-        <source>Historical context: passed all {0} prior run attempts within the latest {1} run attempts and {2}-day history window.</source>
-        <target state="new">Historical context: passed all {0} prior run attempts within the latest {1} run attempts and {2}-day history window.</target>
-        <note>{0} is the total prior run-attempt count, {1} is the maximum recent run-attempt count, and {2} is the history window in days.</note>
-      </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
         <target state="translated">Nombre de jours d'historique de tests à conserver et à utiliser pour le contexte des tests instables (1 à 90). La valeur par défaut est 30. Nécessite '--report-gh-history'.</target>
@@ -261,16 +246,6 @@
         <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
         <target state="translated">L'option '--report-gh-history-window' nécessite que '--report-gh-history' soit spécifiée.</target>
         <note>{Locked="--report-gh-history-window"}{Locked="'--report-gh-history'"}</note>
-      </trans-unit>
-      <trans-unit id="HistoryWindowRunsOptionDescription">
-        <source>Limit flaky-test context to the most recent 1-1000 run attempts within the day-based history window. By default, use all retained attempts. Requires '--report-gh-history'.</source>
-        <target state="new">Limit flaky-test context to the most recent 1-1000 run attempts within the day-based history window. By default, use all retained attempts. Requires '--report-gh-history'.</target>
-        <note>{Locked="--report-gh-history"}</note>
-      </trans-unit>
-      <trans-unit id="HistoryWindowRunsRequiresHistory">
-        <source>The '--report-gh-history-window-runs' option requires '--report-gh-history' to be specified.</source>
-        <target state="new">The '--report-gh-history-window-runs' option requires '--report-gh-history' to be specified.</target>
-        <note>{Locked="--report-gh-history-window-runs"}{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
@@ -291,11 +266,6 @@
         <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
         <target state="translated">Fenêtre d’historique des tests de GitHub Actions non valide «{0}». Spécifiez un nombre entier de jours compris entre 1 et 90.</target>
         <note>{0} is the invalid history window.</note>
-      </trans-unit>
-      <trans-unit id="InvalidHistoryWindowRuns">
-        <source>Invalid GitHub Actions test history run window '{0}'. Specify a whole number of run attempts from 1 through 1000.</source>
-        <target state="new">Invalid GitHub Actions test history run window '{0}'. Specify a whole number of run attempts from 1 through 1000.</target>
-        <note>{0} is the invalid run window.</note>
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
