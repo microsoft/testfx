@@ -27,6 +27,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class TestHostBuilder
 {
+    private const string RetryPipeNameOptionKey = "internal-retry-pipename";
+
     private async Task<IHost> BuildHostAsync(BuildContext context)
     {
         string? orchestratorChain = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN);
@@ -275,14 +277,13 @@ internal sealed partial class TestHostBuilder
 
     private async Task<IReadOnlyList<IInvocationLifetimeHandler>?> BuildInvocationLifetimeHandlersIfOwnerAsync(BuildContext context)
     {
-        // Server mode is deferred to a later stage and never runs the hooks. A process launched by the owner of the
-        // invocation (marker set) is only a participant, and so is any process launched by a test host controller:
-        // the controller identifies itself on the command line, which also reaches hosts that do not inherit its
-        // environment (for example an AUMID-activated packaged application).
+        // The controller PID and retry pipe identify children even when the launch does not inherit the
+        // owner's environment (for example an AUMID-activated packaged application).
         if (!((InvocationLifetimeManager)InvocationLifetime).HasHandlers
             || context.IsJsonRpcProtocol
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
             || context.TestHostControllerInfo.HasTestHostController
+            || context.CommandLineHandler.IsOptionSet(RetryPipeNameOptionKey)
             || !RoslynString.IsNullOrEmpty(context.SystemEnvironment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER)))
         {
             return null;
@@ -374,7 +375,7 @@ internal sealed partial class TestHostBuilder
         => (testHostControllerInfo.HasTestHostController
                 && environment.GetEnvironmentVariable(
                     $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID()}") == "1")
-            || (commandLineOptions.IsOptionSet("internal-retry-pipename")
+            || (commandLineOptions.IsOptionSet(RetryPipeNameOptionKey)
                 && environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION) == "1")
             || commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
 

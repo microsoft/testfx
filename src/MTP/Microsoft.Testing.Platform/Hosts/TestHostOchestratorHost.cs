@@ -94,6 +94,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         }
 
         int exitCode;
+        bool setupFailed = false;
         bool orchestrationCanceled = false;
         try
         {
@@ -103,26 +104,27 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
             if (invocationLifetimeRunner is not null
                 && await invocationLifetimeRunner.RunSetupAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false) is { } setupExitCode)
             {
-                // The orchestrator lifetimes were initialized when the host was built: release them, best-effort.
-                await RunAfterRunAsync(setupExitCode, swallowFailures: true).ConfigureAwait(false);
-                return await invocationLifetimeRunner.RunCleanupAsync(setupExitCode, applicationCancellationToken.CancellationToken.IsCancellationRequested).ConfigureAwait(false);
+                setupFailed = true;
+                exitCode = setupExitCode;
             }
-
-            if (_testHostOrchestratorConfiguration.IsOutermostProcess)
+            else
             {
-                foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+                if (_testHostOrchestratorConfiguration.IsOutermostProcess)
                 {
-                    await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                    foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+                    {
+                        await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                    }
                 }
-            }
 
-            Func<CancellationToken, Task<int>> run = _testHostOrchestratorConfiguration.IsCompositionActive
-                ? token => RunWithChildChainAsync(testHostOrchestrator, token)
-                : testHostOrchestrator.OrchestrateTestHostExecutionAsync;
-            exitCode = _testHostOrchestratorConfiguration.Middleware.Length == 0
-                ? await run(applicationCancellationToken.CancellationToken).ConfigureAwait(false)
-                : await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
-                    _testHostOrchestratorConfiguration.Middleware, run, logger, applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                Func<CancellationToken, Task<int>> run = _testHostOrchestratorConfiguration.IsCompositionActive
+                    ? token => RunWithChildChainAsync(testHostOrchestrator, token)
+                    : testHostOrchestrator.OrchestrateTestHostExecutionAsync;
+                exitCode = _testHostOrchestratorConfiguration.Middleware.Length == 0
+                    ? await run(applicationCancellationToken.CancellationToken).ConfigureAwait(false)
+                    : await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                        _testHostOrchestratorConfiguration.Middleware, run, logger, applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {
@@ -152,7 +154,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         // best-effort.
         try
         {
-            await RunAfterRunAsync(exitCode, swallowFailures: orchestrationCanceled).ConfigureAwait(false);
+            await RunAfterRunAsync(exitCode, swallowFailures: setupFailed || orchestrationCanceled).ConfigureAwait(false);
         }
         catch when (exitCode == (int)ExitCode.Success)
         {

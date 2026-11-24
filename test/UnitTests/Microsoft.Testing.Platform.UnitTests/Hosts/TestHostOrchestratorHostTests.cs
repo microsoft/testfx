@@ -545,6 +545,30 @@ public sealed class TestHostOrchestratorHostTests
 
 #pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
     [TestMethod]
+    public async Task RunAsync_FatalInvocationDisposalAfterSetupFailure_DoesNotRepeatTeardown()
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        RecordingLifetime lifetime = new();
+        Mock<IInvocationLifetimeHandler> handler = new();
+        handler.Setup(h => h.OnInvocationStartingAsync(It.IsAny<InvocationStartingContext>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("setup failed"));
+        BadImageFormatException fatal = new("disposal failed");
+        Mock<IDisposable> disposable = handler.As<IDisposable>();
+        disposable.Setup(d => d.Dispose()).Throws(fatal);
+        InvocationLifetimeRunner runner = new([handler.Object], Mock.Of<IEnvironment>(), Mock.Of<IOutputDevice>(), new NopLogger(), setOwnerMarker: false, restoreEnvironment: false);
+        ServiceProvider services = new();
+        services.AddServices([cancellation, new NopLoggerFactory(), lifetime, runner]);
+        TestHostOrchestratorHost host = new(new([new RecordingOrchestrator()]), services);
+
+        Assert.AreSame(fatal, await Assert.ThrowsExactlyAsync<BadImageFormatException>(host.RunAsync));
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+        Assert.AreSame(fatal, await Assert.ThrowsExactlyAsync<BadImageFormatException>(() => runner.RunCleanupAsync(0, isCanceled: false)));
+        handler.Verify(h => h.OnInvocationCompletedAsync(It.IsAny<InvocationCompletedContext>(), CancellationToken.None), Times.Once);
+        disposable.Verify(d => d.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
     public async Task RunAsync_ProtocolHandshakeThrows_ReleasesUnstartedInvocationLifetimeHandlers()
     {
         Mock<IInvocationLifetimeHandler> handler = new();

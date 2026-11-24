@@ -25,7 +25,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
     private readonly Dictionary<string, string?> _originalValues = [with(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)];
     private int _enteredCount;
     private bool _setupStarted;
-    private int? _cleanupExitCode;
+    private Task<int>? _cleanupTask;
 
     public InvocationLifetimeRunner(
         IReadOnlyList<IInvocationLifetimeHandler> handlers,
@@ -53,7 +53,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
 
     public string Description => "Runs the invocation lifetime handlers.";
 
-    public bool IsCleanupCompleted => _cleanupExitCode is not null;
+    public bool IsCleanupCompleted => _cleanupTask is { IsCompleted: true };
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -123,16 +123,14 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
 
     /// <summary>
     /// Runs the cleanup of every handler whose setup was entered, in reverse registration order, then disposes all
-    /// the handlers. Calling it again returns the result of the first call.
+    /// the handlers. Subsequent host finalization paths observe the same result or exception.
     /// </summary>
     /// <returns>The exit code of the invocation, which becomes a failure when a cleanup failed after a success.</returns>
-    public async Task<int> RunCleanupAsync(int exitCode, bool isCanceled)
-    {
-        if (_cleanupExitCode is { } completedExitCode)
-        {
-            return completedExitCode;
-        }
+    public Task<int> RunCleanupAsync(int exitCode, bool isCanceled)
+        => _cleanupTask ??= RunCleanupCoreAsync(exitCode, isCanceled);
 
+    private async Task<int> RunCleanupCoreAsync(int exitCode, bool isCanceled)
+    {
         bool failed = false;
 
         // Every host turns a canceled run into TestSessionAborted, and a timeout surfaces in a parent process only as
@@ -187,11 +185,9 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
             _originalValues.Clear();
         }
 
-        int finalExitCode = failed && exitCode == (int)ExitCode.Success
+        return failed && exitCode == (int)ExitCode.Success
             ? (int)ExitCode.GenericFailure
             : exitCode;
-        _cleanupExitCode = finalExitCode;
-        return finalExitCode;
     }
 
     /// <summary>
@@ -200,7 +196,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
     /// </summary>
     public async Task ReleaseIfNotStartedAsync()
     {
-        if (!_setupStarted && _cleanupExitCode is null)
+        if (!_setupStarted)
         {
             await RunCleanupAsync((int)ExitCode.GenericFailure, isCanceled: false).ConfigureAwait(false);
         }

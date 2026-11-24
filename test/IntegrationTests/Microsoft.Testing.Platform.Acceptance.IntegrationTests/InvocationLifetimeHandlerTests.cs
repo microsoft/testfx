@@ -99,10 +99,11 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
             testHostResult.ToString());
     }
 
-    [DataRow(false)]
-    [DataRow(true)]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
     [TestMethod]
-    public async Task Retry_RunsTheHandlersOnceAroundAllTheAttempts(bool useController)
+    public async Task Retry_RunsTheHandlersOnceAroundAllTheAttempts(bool useController, bool dropOwnerEnvironment)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         string logFile = GetLogFile(testHost);
@@ -112,6 +113,7 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
             new()
             {
                 ["FAIL_FIRST_ATTEMPT"] = "1",
+                ["DROP_RETRY_OWNER_ENVIRONMENT"] = dropOwnerEnvironment ? "1" : "0",
                 ["LOG_FILE"] = logFile,
                 ["USE_CONTROLLER"] = useController ? "1" : "0",
             },
@@ -119,9 +121,11 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         string[] log = ReadLog(logFile, testHostResult.ToString());
+        Assert.HasCount(6, log, string.Join(Environment.NewLine, log));
         string owner = GetPid(log[0]);
         string firstAttempt = GetPid(log[2]);
         string secondAttempt = GetPid(log[3]);
+        string values = dropOwnerEnvironment ? "<null>:<null>" : "value-A:value-B";
         Assert.AreNotEqual(owner, firstAttempt, testHostResult.ToString());
         Assert.AreNotEqual(owner, secondAttempt, testHostResult.ToString());
         Assert.AreNotEqual(firstAttempt, secondAttempt, testHostResult.ToString());
@@ -129,8 +133,8 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
             [
                 $"starting:A:{owner}",
                 $"starting:B:{owner}",
-                string.Format(CultureInfo.InvariantCulture, Test, firstAttempt, "1"),
-                string.Format(CultureInfo.InvariantCulture, Test, secondAttempt, "2"),
+                $"test:{firstAttempt}:{values}:no-marker:1",
+                $"test:{secondAttempt}:{values}:no-marker:2",
                 $"completed:B:{owner}:0:False",
                 $"completed:A:{owner}:0:False",
             ],
@@ -427,6 +431,15 @@ public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        // AUMID activation preserves the retry arguments, but not the owner's process environment.
+        if (Environment.GetEnvironmentVariable("DROP_RETRY_OWNER_ENVIRONMENT") == "1"
+            && Array.IndexOf(args, "--internal-retry-pipename") >= 0)
+        {
+            Environment.SetEnvironmentVariable("TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER", null);
+            Environment.SetEnvironmentVariable("INVOCATION_VALUE_A", null);
+            Environment.SetEnvironmentVariable("INVOCATION_VALUE_B", null);
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
         builder.AddRetryProvider();
