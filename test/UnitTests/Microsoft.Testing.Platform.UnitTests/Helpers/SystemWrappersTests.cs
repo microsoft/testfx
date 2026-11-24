@@ -764,6 +764,8 @@ internal static class SystemWrapperChildProbe
 
         public void Write(StringBuilder value) => Record("console:" + value);
 
+        public void WriteAtomically(StringBuilder value) => Record("console:" + value);
+
         public void Clear() => throw new NotSupportedException();
 
         public void SetForegroundColor(ConsoleColor color) => throw new NotSupportedException();

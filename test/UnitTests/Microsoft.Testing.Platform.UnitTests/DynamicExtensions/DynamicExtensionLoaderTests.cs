@@ -724,6 +724,8 @@ public sealed class DynamicExtensionLoaderTests
 
         public void Write(StringBuilder value) => _output.Append(value);
 
+        public void WriteAtomically(StringBuilder value) => _output.Append(value);
+
         public int BufferHeight => throw new NotSupportedException();
 
         public int BufferWidth => throw new NotSupportedException();

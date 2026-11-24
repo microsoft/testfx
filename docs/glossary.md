@@ -533,6 +533,14 @@ artifact paths. Successful module results already printed at completion are not
 repeated in the final summary. Artifact paths and failure diagnostics remain
 available in full; cursor-capable interactive output is unchanged.
 
+Experimental: on cursor-capable terminals, setting `MTP_PROGRESS_SCROLL_REGION` to
+`1`, `true`, `on`, or `enable` pins in-place progress to reserved bottom rows using a
+terminal scroll region, so text that tests write directly to the console is no longer
+overwritten or erased by progress redraws. It is off by default and has no effect on
+non-cursor output or with `--progress off`. See the
+[decision record](decisions/scroll-region-progress.md) and
+[#4425](https://github.com/microsoft/testfx/issues/4425).
+
 ### PropertyBag
 
 An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that holds a typed collection of `IProperty` instances attached to a [TestNode](#testnode). Extension authors populate a `PropertyBag` with properties such as `TimingProperty`, `TestFileLocationProperty`, and `TestMetadataProperty` to communicate rich metadata about a test to the platform and to other extensions. A `PropertyBag` enforces that at most one `TestNodeStateProperty` may be present at a time.

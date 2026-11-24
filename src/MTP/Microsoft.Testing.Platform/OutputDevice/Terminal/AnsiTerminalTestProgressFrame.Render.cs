@@ -44,7 +44,7 @@ internal sealed partial class AnsiTerminalTestProgressFrame
         }
 
         int i;
-        List<object> progresses = GenerateLinesToRender(progress, messages);
+        List<object> progresses = GenerateLinesToRender(progress, messages, (int)(Height * 0.7) - 1);
 
         for (i = 0; i < progresses.Count; i++)
         {
@@ -176,7 +176,62 @@ internal sealed partial class AnsiTerminalTestProgressFrame
         }
     }
 
-    private List<object> GenerateLinesToRender(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
+    /// <summary>
+    /// Collects the lines to show in the rows pinned below the scroll region, see <see cref="RenderPinnedRows"/>.
+    /// </summary>
+    /// <returns>The number of collected lines, which can exceed <paramref name="maxLines"/> when there are more workers and messages than rows.</returns>
+    public int CollectPinnedLines(TestProgressState?[] progress, TerminalProgressMessageState[] messages, int maxLines)
+        => GenerateLinesToRender(progress, messages, maxLines).Count;
+
+    /// <summary>
+    /// Renders the lines collected by <see cref="CollectPinnedLines"/> into the rows pinned below the scroll region.
+    /// Output scrolls only above these rows, so it cannot disturb them, and every row is simply redrawn on each tick.
+    /// The cursor is saved and restored around the rows, so output continues exactly where it stopped.
+    /// </summary>
+    public void RenderPinnedRows(AnsiTerminal terminal, int firstRow, int rowCount)
+    {
+        // Origin mode, if the code under test enabled it, would make the rows relative to the scroll region and draw
+        // them over the output. Saving the cursor also saves the mode, so restoring the cursor enables it again.
+        terminal.Append(AnsiCodes.SaveCursor);
+        terminal.Append(AnsiCodes.DisableOriginMode);
+        for (int row = 0; row < rowCount; row++)
+        {
+            terminal.Append(AnsiCodes.MoveCursorTo(firstRow + row, 1));
+            terminal.Append(AnsiCodes.CsiEraseEntireLine);
+
+            // The first row stays blank to separate the progress from the output above it.
+            int lineIndex = row - 1;
+            if (lineIndex < 0 || lineIndex >= _linesToRenderBuffer.Count)
+            {
+                continue;
+            }
+
+            switch (_linesToRenderBuffer[lineIndex])
+            {
+                case TestProgressState progressItem:
+                    RenderedProgressItem progressLine = GetOrAllocateNextSlot();
+                    progressLine.Reset(progressItem.Id, progressItem.Version);
+                    AppendTestWorkerProgress(progressItem, progressLine, terminal);
+                    break;
+
+                case TestDetailState detailItem:
+                    RenderedProgressItem detailLine = GetOrAllocateNextSlot();
+                    detailLine.Reset(detailItem.Id, detailItem.Version);
+                    AppendTestWorkerDetail(detailItem, detailLine, terminal);
+                    break;
+
+                case TerminalProgressMessageState messageItem:
+                    RenderedProgressItem messageLine = GetOrAllocateNextSlot();
+                    messageLine.Reset(messageItem.Id, messageItem.Version);
+                    AppendProgressMessage(messageItem, messageLine, terminal);
+                    break;
+            }
+        }
+
+        terminal.Append(AnsiCodes.RestoreCursor);
+    }
+
+    private List<object> GenerateLinesToRender(TestProgressState?[] progress, TerminalProgressMessageState[] messages, int maxLines)
     {
         // Note: We want to render the list of active tests, but this can easily fill up the full screen.
         // As such, we should balance the number of active tests shown per project.
@@ -209,7 +264,7 @@ internal sealed partial class AnsiTerminalTestProgressFrame
             }
         }
 
-        int linesToDistribute = (int)(Height * 0.7) - 1 - itemCount - messages.Length;
+        int linesToDistribute = maxLines - itemCount - messages.Length;
 
         // Sort indices by detail count ascending to distribute lines fairly,
         // without LINQ Enumerable.Range + OrderBy allocation.

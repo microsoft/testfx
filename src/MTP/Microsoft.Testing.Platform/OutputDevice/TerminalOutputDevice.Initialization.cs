@@ -126,6 +126,7 @@ internal sealed partial class TerminalOutputDevice
             AllowZeroTests = ExitCodeIgnorePolicy.Apply((int)ExitCode.ZeroTests, _commandLineOptions, _environment) == 0,
             HasTestSessionFailure = TestSessionFailureProvider,
             AnsiMode = ansiMode,
+            UseScrollRegionProgress = ProgressReportingConfiguration.IsScrollRegionEnabled(_environment),
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
