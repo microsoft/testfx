@@ -6392,12 +6392,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     object x = new MyClass();
-                    Assert.IsInstanceOfType<MyClass>(x);
+                    Assert.IsInstanceOfType(x, typeof(MyClass));
                     Assert.IsNotInstanceOfType<string>(x, "not a string");
                     Assert.IsNotInstanceOfType<string>(x);
                     Assert.IsNotInstanceOfType<MyClass>(x);
-                    Assert.IsInstanceOfType<System.IO.Stream>(x);
-                    Assert.IsInstanceOfType<string>(x);
+                    Assert.IsInstanceOfType(x, typeof(System.IO.Stream));
+                    Assert.IsInstanceOfType(x, typeof(string));
                 }
             }
             """;
@@ -6412,6 +6412,94 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("IsInstanceOfType", "IsFalse"),
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("IsInstanceOfType", "IsTrue"),
             ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithMessageBeforeNamedTypeCheck_PreservesArgumentNames()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    {|#0:Assert.IsTrue(message: "detail", condition: x is string)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    Assert.IsInstanceOfType(message: "detail", value: x, expectedType: typeof(string));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsInstanceOfType", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithMismatchedTypeCheckInScope_UsesNonGenericAssertion()
+    {
+        string code = """
+            #pragma warning disable MSTESTEXP
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    using (Assert.Scope())
+                    {
+                        {|#0:Assert.IsTrue(x is int)|};
+                        Assert.AreEqual(1, 1);
+                    }
+                }
+            }
+            """;
+
+        string fixedCode = """
+            #pragma warning disable MSTESTEXP
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    using (Assert.Scope())
+                    {
+                        Assert.IsInstanceOfType(x, typeof(int));
+                        Assert.AreEqual(1, 1);
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsInstanceOfType", "IsTrue"),
             fixedCode);
     }
 
@@ -6580,16 +6668,22 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     object x = "a";
                     string input = "abc";
                     string pattern = "a";
+                    string reorderedInput = "a";
+                    int counter = 0;
+                    object first = new object();
+                    object second = new object();
                     Assert.IsTrue(Regex.IsMatch(GetInput(), GetPattern()));
                     Assert.IsTrue(Regex.IsMatch(input, GetPattern()));
                     Assert.IsTrue(Regex.IsMatch(input, pattern), $"{GetMessage()}");
                     Assert.IsTrue(new Regex(pattern).IsMatch(input), $"{GetMessage()}");
+                    Assert.IsTrue(new Regex("a").IsMatch("a"), $"{++counter}");
                     Assert.IsTrue(Regex.IsMatch(null, "a"));
                     Assert.IsFalse(Regex.IsMatch(input, null));
+                    Assert.IsFalse(Regex.IsMatch(reorderedInput, reorderedInput = "b"));
                     Assert.IsTrue(((Regex)null).IsMatch(input));
                     Assert.IsTrue(ReferenceEquals(objB: GetObject(), objA: GetObject()));
+                    Assert.IsTrue(ReferenceEquals(objB: first = second, objA: first));
                     Assert.IsTrue(ReferenceEquals(new Source(), new Target()));
-                    Assert.IsTrue(message: "detail", condition: x is string);
                     Assert.IsTrue(x is string, conditionExpression: "original");
                 }
 

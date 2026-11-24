@@ -23,6 +23,9 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         => assertion.Arguments.TakeWhile(argument => argument.Parameter?.Ordinal != 0).All(argument => argument.IsImplicit) &&
             assertion.Arguments.All(argument => argument.IsImplicit || argument.Parameter?.Ordinal is 0 or 1);
 
+    private static bool CanRewriteTypeAssertion(IInvocationOperation assertion)
+        => assertion.Arguments.All(argument => argument.IsImplicit || argument.Parameter?.Ordinal is 0 or 1);
+
     private static bool HasCompatibleAssertion(INamedTypeSymbol assertType, string name, int arity, SpecialType firstParameterType)
         => assertType.GetMembers(name).OfType<IMethodSymbol>().Any(method =>
             method.IsStatic &&
@@ -32,6 +35,22 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             method.Parameters[0].Type.SpecialType == firstParameterType &&
             method.Parameters[1].Type.SpecialType == SpecialType.System_String &&
             method.Parameters[1].IsOptional);
+
+    private static bool HasCompatibleTypeAssertion(INamedTypeSymbol assertType, bool hasMessage)
+        => assertType.GetMembers("IsInstanceOfType").OfType<IMethodSymbol>().Any(method =>
+            method.IsStatic &&
+            method.DeclaredAccessibility == Accessibility.Public &&
+            method.Arity == 0 &&
+            method.Parameters.Length >= (hasMessage ? 3 : 2) &&
+            method.Parameters[0].Name == "value" &&
+            method.Parameters[0].Type.SpecialType == SpecialType.System_Object &&
+            method.Parameters[1].Name == "expectedType" &&
+            method.Parameters[1].Type.Name == "Type" &&
+            method.Parameters[1].Type.ContainingNamespace.ToDisplayString() == "System" &&
+            (!hasMessage ||
+             (method.Parameters[2].Name == "message" &&
+              method.Parameters[2].Type.SpecialType == SpecialType.System_String)) &&
+            method.Parameters.Skip(hasMessage ? 3 : 2).All(parameter => parameter.IsOptional));
 
     private static bool HasCompatibleSameAssertion(INamedTypeSymbol assertType, string name)
         => assertType.GetMembers(name).OfType<IMethodSymbol>().Any(method =>
@@ -116,7 +135,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 return TypeCheckStatus.Unknown;
         }
 
-        // The suggested methods are generic (T) and take the value as object.
+        // The suggested methods take the value as object. The positive assertion is non-generic
+        // so a mismatched value remains a soft failure inside Assert.Scope().
         if (checkedType is IPointerTypeSymbol or IFunctionPointerTypeSymbol or IErrorTypeSymbol ||
             checkedType.IsRefLikeType ||
             checkedType.SpecialType == SpecialType.System_Void ||

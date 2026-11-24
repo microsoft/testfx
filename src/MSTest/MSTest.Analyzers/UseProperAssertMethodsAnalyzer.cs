@@ -184,7 +184,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// <item>Replace the identifier syntax for the invocation with a generic name of the right assert method, using the type checked by the condition from the first additional location as type argument.</item>
     /// <item>Replace the syntax node from the first additional locations with the node from second additional locations.</item>
     /// </list>
-    /// <para>Example: For <c>Assert.IsTrue(x is string)</c>, it will become <c>Assert.IsInstanceOfType&lt;string&gt;(x)</c>.</para>
+    /// <para>Example: For <c>Assert.IsTrue(x is string)</c>, it will become <c>Assert.IsInstanceOfType(x, typeof(string))</c>.</para>
     /// <para>The value for ProperAssertMethodNameKey is "IsInstanceOfType".</para>
     /// <para>The first additional location will point to the "x is string" node.</para>
     /// <para>The second additional location will point to the "x" node.</para>

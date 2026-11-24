@@ -67,8 +67,11 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 ? "IsInstanceOfType"
                 : "IsNotInstanceOfType";
 
-            if (!CanRewriteNewAssertion(assertion) ||
-                !HasCompatibleAssertion(assertTypeSymbol, properAssertMethod, arity: 1, SpecialType.System_Object))
+            bool hasCompatibleAssertion = properAssertMethod == "IsInstanceOfType"
+                ? HasCompatibleTypeAssertion(assertTypeSymbol, assertion.Arguments.Any(argument => argument.Parameter?.Ordinal == 1 && !argument.IsImplicit))
+                : HasCompatibleAssertion(assertTypeSymbol, properAssertMethod, arity: 1, SpecialType.System_Object);
+
+            if (!CanRewriteTypeAssertion(assertion) || !hasCompatibleAssertion)
             {
                 return;
             }

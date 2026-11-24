@@ -142,6 +142,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
     {
         SyntaxNode conditionExpression = root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true);
         if (conditionExpression.FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNode ||
+            conditionNode.Parent is not ArgumentListSyntax argumentList ||
             root.FindNode(valueLocation.SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax valueExpression ||
             GetCheckedType(conditionExpression) is not { } checkedType)
         {
@@ -149,21 +150,94 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        editor.ReplaceNode(
-            simpleNameSyntax,
-            SyntaxFactory.GenericName(
-                SyntaxFactory.Identifier(properAssertMethodName),
-                SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(checkedType.WithoutTrivia())))
-            .WithTriviaFrom(simpleNameSyntax));
+        if (properAssertMethodName == "IsInstanceOfType")
+        {
+            FixPositiveTypeAssertion();
+        }
+        else
+        {
+            editor.ReplaceNode(
+                simpleNameSyntax,
+                SyntaxFactory.GenericName(
+                    SyntaxFactory.Identifier(properAssertMethodName),
+                    SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(checkedType.WithoutTrivia())))
+                .WithTriviaFrom(simpleNameSyntax));
 
-        editor.ReplaceNode(
-            conditionNode,
-            SyntaxFactory.Argument(
-                valueExpression
-                    .WithLeadingTrivia(conditionNode.GetLeadingTrivia())
-                    .WithoutTrailingTrivia()));
+            ArgumentSyntax valueArgument = CreateValueArgument(conditionNode, valueExpression);
+            if (conditionNode.NameColon is not null)
+            {
+                valueArgument = valueArgument.WithNameColon(
+                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("value"))
+                        .WithTriviaFrom(conditionNode.NameColon));
+            }
+
+            editor.ReplaceNode(conditionNode, valueArgument);
+        }
 
         return editor.GetChangedDocument();
+
+        void FixPositiveTypeAssertion()
+        {
+            bool hasNamedArguments = argumentList.Arguments.Any(argument => argument.NameColon is not null);
+            int conditionIndex = argumentList.Arguments.IndexOf(conditionNode);
+            if (conditionIndex < 0)
+            {
+                return;
+            }
+
+            editor.ReplaceNode(simpleNameSyntax, SyntaxFactory.IdentifierName(properAssertMethodName).WithTriviaFrom(simpleNameSyntax));
+
+            ArgumentSyntax valueArgument = CreateValueArgument(conditionNode, valueExpression);
+            if (hasNamedArguments)
+            {
+                NameColonSyntax valueName = SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("value"));
+                if (conditionNode.NameColon is { } originalName)
+                {
+                    valueName = valueName.WithTriviaFrom(originalName);
+                }
+
+                valueArgument = valueArgument.WithNameColon(valueName);
+            }
+
+            SeparatedSyntaxList<ArgumentSyntax> updatedArguments = argumentList.Arguments.Replace(conditionNode, valueArgument);
+
+            if (hasNamedArguments)
+            {
+                for (int i = 0; i < updatedArguments.Count; i++)
+                {
+                    if (i != conditionIndex && updatedArguments[i].NameColon is null)
+                    {
+                        updatedArguments = updatedArguments.Replace(
+                            updatedArguments[i],
+                            updatedArguments[i].WithNameColon(SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("message"))));
+                    }
+                }
+            }
+
+            ArgumentSyntax expectedTypeArgument = SyntaxFactory.Argument(
+                SyntaxFactory.TypeOfExpression(checkedType.WithoutTrivia()))
+                .WithAdditionalAnnotations(Formatter.Annotation);
+
+            if (hasNamedArguments)
+            {
+                expectedTypeArgument = expectedTypeArgument.WithNameColon(
+                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("expectedType")));
+                updatedArguments = updatedArguments.Add(expectedTypeArgument);
+            }
+            else
+            {
+                updatedArguments = updatedArguments.Insert(conditionIndex + 1, expectedTypeArgument);
+            }
+
+            editor.ReplaceNode(argumentList, argumentList.WithArguments(updatedArguments));
+        }
+
+        static ArgumentSyntax CreateValueArgument(ArgumentSyntax condition, ExpressionSyntax value)
+            => SyntaxFactory.Argument(
+                value
+                    .WithLeadingTrivia(condition.GetLeadingTrivia())
+                    .WithoutTrailingTrivia())
+                .WithAdditionalAnnotations(Formatter.Annotation);
 
         static TypeSyntax? GetCheckedType(SyntaxNode condition)
         {
