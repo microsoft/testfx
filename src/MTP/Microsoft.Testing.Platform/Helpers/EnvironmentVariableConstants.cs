@@ -67,6 +67,13 @@ internal static class EnvironmentVariableConstants
     // dotnet test
     public const string TESTINGPLATFORM_DOTNETTEST_EXECUTIONID = nameof(TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
 
+    // Invocation lifetime: every variable with this prefix is reserved for the platform.
+    public const string TESTINGPLATFORM_INVOCATIONLIFETIME_PREFIX = "TESTINGPLATFORM_INVOCATIONLIFETIME_";
+
+    // Set by the process that owns the invocation lifetime hooks (orchestrator or test host controller) before it
+    // launches children, so the children run as participants and never run the hooks again.
+    public const string TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER = nameof(TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER);
+
     // Carries the 1-based retry attempt number from the retry orchestrator to each launched test host, which
     // then reports it back to dotnet test through the AttemptNumber handshake property.
     public const string TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = nameof(TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);

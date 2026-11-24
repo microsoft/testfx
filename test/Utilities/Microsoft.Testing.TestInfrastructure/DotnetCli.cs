@@ -333,7 +333,7 @@ public static class DotnetCli
         }
 
         string? binlogFullPath = null;
-        if (!args.Contains("-bl:") && !IsDirectDotNetTestInvocation(args))
+        if (!args.Contains("-bl:") && !IsCommand(args, "exec") && !IsDirectDotNetTestInvocation(args))
         {
             // Collection batches run in separate processes sharing this directory; retries need unique names too.
             binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Guid.NewGuid():N}.binlog");

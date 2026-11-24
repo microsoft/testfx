@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
@@ -94,7 +95,19 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
 
     protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed)
     {
-        int exitCode;
+        InvocationLifetimeRunner? invocationLifetimeRunner = ServiceProvider.GetService<InvocationLifetimeRunner>();
+        int exitCode = await RunTestHostControllerAsync(invocationLifetimeRunner, cancellationToken, alreadyDisposed).ConfigureAwait(false);
+
+        // The cleanup already ran before the services were disposed; this returns its exit code on the paths that
+        // returned early, before the cleanup could update it.
+        return invocationLifetimeRunner is null
+            ? exitCode
+            : await RunInvocationCleanupAsync(invocationLifetimeRunner, exitCode, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<int> RunTestHostControllerAsync(InvocationLifetimeRunner? invocationLifetimeRunner, CancellationToken cancellationToken, List<object> alreadyDisposed)
+    {
+        int exitCode = (int)ExitCode.GenericFailure;
         TestHostProcessInformation testHostProcessInformation;
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();
@@ -111,6 +124,15 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         using CancellationTokenSource testHostControllerIpcLifetime = new();
         try
         {
+            // The setup runs before the test host process is configured, so the variables it publishes, and the
+            // owner marker, are inherited by every process of the invocation.
+            if (invocationLifetimeRunner is not null
+                && await RunInvocationSetupAsync(invocationLifetimeRunner, cancellationToken).ConfigureAwait(false) is { } setupExitCode)
+            {
+                exitCode = setupExitCode;
+                return setupExitCode;
+            }
+
             int currentPid = environment.ProcessId;
             string processIdString = currentPid.ToString(CultureInfo.InvariantCulture);
 
@@ -146,6 +168,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
                     cancellationToken).ConfigureAwait(false);
             if (processConfiguration is null)
             {
+                exitCode = (int)ExitCode.InvalidPlatformSetup;
                 return (int)ExitCode.InvalidPlatformSetup;
             }
 
@@ -189,8 +212,19 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
             }
             finally
             {
-                // Service disposal must still run if closing the connection reports a failure.
-                await DisposeServicesAsync(alreadyDisposed).ConfigureAwait(false);
+                try
+                {
+                    // The invocation cleanup runs after the test host process exited, before the services are disposed.
+                    if (invocationLifetimeRunner is not null)
+                    {
+                        exitCode = await RunInvocationCleanupAsync(invocationLifetimeRunner, exitCode, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    // Service disposal must still run if closing the connection reports a failure.
+                    await DisposeServicesAsync(alreadyDisposed).ConfigureAwait(false);
+                }
             }
         }
 

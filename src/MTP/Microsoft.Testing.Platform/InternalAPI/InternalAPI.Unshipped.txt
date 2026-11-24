@@ -182,3 +182,26 @@ static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator !=
 static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator ==(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? right) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.ReadSummariesPayload(System.IO.Stream! stream) -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]!
 static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.WriteSummariesPayload(System.IO.Stream! stream, ushort fieldId, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? summaries) -> void
+[TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationStartingContext.InvocationStartingContext(System.Action<string!, string?>! setEnvironmentVariable) -> void
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeManager
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeManager.AddInvocationLifetimeHandler(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler!>! factory) -> void
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeManager.BuildAsync(System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler!>!>!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeManager.HasHandlers.get -> bool
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeManager.InvocationLifetimeManager() -> void
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.InvocationLifetimeRunner(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler!>! handlers, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger, bool setOwnerMarker, bool restoreEnvironment, System.TimeSpan? setupTimeout = null) -> void
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.IsCleanupCompleted.get -> bool
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.ReleaseIfNotStartedAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.RunCleanupAsync(int exitCode, bool isCanceled) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.RunSetupAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int?>!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.Uid.get -> string!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.Version.get -> string!
+Microsoft.Testing.Platform.Hosts.CommonHost.IsGracefulSessionStopRequested.get -> bool
+Microsoft.Testing.Platform.Hosts.CommonHost.RunInvocationCleanupAsync(Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner! invocationLifetimeRunner, int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.Hosts.CommonHost.RunInvocationSetupAsync(Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner! invocationLifetimeRunner, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int?>!
+Microsoft.Testing.Platform.Hosts.ITestHostBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!
+Microsoft.Testing.Platform.Hosts.TestHostBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!

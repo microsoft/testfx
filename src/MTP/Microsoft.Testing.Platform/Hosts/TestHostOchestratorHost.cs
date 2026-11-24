@@ -3,6 +3,7 @@
 
 using System.Runtime.ExceptionServices;
 
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -23,66 +24,107 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
     {
         using IPlatformActivity? activity = _serviceProvider.GetPlatformOTelService()?.StartActivity("TestHostOrchestratorHost");
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<TestHostOrchestratorHost>();
+        InvocationLifetimeRunner? invocationLifetimeRunner = _serviceProvider.GetService<InvocationLifetimeRunner>();
         if (_testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 1)
         {
+            if (invocationLifetimeRunner is not null)
+            {
+                await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+            }
+
             throw new NotSupportedException("Multiple test orchestrator not supported");
         }
 
-        ITestHostExecutionOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
-        ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
-
-        // When connected to dotnet test through the pipe protocol, handshake from the orchestrator too.
-        // This identifies the participating orchestrator mode for the whole session; middleware that
-        // short-circuits still leaves the session in orchestrator mode and reports a non-success result.
-        // (test hosts and test host controllers already do). This lets the SDK know that an orchestrator
-        // (e.g. retry) is participating in the run, identified by the OrchestratorFeature property.
-        IPushOnlyProtocol? pushOnlyProtocol = _serviceProvider.GetService<IPushOnlyProtocol>();
-        if (pushOnlyProtocol is { IsServerMode: true })
-        {
-            Dictionary<byte, string> additionalHandshakeProperties = new()
-            {
-                [HandshakeMessagePropertyNames.OrchestratorFeature] = testHostOrchestrator.Uid,
-            };
-
-            bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(
-                HandshakeMessageHostTypes.TestHostOrchestrator, additionalHandshakeProperties).ConfigureAwait(false);
-            if (!isProtocolCompatible)
-            {
-                return (int)ExitCode.IncompatibleProtocolVersion;
-            }
-
-            if (pushOnlyProtocol.IsServerControlChannelSupported)
-            {
-                // The orchestrator has no graceful-stop capability of its own; a server-initiated cancel maps to
-                // cancelling the application token, which propagates to the orchestrated test host processes.
-                await pushOnlyProtocol.StartServerControlChannelAsync(_ =>
-                {
-                    applicationCancellationToken.Cancel();
-                    return Task.CompletedTask;
-                }).ConfigureAwait(false);
-            }
-        }
-
-        int exitCode;
-        bool orchestrationCanceled = false;
-        await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
+        ITestHostExecutionOrchestrator testHostOrchestrator;
+        ITestApplicationCancellationTokenSource applicationCancellationToken;
         try
         {
-            if (_testHostOrchestratorConfiguration.IsOutermostProcess)
+            testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
+            applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
+
+            // When connected to dotnet test through the pipe protocol, handshake from the orchestrator too.
+            // This identifies the participating orchestrator mode for the whole session; middleware that
+            // short-circuits still leaves the session in orchestrator mode and reports a non-success result.
+            // (test hosts and test host controllers already do). This lets the SDK know that an orchestrator
+            // (e.g. retry) is participating in the run, identified by the OrchestratorFeature property.
+            IPushOnlyProtocol? pushOnlyProtocol = _serviceProvider.GetService<IPushOnlyProtocol>();
+            if (pushOnlyProtocol is { IsServerMode: true })
             {
-                foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+                Dictionary<byte, string> additionalHandshakeProperties = new()
                 {
-                    await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                    [HandshakeMessagePropertyNames.OrchestratorFeature] = testHostOrchestrator.Uid,
+                };
+
+                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(
+                    HandshakeMessageHostTypes.TestHostOrchestrator, additionalHandshakeProperties).ConfigureAwait(false);
+                if (!isProtocolCompatible)
+                {
+                    if (invocationLifetimeRunner is not null)
+                    {
+                        await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+                    }
+
+                    return (int)ExitCode.IncompatibleProtocolVersion;
+                }
+
+                if (pushOnlyProtocol.IsServerControlChannelSupported)
+                {
+                    // The orchestrator has no graceful-stop capability of its own; a server-initiated cancel maps to
+                    // cancelling the application token, which propagates to the orchestrated test host processes.
+                    await pushOnlyProtocol.StartServerControlChannelAsync(_ =>
+                    {
+                        applicationCancellationToken.Cancel();
+                        return Task.CompletedTask;
+                    }).ConfigureAwait(false);
                 }
             }
 
-            Func<CancellationToken, Task<int>> run = _testHostOrchestratorConfiguration.IsCompositionActive
-                ? token => RunWithChildChainAsync(testHostOrchestrator, token)
-                : testHostOrchestrator.OrchestrateTestHostExecutionAsync;
-            exitCode = _testHostOrchestratorConfiguration.Middleware.Length == 0
-                ? await run(applicationCancellationToken.CancellationToken).ConfigureAwait(false)
-                : await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
-                    _testHostOrchestratorConfiguration.Middleware, run, logger, applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+            await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
+        }
+        catch
+        {
+            // Handshake/control-channel failures happen before setup starts, so release the initialized handlers
+            // without invoking completion hooks and preserve the original failure.
+            if (invocationLifetimeRunner is not null)
+            {
+                await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+            }
+
+            throw;
+        }
+
+        int exitCode;
+        bool setupFailed = false;
+        bool orchestrationCanceled = false;
+        try
+        {
+            // The invocation setup wraps the orchestrator lifetimes, and every test host process the orchestrator
+            // starts inherits the variables it publishes and the owner marker. The runner scopes --timeout to setup,
+            // keeping this parent application token available to orchestrator finalization.
+            if (invocationLifetimeRunner is not null
+                && await invocationLifetimeRunner.RunSetupAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false) is { } setupExitCode)
+            {
+                setupFailed = true;
+                exitCode = setupExitCode;
+            }
+            else
+            {
+                if (_testHostOrchestratorConfiguration.IsOutermostProcess)
+                {
+                    foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+                    {
+                        await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                    }
+                }
+
+                Func<CancellationToken, Task<int>> run = _testHostOrchestratorConfiguration.IsCompositionActive
+                    ? token => RunWithChildChainAsync(testHostOrchestrator, token)
+                    : testHostOrchestrator.OrchestrateTestHostExecutionAsync;
+                exitCode = _testHostOrchestratorConfiguration.Middleware.Length == 0
+                    ? await run(applicationCancellationToken.CancellationToken).ConfigureAwait(false)
+                    : await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                        _testHostOrchestratorConfiguration.Middleware, run, logger, applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {
@@ -98,6 +140,11 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
             // the build's Tests tab. Failures during that release are swallowed so they cannot replace the
             // exception that actually caused the run to fail.
             await RunAfterRunAsync((int)ExitCode.GenericFailure, swallowFailures: true).ConfigureAwait(false);
+            if (invocationLifetimeRunner is not null)
+            {
+                await invocationLifetimeRunner.RunCleanupAsync((int)ExitCode.GenericFailure, applicationCancellationToken.CancellationToken.IsCancellationRequested).ConfigureAwait(false);
+            }
+
             throw;
         }
 
@@ -105,7 +152,24 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         // releasing what BeforeRunAsync acquired matters most. Cleanup failures only surface after normally
         // completed orchestration; cancellation and fault paths already have their outcome, so cleanup is
         // best-effort.
-        await RunAfterRunAsync(exitCode, swallowFailures: orchestrationCanceled).ConfigureAwait(false);
+        try
+        {
+            await RunAfterRunAsync(exitCode, swallowFailures: setupFailed || orchestrationCanceled).ConfigureAwait(false);
+        }
+        catch when (exitCode == (int)ExitCode.Success)
+        {
+            // The invocation fails with the orchestrator lifetime: the invocation cleanup must not see a success.
+            exitCode = (int)ExitCode.GenericFailure;
+            throw;
+        }
+        finally
+        {
+            if (invocationLifetimeRunner is not null)
+            {
+                bool isCanceled = orchestrationCanceled || applicationCancellationToken.CancellationToken.IsCancellationRequested;
+                exitCode = await invocationLifetimeRunner.RunCleanupAsync(isCanceled ? (int)ExitCode.TestSessionAborted : exitCode, isCanceled).ConfigureAwait(false);
+            }
+        }
 
         return exitCode;
 

@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -36,6 +37,31 @@ internal sealed class ConsoleTestHost(
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
     protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> _)
+    {
+        InvocationLifetimeRunner? invocationLifetimeRunner = ServiceProvider.GetService<InvocationLifetimeRunner>();
+        if (invocationLifetimeRunner is null)
+        {
+            return await RunSessionAsync(invocationLifetimeRunner: null, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (await RunInvocationSetupAsync(invocationLifetimeRunner, cancellationToken).ConfigureAwait(false) is { } setupExitCode)
+        {
+            return await RunInvocationCleanupAsync(invocationLifetimeRunner, setupExitCode, cancellationToken).ConfigureAwait(false);
+        }
+
+        try
+        {
+            return await RunSessionAsync(invocationLifetimeRunner, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            // No-op when the session already ran the cleanup before disposing its services.
+            await RunInvocationCleanupAsync(invocationLifetimeRunner, (int)ExitCode.GenericFailure, cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private async Task<int> RunSessionAsync(InvocationLifetimeRunner? invocationLifetimeRunner, CancellationToken cancellationToken)
     {
         var consoleRunStarted = Stopwatch.StartNew();
         DateTimeOffset consoleRunStart = _clock.UtcNow;
@@ -79,7 +105,7 @@ internal sealed class ConsoleTestHost(
         Statistics? statistics = null;
         string? extensionInformation = null;
         await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionUid}'").ConfigureAwait(false);
-        int exitCode;
+        int exitCode = (int)ExitCode.GenericFailure;
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
         DateTimeOffset? requestExecuteStop = null;
@@ -119,6 +145,12 @@ internal sealed class ConsoleTestHost(
         }
         finally
         {
+            // The invocation cleanup runs before the services, in particular the output device, are disposed.
+            if (invocationLifetimeRunner is not null)
+            {
+                exitCode = await RunInvocationCleanupAsync(invocationLifetimeRunner, exitCode, cancellationToken).ConfigureAwait(false);
+            }
+
             // Cleanup all services
             await DisposeServiceProviderAsync(ServiceProvider).ConfigureAwait(false);
         }
