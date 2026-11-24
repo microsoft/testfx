@@ -1,4 +1,5 @@
 #nullable enable
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
 Microsoft.Testing.Extensions.Policy.RetryOrchestrator.Stage.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
 *REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!

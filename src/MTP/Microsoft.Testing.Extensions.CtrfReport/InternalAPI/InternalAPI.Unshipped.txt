@@ -1,2 +1,3 @@
 #nullable enable
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
 static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
