@@ -176,7 +176,7 @@ Setup runs handlers in registration order. Cleanup runs in **reverse** order, on
 | Tests fail, or any non-zero host exit code | Cleanup runs normally; `ExitCode` reflects it | unchanged |
 | One or more cleanups throw | Every other cleanup still runs; each error is displayed | `GenericFailure` only when the exit code was `Success`; an earlier failure is never masked |
 | Ctrl+C during setup or tests | Setup token canceled; a handler that returns normally after the cancellation does not let the next handlers or the tests start; cleanup still runs with `IsCanceled = true` | `TestSessionAborted` (3) |
-| Graceful stop requested by `dotnet test`, or `--timeout` in a test host process | A stop requested during setup cancels the setup token; cleanup runs with `IsCanceled = true` | `TestSessionAborted` (3) |
+| Graceful stop requested by `dotnet test`, or `--timeout` expires during setup or test execution | A stop requested during setup cancels the setup token; for controller and orchestrator owners, `--timeout` cancels only the setup token so the parent application token remains available to finalization; cleanup runs with `IsCanceled = true` | `TestSessionAborted` (3) |
 | Host exits before setup starts (incompatible protocol, `BeforeRunAsync` throws) | Handlers are disposed; neither setup nor cleanup runs | unchanged |
 | A handler factory, `IsEnabledAsync`, or `TryInitializeAsync` throws while the host is built | The handlers already built are disposed; the failure surfaces like any extension build failure | `GenericFailure` (1) |
 
@@ -186,7 +186,7 @@ Errors are rendered through the output device (console, `dotnet test`, server lo
 
 ### 7.3 Cancellation
 
-- `OnInvocationStartingAsync` receives the application cancellation token.
+- `OnInvocationStartingAsync` receives a setup token linked to application cancellation. In controller and orchestrator owners, `--timeout` also cancels this token without canceling the parent application token used by finalization.
 - `OnInvocationCompletedAsync` receives `CancellationToken.None` in Phase 1: cleanup must run precisely when the user canceled. Handlers bound their own cleanup duration; terminating the process is the escape hatch. A platform cleanup timeout is deferred (open question).
 
 ### 7.4 Exit codes

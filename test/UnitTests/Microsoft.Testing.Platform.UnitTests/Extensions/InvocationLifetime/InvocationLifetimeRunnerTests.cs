@@ -278,7 +278,10 @@ public sealed class InvocationLifetimeRunnerTests
     private InvocationLifetimeRunner CreateRunner(IReadOnlyList<IInvocationLifetimeHandler> handlers, bool setOwnerMarker = false, bool restoreEnvironment = false)
         => new(handlers, _environment.Object, _outputDevice.Object, Mock.Of<ILogger>(), setOwnerMarker, restoreEnvironment);
 
-    private sealed class RecordingHandler : IInvocationLifetimeHandler, IAsyncDisposable
+    private sealed class RecordingHandler : IInvocationLifetimeHandler, IDisposable
+#if NETCOREAPP
+        , IAsyncDisposable
+#endif
     {
         private readonly List<string> _calls;
 
@@ -321,11 +324,15 @@ public sealed class InvocationLifetimeRunnerTests
             return CleanupException is null ? Task.CompletedTask : Task.FromException(CleanupException);
         }
 
+        public void Dispose() => _calls.Add($"dispose:{Uid}");
+
+#if NETCOREAPP
         public ValueTask DisposeAsync()
         {
-            _calls.Add($"dispose:{Uid}");
+            Dispose();
             return default;
         }
+#endif
     }
 
     private sealed class SilentlyCancelingHandler(CancellationTokenSource cancellationTokenSource) : IInvocationLifetimeHandler

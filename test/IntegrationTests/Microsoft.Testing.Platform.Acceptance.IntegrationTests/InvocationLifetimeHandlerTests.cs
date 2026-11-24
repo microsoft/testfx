@@ -236,6 +236,14 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
     }
 
     [TestMethod]
+    public async Task TestHostController_SetupTimeoutCancelsBlockedHandlerAndReportsCanceledCleanup()
+        => await AssertOwnerSetupTimeoutAsync("--timeout 5s", useController: true);
+
+    [TestMethod]
+    public async Task RetryOrchestrator_SetupTimeoutCancelsBlockedHandlerAndReportsCanceledCleanup()
+        => await AssertOwnerSetupTimeoutAsync("--retry-failed-tests 2 --timeout 5s", useController: false);
+
+    [TestMethod]
     public async Task Timeout_ReportsTheCanceledInvocationToTheCleanup()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -333,6 +341,34 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
     private static string GetLogFile(TestInfrastructure.TestHost testHost)
         => Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.log");
 
+    private async Task AssertOwnerSetupTimeoutAsync(string arguments, bool useController)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string logFile = GetLogFile(testHost);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            arguments,
+            new()
+            {
+                ["BLOCK_SETUP"] = "A",
+                ["LOG_FILE"] = logFile,
+                ["USE_CONTROLLER"] = useController ? "1" : "0",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        string[] log = ReadLog(logFile, testHostResult.ToString());
+        string owner = GetPid(log[0]);
+        AssertLog(
+            [
+                $"starting:A:{owner}",
+                $"waiting:A:{owner}",
+                $"completed:A:{owner}:3:True",
+            ],
+            log,
+            testHostResult.ToString());
+    }
+
     private static string[] ReadLog(string logFile, string output)
     {
         Assert.IsTrue(File.Exists(logFile), output);
@@ -429,7 +465,7 @@ internal sealed class LoggingHandler(string name) : IInvocationLifetimeHandler
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public Task OnInvocationStartingAsync(InvocationStartingContext context, CancellationToken cancellationToken)
+    public async Task OnInvocationStartingAsync(InvocationStartingContext context, CancellationToken cancellationToken)
     {
         Log.Write($"starting:{name}:{Log.ProcessId}");
         context.SetEnvironmentVariable("INVOCATION_VALUE_" + name, "value-" + name);
@@ -438,7 +474,11 @@ internal sealed class LoggingHandler(string name) : IInvocationLifetimeHandler
             throw new InvalidOperationException("Setup failure from " + name);
         }
 
-        return Task.CompletedTask;
+        if (Environment.GetEnvironmentVariable("BLOCK_SETUP") == name)
+        {
+            Log.Write($"waiting:{name}:{Log.ProcessId}");
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+        }
     }
 
     public Task OnInvocationCompletedAsync(InvocationCompletedContext context, CancellationToken cancellationToken)

@@ -43,12 +43,26 @@ internal sealed class InvocationLifetimeManager : IInvocationLifetimeManager
             // The handlers already built never reach a runner: release them before surfacing the failure.
             if (current is not null)
             {
-                await DisposeHelper.DisposeAsync(current).ConfigureAwait(false);
+                try
+                {
+                    await DisposeHelper.DisposeAsync(current).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // Preserve the build failure and continue releasing the other handlers.
+                }
             }
 
             foreach (IInvocationLifetimeHandler handler in handlers)
             {
-                await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
+                try
+                {
+                    await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // A failed disposal must not prevent releasing the remaining handlers.
+                }
             }
 
             throw;

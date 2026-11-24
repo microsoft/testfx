@@ -274,6 +274,7 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
 
     /// <summary>
     /// Runs the invocation setup with a token that is also canceled when the server requests a graceful stop.
+    /// Any configured owner setup timeout is scoped by the runner and does not cancel the application token.
     /// </summary>
     protected async Task<int?> RunInvocationSetupAsync(InvocationLifetimeRunner invocationLifetimeRunner, CancellationToken cancellationToken)
     {

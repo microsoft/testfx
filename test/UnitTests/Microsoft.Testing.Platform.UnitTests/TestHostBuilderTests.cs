@@ -7,6 +7,8 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
@@ -241,6 +243,58 @@ public sealed class TestHostBuilderTests
 
         Assert.Contains($"Found {orchestratorCount} orchestrator(s) instead.", exception.Message, StringComparison.Ordinal);
     }
+
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task BuilderHostConstructionFailure_DisposesInvocationLifetimeHandlersWithoutCompletion()
+    {
+        const string ownerVariable = EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER;
+        SystemEnvironment environment = new();
+        string? originalOwnerValue = environment.GetEnvironmentVariable(ownerVariable);
+        environment.SetEnvironmentVariable(ownerVariable, null);
+
+        try
+        {
+            var builder = new TestApplicationBuilder(
+                new ApplicationLoggingState(LogLevel.None, new CommandLineParseResult(null, [], [])),
+                DateTimeOffset.UtcNow,
+                new TestApplicationOptions(),
+                Mock.Of<IUnhandledExceptionsHandler>(),
+                ["--no-banner"]);
+            builder.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, _) => Mock.Of<ITestFramework>());
+            Mock<IInvocationLifetimeHandler> handler = new();
+            handler.SetupGet(h => h.Uid).Returns("invocation");
+            handler.Setup(h => h.IsEnabledAsync()).ReturnsAsync(true);
+            Mock<IDisposable> disposable = handler.As<IDisposable>();
+            disposable.Setup(d => d.Dispose()).Throws(new ObjectDisposedException("invocation"));
+            builder.InvocationLifetime.AddInvocationLifetimeHandler(_ => handler.Object);
+            ((PublicApi.TestHostOrchestratorManager)((ITestApplicationBuilder)builder).TestHostOrchestrator)
+                .AddTestHostExecutionOrchestratorMiddleware(_ =>
+                {
+                    Mock<BackCompat.ITestHostExecutionOrchestratorMiddleware> middleware = new();
+                    middleware.SetupGet(x => x.Uid).Returns("middleware");
+                    middleware.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+                    return middleware.Object;
+                });
+
+            InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => builder.BuildAsync());
+
+            Assert.Contains("Found 0 orchestrator(s) instead.", exception.Message, StringComparison.Ordinal);
+            disposable.Verify(d => d.Dispose(), Times.Once);
+            handler.Verify(
+                h => h.OnInvocationCompletedAsync(It.IsAny<InvocationCompletedContext>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+        finally
+        {
+            environment.SetEnvironmentVariable(ownerVariable, originalOwnerValue);
+        }
+    }
+#pragma warning restore TPEXP
 
     private static TestHostControllerInfo CreateTestHostControllerInfo(int? testHostControllerPid)
         => new(new CommandLineParseResult(

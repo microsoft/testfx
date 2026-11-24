@@ -81,7 +81,8 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         try
         {
             // The invocation setup wraps the orchestrator lifetimes, and every test host process the orchestrator
-            // starts inherits the variables it publishes and the owner marker.
+            // starts inherits the variables it publishes and the owner marker. The runner scopes --timeout to setup,
+            // keeping this parent application token available to orchestrator finalization.
             if (invocationLifetimeRunner is not null
                 && await invocationLifetimeRunner.RunSetupAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false) is { } setupExitCode)
             {

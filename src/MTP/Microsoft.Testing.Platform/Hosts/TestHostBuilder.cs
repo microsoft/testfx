@@ -85,21 +85,16 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     {
         ApplicationStateGuard.Ensure(TestFramework is not null);
         BuildContext context = await SetupCommonServicesAsync(loggingState, testApplicationOptions, unhandledExceptionsHandler, createBuilderStart).ConfigureAwait(false);
+        context.GlobalTestTimeout = GetGlobalTestTimeout(context.CommandLineHandler);
         IHost host = await BuildHostAsync(context).ConfigureAwait(false);
 
-        // The timeout belongs exclusively to the test host. In a restarted run the controller keeps its
-        // application token alive while the child schedules the timeout, so controller extensions can finalize
-        // after the child reports an aborted run without two processes racing the same deadline.
+        // The test-execution timeout belongs exclusively to the test host. Controller and orchestrator owners
+        // apply the same duration to setup through a separate token, leaving their application token available
+        // for finalization and avoiding two processes racing the test-execution deadline.
         if (context.EarlyHost is null
             && context.PoliciesService.ProcessRole is TestProcessRole.TestHost
-            && context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
-            && context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+            && context.GlobalTestTimeout is { } timeout)
         {
-            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
-            {
-                throw ApplicationStateGuard.Unreachable();
-            }
-
             context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
         }
 
@@ -110,6 +105,14 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
                 testApplicationOptions.CancellationToken)
             : host;
     }
+
+    private static TimeSpan? GetGlobalTestTimeout(CommandLineHandler commandLineHandler)
+        => commandLineHandler.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
+            && commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args)
+                ? TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout)
+                    ? timeout
+                    : throw ApplicationStateGuard.Unreachable()
+                : null;
 
     private sealed class ExternallyCancellableHost : IHost, IDisposable
     {
@@ -212,6 +215,8 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
         public bool IsInfoCommand { get; set; }
 
         public IHost? EarlyHost { get; set; }
+
+        public TimeSpan? GlobalTestTimeout { get; set; }
 
         // Null when the current process does not own the invocation lifetime hooks.
         public IReadOnlyList<IInvocationLifetimeHandler>? InvocationLifetimeHandlers { get; set; }

@@ -96,11 +96,19 @@ internal sealed partial class TestHostBuilder
 
         context.InvocationLifetimeHandlers = await BuildInvocationLifetimeHandlersIfOwnerAsync(context).ConfigureAwait(false);
 
-        return await TryBuildTestHostOrchestratorHostAsync(context).ConfigureAwait(false) is { } testHostOrchestratorHost
-            ? testHostOrchestratorHost
-            : await TryBuildTestHostControllersHostAsync(context).ConfigureAwait(false) is { } testHostControllerHost
-            ? testHostControllerHost
-            : await BuildTestHostModeAsync(context).ConfigureAwait(false);
+        try
+        {
+            return await TryBuildTestHostOrchestratorHostAsync(context).ConfigureAwait(false) is { } testHostOrchestratorHost
+                ? testHostOrchestratorHost
+                : await TryBuildTestHostControllersHostAsync(context).ConfigureAwait(false) is { } testHostControllerHost
+                ? testHostControllerHost
+                : await BuildTestHostModeAsync(context).ConfigureAwait(false);
+        }
+        catch
+        {
+            await ReleaseInvocationLifetimeHandlersAsync(context.InvocationLifetimeHandlers).ConfigureAwait(false);
+            throw;
+        }
     }
 
     private async Task<IReadOnlyList<ITool>> BuildToolsInformationAsync(BuildContext context)
@@ -164,7 +172,11 @@ internal sealed partial class TestHostBuilder
         ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
             await _testHostOrchestratorManager.BuildTestHostOrchestratorApplicationLifetimesAsync(context.ServiceProvider).ConfigureAwait(false);
         context.ServiceProvider.AddServices(orchestratorLifetimes);
-        AddInvocationLifetimeRunner(context, context.ServiceProvider, setOwnerMarker: true);
+        AddInvocationLifetimeRunner(
+            context,
+            context.ServiceProvider,
+            setOwnerMarker: true,
+            setupTimeout: context.GlobalTestTimeout);
 
         CompleteBuilderActivity(context.BuilderActivity, nameof(TestHostOrchestratorHost));
         return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, context.ServiceProvider);
@@ -220,7 +232,11 @@ internal sealed partial class TestHostBuilder
         }
 
         context.TestHostControllerInfo.IsCurrentProcessTestHostController = true;
-        AddInvocationLifetimeRunner(context, testHostControllersServiceProvider, setOwnerMarker: true);
+        AddInvocationLifetimeRunner(
+            context,
+            testHostControllersServiceProvider,
+            setOwnerMarker: true,
+            setupTimeout: context.GlobalTestTimeout);
         context.PoliciesService.ProcessRole = TestProcessRole.TestHostController;
         await context.ProxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
@@ -264,7 +280,11 @@ internal sealed partial class TestHostBuilder
         return await ((InvocationLifetimeManager)InvocationLifetime).BuildAsync(context.ServiceProvider).ConfigureAwait(false);
     }
 
-    private static void AddInvocationLifetimeRunner(BuildContext context, ServiceProvider serviceProvider, bool setOwnerMarker)
+    private static void AddInvocationLifetimeRunner(
+        BuildContext context,
+        ServiceProvider serviceProvider,
+        bool setOwnerMarker,
+        TimeSpan? setupTimeout = null)
     {
         if (context.InvocationLifetimeHandlers is not { } handlers)
         {
@@ -277,7 +297,28 @@ internal sealed partial class TestHostBuilder
             context.ProxyOutputDevice,
             context.LoggerFactory.CreateLogger<InvocationLifetimeRunner>(),
             setOwnerMarker,
-            restoreEnvironment: false));
+            restoreEnvironment: false,
+            setupTimeout: setupTimeout));
+    }
+
+    private static async Task ReleaseInvocationLifetimeHandlersAsync(IReadOnlyList<IInvocationLifetimeHandler>? handlers)
+    {
+        if (handlers is null)
+        {
+            return;
+        }
+
+        foreach (IInvocationLifetimeHandler handler in handlers)
+        {
+            try
+            {
+                await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // Host construction already failed; release every handler without replacing that failure.
+            }
+        }
     }
 
     private static void ClearInvocationLifetimeEnvironmentVariables(IEnvironment environment)

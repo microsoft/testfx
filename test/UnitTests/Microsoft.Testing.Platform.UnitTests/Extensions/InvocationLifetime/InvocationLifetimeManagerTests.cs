@@ -95,6 +95,34 @@ public sealed class InvocationLifetimeManagerTests
         duplicateDisposable.Verify(d => d.Dispose(), Times.Once);
     }
 
+    [TestMethod]
+    public async Task BuildAsync_WhenInitializationAndDisposalFail_PreservesInitializationFailureAndAttemptsEveryDisposal()
+    {
+        InvocationLifetimeManager manager = new();
+        Mock<IInvocationLifetimeHandler> first = CreateHandler("a", enabled: true);
+        Mock<IDisposable> firstDisposable = first.As<IDisposable>();
+        firstDisposable.Setup(d => d.Dispose()).Throws(new ObjectDisposedException("first"));
+        Mock<IInvocationLifetimeHandler> second = CreateHandler("b", enabled: true);
+        Mock<IDisposable> secondDisposable = second.As<IDisposable>();
+        Mock<IInvocationLifetimeHandler> failing = CreateHandler("c", enabled: true);
+        Mock<IAsyncInitializableExtension> initializable = failing.As<IAsyncInitializableExtension>();
+        InvalidOperationException initializationFailure = new("Initialization failed.");
+        initializable.Setup(h => h.InitializeAsync()).ThrowsAsync(initializationFailure);
+        Mock<IDisposable> failingDisposable = failing.As<IDisposable>();
+        failingDisposable.Setup(d => d.Dispose()).Throws(new ObjectDisposedException("failing"));
+        manager.AddInvocationLifetimeHandler(_ => first.Object);
+        manager.AddInvocationLifetimeHandler(_ => second.Object);
+        manager.AddInvocationLifetimeHandler(_ => failing.Object);
+
+        InvalidOperationException actual = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => manager.BuildAsync(Mock.Of<IServiceProvider>()));
+
+        Assert.AreSame(initializationFailure, actual);
+        firstDisposable.Verify(d => d.Dispose(), Times.Once);
+        secondDisposable.Verify(d => d.Dispose(), Times.Once);
+        failingDisposable.Verify(d => d.Dispose(), Times.Once);
+    }
+
     private static Mock<IInvocationLifetimeHandler> CreateHandler(string uid, bool enabled)
     {
         Mock<IInvocationLifetimeHandler> handler = new();

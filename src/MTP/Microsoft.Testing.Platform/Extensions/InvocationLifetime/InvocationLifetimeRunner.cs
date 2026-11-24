@@ -21,6 +21,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
     private readonly ILogger _logger;
     private readonly bool _setOwnerMarker;
     private readonly bool _restoreEnvironment;
+    private readonly TimeSpan? _setupTimeout;
     private readonly Dictionary<string, string?> _originalValues = [with(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)];
     private int _enteredCount;
     private bool _setupStarted;
@@ -32,7 +33,8 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
         IOutputDevice outputDevice,
         ILogger logger,
         bool setOwnerMarker,
-        bool restoreEnvironment)
+        bool restoreEnvironment,
+        TimeSpan? setupTimeout = null)
     {
         _handlers = handlers;
         _environment = environment;
@@ -40,6 +42,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
         _logger = logger;
         _setOwnerMarker = setOwnerMarker;
         _restoreEnvironment = restoreEnvironment;
+        _setupTimeout = setupTimeout;
     }
 
     public string Uid => nameof(InvocationLifetimeRunner);
@@ -66,12 +69,23 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
         }
 
         _setupStarted = true;
+        // A controller or orchestrator can time out before it launches the leaf test host. Scope that timeout to
+        // setup so cancellation is observed by the handler without canceling the application token used by finalization.
+        using CancellationTokenSource? setupCancellationTokenSource = _setupTimeout is not null
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+            : null;
+        if (_setupTimeout is { } setupTimeout && setupCancellationTokenSource is not null)
+        {
+            setupCancellationTokenSource.CancelAfter(setupTimeout);
+        }
+
+        CancellationToken setupCancellationToken = setupCancellationTokenSource?.Token ?? cancellationToken;
         InvocationStartingContext context = new(SetEnvironmentVariable);
         foreach (IInvocationLifetimeHandler handler in _handlers)
         {
             // A handler that observes the cancellation and returns normally must not let the next ones, or the
             // tests, start.
-            if (cancellationToken.IsCancellationRequested)
+            if (setupCancellationToken.IsCancellationRequested)
             {
                 return (int)ExitCode.TestSessionAborted;
             }
@@ -80,9 +94,9 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
             _enteredCount++;
             try
             {
-                await handler.OnInvocationStartingAsync(context, cancellationToken).ConfigureAwait(false);
+                await handler.OnInvocationStartingAsync(context, setupCancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (setupCancellationToken.IsCancellationRequested)
             {
                 await TryLogAsync(() => _logger.LogDebugAsync($"Invocation lifetime handler '{handler.Uid}' setup was canceled.")).ConfigureAwait(false);
                 return (int)ExitCode.TestSessionAborted;
@@ -94,7 +108,7 @@ internal sealed class InvocationLifetimeRunner : IOutputDeviceDataProducer
             }
         }
 
-        if (cancellationToken.IsCancellationRequested)
+        if (setupCancellationToken.IsCancellationRequested)
         {
             return (int)ExitCode.TestSessionAborted;
         }
