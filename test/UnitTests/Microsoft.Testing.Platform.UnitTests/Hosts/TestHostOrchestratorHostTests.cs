@@ -605,6 +605,33 @@ public sealed class TestHostOrchestratorHostTests
     }
 
     [TestMethod]
+    public async Task RunAsync_InnerComposedProcess_SkipsApplicationLifetimes()
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        RecordingLifetime lifetime = new();
+        List<string> log = [];
+        RecordingOrchestrator orchestrator = new(onOrchestrate: _ => log.Add("orchestrator"));
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddServices([cancellation, new NopLoggerFactory(), lifetime, environment.Object]);
+        TestHostOrchestratorConfiguration configuration = new(
+            [orchestrator],
+            [],
+            ["outer-orchestrator"],
+            isCompositionActive: true);
+        TestHostOrchestratorHost host = new(configuration, serviceProvider);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(0, exitCode);
+        Assert.AreSequenceEqual(new[] { "orchestrator" }, log);
+        Assert.AreEqual(0, lifetime.BeforeRunCount);
+        Assert.AreEqual(0, lifetime.AfterRunCount);
+        Assert.AreEqual(0, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task RunAsync_DisposalFailurePreservesNormalFailureAndCanceledVerdict(bool canceled)

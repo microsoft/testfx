@@ -50,6 +50,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: test-gh-attachments-${{ github.ref }}
@@ -111,6 +112,8 @@ jobs:
           artifact-ids: ${{ steps.attachments.outputs.artifact-id }}
           path: ${{ runner.temp }}/mtp-attachment-download
           merge-multiple: true
+          # Use the REST API because the internal ID-filtered lookup failed for this artifact.
+          github-token: ${{ github.token }}
       - name: Verify the downloaded bytes and associations
         shell: pwsh
         env:

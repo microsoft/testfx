@@ -15,8 +15,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
     /// <summary>
-    /// Provides an interpolated string handler used by <see cref="Assert.HasCount{T}(int, IEnumerable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>
-    /// and <see cref="Assert.IsEmpty{T}(IEnumerable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>
+    /// Provides an interpolated string handler used by <see cref="Assert.HasCount{T}(int, IEnumerable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>,
+    /// <see cref="Assert.HasCount{T}(int, IQueryable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>,
+    /// <see cref="Assert.IsEmpty{T}(IEnumerable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>, and
+    /// <see cref="Assert.IsEmpty{T}(IQueryable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>
     /// that only allocates and formats the message when the assertion is failing.
     /// </summary>
     /// <typeparam name="TItem">The type of item in the collection.</typeparam>
@@ -62,6 +64,45 @@ public sealed partial class Assert
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
         {
             _actualCount = CollectionCountHelper.GetCount(collection);
+            _expectedCount = 0;
+            shouldAppend = _actualCount != _expectedCount;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="count">The expected item count.</param>
+        /// <param name="collection">The query being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        /// <remarks>The query provider is used to calculate the count.</remarks>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, IQueryable<TItem> collection, out bool shouldAppend)
+        {
+            _actualCount = Queryable.Count(collection);
+            _expectedCount = count;
+            shouldAppend = _actualCount != _expectedCount;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The query being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        /// <remarks>The query provider is used to calculate the count.</remarks>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, IQueryable<TItem> collection, out bool shouldAppend)
+        {
+            _actualCount = Queryable.Count(collection);
             _expectedCount = 0;
             shouldAppend = _actualCount != _expectedCount;
             if (shouldAppend)

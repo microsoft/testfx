@@ -12,6 +12,9 @@ on:
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - '.agents/skills/test-value-evidence/SKILL.md'
       - '.github/skills/testfx-test-value-evidence/SKILL.md'
+      - '.github/skills/testfx-test-quality/SKILL.md'
+      - '.github/agents/test-engineer.agent.md'
+      - '.github/copilot-instructions.md'
       - 'eng/vendored-files.json'
   push:
     branches:
@@ -26,6 +29,9 @@ on:
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - '.agents/skills/test-value-evidence/SKILL.md'
       - '.github/skills/testfx-test-value-evidence/SKILL.md'
+      - '.github/skills/testfx-test-quality/SKILL.md'
+      - '.github/agents/test-engineer.agent.md'
+      - '.github/copilot-instructions.md'
       - 'eng/vendored-files.json'
   workflow_dispatch:
 

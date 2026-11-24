@@ -79,6 +79,12 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzer : DiagnosticAna
             return;
         }
 
+        if (method.Name is not "ContainsSingle"
+            && method.Parameters.Any(parameter => parameter.Name == "collection" && parameter.Type.DerivesFrom(queryableSymbol)))
+        {
+            return;
+        }
+
         IArgumentOperation? collection = invocation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == "collection");
         ITypeSymbol? collectionType = collection is null ? null : GetCollectionType(collection.Value, enumerableSymbol);
         if (collectionType is null || !collectionType.DerivesFrom(queryableSymbol) || UsesCollectionCount(collectionType, method, collectionSymbol, genericCollectionSymbol))

@@ -14,7 +14,7 @@ namespace Microsoft.Testing.Extensions.Policy;
 
 [UnsupportedOSPlatform("browser")]
 [UnsupportedOSPlatform("wasi")]
-internal sealed partial class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutputDeviceDataProducer, ITestHostControllerConnectionAuthorizationConsumer
+internal sealed partial class RetryOrchestrator : IComposableTestHostExecutionOrchestrator, IOutputDeviceDataProducer, ITestHostControllerConnectionAuthorizationConsumer
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -34,6 +34,8 @@ internal sealed partial class RetryOrchestrator : ITestHostExecutionOrchestrator
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 
     public string Description => ExtensionResources.RetryFailedTestsExtensionDescription;
+
+    public TestHostExecutionOrchestratorStage Stage => TestHostExecutionOrchestratorStage.Recovery;
 
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName));

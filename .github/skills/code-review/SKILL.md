@@ -93,9 +93,12 @@ not automatic instructions to comment.
   anchor alone does not justify repeating an unresolved, still-applicable
   finding. Reopen a resolved or declined concern only with new evidence that
   addresses the earlier disposition.
-- Keep per-test grades and rubric-only improvements in the combined review
-  summary. A below-A grade is not a defect or an inline-publication threshold;
-  do not add assertions, churn, or unsupported modernizations just to raise it.
+- Apply [test quality follow-through](../testfx-test-quality/SKILL.md) to
+  test-quality feedback. Prefer inline test-method comments for supported
+  improvements and unresolved doubts, explicitly distinguishing an investigation
+  request from a verified defect. A below-A grade alone is not a defect:
+  explain a no-change disposition rather than inventing assertions or churn.
+  Preserve the context, authorization, anchoring and deduplication gates above.
 - For automatic specialist checks that are fully clean, prefer `noop` when the
   main review already covers that dimension. Explicit slash-command reviews may
   still publish an informational `COMMENT` review. The test-quality workflow

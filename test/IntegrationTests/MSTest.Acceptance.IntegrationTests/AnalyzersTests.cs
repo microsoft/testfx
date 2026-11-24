@@ -190,6 +190,80 @@ public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    public async Task PackagedQueryableAssertionsUseNativeOverloads()
+    {
+        string code = $$"""
+            #file QueryableAssertions.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFrameworks$</TargetFramework>
+                <OutputType>Exe</OutputType>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <Nullable>enable</Nullable>
+                <RunAnalyzers>true</RunAnalyzers>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="MSTest.Analyzers" Version="$MSTestVersion$" />
+                <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+              </ItemGroup>
+            </Project>
+
+            #file .editorconfig
+            root = true
+            [*.cs]
+            dotnet_diagnostic.MSTEST0090.severity = warning
+
+            #file Program.cs
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            internal static class Program
+            {
+                private static void Main()
+                {
+                    IQueryable<int> query = new[] { 1, 2 }.AsQueryable();
+                    Assert.HasCount(2, query);
+                    Assert.IsEmpty(query.Where(value => value < 0));
+                    Assert.IsNotEmpty(query);
+
+                    Assert.HasCount(2, query.AsEnumerable());
+                    Assert.IsEmpty((IEnumerable<int>)query.Where(value => value < 0));
+                    Assert.IsNotEmpty(query.AsEnumerable());
+                    Assert.ContainsSingle(new[] { 1 }.AsQueryable());
+                }
+            }
+            """
+            .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(PackagedQueryableAssertionsUseNativeOverloads), code);
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, "build.binlog");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -bl:\"{binlogPath}\"",
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        string output = result.StandardOutput + result.StandardError;
+        Assert.AreEqual(0, result.ExitCode, output);
+        string[] diagnostics = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.Contains("warning MSTEST0090", StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        Assert.HasCount(4, diagnostics, output);
+        Assert.HasCount(1, diagnostics.Where(line => line.Contains("'Assert.HasCount'", StringComparison.Ordinal)).ToArray(), output);
+        Assert.HasCount(1, diagnostics.Where(line => line.Contains("'Assert.IsEmpty'", StringComparison.Ordinal)).ToArray(), output);
+        Assert.HasCount(1, diagnostics.Where(line => line.Contains("'Assert.IsNotEmpty'", StringComparison.Ordinal)).ToArray(), output);
+        Assert.HasCount(1, diagnostics.Where(line => line.Contains("'Assert.ContainsSingle'", StringComparison.Ordinal)).ToArray(), output);
+
+        DotnetMuxerResult runResult = await DotnetCli.RunAsync(
+            $"run --project \"{testAsset.TargetAssetPath}\" --no-build",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, runResult.ExitCode, runResult.StandardOutput + runResult.StandardError);
+    }
+
+    [TestMethod]
     [DataRow(false, false)]
     [DataRow(false, true)]
     [DataRow(true, false)]

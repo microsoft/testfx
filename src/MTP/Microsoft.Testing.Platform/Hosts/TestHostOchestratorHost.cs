@@ -108,18 +108,21 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 return await invocationLifetimeRunner.RunCleanupAsync(setupExitCode, applicationCancellationToken.CancellationToken.IsCancellationRequested).ConfigureAwait(false);
             }
 
-            foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+            if (_testHostOrchestratorConfiguration.IsOutermostProcess)
             {
-                await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+                {
+                    await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                }
             }
 
+            Func<CancellationToken, Task<int>> run = _testHostOrchestratorConfiguration.IsCompositionActive
+                ? token => RunWithChildChainAsync(testHostOrchestrator, token)
+                : testHostOrchestrator.OrchestrateTestHostExecutionAsync;
             exitCode = _testHostOrchestratorConfiguration.Middleware.Length == 0
-                ? await testHostOrchestrator.OrchestrateTestHostExecutionAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false)
+                ? await run(applicationCancellationToken.CancellationToken).ConfigureAwait(false)
                 : await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
-                    _testHostOrchestratorConfiguration.Middleware,
-                    testHostOrchestrator.OrchestrateTestHostExecutionAsync,
-                    logger,
-                    applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                    _testHostOrchestratorConfiguration.Middleware, run, logger, applicationCancellationToken.CancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {
@@ -170,6 +173,11 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
 
         async Task RunAfterRunAsync(int reportedExitCode, bool swallowFailures)
         {
+            if (!_testHostOrchestratorConfiguration.IsOutermostProcess)
+            {
+                return;
+            }
+
             Exception? firstFailure = null;
 
             foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
@@ -226,6 +234,24 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 // Diagnostic logging in this cleanup path is best-effort; letting it escape could skip
                 // disposal or later lifetimes and strand the resources this loop exists to release.
             }
+        }
+    }
+
+    private async Task<int> RunWithChildChainAsync(ITestHostExecutionOrchestrator orchestrator, CancellationToken cancellationToken)
+    {
+        IEnvironment environment = _serviceProvider.GetEnvironment();
+        const string variable = EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN;
+        string? originalChain = environment.GetEnvironmentVariable(variable);
+        string[] chain = [.. _testHostOrchestratorConfiguration.ConsumedOrchestratorUids, orchestrator.Uid];
+        UTF8Encoding encoding = new(false, true);
+        environment.SetEnvironmentVariable(variable, string.Join(".", chain.Select(uid => Convert.ToBase64String(encoding.GetBytes(uid)))));
+        try
+        {
+            return await orchestrator.OrchestrateTestHostExecutionAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            environment.SetEnvironmentVariable(variable, originalChain);
         }
     }
 }

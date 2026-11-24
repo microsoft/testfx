@@ -798,7 +798,9 @@ handshake on the **same** Execution ID:
 - **Test host** — `HostType = TestHost` (or `ServerTestHost`); actually runs tests.
 - **Test host controller** — `HostType = TestHostController`; monitors/restarts the test host.
 - **Test host orchestrator** — `HostType = TestHostOrchestrator`; drives one or more test host
-  executions (e.g. the retry orchestrator, which also sends `OrchestratorFeature`). A control-channel
+  executions (e.g. the retry orchestrator, which also sends `OrchestratorFeature`). When multiple
+  composable orchestrators participate, each runs in its own process and sends its own handshake;
+  outer stages launch child test-application processes that activate the next stage. A control-channel
   cancel maps to cancelling its application token, which propagates to the orchestrated hosts.
 
 These are the root test-app process and its child process tree. Each advertises its own `InstanceId`;

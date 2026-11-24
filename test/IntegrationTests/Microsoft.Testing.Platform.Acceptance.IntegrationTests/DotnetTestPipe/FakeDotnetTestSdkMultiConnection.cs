@@ -37,7 +37,7 @@ internal static class FakeDotnetTestSdkMultiConnection
         string pipeId = Guid.NewGuid().ToString("N");
         string osPipeName = DotnetTestPipeProtocol.GetPipeName(pipeId);
 
-        var receivedHandshakes = new ConcurrentBag<Dictionary<byte, string>>();
+        var receivedHandshakes = new ConcurrentQueue<Dictionary<byte, string>>();
         var receivedMessages = new ConcurrentBag<RawMessage>();
         var connectionTasks = new ConcurrentBag<Task>();
 
@@ -66,7 +66,7 @@ internal static class FakeDotnetTestSdkMultiConnection
         string osPipeName,
         string supportedProtocolVersions,
         string? coverageSummaryVersion,
-        ConcurrentBag<Dictionary<byte, string>> receivedHandshakes,
+        ConcurrentQueue<Dictionary<byte, string>> receivedHandshakes,
         ConcurrentBag<RawMessage> receivedMessages,
         ConcurrentBag<Task> connectionTasks,
         CancellationToken cancellationToken)
@@ -102,7 +102,7 @@ internal static class FakeDotnetTestSdkMultiConnection
         PipeOptions options,
         string supportedProtocolVersions,
         string? coverageSummaryVersion,
-        ConcurrentBag<Dictionary<byte, string>> receivedHandshakes,
+        ConcurrentQueue<Dictionary<byte, string>> receivedHandshakes,
         ConcurrentBag<RawMessage> receivedMessages,
         TaskCompletionSource connectionEstablished,
         CancellationToken cancellationToken)
@@ -141,7 +141,7 @@ internal static class FakeDotnetTestSdkMultiConnection
         NamedPipeServerStream stream,
         string supportedProtocolVersions,
         string? coverageSummaryVersion,
-        ConcurrentBag<Dictionary<byte, string>> receivedHandshakes,
+        ConcurrentQueue<Dictionary<byte, string>> receivedHandshakes,
         ConcurrentBag<RawMessage> receivedMessages,
         CancellationToken cancellationToken)
     {
@@ -159,7 +159,7 @@ internal static class FakeDotnetTestSdkMultiConnection
                 if (frame.SerializerId == DotnetTestPipeProtocol.SerializerIds.HandshakeMessage)
                 {
                     Dictionary<byte, string> handshake = DotnetTestPipeProtocol.DecodeHandshakeBody(frame.Body);
-                    receivedHandshakes.Add(handshake);
+                    receivedHandshakes.Enqueue(handshake);
 
                     string selected = FakeDotnetTestSdk.SelectHighestMutuallySupportedVersion(handshake, supportedProtocolVersions);
 
