@@ -122,6 +122,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         using System.Collections.Generic;
         using System.Collections.Immutable;
         using System.Globalization;
+        using System.Linq;
         using System.Text.RegularExpressions;
         using System.Threading.Tasks;
         using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -179,6 +180,38 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.HasCount(1, values);
                 Assert.IsEmpty(values);
                 Assert.IsNotEmpty(values);
+            }
+
+            internal static void QueryableEnumerableAndArrayCalls(
+                IQueryable<int> query,
+                IEnumerable<int> enumerable,
+                int[] values)
+            {
+                Assert.HasCount(1, query);
+                Assert.HasCount(1, query, "query count");
+                Assert.HasCount(1, query, $"query count {query.ElementType}");
+                Assert.IsEmpty(query);
+                Assert.IsEmpty(query, $"query empty {query.ElementType}");
+                Assert.IsNotEmpty(query);
+                Assert.IsNotEmpty(query, $"query not empty {query.ElementType}");
+
+                Assert.HasCount(1, enumerable);
+                Assert.HasCount(1, enumerable, $"enumerable count {enumerable.GetType()}");
+                Assert.IsEmpty(enumerable);
+                Assert.IsEmpty(enumerable, $"enumerable empty {enumerable.GetType()}");
+                Assert.IsNotEmpty(enumerable);
+                Assert.IsNotEmpty(enumerable, $"enumerable not empty {enumerable.GetType()}");
+
+                Assert.HasCount<int>(1, (IEnumerable<int>)null!);
+                Assert.IsEmpty<int>((IEnumerable<int>)null!);
+                Assert.IsNotEmpty<int>((IEnumerable<int>)null!);
+
+                Assert.HasCount(1, values);
+                Assert.HasCount(1, values, $"array count {values.Length}");
+                Assert.IsEmpty(values);
+                Assert.IsEmpty(values, $"array empty {values.Length}");
+                Assert.IsNotEmpty(values);
+                Assert.IsNotEmpty(values, $"array not empty {values.Length}");
             }
 
             // General constrained collection forwarders have additional generic parameters, so explicit
@@ -247,9 +280,9 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.DoesNotContainAll<int>(default!, default!, comparer);
                 _ = Assert.ContainsSingle<int>(default!);
                 _ = Assert.ContainsSingle<int>(predicate, default!);
-                Assert.HasCount<int>(1, default!);
-                Assert.IsEmpty<int>(default!);
-                Assert.IsNotEmpty<int>(default!);
+                Assert.HasCount<int>(1, (IEnumerable<int>)default!);
+                Assert.IsEmpty<int>((IEnumerable<int>)default!);
+                Assert.IsNotEmpty<int>((IEnumerable<int>)default!);
             }
 
             internal static void GenericEnumerableCalls(
