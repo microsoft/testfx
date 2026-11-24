@@ -11,7 +11,8 @@ internal static partial class GitHubActionsHistoryStore
         (string TestId, string FullyQualifiedName, string DisplayName),
         GitHubActionsHistoryStats> AggregateStats(
         GitHubActionsHistorySnapshot snapshot,
-        GitHubActionsHistoryScope scope)
+        GitHubActionsHistoryScope scope,
+        int? historyWindowInRuns = null)
     {
         var counts = new Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), (
             int PassCount,
@@ -32,8 +33,23 @@ internal static partial class GitHubActionsHistoryStore
             int passCount = 0;
             int failCount = 0;
             int flakyCount = 0;
-            foreach (IGrouping<(string RunId, int RunAttempt, string CommitSha, DateTimeOffset TimestampUtc, TimeSpan TimestampOffset), GitHubActionsHistorySample> runGroup
-                in testGroup.GroupBy(static sample => sample.GetRunIdentity()))
+            IGrouping<(string RunId, int RunAttempt, string CommitSha, DateTimeOffset TimestampUtc, TimeSpan TimestampOffset), GitHubActionsHistorySample>[] runGroups =
+            [
+                .. testGroup.GroupBy(static sample => sample.GetRunIdentity()),
+            ];
+            if (historyWindowInRuns is int maxRuns)
+            {
+                runGroups =
+                [
+                    .. runGroups
+                        .OrderByDescending(static group => group.Max(static sample => sample.TimestampUtc))
+                        .ThenByDescending(static group => group.Key.RunAttempt)
+                        .ThenBy(static group => group.Key.RunId, StringComparer.Ordinal)
+                        .Take(maxRuns),
+                ];
+            }
+
+            foreach (IGrouping<(string RunId, int RunAttempt, string CommitSha, DateTimeOffset TimestampUtc, TimeSpan TimestampOffset), GitHubActionsHistorySample> runGroup in runGroups)
             {
                 if (runGroup.Any(static sample => sample.Outcome == GitHubActionsHistoryOutcome.Failed))
                 {
@@ -52,7 +68,7 @@ internal static partial class GitHubActionsHistoryStore
 
             long[] durationTicks =
             [
-                .. testGroup
+                .. runGroups.SelectMany(static runGroup => runGroup)
                     .Where(static sample => sample.DurationTicks > 0)
                     .Select(static sample => sample.DurationTicks)
                     .OrderBy(static duration => duration),

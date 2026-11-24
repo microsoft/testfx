@@ -256,35 +256,45 @@ internal sealed class GitHubActionsAnnotationReporter :
         }
 
         string failure = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
-        return FormatHistoryContext(failure, stats, _historyService.HistoryWindowInDays);
+        return FormatHistoryContext(failure, stats, _historyService.HistoryWindowInDays, _historyService.HistoryWindowInRuns);
     }
 
     internal static string FormatHistoryContext(
         string failure,
         GitHubActionsHistoryStats stats,
-        int historyWindowInDays)
+        int historyWindowInDays,
+        int? historyWindowInRuns = null)
     {
         string outcomeContext = stats.FailCount > 0
             ? string.Format(
                 CultureInfo.InvariantCulture,
-                GitHubActionsResources.HistoryFailureContext,
+                historyWindowInRuns is null
+                    ? GitHubActionsResources.HistoryFailureContext
+                    : GitHubActionsResources.HistoryFailureContextRuns,
                 stats.FailCount,
                 stats.FlakyCount,
                 stats.TotalCount,
-                historyWindowInDays)
+                historyWindowInRuns ?? historyWindowInDays,
+                historyWindowInRuns is null ? 0 : historyWindowInDays)
             : stats.FlakyCount > 0
                 ? string.Format(
                     CultureInfo.InvariantCulture,
-                    GitHubActionsResources.HistoryFlakyContext,
+                    historyWindowInRuns is null
+                        ? GitHubActionsResources.HistoryFlakyContext
+                        : GitHubActionsResources.HistoryFlakyContextRuns,
                     stats.FlakyCount,
                     stats.TotalCount,
-                    historyWindowInDays)
+                    historyWindowInRuns ?? historyWindowInDays,
+                    historyWindowInRuns is null ? 0 : historyWindowInDays)
                 : stats.TotalCount >= MinSamplesForRegressionContext
                 ? string.Format(
                     CultureInfo.InvariantCulture,
-                    GitHubActionsResources.HistoryRegressionContext,
+                    historyWindowInRuns is null
+                        ? GitHubActionsResources.HistoryRegressionContext
+                        : GitHubActionsResources.HistoryRegressionContextRuns,
                     stats.TotalCount,
-                    historyWindowInDays)
+                    historyWindowInRuns ?? historyWindowInDays,
+                    historyWindowInRuns is null ? 0 : historyWindowInDays)
                 : string.Empty;
         string durationContext = stats.DurationSampleCount == 0
             ? string.Empty

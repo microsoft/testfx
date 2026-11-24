@@ -69,7 +69,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                         GitHubActionsAnnotationReporter.FormatHistoryContext(
                             failureDetails.Message ?? GitHubActionsResources.NoFailureMessageFallback,
                             historyStats,
-                            _historyService.HistoryWindowInDays),
+                            _historyService.HistoryWindowInDays,
+                            _historyService.HistoryWindowInRuns),
                         failureDetails.ExceptionType,
                         failureDetails.StackTrace,
                         failureDetails.FilePath,

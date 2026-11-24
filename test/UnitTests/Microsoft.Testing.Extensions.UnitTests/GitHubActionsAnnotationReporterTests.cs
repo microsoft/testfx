@@ -285,6 +285,25 @@ public sealed class GitHubActionsAnnotationReporterTests
     }
 
     [TestMethod]
+    public void AppendHistoryContext_ReportsConfiguredRunAttemptWindow()
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount: 7, failCount: 3),
+            historyWindowInRuns: 5);
+
+        string? message = reporter.AppendHistoryContext(
+            "flaky-id",
+            "Tests.Flaky",
+            "Flaky",
+            "boom",
+            exception: null);
+
+        Assert.AreEqual(
+            "boom Historical context: failed 3 and flaked 0 of 10 prior run attempts within the latest 5 run attempts and 14-day history window.",
+            message);
+    }
+
+    [TestMethod]
     [DataRow(4, "boom")]
     [DataRow(5, "boom Historical context: passed all 5 prior runs within the 14-day history window.")]
     public void AppendHistoryContext_AppliesRegressionSampleBoundary(int passCount, string expected)
@@ -558,7 +577,9 @@ public sealed class GitHubActionsAnnotationReporterTests
         return fileSystem.Object;
     }
 
-    private static GitHubActionsAnnotationReporter CreateReporter(GitHubActionsHistoryStats stats)
+    private static GitHubActionsAnnotationReporter CreateReporter(
+        GitHubActionsHistoryStats stats,
+        int? historyWindowInRuns = null)
     {
         var environment = new Mock<IEnvironment>();
         environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
@@ -574,7 +595,7 @@ public sealed class GitHubActionsAnnotationReporterTests
             Mock.Of<IOutputDevice>(),
             Mock.Of<ITestApplicationProcessExitCode>(),
             loggerFactory.Object,
-            new FakeHistoryService(stats, historyWindowInDays: 14));
+            new FakeHistoryService(stats, historyWindowInDays: 14, historyWindowInRuns: historyWindowInRuns));
     }
 
     // Exception whose StackTrace is a caller-supplied synthetic string, letting tests exercise the
@@ -604,13 +625,16 @@ public sealed class GitHubActionsAnnotationReporterTests
 
     private sealed class FakeHistoryService(
         GitHubActionsHistoryStats stats,
-        int historyWindowInDays) : IGitHubActionsHistoryService
+        int historyWindowInDays,
+        int? historyWindowInRuns = null) : IGitHubActionsHistoryService
     {
         public bool IsEnabled => true;
 
         public string? HistoryPath => null;
 
         public int HistoryWindowInDays { get; } = historyWindowInDays;
+
+        public int? HistoryWindowInRuns { get; } = historyWindowInRuns;
 
         public bool TryGetStats(
             string testId,

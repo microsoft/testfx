@@ -3713,6 +3713,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
 
         public int HistoryWindowInDays => IsEnabled ? 30 : 0;
 
+        public int? HistoryWindowInRuns => null;
+
         public bool TryGetStats(
             string testId,
             string fullyQualifiedName,
