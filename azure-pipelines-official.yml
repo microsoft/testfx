@@ -138,7 +138,9 @@ extends:
             timeoutInMinutes: 180
             pool:
               name: $(DncEngInternalBuildPool)
-              image: windows.vs2026.amd64
+              # Keep the scout image: global.json requires Visual Studio 18.12 with the Universal
+              # workload, which the GA windows.vs2026.amd64 image does not provide (vswhere fails).
+              image: windows.vs2026preview.scout.amd64
               os: windows
             steps:
             - template: /eng/pipelines/steps/install-windows-prereqs.yml@self
