@@ -94,6 +94,191 @@ public sealed class FileLoggerDisposalTests : IDisposable
         Assert.AreEqual("0001-01-01T00:00:00.0000000+00:00 Test INFORMATION Message" + Environment.NewLine, _stream.GetText());
     }
 
+#if NETFRAMEWORK
+    [TestMethod]
+    public async Task Dispose_AsyncFlush_WhenThreadPoolIsStarved_FlushesAndReleasesFile()
+    {
+        SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync("file-logger-starvation");
+
+        Assert.AreEqual(0, child.ExitCode, child.Error);
+        string[] records = child.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.TrimStart('\uFEFF'))
+            .Where(line => line.StartsWith("PROBE|", StringComparison.Ordinal))
+            .Select(line => Encoding.UTF8.GetString(Convert.FromBase64String(line["PROBE|".Length..])))
+            .ToArray();
+        string expectedLog = """
+            0001-01-01T00:00:00.0000000+00:00 Test TRACE Message
+
+            """;
+        Assert.AreSequenceEqual(
+            ["released:True", "log:" + expectedLog.Replace("\r\n", "\n"), "warnings:0"],
+            records);
+    }
+
+    [TestMethod]
+    public async Task Dispose_AsyncFlush_WhenConsoleWriteFails_ReportsFaultWithoutCrashingProcess()
+    {
+        SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync("file-logger-console-failure");
+
+        Assert.AreEqual(0, child.ExitCode, child.Error);
+        Assert.AreEqual(
+            "PROBE|" + Convert.ToBase64String(Encoding.UTF8.GetBytes("fault:console failure")),
+            child.Output.Trim().TrimStart('\uFEFF'));
+    }
+
+    internal static void RunConsoleFailureProbe(Action<string> record)
+    {
+        using var attemptedWarning = new ManualResetEvent(false);
+        using var stream = new FailingWriteStream();
+        using var fixture = new FileLoggerDisposalTests();
+        fixture._fileStream.Setup(x => x.Stream).Returns(stream);
+        Thread? warningThread = null;
+        fixture._console.Setup(x => x.WriteLine(It.IsAny<string>()))
+            .Callback(() =>
+            {
+                warningThread = Thread.CurrentThread;
+                attemptedWarning.Set();
+            })
+            .Throws(new IOException("console failure"));
+
+        FileLogger logger = fixture.CreateLogger(new SystemTask(), syncFlush: false, flushTimeout: TimeSpan.FromSeconds(30));
+        logger.Log(LogLevel.Trace, Message, null, Formatter, Category);
+        if (!attemptedWarning.WaitOne(TimeSpan.FromSeconds(30)))
+        {
+            throw new TimeoutException("The child process did not attempt to report the write failure.");
+        }
+
+        try
+        {
+            logger.Dispose();
+        }
+        catch (AggregateException ex) when (ex.InnerException is IOException { Message: "console failure" })
+        {
+            if (warningThread is null)
+            {
+                throw new InvalidOperationException("The warning thread was not recorded.");
+            }
+
+            // RunLongRunning can fault its task before an unhandled exception terminates its thread.
+            if (!warningThread.IsThreadPoolThread && !warningThread.Join(TimeSpan.FromSeconds(30)))
+            {
+                throw new TimeoutException("The dedicated consumer thread did not terminate after the fault.");
+            }
+
+            record("fault:console failure");
+            return;
+        }
+
+        throw new InvalidOperationException("The consumer fault was not reported during disposal.");
+    }
+
+    internal static void RunThreadPoolStarvationProbe(Action<string> record)
+    {
+        ThreadPool.GetMinThreads(out int minimumWorkers, out int minimumIoThreads);
+        ThreadPool.GetMaxThreads(out _, out int maximumIoThreads);
+        int workerCount = Math.Max(minimumWorkers, Environment.ProcessorCount);
+        if (!ThreadPool.SetMinThreads(workerCount, minimumIoThreads)
+            || !ThreadPool.SetMaxThreads(workerCount, maximumIoThreads))
+        {
+            throw new InvalidOperationException("Could not constrain the child process thread pool.");
+        }
+
+        var started = new CountdownEvent(workerCount);
+        var release = new ManualResetEvent(false);
+        var blockers = new List<Task>(workerCount);
+        FileLoggerDisposalTests? fixture = null;
+        Task? consumer = null;
+        bool released = false;
+        string output = string.Empty;
+        int warnings = 0;
+        Exception? failure = null;
+        Exception? cleanupFailure = null;
+        try
+        {
+            for (int i = 0; i < workerCount; i++)
+            {
+                blockers.Add(Task.Run(() =>
+                {
+                    started.Signal();
+                    release.WaitOne();
+                }));
+            }
+
+            if (!started.Wait(TimeSpan.FromSeconds(30)))
+            {
+                throw new TimeoutException("The child process did not occupy every thread-pool worker.");
+            }
+
+            ThreadPool.GetAvailableThreads(out int availableWorkers, out _);
+            if (availableWorkers != 0)
+            {
+                throw new InvalidOperationException("The child process thread pool was not saturated.");
+            }
+
+            fixture = new FileLoggerDisposalTests();
+            fixture._console.Setup(x => x.WriteLine(It.IsAny<string>())).Callback(() => Interlocked.Increment(ref warnings));
+            var systemTask = new SystemTask();
+            var task = new Mock<ITask>(MockBehavior.Strict);
+            task.Setup(x => x.Run(It.IsAny<Action>()))
+                .Returns((Action action) => consumer = systemTask.Run(action));
+            task.Setup(x => x.RunLongRunning(It.IsAny<Func<Task>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns((Func<Task> action, string name, CancellationToken token) => consumer = systemTask.RunLongRunning(action, name, token));
+
+            FileLogger logger = fixture.CreateLogger(task.Object, syncFlush: false, flushTimeout: TimeSpan.FromSeconds(30));
+            logger.Log(LogLevel.Trace, Message, null, Formatter, Category);
+            logger.Dispose();
+            released = logger.IsFileHandleReleased;
+            output = fixture._stream.GetText().Replace("\r\n", "\n");
+        }
+        catch (Exception ex)
+        {
+            failure = ex;
+        }
+        finally
+        {
+            release.Set();
+            if (consumer is not null)
+            {
+                blockers.Add(consumer);
+            }
+
+            var completion = Task.WhenAll(blockers);
+            try
+            {
+                if (!completion.Wait(TimeSpan.FromSeconds(30)))
+                {
+                    cleanupFailure = new TimeoutException("The child process did not finish its thread-pool work.");
+                }
+            }
+            catch (Exception ex)
+            {
+                cleanupFailure = ex;
+            }
+
+            if (completion.IsCompleted)
+            {
+                started.Dispose();
+                release.Dispose();
+                (fixture as IDisposable)?.Dispose();
+            }
+        }
+
+        if (failure is not null || cleanupFailure is not null)
+        {
+            throw new AggregateException(new[] { failure, cleanupFailure }.OfType<Exception>());
+        }
+
+        record("released:" + released);
+        record("log:" + output);
+        record("warnings:" + warnings.ToString(CultureInfo.InvariantCulture));
+    }
+
+    private sealed class FailingWriteStream : MemoryStream
+    {
+        public override void Write(byte[] buffer, int offset, int count) => throw new IOException("log write failure");
+    }
+#endif
+
 #if NETCOREAPP
     [TestMethod]
     public void Log_AsyncFlush_AfterDispose_ThrowsBecauseTheChannelRejectsTheEntry()
@@ -171,7 +356,7 @@ public sealed class FileLoggerDisposalTests : IDisposable
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken) => _inner.Run(function, cancellationToken);
 
         [UnsupportedOSPlatform("browser")]
-        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken) => _inner.RunLongRunning(action, name, cancellationToken);
+        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken) => new TaskCompletionSource<bool>().Task;
 
         public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
 
@@ -189,12 +374,12 @@ public sealed class FileLoggerDisposalTests : IDisposable
         public Task Run(Func<Task> function, CancellationToken cancellationToken) => null!;
 
         public Task Run(Action action) => null!;
-#pragma warning restore VSTHRD114
 
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken) => _inner.Run(function, cancellationToken);
 
         [UnsupportedOSPlatform("browser")]
-        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken) => _inner.RunLongRunning(action, name, cancellationToken);
+        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken) => null!;
+#pragma warning restore VSTHRD114
 
         public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
 
