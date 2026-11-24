@@ -126,6 +126,7 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                     $null = Get-ZipHash $Archive "build/$framework/MSTest.TestAdapter.$extension"
                     $null = Get-ZipHash $Archive "buildTransitive/$framework/MSTest.TestAdapter.$extension"
                 }
+                $null = Get-ZipHash $Archive "buildTransitive/$framework/MSTest.TestAdapter.AssetPolicy.targets"
                 $null = Get-ZipHash $Archive "buildTransitive/$framework/Parallelize.targets"
                 if (@($Archive.Entries | Where-Object { $_.FullName -like 'buildTransitive/*.dll' -or $_.FullName -like '*/_localization/*' }).Count) {
                     throw 'The adapter must ship its assemblies and satellites as lib assets, not build payloads.'

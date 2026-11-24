@@ -1777,3 +1777,27 @@ VSTest satellite-duplication behavior remain unverified.
   /bl:"$probe\build6.binlog" /v:minimal
 # Exit 0; native compilation emitted missing-assembly and runtime-directives warnings.
 ```
+
+### Native Bazel package follow-up
+
+The shared non-SDK policy introduced a required import in the portable
+`buildTransitive` targets. The experimental native Bazel package has its own
+file mapping and must ship the same helper beside those targets for each
+portable TFM. Leaving it out breaks consumer evaluation; making the import
+optional would silently omit the policy. The native package validator checks
+the helper in each package framework alongside the existing target files.
+
+At source revision `b590f31afcd74a184aa95bac7f2c7cd69f6cf43d`, with only
+the new validator assertion applied,
+`pwsh -NoLogo -NoProfile -File .\eng\bazel\validate-mstest-packages.ps1
+-OutputRoot artifacts\bazel-mstest-review-red` built the native package
+closure but exited 1 on the intended missing
+`buildTransitive/net10.0/MSTest.TestAdapter.AssetPolicy.targets` entry.
+With the file mapping added, the identical validator using
+`-OutputRoot artifacts\bazel-mstest-review-green` exited 0. It verified the
+helper for net10.0 and net11.0, then published and ran both real package
+consumers: each passed all three named cases, exercised the intended failure
+and empty-result exits, and the net11 MSBuild driver passed the same three
+cases and its intentional failure check. The green native adapter package
+SHA-256 was
+`58B210FD0D79002CA74CBB3176D7F6F96D5DF509569A872F8F05ED351E599C80`.
