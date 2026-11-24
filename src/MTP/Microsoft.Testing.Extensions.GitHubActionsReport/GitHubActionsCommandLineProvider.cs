@@ -23,6 +23,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsGroups, GitHubActionsResources.GroupsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsHistory, GitHubActionsResources.HistoryOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow, GitHubActionsResources.HistoryWindowOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns, GitHubActionsResources.HistoryWindowRunsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsAnnotations, GitHubActionsResources.AnnotationsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsAttachments, GitHubActionsResources.AttachmentsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummary, GitHubActionsResources.StepSummaryOptionDescription, ArgumentArity.ExactlyOne, false),
@@ -58,6 +59,10 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 when !int.TryParse(arguments[0], NumberStyles.None, CultureInfo.InvariantCulture, out int historyWindow)
                 || historyWindow is < 1 or > 90
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidHistoryWindow, arguments[0])),
+            GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns
+                when !int.TryParse(arguments[0], NumberStyles.None, CultureInfo.InvariantCulture, out int historyWindowRuns)
+                || historyWindowRuns is < 1 or > GitHubActionsCommandLineOptions.HistoryWindowMaxRuns
+                => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidHistoryWindowRuns, arguments[0])),
             GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections
                 when !GitHubActionsStepSummarySectionsParser.TryParse(arguments, out _, out string? invalidValue, out bool hasEmptyValue)
                 => ValidationResult.InvalidTask(
@@ -113,6 +118,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 GitHubActionsCommandLineOptions.GitHubActionsGroups,
                 GitHubActionsCommandLineOptions.GitHubActionsHistory,
                 GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow,
+                GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns,
                 GitHubActionsCommandLineOptions.GitHubActionsAnnotations,
                 GitHubActionsCommandLineOptions.GitHubActionsAttachments,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummary,
@@ -126,8 +132,12 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
         ?? RequiresHistoryOptionAsync(commandLineOptions);
 
     private static Task<ValidationResult> RequiresHistoryOptionAsync(ICommandLineOptions commandLineOptions)
-        => commandLineOptions.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow)
+        => (commandLineOptions.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow)
+            || commandLineOptions.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns))
            && !commandLineOptions.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsHistory)
-               ? ValidationResult.InvalidTask(GitHubActionsResources.HistoryWindowRequiresHistory)
+               ? ValidationResult.InvalidTask(
+                   commandLineOptions.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns)
+                       ? GitHubActionsResources.HistoryWindowRunsRequiresHistory
+                       : GitHubActionsResources.HistoryWindowRequiresHistory)
                : ValidationResult.ValidTask;
 }

@@ -96,6 +96,46 @@ public sealed class GitHubActionsHistoryTests
     }
 
     [TestMethod]
+    public void AggregateStats_LimitsOutcomesAndDurationsToMostRecentRunAttempts()
+    {
+        GitHubActionsHistorySample olderFailure = CreateSample(
+            "Tests.Flaky",
+            GitHubActionsHistoryOutcome.Failed,
+            Now.AddMinutes(-3));
+        olderFailure.RunId = "41";
+        olderFailure.DurationTicks = TimeSpan.FromSeconds(1).Ticks;
+        GitHubActionsHistorySample firstAttempt = CreateSample(
+            "Tests.Flaky",
+            GitHubActionsHistoryOutcome.Passed,
+            Now.AddMinutes(-2));
+        firstAttempt.RunId = "42";
+        firstAttempt.RunAttempt = 1;
+        firstAttempt.DurationTicks = TimeSpan.FromSeconds(2).Ticks;
+        GitHubActionsHistorySample rerunAttempt = CreateSample(
+            "Tests.Flaky",
+            GitHubActionsHistoryOutcome.Failed,
+            Now.AddMinutes(-1));
+        rerunAttempt.RunId = "42";
+        rerunAttempt.RunAttempt = 2;
+        rerunAttempt.DurationTicks = TimeSpan.FromSeconds(3).Ticks;
+        var snapshot = new GitHubActionsHistorySnapshot
+        {
+            Samples = [olderFailure, firstAttempt, rerunAttempt],
+        };
+
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(
+            snapshot,
+            CreateScope(),
+            historyWindowInRuns: 2)[("Tests.Flaky", "Tests.Flaky", "Tests.Flaky")];
+
+        Assert.AreEqual(1, stats.PassCount);
+        Assert.AreEqual(1, stats.FailCount);
+        Assert.AreEqual(2, stats.TotalCount);
+        Assert.AreEqual(2, stats.DurationSampleCount);
+        Assert.AreEqual(TimeSpan.FromSeconds(3), stats.P95Duration);
+    }
+
+    [TestMethod]
     public void Merge_KeepsLatestBoundedSamplesOverall()
     {
         GitHubActionsHistorySample[] samples =
