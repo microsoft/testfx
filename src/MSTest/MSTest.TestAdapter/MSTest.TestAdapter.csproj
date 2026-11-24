@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 
   <PropertyGroup>
     <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
@@ -22,7 +22,8 @@
     <IsPackable>true</IsPackable>
     <!--
       This package has a custom layout (the adapter and the bundled PlatformServices assemblies ship as lib/<tfm>
-      assets, the UWP/WinUI variants ship as build-time payloads under buildTransitive/, and the dependencies are
+      assets, including classic UWP under lib/uap10.0.16299, the Windows-specific modern UWP/WinUI adapter ships as
+      a build-time payload under buildTransitive/net10.0, and the dependencies are
       curated), so the package contents and dependencies are produced explicitly through MSBuild items/targets
       rather than the default SDK output.
     -->
@@ -38,7 +39,7 @@ Supported platforms:
 - UWP and WinUI with .NET 10.0 Windows 10.0.18362+
 
 $(CommonProductDescription)]]></PackageDescription>
-    <!-- UWP/WinUI adapter assemblies are build-time payloads selected by the package targets, not lib assets. -->
+    <!-- The modern UWP/WinUI adapter assemblies are a build-time payload selected by the package targets, not lib assets. -->
     <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
 
     <GenerateBuildInfo>true</GenerateBuildInfo>
@@ -189,21 +190,22 @@ $(CommonProductDescription)]]></PackageDescription>
   </Target>
 
   <!--
-    Classic UWP (uap10.0) consumes the adapter as a build-time payload, as before the lib-asset layout: the
-    buildTransitive/uap10.0 targets reference it explicitly and deploy its dependencies through AppX content.
+    Classic UWP consumes the adapter as standard lib/uap10.0.16299 assets (satellites under lib/uap10.0.16299/<culture>/),
+    like MSTest.TestFramework. The buildTransitive/uap10.0 targets deploy it and its dependencies through AppX content
+    because SDK-style UWP does not copy NuGet runtime assets.
   -->
   <Target Name="_AddClassicUwpTestAdapterPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences"
           Condition=" '$(TargetFramework)' == '$(UwpMinimum)' AND '$(UwpMinimum)' != '' ">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestAdapter.dll" PackagePath="buildTransitive\uap10.0\" />
-      <TfmSpecificPackageFile Include="$(TargetDir)MSTestAdapter.PlatformServices.dll" PackagePath="buildTransitive\uap10.0\" />
+      <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestAdapter.dll" PackagePath="lib\$(UwpMinimum)\" />
+      <TfmSpecificPackageFile Include="$(TargetDir)MSTestAdapter.PlatformServices.dll" PackagePath="lib\$(UwpMinimum)\" />
       <TfmSpecificPackageFile Include="$(MSBuildProjectDirectory)\buildTransitive\uwp\MSTest.TestAdapter.props" PackagePath="buildTransitive\uap10.0\" />
       <TfmSpecificPackageFile Include="$(MSBuildProjectDirectory)\buildTransitive\uwp\MSTest.TestAdapter.targets" PackagePath="buildTransitive\uap10.0\" />
       <TfmSpecificPackageFile Include="$(MSBuildProjectDirectory)\buildTransitive\Parallelize.targets" PackagePath="buildTransitive\uap10.0\" />
 
-      <!-- Localized satellites, packed under buildTransitive/uap10.0/_localization/<culture>/. -->
-      <TfmSpecificPackageFile Include="$(TargetDir)**\MSTestAdapter.PlatformServices.resources.dll" PackagePath="buildTransitive\uap10.0\_localization\" />
-      <TfmSpecificPackageFile Include="$(TargetDir)**\MSTest.TestAdapter.resources.dll" PackagePath="buildTransitive\uap10.0\_localization\" />
+      <!-- Localized satellites, packed under lib/uap10.0.16299/<culture>/ (the culture folder comes from RecursiveDir). -->
+      <TfmSpecificPackageFile Include="$(TargetDir)**\MSTestAdapter.PlatformServices.resources.dll" PackagePath="lib\$(UwpMinimum)\" />
+      <TfmSpecificPackageFile Include="$(TargetDir)**\MSTest.TestAdapter.resources.dll" PackagePath="lib\$(UwpMinimum)\" />
     </ItemGroup>
   </Target>
 
@@ -220,8 +222,8 @@ $(CommonProductDescription)]]></PackageDescription>
     <Error Condition=" !Exists('$(_MSTestUITestAdapterOutput)MSTest.TestAdapter.dll') or !Exists('$(_MSTestUITestAdapterOutput)MSTestAdapter.PlatformServices.dll') "
            Text="Build MSTest.TestAdapter for $(WinUiMinimum) before packing MSTest.TestAdapter. Use the repository solution build and pack entry point." />
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(_MSTestUITestAdapterOutput)MSTest.TestAdapter.dll" PackagePath="buildTransitive\net10.0\ui\" />
-      <TfmSpecificPackageFile Include="$(_MSTestUITestAdapterOutput)MSTestAdapter.PlatformServices.dll" PackagePath="buildTransitive\net10.0\ui\" />
+      <TfmSpecificPackageFile Include="$(_MSTestUITestAdapterOutput)MSTest.TestAdapter.dll" PackagePath="buildTransitive\net10.0\" />
+      <TfmSpecificPackageFile Include="$(_MSTestUITestAdapterOutput)MSTestAdapter.PlatformServices.dll" PackagePath="buildTransitive\net10.0\" />
     </ItemGroup>
   </Target>
 

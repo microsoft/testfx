@@ -17,7 +17,7 @@
   <!--
     WinUI and modern (.NET) UWP applications need the UI build of the adapter, which dispatches [UITestMethod] to the
     application's UI thread. NuGet can only select one lib/<tfm> asset per target framework, so that build ships in
-    buildTransitive/net10.0/ui and replaces the adapter assemblies NuGet resolved from lib (see _MSTestSelectUIAdapterAssets).
+    buildTransitive/net10.0 and replaces the adapter assemblies NuGet resolved from lib (see _MSTestSelectUIAdapterAssets).
     The selection runs at execution time because UseWinUI, UseUwpTools and UseUwp may be set after package targets are
     imported (for example in Directory.Build.targets).
   -->
@@ -27,7 +27,7 @@
       <_MSTestUIAdapterSelected Condition=" '$(UsingMicrosoftNETSdk)' == 'true'
                                             AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetPlatformIdentifier)' == 'Windows'
                                             AND ('$(UseWinUI)' == 'true' OR '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '')) ">true</_MSTestUIAdapterSelected>
-      <_MSTestUIAdapterRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'net10.0', 'ui'))</_MSTestUIAdapterRoot>
+      <_MSTestUIAdapterRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'net10.0'))</_MSTestUIAdapterRoot>
     </PropertyGroup>
   </Target>
 

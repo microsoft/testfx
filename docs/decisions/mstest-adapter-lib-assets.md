@@ -1327,7 +1327,7 @@ Assumptions, not confirmed by the maintainer:
 | Package | Ordinary assets | UI payload (not in `lib`) | Selected by |
 | --- | --- | --- | --- |
 | `MSTest.TestFramework` | `lib/{net462,netstandard2.0,net10.0,net11.0,uap10.0.16299}` | `buildTransitive/net10.0/{uwp,winui}/` (`MSTest.Uwp.dll`, `MSTest.WinUI.dll` with xml, pri and WinUI satellites) | Modern UI projects get compile and runtime assets according to the resolved core framework assets. For classic UWP, NuGet selects `lib/uap10.0.16299` directly. |
-| `MSTest.TestAdapter` | `lib/{net462,net10.0,net11.0}` | `buildTransitive/net10.0/ui/` (UI adapter and platform services); `buildTransitive/uap10.0/` (classic UWP adapter, platform services and `_localization` satellites) | `_MSTestComputeUIAdapterSelection` decides; `_MSTestSelectUIAdapterAssets` then swaps the resolved `lib/net10.0` adapter DLLs for the `ui/` build in place after `ResolvePackageAssets` (and the publish equivalent); classic UWP references the `uap10.0` payload directly |
+| `MSTest.TestAdapter` | `lib/{net462,net10.0,net11.0,uap10.0.16299}` | `buildTransitive/net10.0/` (UI adapter and platform services) | `_MSTestComputeUIAdapterSelection` decides; `_MSTestSelectUIAdapterAssets` then swaps the resolved `lib/net10.0` adapter DLLs for the `buildTransitive/net10.0` build in place after `ResolvePackageAssets` (and the publish equivalent); for classic UWP, NuGet selects `lib/uap10.0.16299` directly (see [classic UWP lib layout](#classic-uwp-adapter-in-lib-and-flat-ui-payload)) |
 
 Classic UWP has a distinct TFM. Its `lib` group includes `MSTest.Uwp` alongside
 the same core framework, type forwarders and satellites as `lib/netstandard2.0`:
@@ -1648,3 +1648,68 @@ the relevant demonstration. Explicit French was tested through packed
 build/publish probes, not an additional native activation case. Linux/Bazel
 packs and unrelated application-model cases were not rerun. These local
 results do not replace fresh blocking CI checks on the published head.
+
+## Classic UWP adapter in lib and flat UI payload
+
+Date: 2026-11-24
+
+### Request
+
+The maintainer asked to drop the `ui` subfolder from the net10 Windows UI
+adapter payload, and to ship the classic UWP adapter directly from `lib`
+because `uap10.0` is a real NuGet TFM.
+
+### Decision
+
+- The Windows-specific UWP/WinUI adapter build moves from
+  `buildTransitive/net10.0/ui/` to `buildTransitive/net10.0/`. The
+  portable net10 adapter stays in `lib/net10.0`, so these two builds do not
+  collide. `buildTransitive/common/MSTest.TestAdapter.targets` selects the
+  flat path through `_MSTestUIAdapterRoot`.
+- The classic UWP adapter DLLs and satellites move from the
+  `buildTransitive/uap10.0` payload to `lib/uap10.0.16299/`, matching
+  `MSTest.TestFramework`. Only the props, targets and `Parallelize.targets`
+  remain under `buildTransitive/uap10.0/`.
+- The UWP targets drop their explicit `Reference`/`HintPath` items. The
+  `_AddMSTestUwpRuntimeDependencies` AppX `Content` items still deploy the
+  adapter DLLs, because SDK-style classic UWP projects do not copy NuGet
+  runtime assets into the AppX layout. Satellite globs read
+  `lib/uap10.0.16299/<culture>/`, so the existing culture policy is
+  unchanged.
+
+### Consequences
+
+- NuGet now produces a `uap10.0.16299` `<references>` group with
+  `MSTest.TestAdapter.dll` and `MSTestAdapter.PlatformServices.dll`. Classic
+  UWP projects therefore get a compile reference to the adapter, as net462
+  and net10 consumers already do. Adapter types are mostly internal, so this
+  was accepted for consistency. Previously the adapter used a
+  `Private=false` reference with no compile surface.
+- Alternative considered: keep the classic UWP DLLs in a `buildTransitive`
+  payload or keep satellites under `_localization`. It was rejected because
+  it keeps a parallel, nonstandard asset location for a TFM that NuGet
+  already understands.
+
+### Validation
+
+- `.\build.cmd -pack` and `.\eng\verify-nupkgs.ps1 -configuration Debug
+  -updateBaselines`: only `eng/package-shapes/MSTest.TestAdapter.txt`
+  changed.
+- MSTest acceptance tests run with `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1`:
+  `WindowsApplicationModelPackageTests`, `CoreFrameworkAssemblyTests`,
+  `ClassicUwpTests` and `SdkTests` (including the classic UWP, Modern UWP
+  and WinUI composition and satellite cases): 191 passed, 0 failed, including
+  end-to-end classic UWP MTP runs for the `MSTest`, `MSTest.Sdk` and
+  `MSTest.TestAdapter` consumers and classic UWP satellite filtering.
+- MTP `PackagedWinUITests` built the WinUI consumers against the flat
+  payload but could not run locally: the native cases need
+  `TESTFX_DOTNET_10_PATH`, and the controller cases failed to load
+  `Microsoft.CodeCoverage.Instrumentation.Core` from the unchanged
+  `Microsoft.Testing.Extensions.PackagedApp.MSBuild` controller layout.
+  CI must cover them.
+
+### Gap
+
+Non-SDK (`packages.config`) classic UWP projects were not exercised. They
+may receive adapter satellites from both NuGet and the culture-policy
+`Content` items.

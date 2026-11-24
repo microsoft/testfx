@@ -8,16 +8,6 @@
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Reference Include="MSTest.TestAdapter">
-      <HintPath>$(_MSTestAdapterPayloadRoot)MSTest.TestAdapter.dll</HintPath>
-      <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
-    </Reference>
-    <Reference Include="MSTestAdapter.PlatformServices">
-      <HintPath>$(_MSTestAdapterPayloadRoot)MSTestAdapter.PlatformServices.dll</HintPath>
-      <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup Condition=" '$(IsTestApplication)' != 'false' ">
     <!-- Stable extension identity: entry-point generation registers MSTest last. -->
@@ -27,8 +17,9 @@
     </TestingPlatformBuilderHook>
   </ItemGroup>
 
-  <!-- SDK-style UWP disables copying NuGet runtime assets by default. Deploy the adapter's
-       resolved dependencies as AppX content without duplicating them in this package.
+  <!-- SDK-style UWP disables copying NuGet runtime assets by default. Deploy the adapter (from
+       lib/uap10.0.16299) and its resolved dependencies as AppX content. The adapter itself is only
+       deployed for test applications.
        Non-SDK UWP projects expose their package assemblies through ReferencePath. -->
   <Target Name="_AddMSTestUwpRuntimeDependencies" AfterTargets="ResolveReferences">
     <ItemGroup>
@@ -45,7 +36,10 @@
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'MSTest.TestFramework.Extensions'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.CoreUtilities'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.PlatformAbstractions'
-                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.VisualStudio.TestPlatform.ObjectModel' ">
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.VisualStudio.TestPlatform.ObjectModel'
+                 OR ( '$(IsTestApplication)' != 'false'
+                   AND ( '%(_MSTestUwpRuntimeDependency.Filename)' == 'MSTest.TestAdapter'
+                     OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'MSTestAdapter.PlatformServices' ) ) ">
         <Link>%(_MSTestUwpRuntimeDependency.Filename)%(_MSTestUwpRuntimeDependency.Extension)</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
@@ -71,7 +65,7 @@
       Every requested localized satellite must be copied to the output directory so any selected culture can be resolved at run time.
       -->
     <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
-      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)**\*.dll" />
+      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)*\*.resources.dll" />
       <!-- Set UICulture from the satellite's culture folder. This is done via Update (not inline on Include) because
            the well-known %(RecursiveDir) metadata is only available on items after they have been created. -->
       <_MSTestV2Files Update="@(_MSTestV2Files)">
@@ -103,7 +97,8 @@
       Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
     -->
     <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
-      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)%(CurrentUICultureHierarchy.Identity)\*.dll">
+      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)%(CurrentUICultureHierarchy.Identity)\*.resources.dll"
+                     Condition=" '%(CurrentUICultureHierarchy.Identity)' != '' ">
         <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
         <Culture>$([System.String]::Copy('%(CurrentUICultureHierarchy.Identity)').ToLowerInvariant())</Culture>
       </_MSTestV2Files>

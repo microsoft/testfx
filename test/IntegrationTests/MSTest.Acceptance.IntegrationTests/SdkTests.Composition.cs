@@ -307,7 +307,7 @@ public sealed partial class SdkTests
         await AssertResolvedMSTestCompositionAsync(helperDirectory, TargetFrameworks.NetCurrent, expectAdapter: true);
         await AssertGeneratedHelperSourcesAsync(helperDirectory, TargetFrameworks.NetCurrent, enableSourceGeneration: true);
 
-        string uiAdapterDirectory = $"/mstest.testadapter/{MSTestVersion.ToLowerInvariant()}/buildtransitive/net10.0/ui/";
+        string uiAdapterDirectory = $"/mstest.testadapter/{MSTestVersion.ToLowerInvariant()}/buildtransitive/net10.0/";
         string[] references = await File.ReadAllLinesAsync(Path.Join(testAsset.TargetAssetPath, "resolved-mstest-assets.txt"), TestContext.CancellationToken);
         foreach (string assembly in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll" })
         {
@@ -463,8 +463,8 @@ public sealed partial class SdkTests
         string? adapterDirectory = !expectAdapter ? null : uiAssetKind switch
         {
             null => $"/mstest.testadapter/{version}/lib/",
-            WindowsApplicationModelAssetKind.ClassicUwp => $"/mstest.testadapter/{version}/buildtransitive/uap10.0/",
-            _ => $"/mstest.testadapter/{version}/buildtransitive/net10.0/ui/",
+            WindowsApplicationModelAssetKind.ClassicUwp => $"/mstest.testadapter/{version}/lib/uap10.0.16299/",
+            _ => $"/mstest.testadapter/{version}/buildtransitive/net10.0/",
         };
         string? uwpDirectory = uiAssetKind switch
         {
