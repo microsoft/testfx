@@ -174,3 +174,20 @@ static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator !=
 static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator ==(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? right) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.ReadSummariesPayload(System.IO.Stream! stream) -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]!
 static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.WriteSummariesPayload(System.IO.Stream! stream, ushort fieldId, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? summaries) -> void
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PROGRESS_SCROLL_REGION = "TESTINGPLATFORM_PROGRESS_SCROLL_REGION" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.CsiEraseEntireLine = "\u001b[2K" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.Index = "\u001bD" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.ResetScrollRegion = "\u001b[r" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.RestoreCursor = "\u001b8" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.SaveCursor = "\u001b7" -> string!
+Microsoft.Testing.Platform.Helpers.IConsole.WriteAtomically(System.Text.StringBuilder! value) -> void
+Microsoft.Testing.Platform.Helpers.SystemConsole.WriteAtomically(System.Text.StringBuilder! value) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal.AnsiTerminal(Microsoft.Testing.Platform.Helpers.IConsole! console, bool useScrollRegion) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame.CollectPinnedLines(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]! messages, int maxLines) -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame.RenderPinnedRows(Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal! terminal, int firstRow, int rowCount) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.CursorProgressRenderer.CursorProgressRenderer(bool useScrollRegion) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.UseScrollRegionProgress.get -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.UseScrollRegionProgress.init -> void
+static Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.MoveCursorTo(int row, int column) -> string!
+static Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.MoveCursorUp(int count) -> string!
+static Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiCodes.SetScrollRegion(int top, int bottom) -> string!

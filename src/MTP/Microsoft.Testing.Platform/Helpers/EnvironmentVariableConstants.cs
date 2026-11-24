@@ -42,6 +42,10 @@ internal static class EnvironmentVariableConstants
     public const string TESTINGPLATFORM_NOBANNER = nameof(TESTINGPLATFORM_NOBANNER);
     public const string TESTINGPLATFORM_EXITCODE_IGNORE = nameof(TESTINGPLATFORM_EXITCODE_IGNORE);
 
+    // Experimental: pins the interactive progress to reserved bottom rows using a terminal scroll region, so it never
+    // moves the cursor over output written directly to the console by tests.
+    public const string TESTINGPLATFORM_PROGRESS_SCROLL_REGION = nameof(TESTINGPLATFORM_PROGRESS_SCROLL_REGION);
+
     // Telemetry
     public const string TESTINGPLATFORM_TELEMETRY_OPTOUT = nameof(TESTINGPLATFORM_TELEMETRY_OPTOUT);
     public const string DOTNET_CLI_TELEMETRY_OPTOUT = nameof(DOTNET_CLI_TELEMETRY_OPTOUT);

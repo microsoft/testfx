@@ -14,6 +14,23 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [Embedded]
 internal sealed class CursorProgressRenderer : IProgressRenderer
 {
+    private readonly bool _useScrollRegion;
+
+    public CursorProgressRenderer()
+        : this(useScrollRegion: false)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CursorProgressRenderer"/> class.
+    /// </summary>
+    /// <param name="useScrollRegion">
+    /// Whether the terminal pins progress to reserved rows with a scroll region. Progress then lives outside the
+    /// area that output scrolls through, so it does not need to be erased before writing output.
+    /// </param>
+    public CursorProgressRenderer(bool useScrollRegion)
+        => _useScrollRegion = useScrollRegion;
+
     // We only show seconds on the screen, but we want the in-place progress to look responsive, so we
     // redraw every half second.
     public TimeSpan TickInterval => TimeSpan.FromMilliseconds(500);
@@ -32,7 +49,11 @@ internal sealed class CursorProgressRenderer : IProgressRenderer
         Action<ITerminal> write,
         TerminalProgressMessageState[]? messages = null)
     {
-        terminal.EraseProgress();
+        if (!_useScrollRegion)
+        {
+            terminal.EraseProgress();
+        }
+
         write(terminal);
         terminal.RenderProgress(progressItems, messages ?? []);
     }

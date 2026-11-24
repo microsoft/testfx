@@ -77,6 +77,13 @@ internal sealed class TerminalTestReporterOptions
     public AnsiMode AnsiMode { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether cursor-capable terminals render progress in rows reserved at the bottom of
+    /// the screen with a scroll region, instead of redrawing it below the last output line. Progress then never
+    /// moves the cursor over output that tests write directly to the console. Experimental and off by default.
+    /// </summary>
+    public bool UseScrollRegionProgress { get; init; }
+
+    /// <summary>
     /// Gets a value indicating when to show standard output.
     /// </summary>
     public OutputShowMode ShowStdout { get; init; } = OutputShowMode.Failed;

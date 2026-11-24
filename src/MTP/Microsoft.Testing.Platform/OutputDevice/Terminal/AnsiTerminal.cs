@@ -14,6 +14,11 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class AnsiTerminal : ITerminal
 {
     /// <summary>
+    /// The smallest window height that leaves room for both output and pinned progress rows.
+    /// </summary>
+    private const int MinimumScrollRegionHeight = 5;
+
+    /// <summary>
     /// File extensions that we will link to directly, all other files
     /// are linked to their directory, to avoid opening dlls, or executables.
     /// </summary>
@@ -24,14 +29,35 @@ internal sealed class AnsiTerminal : ITerminal
     private readonly IConsole _console;
     private readonly string? _baseDirectory;
     private readonly bool _useBusyIndicator;
+    private readonly bool _useScrollRegion;
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
     private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
     private AnsiTerminalTestProgressFrame _spareFrame = new(0, 0);
 
+    // Rows reserved at the bottom of the window for progress, and the window size they were reserved for.
+    private int _pinnedRows;
+    private int _pinnedWidth;
+    private int _pinnedHeight;
+
     public AnsiTerminal(IConsole console)
+        : this(console, useScrollRegion: false)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnsiTerminal"/> class.
+    /// </summary>
+    /// <param name="console">The console to write to.</param>
+    /// <param name="useScrollRegion">
+    /// Whether to pin progress to rows reserved at the bottom of the window by limiting scrolling to the rows above
+    /// them. Output written by anyone, including the code under test, then scrolls above the progress instead of
+    /// being overwritten when the progress is redrawn.
+    /// </param>
+    public AnsiTerminal(IConsole console, bool useScrollRegion)
     {
         _console = console;
+        _useScrollRegion = useScrollRegion;
         _baseDirectory = Directory.GetCurrentDirectory();
 
         // Output ansi code to get spinner on top of a terminal, to indicate in-progress task.
@@ -160,7 +186,17 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        _console.Write(_stringBuilder);
+        if (_useScrollRegion)
+        {
+            // A frame saves the cursor, moves it to the pinned rows, and restores it. Output written by another
+            // thread in the middle of the frame would land in the pinned rows, so the frame must be a single write.
+            _console.WriteAtomically(_stringBuilder);
+        }
+        else
+        {
+            _console.Write(_stringBuilder);
+        }
+
         _isBatching = false;
     }
 
@@ -259,6 +295,12 @@ internal sealed class AnsiTerminal : ITerminal
     /// </summary>
     public void EraseProgress()
     {
+        if (_useScrollRegion)
+        {
+            ReleasePinnedRows();
+            return;
+        }
+
         if (_currentFrame.RenderedLinesCount == 0)
         {
             return;
@@ -271,12 +313,100 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
     {
+        if (_useScrollRegion)
+        {
+            RenderPinnedProgress(progress, messages);
+            return;
+        }
+
         // Reuse the spare frame instead of allocating a new one every tick.
         AnsiTerminalTestProgressFrame nextFrame = _spareFrame;
         nextFrame.Reset(Width, Height);
         nextFrame.Render(_currentFrame, progress, messages, terminal: this);
         _spareFrame = _currentFrame;
         _currentFrame = nextFrame;
+    }
+
+    private void RenderPinnedProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
+    {
+        int width = Width;
+        int height = Height;
+        if (_pinnedRows > 0 && (width != _pinnedWidth || height != _pinnedHeight))
+        {
+            // The rows were reserved for another window size, release them and reserve them again below.
+            ReleasePinnedRows();
+        }
+
+        // Without a known window height (redirected output) or with a tiny window, there is no room to pin
+        // progress, and showing nothing is better than overwriting output.
+        if (height is int.MaxValue or < MinimumScrollRegionHeight)
+        {
+            return;
+        }
+
+        AnsiTerminalTestProgressFrame frame = _currentFrame;
+        frame.Reset(width, height);
+
+        // Use at most a third of the window, one row of which separates the progress from the output above it.
+        int maxRows = Math.Max(2, height / 3);
+        int lineCount = frame.CollectPinnedLines(progress, messages, maxRows - 1);
+
+        // Never shrink the reserved rows during the run, shrinking would leave a gap in the output.
+        int rows = Math.Max(_pinnedRows, lineCount == 0 ? 0 : Math.Min(lineCount + 1, maxRows));
+        if (rows == 0)
+        {
+            return;
+        }
+
+        if (rows > _pinnedRows)
+        {
+            ReservePinnedRows(rows, width, height);
+        }
+
+        frame.RenderPinnedRows(this, firstRow: height - rows + 1, rowCount: rows);
+    }
+
+    private void ReservePinnedRows(int rows, int width, int height)
+    {
+        StringBuilder reserve = new();
+
+        // Remove any previous scroll region, so that the lines below can scroll the whole window. Setting the
+        // region moves the cursor to the top left corner, so the cursor is saved and restored around it.
+        reserve.Append(AnsiCodes.SaveCursor).Append(AnsiCodes.ResetScrollRegion).Append(AnsiCodes.RestoreCursor);
+
+        // The cursor is in the output area, so this clears the previously pinned rows.
+        reserve.Append(AnsiCodes.CsiEraseInDisplay);
+
+        // Move down as many lines as needed, scrolling the output above into the scrollback when the cursor
+        // reaches the bottom of the window, then go back up. The cursor is now on the same output line and
+        // column as before, with the requested number of empty rows below the output area.
+        for (int i = 0; i < rows; i++)
+        {
+            reserve.Append(AnsiCodes.Index);
+        }
+
+        reserve.Append(AnsiCodes.MoveCursorUp(rows));
+
+        // Limit scrolling to the output area above the pinned rows.
+        reserve.Append(AnsiCodes.SaveCursor).Append(AnsiCodes.SetScrollRegion(1, height - rows)).Append(AnsiCodes.RestoreCursor);
+
+        Append(reserve.ToString());
+        _pinnedRows = rows;
+        _pinnedWidth = width;
+        _pinnedHeight = height;
+    }
+
+    private void ReleasePinnedRows()
+    {
+        if (_pinnedRows == 0)
+        {
+            return;
+        }
+
+        // Let output scroll the whole window again, and clear the pinned rows below the cursor.
+        Append($"{AnsiCodes.SaveCursor}{AnsiCodes.ResetScrollRegion}{AnsiCodes.RestoreCursor}{AnsiCodes.CsiEraseInDisplay}");
+        _pinnedRows = 0;
+        _currentFrame.Clear();
     }
 
     public void StartBusyIndicator()

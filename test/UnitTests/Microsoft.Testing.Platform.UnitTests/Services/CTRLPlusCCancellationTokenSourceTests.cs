@@ -239,6 +239,11 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
             // do nothing
         }
 
+        public void WriteAtomically(StringBuilder value)
+        {
+            // do nothing
+        }
+
         public void Write(char value)
         {
             // do nothing

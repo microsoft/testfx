@@ -126,6 +126,7 @@ internal sealed partial class TerminalOutputDevice
             AllowZeroTests = ExitCodeIgnorePolicy.Apply((int)ExitCode.ZeroTests, _commandLineOptions, _environment) == 0,
             HasTestSessionFailure = TestSessionFailureProvider,
             AnsiMode = ansiMode,
+            UseScrollRegionProgress = IsScrollRegionProgressEnabled(_environment),
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
@@ -154,6 +155,12 @@ internal sealed partial class TerminalOutputDevice
         return !RoslynString.IsNullOrEmpty(value)
             && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int attemptNumber)
             && attemptNumber > 1;
+    }
+
+    private static bool IsScrollRegionProgressEnabled(IEnvironment environment)
+    {
+        string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_PROGRESS_SCROLL_REGION);
+        return value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
     }
 
     // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the

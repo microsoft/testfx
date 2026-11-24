@@ -113,6 +113,32 @@ internal static class AnsiCodes
     public const string CsiEraseInLine = CSI + EraseInLine;
 
     /// <summary>
+    /// Clears the entire current line without moving the cursor.
+    /// </summary>
+    public const string CsiEraseEntireLine = CSI + "2" + EraseInLine;
+
+    /// <summary>
+    /// Saves the cursor position and attributes (DECSC).
+    /// </summary>
+    public const string SaveCursor = Esc + "7";
+
+    /// <summary>
+    /// Restores the cursor position and attributes saved by <see cref="SaveCursor"/> (DECRC).
+    /// </summary>
+    public const string RestoreCursor = Esc + "8";
+
+    /// <summary>
+    /// Moves the cursor down one line, scrolling the scroll region up when the cursor is on its bottom margin (IND).
+    /// Unlike a line feed, the column is preserved regardless of the terminal's newline translation.
+    /// </summary>
+    public const string Index = Esc + "D";
+
+    /// <summary>
+    /// Resets the scroll region to the full screen (DECSTBM without parameters). Moves the cursor to the home position.
+    /// </summary>
+    public const string ResetScrollRegion = CSI + "r";
+
+    /// <summary>
     /// Hides the cursor.
     /// </summary>
     public const string HideCursor = $"{Esc}[?25l";
@@ -182,4 +208,28 @@ internal static class AnsiCodes
     /// <param name="column">Column index.</param>
     /// <returns>Control codes to set the desired position.</returns>
     public static string SetCursorHorizontal(int column) => $"{CSI}{column}G";
+
+    /// <summary>
+    /// Restricts scrolling to the rows from <paramref name="top"/> to <paramref name="bottom"/> (DECSTBM).
+    /// Moves the cursor to the home position.
+    /// </summary>
+    /// <param name="top">The 1-based first row of the scroll region.</param>
+    /// <param name="bottom">The 1-based last row of the scroll region.</param>
+    /// <returns>Control codes to set the scroll region.</returns>
+    public static string SetScrollRegion(int top, int bottom) => $"{CSI}{top};{bottom}r";
+
+    /// <summary>
+    /// Moves the cursor up the specified number of lines without changing its column, stopping at the top margin (CUU).
+    /// </summary>
+    /// <param name="count">Number of lines.</param>
+    /// <returns>Control codes to move the cursor.</returns>
+    public static string MoveCursorUp(int count) => $"{CSI}{count}A";
+
+    /// <summary>
+    /// Moves the cursor to the specified 1-based row and column (CUP).
+    /// </summary>
+    /// <param name="row">The 1-based row.</param>
+    /// <param name="column">The 1-based column.</param>
+    /// <returns>Control codes to move the cursor.</returns>
+    public static string MoveCursorTo(int row, int column) => $"{CSI}{row};{column}H";
 }

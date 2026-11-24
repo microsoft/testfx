@@ -128,6 +128,22 @@ internal sealed class SystemConsole : IConsole
 #endif
     }
 
+    public void WriteAtomically(StringBuilder value)
+    {
+        if (_suppressOutput || value.Length == 0)
+        {
+            return;
+        }
+
+        // The writer's buffer is smaller than a typical frame, so writing through it would split the frame into
+        // several writes. Encode the whole frame and hand it to the stream in one call instead.
+        CaptureConsoleOutWriter.Flush();
+        byte[] bytes = CaptureConsoleOutWriter.Encoding.GetBytes(value.ToString());
+        Stream stream = CaptureConsoleOutWriter.BaseStream;
+        stream.Write(bytes, 0, bytes.Length);
+        stream.Flush();
+    }
+
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]

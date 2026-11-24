@@ -74,6 +74,17 @@ internal interface IConsole
     /// </remarks>
     void Write(StringBuilder value);
 
+    /// <summary>
+    /// Writes the contents of <paramref name="value"/> to the output with a single write to the underlying stream,
+    /// so that the terminal never observes output from other writers in the middle of it.
+    /// </summary>
+    /// <remarks>
+    /// Used by the scroll-region progress renderer, whose frames save the cursor, draw outside the scroll region,
+    /// and restore the cursor. Output from another writer landing between those steps would be drawn at the
+    /// wrong position.
+    /// </remarks>
+    void WriteAtomically(StringBuilder value);
+
     void Write(char value);
 
     [UnsupportedOSPlatform("android")]

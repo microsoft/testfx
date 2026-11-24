@@ -150,7 +150,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 _ => throw ApplicationStateGuard.Unreachable(),
             };
 
-            terminal = useAnsi ? new AnsiTerminal(console) : new NonAnsiTerminal(console);
+            terminal = useAnsi ? new AnsiTerminal(console, _options.UseScrollRegionProgress) : new NonAnsiTerminal(console);
 
             // Only cursor-capable ANSI terminals can redraw progress in place. Anything that resolved to a
             // non-ANSI terminal (explicit NoAnsi, or AnsiIfPossible on a console that can't do ANSI) uses
@@ -161,7 +161,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         _useCompactSummary = !useCursorRenderer;
         IProgressRenderer renderer = useCursorRenderer
-            ? new CursorProgressRenderer()
+            ? new CursorProgressRenderer(_options.UseScrollRegionProgress)
             : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch(), () => _assemblies.Values, _options.ContextualModuleOutput, _options.ModuleDisplayName);
 
         _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer, logger);
