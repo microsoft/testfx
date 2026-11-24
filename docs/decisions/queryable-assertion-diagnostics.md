@@ -1,4 +1,4 @@
-# Queryable assertion diagnostics: research and decisions
+# Queryable assertions: research and decisions
 
 ## Problem and contract
 
@@ -361,11 +361,146 @@ The good consumer exited 0 with zero warnings/errors; the bad consumer exited 1
 with only the eight expected MSTEST0090 errors. No CI result is inferred from
 these local runs.
 
+## 2026-11-23: native scalar assertion support
+
+### Problem and contract
+
+Issue [#12244](https://github.com/microsoft/testfx/issues/12244) asks for
+provider-native scalar behavior in `Assert.HasCount`, `Assert.IsEmpty`, and
+`Assert.IsNotEmpty`.
+
+- Add overloads taking `IQueryable<T>` alongside the existing
+  `IEnumerable<T>` overloads. Keep both message-string and interpolated-string
+  handler call shapes.
+- Use `Queryable.Count` for `HasCount` and `IsEmpty`. `IsEmpty` currently
+  reports the exact actual count on failure; using `Any` would either lose that
+  diagnostic or require another provider execution.
+- Use `Queryable.Any` for `IsNotEmpty`.
+- Add matching `IQueryable<T>` handler constructors so interpolated messages
+  retain lazy evaluation and use the same provider operation as the selected
+  assertion overload.
+- Do not catch provider failures or fall back to `Enumerable`. A provider that
+  cannot translate the selected scalar operation should surface its failure;
+  enumeration could be expensive or change semantics. No database provider or
+  SQL behavior is promised.
+- Make MSTEST0090 recognize that direct calls select native overloads. Keep its
+  warning for queryables explicitly viewed as `IEnumerable<T>` (including
+  `AsEnumerable()`), and leave `ContainsSingle` unchanged.
+
+The existing public `IEnumerable<T>` signatures and their behavior remain
+unchanged. A statically typed `IQueryable<T>` now selects the more-specific
+overload; a cast or `AsEnumerable()` retains enumerable semantics. This is an
+intentional source-binding and runtime behavior change for direct queryable
+calls, and the overloads and handler constructors must be tracked in the
+unshipped public API baseline.
+
+### Research and alternatives
+
+- On 2026-11-23, read #12244 and the current assertion, interpolated-handler,
+  analyzer, public-API, and C# 12 source-compatibility implementations at base
+  `8c841a21bf80dd5b19330547ed875f47e853d2bc`. The framework currently targets
+  `netstandard2.0` and supported .NET Framework/.NET TFMs; the analyzer package
+  targets `netstandard2.0`. The package IDs are `MSTest.TestFramework` and
+  `MSTest.Analyzers`, with repository version
+  `5.0.0-preview.26571.1`.
+- `CollectionCountHelper.GetCount` currently probes `ICollection<T>`,
+  non-generic `ICollection`, then `Enumerable.Count`; `IsNotEmptyCore` uses
+  `ICollection<T>` or `Enumerable.Any`. LINQ's `Enumerable.Count` checks
+  in-memory collection and iterator capabilities; it does not dispatch to
+  `IQueryable.Provider`.
+- Runtime-type probing for `IQueryable` was considered and rejected. Since
+  `AsEnumerable()` returns the same object, such a probe cannot preserve the
+  caller's choice to bind as `IEnumerable<T>`; it would also ask providers to
+  translate `Count` or `Any` even when their supported operation is enumeration.
+  Explicit overloads make provider execution opt-in through the static type.
+- The prior design, MSTEST0090 alone, remains a valid workaround but does not
+  provide native assertion syntax. Broad support for other assertions remains
+  out of scope because their return values, predicates, and diagnostic
+  contracts differ.
+
+### Consumer and validation plan
+
+The producer is `MSTest.TestFramework` (`MSTest.TestFramework.dll`, all package
+TFMs); `MSTest.Analyzers` consumes the framework API to decide whether
+MSTEST0090 applies. The consumer boundary is a C# 12 package consumer using
+the repository-pinned SDK `12.0.100-alpha.1.26570.125`. There is no process
+launch, handshake, cancellation protocol, external service, or result
+reporting boundary in this feature. The feature author owns local package,
+analyzer, and source-compatibility validation; release-branch servicing or
+backport decisions remain for maintainers before release.
+
+| Requirement / risk | Automated evidence | Rendered check / gap |
+| --- | --- | --- |
+| Direct `IQueryable<T>` assertions use provider scalar execution, do not enumerate, and report correct outcomes | Provider-recording unit tests for `HasCount`, `IsEmpty`, and `IsNotEmpty`, including failure diagnostics | Nonvisual API behavior |
+| Message and handler paths use provider operations while preserving lazy message evaluation | Handler tests for successful and failing assertions | Nonvisual API behavior |
+| Framework and analyzer packages work together for C# consumers | `PackagedQueryableAssertionsUseNativeOverloads` builds and runs against both Shipping packages; it checks no warning for three direct calls and warnings for enumerable-bound calls and `ContainsSingle` | Compiler diagnostics are the affected surface; no IDE layout change |
+| Explicit enumerable binding remains enumerable-bound; analyzer guidance matches the selected overload | MSTEST0090 unit tests for direct queryable calls, `AsEnumerable()` / enumerable casts, and `ContainsSingle` | No IDE surface/layout change |
+| Existing array, enumerable, named-argument, message, handler, and queryable calls remain compilable | Packed C# 12 `AssertSourceCompatibilityTests` consumer | No rendered surface |
+
+**Source-compatibility caveat:** adding these overloads makes an existing explicit-generic null/default call such as `Assert.IsEmpty<int>(default!)` ambiguous with the array overload (`CS0121`). The C# 12 consumer exposed the same ambiguity for `HasCount`, `IsEmpty`, and `IsNotEmpty`. Callers of those shapes must explicitly bind to `IEnumerable<T>`, for example `Assert.IsEmpty<int>((IEnumerable<int>)default!)`; the source-compatibility fixture now uses that cast. This is a source break for null/default-literal calls, while existing method signatures and binaries remain unchanged.
+
+Parallel-safety preflight found no shared mutable test resource: TestFramework
+unit tests run through the sequential `TestContainer` engine; analyzer tests run
+at method-level parallelism but use per-test compiler inputs; the packed
+consumer harness creates a unique temporary directory and package cache per
+asset. The change does not add process/global state or change test scheduling.
+
+## Validation and test-value evidence (2026-11-24)
+
+Base commit: `8c841a21bf80dd5b19330547ed875f47e853d2bc`. The implementation is
+uncommitted; validation below applies to the source and tests in this worktree.
+Source-and-test diff SHA-256 (excluding this decision record):
+`0CD688F50B1C51F949FBAF96CF56253E290A87AFE47F5A211EE04F8064A6EE84`.
+
+| Contract / test case | Counterfactual | Without behavior | Correct implementation | Evidence / gap |
+| --- | --- | --- | --- | --- |
+| `Count_IQueryable_UsesQueryableCountWithoutEnumerating` | In a detached comparison worktree, changed the `IQueryable<T>` `HasCount` helper from `Queryable.Count` to `Enumerable.Count`; mutation patch SHA-256 `F72DEB890A6E1342DBEBB9857FBADED34194C9326D0E2A0591BC30906C608C46` | Executed: 1 failed, at the assertion expecting provider operation `Count`; exit 2 | Executed: 1 passed; exit 0 | Buildable behavior-removal test; feature patch was applied to the comparison worktree before the mutation. |
+| Provider-backed behavior for `HasCount`, `IsEmpty`, and `IsNotEmpty`; analyzer binding and enumerable-bound cases | No separate counterfactual for this group | Unverified | Focused analyzer tests: 20 passed, 0 failed, 0 skipped on `net10.0`; prior framework TRX reports include all 10 new provider assertion tests passing | Analyzer TRX: `artifacts\TestResults\QueryableAnalyzer\queryable-analyzer-targeted.trx`; framework TRX: `artifacts\TestResults\Debug\TestFramework.UnitTests_net10.0_x64.trx`. |
+| Shipping package consumer and C# 12 source compatibility | Not applicable to the scalar-behavior mutation | Unverified | 3 outer acceptance cases passed, 0 failed, 0 skipped: `PackagedQueryableAssertionsUseNativeOverloads` and `PublicAssertCallShapes_CompileWithCSharp12` for `net11.0` and `net10.0`; exit 0 | Release consumer restored the current framework package into an isolated cache and the source-compatibility helper compared the cached/runtime assembly payload with the package. |
+
+The final Release pack used `.\build.cmd -pack -c Release -v:quiet
+"/bl:artifacts\TestResults\QueryableFeature\pack-final2-73884039168040b28b81d85941c401ba\pack.binlog"`
+and exited 0. Package SHA-256 values were:
+
+- `MSTest.TestFramework.5.0.0-dev.nupkg`: `4DBA9718D2EC92F8DC56CCEA3DFE909EAD352A833A30A65096CE39697E7D0009`
+- `MSTest.Analyzers.5.0.0-dev.nupkg`: `E532875C61C2DFD7F136A610489000AD345AA98943D2C60EEE3927171C663286`
+
+The acceptance host build was
+`.\.dotnet\dotnet.exe build test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -v:quiet "/bl:artifacts\TestResults\QueryableFeature\acceptance-final2-e25e3b5adf8743f59b84750841dc0bff\acceptance-build.binlog"`
+(exit 0). Independent discovery used `dotnet test --project
+test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj
+-c Release --no-build --list-tests json` with `UsingDotNetTest=true` and
+reporter arguments cleared (exit 0). Execution used `--minimum-expected-tests 3`
+and these discovered UIDs:
+
+```text
+11f41e7f-7852-80aa-a58d-352634ea13b4
+1e590805-3ea6-85a5-99e8-41c04e1c164d
+18d4e45e-17fa-8a73-a26c-a78f8321271a
+```
+
+The acceptance verifier reported planned=3, selected=3, executed=3, passed=3,
+failed=0, skipped=0, outer process exit=0. TRX:
+`artifacts\TestResults\QueryableFeature\acceptance-final2-e25e3b5adf8743f59b84750841dc0bff\MSTest.Acceptance.IntegrationTests_net12.0_x64.trx`.
+
+The full analyzer suite was also attempted on `net10.0`: 3,049 passed, 10 failed,
+and 1 skipped. The failures were unrelated global-config-generator continuation
+tests because expected `artifacts\bin\MSTest.GlobalConfigsGenerator\Debug\net12.0`
+outputs were absent. The changed queryable analyzer cases were included in the
+focused 20/20 passing selection; the full analyzer suite is not claimed green.
+The first package-consumer attempt also confirmed the null/default-literal
+ambiguity above; a subsequent attempt exposed and corrected an invalid
+`IsEmpty` test input. The final package consumer run passed.
+
+These are local results, not CI results. UI rendering is not applicable to this
+nonvisual API/analyzer change. Release-branch servicing/backport decisions
+remain for maintainers before release.
+
 ## Open questions
 
 - Extending detection to queries hidden in enumerable aliases or additional
   client-side LINQ chains would require a separately justified analysis scope.
 - Content-fetching assertions and consumed `ContainsSingle` results may deserve
   separate guidance, but are not count/existence-only mistakes.
-- No downstream rollout, servicing change, or framework runtime change is
-  required for this additive analyzer.
+- No downstream rollout or runtime-protocol change is included here; maintainers
+  still need to decide release-branch servicing/backports before release.

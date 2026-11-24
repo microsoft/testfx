@@ -465,7 +465,7 @@ public sealed class AnalyzerDiagnosticContinuationTests
     }
 
     [TestMethod]
-    public async Task Inheritance_ConstrainedQueryable_ReportsOnlyEnumerableContract()
+    public async Task Inheritance_ConstrainedQueryable_UsesNativeOverloadsWithoutDiagnostic()
     {
         const string source = """
             using System.Collections.Generic;
@@ -485,11 +485,7 @@ public sealed class AnalyzerDiagnosticContinuationTests
         using var workspace = new AdhocWorkspace();
         Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
         ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new AvoidEnumerableAssertionsOnQueryableAnalyzer());
-        Assert.HasCount(2, diagnostics);
-        AnalyzerContinuationTestHelpers.AssertDiagnostic(diagnostics[0], "MSTEST0090", DiagnosticSeverity.Info, source,
-            "Assert.HasCount(3, query)", "Use 'Queryable.Count' instead of 'Assert.HasCount' to avoid enumerating query results for a count or existence check");
-        AnalyzerContinuationTestHelpers.AssertDiagnostic(diagnostics[1], "MSTEST0090", DiagnosticSeverity.Info, source,
-            "Assert.IsEmpty(query)", "Use 'Queryable.Any' instead of 'Assert.IsEmpty' to avoid enumerating query results for a count or existence check");
+        Assert.IsEmpty(diagnostics);
     }
 
     [TestMethod]

@@ -86,6 +86,15 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> M
 Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly(System.Func<object?, bool>! predicate, System.Collections.IEnumerable? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<TItem>.AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, System.Linq.IQueryable<TItem>! collection, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<TItem>.AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, System.Linq.IQueryable<TItem>! collection, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, System.Linq.IQueryable<TItem>! collection, out bool shouldAppend) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Linq.IQueryable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Linq.IQueryable<T>! collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty<T>(System.Linq.IQueryable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty<T>(System.Linq.IQueryable<T>! collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Linq.IQueryable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Linq.IQueryable<T>! collection, string? message = "", string! collectionExpression = "") -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestContext() -> void
