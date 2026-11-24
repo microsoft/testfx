@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$SelfTest,
+    [switch]$PrepareArtifacts,
     [string]$Repository = (Split-Path $PSScriptRoot -Parent),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
@@ -10,6 +11,99 @@ param(
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "collection-test-modules.ps1")
+
+function Prepare-CTSComparisonArtifacts {
+    param([string]$ResultsDirectory)
+
+    if ([string]::IsNullOrWhiteSpace($ResultsDirectory)) {
+        throw "CTS artifact preparation requires a results directory."
+    }
+    if (-not (Test-Path -LiteralPath $ResultsDirectory -PathType Container)) {
+        Write-Host "No CTS results directory to prepare: $ResultsDirectory"
+        return
+    }
+
+    foreach ($run in Get-ChildItem -LiteralPath $ResultsDirectory -Directory) {
+        $maps = Join-Path $run.FullName "maps"
+        if (-not (Test-Path -LiteralPath $maps -PathType Container)) {
+            continue
+        }
+        $archive = Join-Path $run.FullName "maps.zip"
+        if (Test-Path -LiteralPath $archive) {
+            throw "CTS map archive already exists: $archive"
+        }
+        $temporaryArchive = Join-Path $run.FullName ("maps-" + [guid]::NewGuid().ToString("N") + ".tmp")
+        try {
+            [System.IO.Compression.ZipFile]::CreateFromDirectory($maps, $temporaryArchive)
+            Move-Item -LiteralPath $temporaryArchive -Destination $archive
+            Remove-Item -LiteralPath $maps -Recurse -Force
+            Write-Host "Archived CTS maps for publication: $archive"
+        } finally {
+            if (Test-Path -LiteralPath $temporaryArchive) {
+                Remove-Item -LiteralPath $temporaryArchive -Force
+            }
+        }
+    }
+}
+
+function Invoke-CTSArchiveSelfTest {
+    $fixture = Join-Path ([System.IO.Path]::GetTempPath()) ("testfx-cts-archive-" + [guid]::NewGuid().ToString("N"))
+    $run = Join-Path $fixture "run"
+    $maps = Join-Path $run "maps"
+    $nested = Join-Path $maps (("long-directory-" + ("x" * 60) + "\") * 6)
+    New-Item -ItemType Directory -Path $nested -Force | Out-Null
+    try {
+        Set-Content -LiteralPath (Join-Path $maps "committed") -Value "first" -NoNewline
+        Set-Content -LiteralPath (Join-Path $nested ".hidden-map") -Value "second" -NoNewline
+        Set-Content -LiteralPath (Join-Path $run "comparison.json") -Value "comparison"
+        Prepare-CTSComparisonArtifacts -ResultsDirectory $fixture
+        $archivePath = Join-Path $run "maps.zip"
+        if (-not (Test-Path -LiteralPath $archivePath -PathType Leaf) -or (Test-Path -LiteralPath $maps) -or
+            -not (Test-Path -LiteralPath (Join-Path $run "comparison.json") -PathType Leaf)) {
+            throw "CTSMapsAreArchivedForPublication: the archive must replace only the maps tree."
+        }
+
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($archivePath)
+        try {
+            $entries = @($archive.Entries | Where-Object { -not $_.FullName.EndsWith("/") })
+            $committed = @($entries | Where-Object FullName -eq "committed")
+            $hidden = @($entries | Where-Object { $_.FullName.EndsWith("/.hidden-map") })
+            if ($entries.Count -ne 2 -or $committed.Count -ne 1 -or $hidden.Count -ne 1 -or
+                $hidden[0].FullName.Length -le 399) {
+                throw "CTSMapsAreArchivedForPublication: long and hidden map paths must be retained."
+            }
+            foreach ($case in @(@{ Entry = $committed[0]; Expected = "first" }, @{ Entry = $hidden[0]; Expected = "second" })) {
+                $reader = [System.IO.StreamReader]::new($case.Entry.Open())
+                try {
+                    if ($reader.ReadToEnd() -cne $case.Expected) {
+                        throw "CTSMapsAreArchivedForPublication: archive contents changed."
+                    }
+                } finally {
+                    $reader.Dispose()
+                }
+            }
+        } finally {
+            $archive.Dispose()
+        }
+        Write-Output "PASS CTSMapsAreArchivedForPublication"
+
+        New-Item -ItemType Directory -Path $maps | Out-Null
+        Set-Content -LiteralPath (Join-Path $maps "committed") -Value "preserve"
+        $rejected = $false
+        try {
+            Prepare-CTSComparisonArtifacts -ResultsDirectory $fixture
+        } catch {
+            $rejected = $_.Exception.Message.StartsWith("CTS map archive already exists:")
+        }
+        if (-not $rejected -or -not (Test-Path -LiteralPath (Join-Path $maps "committed")) -or
+            (Get-Content -LiteralPath (Join-Path $maps "committed") -Raw).Trim() -ne "preserve") {
+            throw "CTSArchiveCollisionPreservesMaps: an existing archive must not overwrite or delete maps."
+        }
+        Write-Output "PASS CTSArchiveCollisionPreservesMaps"
+    } finally {
+        Remove-Item -LiteralPath $fixture -Recurse -Force
+    }
+}
 
 function Invoke-CTSModuleSelectionSelfTest {
     $fixture = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("testfx-cts-selection-" + [guid]::NewGuid().ToString("N"))
@@ -316,6 +410,12 @@ function Invoke-CTSArtifactSelfTest {
 if ($SelfTest) {
     Invoke-CTSModuleSelectionSelfTest
     Invoke-CTSArtifactSelfTest
+    Invoke-CTSArchiveSelfTest
+    exit 0
+}
+
+if ($PrepareArtifacts) {
+    Prepare-CTSComparisonArtifacts -ResultsDirectory $ResultsDirectory
     exit 0
 }
 

@@ -656,6 +656,37 @@ the production or test-helper fix. Tests are run from `artifacts\bin\<project>\D
 each image, and the next `Windows AffectedTests` and `Windows CTS comparison` runs are the first end-to-end proof.
 Media is inapplicable to these CI and test fixes.
 
+## CI fixes for build 1696417 (2026-11-24)
+
+In [build 1696417](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1696417), the Windows
+affected-test job failed when `MSTestAdapter.PlatformServices.UnitTests` on `net10.0-windows10.0.18362.0`
+exceeded the collector's 128-MiB map limit. Like the two previously excluded Framework hosts, that exact
+module/TFM is now omitted from collection; a missing shard conservatively runs the entire module on PRs.
+The concurrently running `net10.0` module had not finished when the failed module stopped the pool, so it remains
+enabled rather than being excluded without evidence.
+
+The CTS collector itself exited zero for 48 modules. Its test-results artifact upload failed with `TF205023`:
+the Azure DevOps container rejected map paths longer than 399 characters. Before publication, the CTS-only
+pipeline step archives each run's `maps` directory as `maps.zip`, preserving relative paths and keeping TRX,
+logs, and `comparison.json` as separate files. Extract `maps.zip` into a `maps` directory to restore the previous
+layout. Preparation also runs after collection failures to preserve partial maps; a failed archive leaves the
+original maps in place and fails the step. The archive is created before the original tree is removed.
+`PublishBuildArtifacts@1`'s `StoreAsTar` is not an alternative on this Windows agent: the
+[task documentation](https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/publish-build-artifacts-v1)
+says that setting is ignored on Windows.
+
+**Test-value evidence:** base `8321e6cf4ceeba5bd68579aa631384b531f0c117`, with these local changes:
+`pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1` exited 1 at
+`ModulePoolSkipsOnlyOversizedMaps` with the new expectation and the original exclusion list, then exited 0
+with the fix. `pwsh -NoLogo -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest` exited 1 at
+`CTSMapsAreArchivedForPublication` with the archive function replaced by a no-op, then exited 0 with the
+implementation; the test checks a path longer than 399 characters, hidden-file contents, and unchanged
+diagnostics. `CTSArchiveCollisionPreservesMaps` verifies that an existing archive is not overwritten or the maps
+deleted. `pwsh -NoLogo -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true
+-EnableNonWindowsAffectedTests false` verifies the CTS archive step and rejects its removal or a success-only
+condition. The actual Azure DevOps upload and the remaining module collections require a hosted run and are not
+validated by these local tests.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
@@ -672,7 +703,8 @@ Media is inapplicable to these CI and test fixes.
   writes to `TestFx_AffectedTestsMaps`; see [CTS comparison activation](#cts-comparison-activation-2026-11-19).
 - With the rollout enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
-  package's `netstandard2.0` assets. The exception is MSTestAdapter.PlatformServices.UnitTests on net462 and net48:
+  package's `netstandard2.0` assets. The exceptions are MSTestAdapter.PlatformServices.UnitTests on net462, net48,
+  and net10.0-windows10.0.18362.0:
   their maps exceed the collector's 128-MiB limit, so they are not collected and selection runs all of their tests
   ([CI fixes for build 1691751](#ci-fixes-for-build-1691751-2026-11-20)). The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
