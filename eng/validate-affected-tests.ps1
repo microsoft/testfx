@@ -169,6 +169,13 @@ function Assert-CTSComparisonWiring {
         throw "CTSComparisonPreservesNativeCollection: run the actual CTS tool, preserve failures, and store its maps separately."
     }
 
+    $archiveStep = [regex]::Match($WindowsBuildTemplate,
+        '(?ms)^  - \$\{\{ if eq\(parameters\.CollectCTS, true\) \}\}:\r?\n    - pwsh: \./eng/collect-cts-comparison\.ps1 -PrepareArtifacts -ResultsDirectory "[^"\r\n]+/CTS"\r?\n      displayName: Archive CTS maps for publication\r?\n      condition: and\(always\(\), ne\(variables\._XmlDocsOnly, ''true''\)\)')
+    $publishIndex = $WindowsBuildTemplate.IndexOf("- task: PublishBuildArtifacts@1", [StringComparison]::Ordinal)
+    if (-not $archiveStep.Success -or $publishIndex -lt 0 -or $archiveStep.Index -ge $publishIndex) {
+        throw "CTSComparisonArchivesMapsBeforePublication: archive CTS maps even after failures, before the results artifact is published."
+    }
+
     $manifest = $ManifestText | ConvertFrom-Json
     if (-not $manifest.isRoot -or @($manifest.tools.PSObject.Properties).Count -ne 1 -or
         $manifest.tools.cts.version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$' -or
@@ -260,6 +267,19 @@ function Invoke-CTSComparisonSelfTest {
                 "    - template: /eng/pipelines/steps/test-cts-comparison.yml",
                 "    - template: /eng/pipelines/steps/test-cts-comparison.yml`n    - template: /eng/pipelines/steps/test-windows-configuration-tests.yml")
             ExpectedFailure = "CTSComparisonAndValidationAreExclusive"
+        },
+        @{
+            Name = "CTSComparisonMissingArchiveStepIsRejected"
+            WindowsBuildTemplate = $WindowsBuildTemplate.Replace("-PrepareArtifacts -ResultsDirectory", "-MissingArchive -ResultsDirectory")
+            ExpectedFailure = "CTSComparisonArchivesMapsBeforePublication"
+        },
+        @{
+            Name = "CTSComparisonArchiveSkippedOnFailureIsRejected"
+            WindowsBuildTemplate = [regex]::Replace(
+                $WindowsBuildTemplate,
+                '(displayName: Archive CTS maps for publication\r?\n      condition: and\()always\(\)',
+                '$1succeeded()')
+            ExpectedFailure = "CTSComparisonArchivesMapsBeforePublication"
         },
         @{
             Name = "CTSComparisonRuntimeRollForwardIsRejected"

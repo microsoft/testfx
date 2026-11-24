@@ -32,6 +32,25 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests that the query is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the query items.</typeparam>
+    /// <param name="collection">The query.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <remarks>The query provider is used to calculate the count reported on failure.</remarks>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsEmpty<T>(IQueryable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsEmpty");
+        message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
+    }
+
+    /// <summary>
     /// Tests that the collection is empty.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -42,6 +61,20 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void IsEmpty<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(IsEmpty), 0, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests that the query is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the query items.</typeparam>
+    /// <param name="collection">The query.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <remarks>The query provider is used to calculate the count reported on failure.</remarks>
+    public static void IsEmpty<T>(IQueryable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount(nameof(IsEmpty), 0, collection, message, collectionExpression);
 
     /// <summary>

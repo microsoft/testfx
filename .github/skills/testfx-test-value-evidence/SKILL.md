@@ -34,7 +34,10 @@ file unmodified; its source revision and blob are recorded in
   The automatic and `/review-tests` reviewers are read-only: report static
   predictions or unavailable proof unless exact matching execution records can
   be inspected. Do not execute PR code or infer red-green proof from green CI.
-  Put material evidence gaps in the summary, not automatic inline findings.
+  Apply [test quality follow-through](../testfx-test-quality/SKILL.md) to
+  material evidence gaps: prefer a test-anchored Copilot investigation request,
+  not an asserted defect or speculative fix. Keep unanchorable gaps in the
+  summary with the exact next action and acceptance criterion.
 
 The existing review workflow reports the canonical evidence table for each
 eligible PR head, including unchanged tests protecting source-only changes.

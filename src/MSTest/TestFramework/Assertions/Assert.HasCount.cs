@@ -35,6 +35,26 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests whether the query has the expected count.
+    /// </summary>
+    /// <typeparam name="T">The type of the query items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The query.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <remarks>The query provider is used to calculate the count.</remarks>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void HasCount<T>(int expected, IQueryable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.HasCount");
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    }
+
+    /// <summary>
     /// Tests whether the collection has the expected count/length.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -46,6 +66,21 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the query has the expected count.
+    /// </summary>
+    /// <typeparam name="T">The type of the query items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The query.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <remarks>The query provider is used to calculate the count.</remarks>
+    public static void HasCount<T>(int expected, IQueryable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
 
     /// <summary>
@@ -240,6 +275,19 @@ public sealed partial class Assert
         TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
 
         int actualCount = CollectionCountHelper.GetCount(collection);
+        if (actualCount == expected)
+        {
+            return;
+        }
+
+        ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
+    }
+
+    private static void HasCount<T>(string assertionName, int expected, IQueryable<T> collection, string? message, string collectionExpression)
+    {
+        TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
+
+        int actualCount = Queryable.Count(collection);
         if (actualCount == expected)
         {
             return;

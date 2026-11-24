@@ -311,7 +311,7 @@ class ReportingContractTests(unittest.TestCase):
 
     def test_result_assessment_retains_clean_review_evidence(self):
         source = SOURCE.read_text(encoding="utf-8")
-        self.assertIn("| Result | Quality | Test | Notes | How to improve |", source)
+        self.assertIn("| Result | Quality | Test | Notes | Follow-up |", source)
         self.assertIn("Otherwise publish the evidence even when all results are `Pass`", source)
         self.assertIn("Likely killed (inferred)", source)
         self.assertIn("Candidate survivor (unverified)", source)
@@ -415,6 +415,44 @@ class ReportingContractTests(unittest.TestCase):
         )
         self.assertNotIn("every graded test earned A;", source)
         self.assertIn("Queued test quality review", source)
+
+    def test_pass_improvements_are_not_discarded_by_the_scorecard(self):
+        source = " ".join(SOURCE.read_text(encoding="utf-8").split())
+        self.assertIn("`Pass` can have an improvement", source)
+        self.assertIn("For each below-A grade, inspect the deduction", source)
+        self.assertIn("explicit no-change rationale", source)
+        self.assertIn("one inline @copilot request", source)
+        self.assertNotIn("`Pass` uses `None`, even below A", source)
+        self.assertNotIn("Keep rubric-only improvements in the scorecard, not inline threads", source)
+
+    def test_uncertainty_requires_inline_investigation_or_explicit_fallback(self):
+        source = " ".join(SOURCE.read_text(encoding="utf-8").split())
+        self.assertIn("Test review · Investigation · Result Uncertain", source)
+        self.assertIn("precise uncertainty", source)
+        self.assertIn("report the decisive observation before changing expectations", source)
+        self.assertIn("the exact @copilot request in Step 5 with the blocked-inline reason", source)
+        self.assertIn("An uncertainty already has an applicable live thread", source)
+        self.assertNotIn("Missing execution proof alone is an evidence gap in the summary", source)
+        self.assertIn("Do not execute PR code, builds, tests, or mutation tools.", source)
+        self.assertIn("a queued request is not verified publication or proof that Copilot started work", source)
+
+    def test_quality_adapter_is_shared_without_replacing_upstream_grading(self):
+        adapter = REPO / ".github" / "skills" / "testfx-test-quality" / "SKILL.md"
+        text = adapter.read_text(encoding="utf-8")
+        self.assertIn("name: testfx-test-quality\n", text)
+        self.assertIn("../../../.agents/skills/grade-tests/SKILL.md", text)
+        self.assertIn("Supplement its report with a", text)
+        self.assertIn("**Follow-up** field", text)
+        self.assertIn("Do not overwrite the upstream skill's Pass/None convention".lower(),
+                      " ".join(text.split()).lower())
+        for relative, reference in (
+            (".github/copilot-instructions.md", "skills/testfx-test-quality/SKILL.md"),
+            (".github/agents/test-engineer.agent.md", "../skills/testfx-test-quality/SKILL.md"),
+        ):
+            with self.subTest(relative=relative):
+                self.assertIn(reference, (REPO / relative).read_text(encoding="utf-8"))
+        self.assertIn("`.github/skills/testfx-test-quality/SKILL.md`",
+                      SOURCE.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

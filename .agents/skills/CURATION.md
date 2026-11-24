@@ -10,6 +10,13 @@ including its result states, concrete improvement suggestions, and read-only
 per-test pseudo-mutation assessment. TestFx-specific review conventions live
 in `.github/workflows/shared/test-reviewer-shared.md`, not a fork of the skill.
 
+The repository-owned `.github/skills/testfx-test-quality/SKILL.md` adapter
+adds improvement/investigation follow-through without changing upstream scores
+or result states. Repository instructions apply it to the managed
+test-quality-auditor; the retained test-engineer and both test-review workflows
+also load it. Keep the upstream grading skill and managed auditor unchanged on
+refresh; compare the adapter's report/permission contract with upstream changes.
+
 The installation deliberately excludes the repository-owned review corrections
 below so a refresh cannot silently overwrite them:
 

@@ -3,6 +3,8 @@
 
 using System.Collections;
 using System.Globalization;
+using System.Linq;
+using System.Linq.Expressions;
 
 using AwesomeAssertions;
 
@@ -1029,6 +1031,249 @@ public partial class AssertTests
         {
             EnumerationCount++;
             throw new InvalidOperationException("The ICollection fast path should not enumerate.");
+        }
+    }
+
+    public void Count_IQueryable_UsesQueryableCountWithoutEnumerating()
+    {
+        RecordingQueryable<int> query = new(1, 2, 3);
+
+        Assert.HasCount(3, query);
+
+        query.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        query.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_IQueryable_WhenCountDiffers_ReportsActualCountWithoutEnumerating()
+    {
+        RecordingQueryable<int> query = new(1, 2);
+
+        Action action = () => Assert.HasCount(3, query);
+
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+
+                expected count: 3
+                actual count:   2
+
+                Assert.HasCount(3, query)
+                """);
+        query.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        query.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_IQueryable_WhenProviderCountThrows_PropagatesWithoutEnumerating()
+    {
+        NotSupportedException expectedException = new("provider count not supported");
+        RecordingQueryable<int> query = new([1, 2], expectedException);
+
+        Action action = () => Assert.HasCount(2, query);
+
+        action.Should().Throw<NotSupportedException>()
+            .WithMessage("provider count not supported");
+        query.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        query.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_IQueryable_InterpolatedStringHandler_IsLazyOnSuccessAndFormatsFailure()
+    {
+        DummyClassTrackingToStringCalls successfulMessage = new();
+        RecordingQueryable<int> successfulQuery = new(1);
+
+        Assert.HasCount(1, successfulQuery, $"success {successfulMessage}");
+
+        successfulMessage.WasToStringCalled.Should().BeFalse();
+        successfulQuery.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        successfulQuery.EnumerationCount.Should().Be(0);
+
+        DummyClassTrackingToStringCalls failingMessage = new();
+        RecordingQueryable<int> failingQuery = new();
+        Action action = () => Assert.HasCount(1, failingQuery, $"count detail {failingMessage}");
+
+        action.Should().Throw<Exception>()
+            .WithMessage("*count detail DummyClassTrackingToStringCalls*expected count:*1*actual count:*0*");
+        failingMessage.WasToStringCalled.Should().BeTrue();
+        failingQuery.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        failingQuery.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsEmpty_IQueryable_UsesQueryableCountWithoutEnumerating()
+    {
+        RecordingQueryable<int> query = new();
+
+        Assert.IsEmpty(query);
+
+        query.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        query.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsEmpty_IQueryable_WhenNotEmpty_ReportsActualCountWithoutEnumerating()
+    {
+        RecordingQueryable<int> query = new(1, 2);
+
+        Action action = () => Assert.IsEmpty(query);
+
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be empty.
+
+                expected count: 0
+                actual count:   2
+
+                Assert.IsEmpty(query)
+                """);
+        query.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        query.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsEmpty_IQueryable_InterpolatedStringHandler_IsLazyOnSuccessAndFormatsFailure()
+    {
+        DummyClassTrackingToStringCalls successfulMessage = new();
+        RecordingQueryable<int> successfulQuery = new();
+
+        Assert.IsEmpty(successfulQuery, $"success {successfulMessage}");
+
+        successfulMessage.WasToStringCalled.Should().BeFalse();
+        successfulQuery.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        successfulQuery.EnumerationCount.Should().Be(0);
+
+        DummyClassTrackingToStringCalls failingMessage = new();
+        RecordingQueryable<int> failingQuery = new(1);
+        Action action = () => Assert.IsEmpty(failingQuery, $"empty detail {failingMessage}");
+
+        action.Should().Throw<Exception>()
+            .WithMessage("*empty detail DummyClassTrackingToStringCalls*expected count:*0*actual count:*1*");
+        failingMessage.WasToStringCalled.Should().BeTrue();
+        failingQuery.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Count));
+        failingQuery.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_IQueryable_UsesQueryableAnyWithoutEnumerating()
+    {
+        RecordingQueryable<int> query = new(1, 2);
+
+        Assert.IsNotEmpty(query);
+
+        query.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Any));
+        query.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_IQueryable_WhenEmpty_ReportsZeroCountWithoutEnumerating()
+    {
+        RecordingQueryable<int> query = new();
+
+        Action action = () => Assert.IsNotEmpty(query);
+
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+
+                actual count: 0
+
+                Assert.IsNotEmpty(query)
+                """);
+        query.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Any));
+        query.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_IQueryable_InterpolatedStringHandler_IsLazyOnSuccessAndFormatsFailure()
+    {
+        DummyClassTrackingToStringCalls successfulMessage = new();
+        RecordingQueryable<int> successfulQuery = new(1);
+
+        Assert.IsNotEmpty(successfulQuery, $"success {successfulMessage}");
+
+        successfulMessage.WasToStringCalled.Should().BeFalse();
+        successfulQuery.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Any));
+        successfulQuery.EnumerationCount.Should().Be(0);
+
+        DummyClassTrackingToStringCalls failingMessage = new();
+        RecordingQueryable<int> failingQuery = new();
+        Action action = () => Assert.IsNotEmpty(failingQuery, $"not empty detail {failingMessage}");
+
+        action.Should().Throw<Exception>()
+            .WithMessage("*not empty detail DummyClassTrackingToStringCalls*actual count: 0*");
+        failingMessage.WasToStringCalled.Should().BeTrue();
+        failingQuery.Provider.ScalarOperations.Should().Equal(nameof(Queryable.Any));
+        failingQuery.EnumerationCount.Should().Be(0);
+    }
+
+    private sealed class RecordingQueryable<T> : IQueryable<T>
+    {
+        private readonly T[] _items;
+
+        public RecordingQueryable(params T[] items)
+            : this(items, null)
+        {
+        }
+
+        public RecordingQueryable(T[] items, Exception? scalarException)
+        {
+            _items = items;
+            Provider = new(this, scalarException);
+            Expression = Expression.Constant(this);
+        }
+
+        public RecordingQueryProvider<T> Provider { get; }
+
+        public Type ElementType => typeof(T);
+
+        public Expression Expression { get; }
+
+        IQueryProvider IQueryable.Provider => Provider;
+
+        public int EnumerationCount { get; private set; }
+
+        public int ItemCount => _items.Length;
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            EnumerationCount++;
+            return ((IEnumerable<T>)_items).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private sealed class RecordingQueryProvider<T>(RecordingQueryable<T> query, Exception? scalarException) : IQueryProvider
+    {
+        public List<string> ScalarOperations { get; } = [];
+
+        public IQueryable CreateQuery(Expression expression)
+            => throw new NotSupportedException("Query composition is not supported by this test provider.");
+
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+            => throw new NotSupportedException("Query composition is not supported by this test provider.");
+
+        public object? Execute(Expression expression)
+            => ExecuteScalar(expression);
+
+        public TResult Execute<TResult>(Expression expression)
+            => (TResult)ExecuteScalar(expression);
+
+        private object ExecuteScalar(Expression expression)
+        {
+            if (expression is not MethodCallExpression methodCall)
+            {
+                throw new NotSupportedException($"Unsupported query expression '{expression}'.");
+            }
+
+            ScalarOperations.Add(methodCall.Method.Name);
+            if (scalarException is not null)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(scalarException).Throw();
+            }
+
+            return methodCall.Method.Name switch
+            {
+                nameof(Queryable.Count) => query.ItemCount,
+                nameof(Queryable.Any) => query.ItemCount > 0,
+                _ => throw new NotSupportedException($"Unsupported scalar operation '{methodCall.Method.Name}'."),
+            };
         }
     }
 

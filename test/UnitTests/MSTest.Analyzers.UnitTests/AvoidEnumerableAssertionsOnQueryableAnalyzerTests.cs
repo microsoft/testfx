@@ -58,11 +58,11 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
         """;
 
     [TestMethod]
-    [DataRow("Assert.HasCount(1, query)", "HasCount", "Count", DisplayName = "CSharp HasCount")]
-    [DataRow("Assert.IsEmpty(query)", "IsEmpty", "Any", DisplayName = "CSharp IsEmpty")]
-    [DataRow("Assert.IsNotEmpty(query)", "IsNotEmpty", "Any", DisplayName = "CSharp IsNotEmpty")]
-    [DataRow("Assert.ContainsSingle(query)", "ContainsSingle", "Count", DisplayName = "CSharp ContainsSingle")]
-    public async Task QueryableCountAndExistenceAssertions_Diagnostic(string assertion, string method, string queryOperation)
+    [DataRow("Assert.HasCount(1, query)", "HasCount", "Count", false, DisplayName = "CSharp HasCount")]
+    [DataRow("Assert.IsEmpty(query)", "IsEmpty", "Count", false, DisplayName = "CSharp IsEmpty")]
+    [DataRow("Assert.IsNotEmpty(query)", "IsNotEmpty", "Any", false, DisplayName = "CSharp IsNotEmpty")]
+    [DataRow("Assert.ContainsSingle(query)", "ContainsSingle", "Count", true, DisplayName = "CSharp ContainsSingle")]
+    public async Task QueryableCountAndExistenceAssertions_Diagnostic(string assertion, string method, string queryOperation, bool expectDiagnostic)
     {
         string code = $$"""
             using System.Linq;
@@ -77,10 +77,17 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic()
-            .WithLocation(0)
-            .WithSeverity(DiagnosticSeverity.Info)
-            .WithMessage($"Use 'Queryable.{queryOperation}' instead of 'Assert.{method}' to avoid enumerating query results for a count or existence check"));
+        if (expectDiagnostic)
+        {
+            await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithSeverity(DiagnosticSeverity.Info)
+                .WithMessage($"Use 'Queryable.{queryOperation}' instead of 'Assert.{method}' to avoid enumerating query results for a count or existence check"));
+        }
+        else
+        {
+            await VerifyCS.VerifyAnalyzerAsync(code);
+        }
     }
 
     [TestMethod]
@@ -94,14 +101,14 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
             {
                 public void Check(IQueryable<int> query)
                 {
-                    [|Assert.HasCount(1, query.Where(i => i > 0))|];
-                    [|Assert.HasCount(collection: query, expected: 0, message: "empty")|];
-                    [|Assert.IsEmpty(collection: query, message: $"{query}")|];
-                    [|Assert.IsNotEmpty(query, $"{query}")|];
+                    Assert.HasCount(1, query.Where(i => i > 0));
+                    Assert.HasCount(collection: query, expected: 0, message: "empty");
+                    Assert.IsEmpty(collection: query, message: $"{query}");
+                    Assert.IsNotEmpty(query, $"{query}");
                     [|Assert.ContainsSingle(query, $"{query}")|];
                     [|Assert.ContainsSingle(i => i > 0, query)|];
                     [|Assert.ContainsSingle(collection: query, predicate: i => i > 0, message: "one")|];
-                    [|Assert.HasCount<int>(1, query.OrderBy(i => i))|];
+                    Assert.HasCount<int>(1, query.OrderBy(i => i));
                 }
             }
             """;
@@ -134,8 +141,8 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
             {
                 public void Check(Query query, IQuery derived, IQueryable nonGeneric)
                 {
-                    [|Assert.HasCount(1, query)|];
-                    [|Assert.IsEmpty(derived)|];
+                    Assert.HasCount(1, query);
+                    Assert.IsEmpty(derived);
                     [|Assert.IsNotEmpty(nonGeneric)|];
                     [|Assert.ContainsSingle(nonGeneric)|];
                 }
@@ -144,8 +151,8 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
                     where TQuery : TBase
                     where TBase : IQueryable<int>
                 {
-                    [|Assert.IsEmpty(query)|];
-                    [|Assert.HasCount(1, other)|];
+                    Assert.IsEmpty(query);
+                    Assert.HasCount(1, other);
                 }
             }
             """;
@@ -166,10 +173,15 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
             {
                 public void Check(IQueryable<int> query)
                 {
+                    Assert.HasCount(1, query);
+                    Assert.IsEmpty(query);
+                    [|Assert.HasCount(1, (IEnumerable<int>)query)|];
                     [|Assert.IsEmpty((IEnumerable<int>)query)|];
+                    [|Assert.IsNotEmpty((IEnumerable<int>)query)|];
                     [|Assert.HasCount(1, (IEnumerable)query)|];
-                    [|Assert.IsNotEmpty(((query)))|];
+                    [|Assert.HasCount(1, query.AsEnumerable())|];
                     [|Assert.IsEmpty(query.AsEnumerable())|];
+                    [|Assert.IsNotEmpty(query.AsEnumerable())|];
                     [|Assert.ContainsSingle(Enumerable.AsEnumerable(query))|];
                 }
             }
@@ -286,15 +298,16 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
     {
         string code = """
             using System.Collections;
+            using System.Collections.Generic;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class Tests
             {
                 public void Check()
                 {
-                    Assert.HasCount<int>(1, null!);
-                    Assert.IsEmpty<int>(null!);
-                    Assert.IsNotEmpty<int>(null!);
+                    Assert.HasCount<int>(1, (IEnumerable<int>)null!);
+                    Assert.IsEmpty<int>((IEnumerable<int>)null!);
+                    Assert.IsNotEmpty<int>((IEnumerable<int>)null!);
                     Assert.ContainsSingle<int>(null!);
                     Assert.IsEmpty((IEnumerable)null!);
                 }
@@ -446,18 +459,18 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
             {
                 public void Check(GenericCountQuery<string> generic, NonGenericCountQuery<string> nonGeneric, ReadOnlyCountQuery<string> readOnly)
                 {
-                    [|Assert.HasCount<object>(1, generic)|];
-                    [|Assert.IsEmpty<object>(generic)|];
-                    [|Assert.IsNotEmpty<object>(generic)|];
+                    Assert.HasCount<object>(1, generic);
+                    Assert.IsEmpty<object>(generic);
+                    Assert.IsNotEmpty<object>(generic);
                     [|Assert.HasCount(1, (IEnumerable)generic)|];
                     [|Assert.IsEmpty((IEnumerable)generic)|];
                     [|Assert.IsNotEmpty((IEnumerable)generic)|];
                     [|Assert.ContainsSingle(generic)|];
                     [|Assert.ContainsSingle(nonGeneric)|];
                     [|Assert.ContainsSingle(i => i.Length > 0, generic)|];
-                    [|Assert.HasCount(1, readOnly)|];
-                    [|Assert.IsEmpty(readOnly)|];
-                    [|Assert.IsNotEmpty(readOnly)|];
+                    Assert.HasCount(1, readOnly);
+                    Assert.IsEmpty(readOnly);
+                    Assert.IsNotEmpty(readOnly);
                 }
             }
             """;

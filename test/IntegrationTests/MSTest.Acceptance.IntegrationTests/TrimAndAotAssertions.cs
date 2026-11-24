@@ -32,6 +32,8 @@ internal static class TrimAndAotAssertions
         "AssemblyResolver.cs",
         "DataSerializationHelper.cs",
         "ManagedNameHelper.cs",
+        "ManagedNameHelper.Escaping.cs",
+        "ManagedNameHelper.Format.cs",
         "MethodInfoExtensions.cs",
         "TestContextImplementation.AssertionFailureDiagnostics.cs",
         "TestMethodFilter.cs",

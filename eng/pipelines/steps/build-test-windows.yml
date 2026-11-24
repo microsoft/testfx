@@ -82,6 +82,11 @@ steps:
       displayName: Compare TRX, CTRF, and JUnit reports
       condition: and(succeededOrFailed(), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'), eq(variables.HasTestReports, 'true'))
 
+  - ${{ if eq(parameters.CollectCTS, true) }}:
+    - pwsh: ./eng/collect-cts-comparison.ps1 -PrepareArtifacts -ResultsDirectory "$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/CTS"
+      displayName: Archive CTS maps for publication
+      condition: and(always(), ne(variables._XmlDocsOnly, 'true'))
+
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Test Results folders'
     inputs:

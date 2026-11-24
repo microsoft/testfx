@@ -656,6 +656,37 @@ the production or test-helper fix. Tests are run from `artifacts\bin\<project>\D
 each image, and the next `Windows AffectedTests` and `Windows CTS comparison` runs are the first end-to-end proof.
 Media is inapplicable to these CI and test fixes.
 
+## CI fixes for build 1696417 (2026-11-24)
+
+In [build 1696417](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1696417), the Windows
+affected-test job failed when `MSTestAdapter.PlatformServices.UnitTests` on `net10.0-windows10.0.18362.0`
+exceeded the collector's 128-MiB map limit. Like the two previously excluded Framework hosts, that exact
+module/TFM is now omitted from collection; a missing shard conservatively runs the entire module on PRs.
+The concurrently running `net10.0` module had not finished when the failed module stopped the pool, so it remains
+enabled rather than being excluded without evidence.
+
+The CTS collector itself exited zero for 48 modules. Its test-results artifact upload failed with `TF205023`:
+the Azure DevOps container rejected map paths longer than 399 characters. Before publication, the CTS-only
+pipeline step archives each run's `maps` directory as `maps.zip`, preserving relative paths and keeping TRX,
+logs, and `comparison.json` as separate files. Extract `maps.zip` into a `maps` directory to restore the previous
+layout. Preparation also runs after collection failures to preserve partial maps; a failed archive leaves the
+original maps in place and fails the step. The archive is created before the original tree is removed.
+`PublishBuildArtifacts@1`'s `StoreAsTar` is not an alternative on this Windows agent: the
+[task documentation](https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/publish-build-artifacts-v1)
+says that setting is ignored on Windows.
+
+**Test-value evidence:** base `8321e6cf4ceeba5bd68579aa631384b531f0c117`, with these local changes:
+`pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1` exited 1 at
+`ModulePoolSkipsOnlyOversizedMaps` with the new expectation and the original exclusion list, then exited 0
+with the fix. `pwsh -NoLogo -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest` exited 1 at
+`CTSMapsAreArchivedForPublication` with the archive function replaced by a no-op, then exited 0 with the
+implementation; the test checks a path longer than 399 characters, hidden-file contents, and unchanged
+diagnostics. `CTSArchiveCollisionPreservesMaps` verifies that an existing archive is not overwritten or the maps
+deleted. `pwsh -NoLogo -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true
+-EnableNonWindowsAffectedTests false` verifies the CTS archive step and rejects its removal or a success-only
+condition. The actual Azure DevOps upload and the remaining module collections require a hosted run and are not
+validated by these local tests.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
@@ -672,7 +703,8 @@ Media is inapplicable to these CI and test fixes.
   writes to `TestFx_AffectedTestsMaps`; see [CTS comparison activation](#cts-comparison-activation-2026-11-19).
 - With the rollout enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
-  package's `netstandard2.0` assets. The exception is MSTestAdapter.PlatformServices.UnitTests on net462 and net48:
+  package's `netstandard2.0` assets. The exceptions are MSTestAdapter.PlatformServices.UnitTests on net462, net48,
+  and net10.0-windows10.0.18362.0:
   their maps exceed the collector's 128-MiB limit, so they are not collected and selection runs all of their tests
   ([CI fixes for build 1691751](#ci-fixes-for-build-1691751-2026-11-20)). The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
@@ -835,6 +867,8 @@ usually two module slots with two child batches each. Each module owns logs/resu
 publication still uses the provider's shared-container coordination. Scheduling must not silently multiply
 per-module child limits, omit frameworks or turn partial/canceled collection into success.
 
+The label design in this paragraph and its evidence below are superseded by
+[Collection console presentation](#collection-console-presentation-2026-11-23) and retained as history.
 The pool adds a project/TFM label to unscoped stdout and stderr. Affected-test diagnostics that already start
 with `[affected-tests] [assembly | framework | ...]` retain that context without an additional pool label.
 Assembly names may contain balanced bracketed text, but recognition cannot cross an unscoped tag such as
@@ -942,6 +976,106 @@ is supported for legacy .NET Framework deployment paths. With the unchanged publ
 196-UID startup-heavy two-framework fixture, the first interleaved measurement was 18.79 seconds with one module
 slot and 11.91 seconds with two, both with ten startups and two complete 98-UID maps. This isolates module overlap,
 not the new batching feedback or cache benefit, and is not a full-suite forecast.
+
+#### Collection console presentation (2026-11-23)
+
+The `Test and collect affected-test map` step of
+[build 1695348](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1695348&view=logs&j=88896cab-fdcf-5663-ba27-dbd4faf1ed02&t=38027b7a-cac6-5a9e-d77b-89d30e80d7fd)
+(job `Windows AffectedTests`, log 244) printed 610 console lines for 46 modules and was hard to read:
+
+- `[affected-tests]` appeared only on provider diagnostics, not on pool or SDK lines, so it identified nothing.
+- Full contexts such as `[MSTest.SelfRealExamples.UnitTests | .NETCoreApp,Version=v11.0 | .NET 11.0.0 | win-x64]`
+  restated the framework up to three times on every line.
+- Module success was spread over provider banners (`Experimental test-map collection:`, `Discovered`,
+  `Mapping timing:`, `Collected test map`) and a per-module SDK `Test map collection: Completed.` block with
+  a repeated `Module completion is not a test verdict` line. No single line said which module finished,
+  how long it took or what it produced.
+
+The console now mirrors a normal MTP run of the same modules (log 134 of that build:
+`Running tests from <path> (net11.0|x64)`, then `<path> (net462|x64, runtime: net48) passed [...] (7s 507ms)`
+and a `Test run summary:` block), with only the extra collection details:
+
+- `eng/collect-affected-test-maps.ps1` writes one header,
+  `Collecting test maps for N modules (up to S at a time, at most C instrumentation children).`
+- `eng/collection-module-pool.ps1` writes `Collecting test map from <module path> (<tfm>)` when a module starts.
+- Diagnostics use `[<project> <tfm>]` for the module's own lines. A different assembly or target keeps its own
+  short framework, architecture and differing runtime when available, since it has no completion line here.
+  Neither `[affected-tests]` nor redundant runtime/RID details are repeated. Azure DevOps (`##vso[`, `##[`) and
+  GitHub (`::`) commands pass through unlabeled; other bracket shapes are kept verbatim.
+- After a blank line, each module gets one completion line in MTP's framework display:
+  `<path> (<tfm>|<arch>[, runtime: <runtime>]) <outcome> (<duration>)`. Outcome is
+  `mapped N tests to M source paths`, `completed (map counts not reported)`, `failed with exit code X` or `canceled`.
+  As in MTP, the runtime is shown only when it differs from the TFM (`net48|x64`, not
+  `.NETFramework,Version=v4.8 | .NET Framework 4.8.9363.0`).
+- The entry script ends with `Test map collection summary: Completed!` or `Failed! (exit code X)`, followed by
+  `modules`, `canceled` (only when non-zero), `tests mapped`, `duration` and the module-log directory.
+  A reported zero is distinct from an absent count. The summary qualifies partial totals with the number
+  of finished modules reporting counts, or says `not reported` when none did.
+
+Only lines whose information moves into the completion line or summary are suppressed: those provider
+banners, `Mapping timing` with zero conservative fallback, the SDK's successful completion block, its
+`Child test-result reporting is suppressed` banner and repeated `Telemetry is:` lines (shown once per pool).
+Non-zero conservative fallback, failed completion blocks, warnings and unrecognized provider details are kept. The
+`Test-map collection child failed: MSTest v...` banner drops its `[RID - runtime]` suffix because the
+completion line carries it. Per-module `collection.log` still holds the raw child output. `module.json`
+additionally records `ProcessId`, `Discovered`, `Tests`, `SourcePaths`, `MapUri`, `Runtime` and `Rid`.
+
+The pool checks for a native exit before stopping each remaining process tree. If the process already exited,
+its result belongs in `Modules` and counts as finished, including a nonzero exit. `CanceledModules` contains
+only peers still running when cancellation was requested. The console and JSON use the same classification;
+cleanup and native-exit precedence are unchanged.
+
+Alternatives considered:
+
+- Applying `[affected-tests]` consistently to pool and SDK lines: every line would carry the same constant.
+- Always showing the full `[assembly | framework | runtime | RID]` context: correct, but MTP shows
+  architecture/runtime once per module rather than on every line.
+- Changing provider or SDK text: neither is owned here. Rewriting only console presentation avoids
+  cross-repository package flow. The provider-owned `Process launch attempts`,
+  `Mapping batch timing feedback is unavailable` and multi-line `Collector error:` stacks remain verbatim and
+  are follow-up candidates for their owner.
+- Buffering each module's output until it completes, like grouped test output: long acceptance modules run
+  for over an hour in log 244 and would give no live progress.
+
+The start line has no architecture because the RID is known only after the child reports it. Full-context
+lines are attributed using the child's pipe, assembly file name or project name, and declared target. A bare
+provider TFM can match a platform-suffixed module; another reported target cannot supply that module's counts.
+Colors and the live progress area of the MTP terminal reporter are not reproduced; this
+is plain CI log text in English.
+
+**Initial evidence (2026-11-23):** the change is based on `be3cf477a83f9b94e416b0401163a48580e389aa`; its
+source/test patch (`git --no-pager diff --binary -- eng`, redirected through `cmd`), excluding this document,
+has SHA-256 `49472E5378645885599C880E2DF7F7A485E89581E48C4E2DD57D95B4E4DC68F4`. All runs use Windows,
+PowerShell 7.7.0 and `pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1`, with
+process-scoped `TEMP`/`TMP` under `artifacts\tmp`, in isolated comparisons outside the repository:
+
+- base validator and scripts: exit 0, 34 passed;
+- new validator with the base scripts: exit 1, all 31 exact multi-line output cases fail on stdout and stderr;
+- new validator and scripts with drained native-failure detection disabled: exit 1 in
+  `ModulePoolReportsNativeFailureDuringOutputError`, which sees `canceled` rather than
+  `failed with exit code 37`;
+- new validator and scripts: exit 0, 51 passed.
+
+A session-local replay of the new presenter over log 244, attributing lines to modules by their labels,
+reduces 610 console lines to 205: 46 completion lines, a 57,399 `tests mapped` total equal to the sum of the
+original `Collected test map` counts, and two unattributed `Skipping map collection` notices printed by the
+entry script before the pool starts. It is not an SDK collection run.
+
+**Review evidence (2026-11-24):** Windows, PowerShell 7.7.0, comparison commit
+`98a5f0a60706675f1496085eef35aebb0104dc79`, review patch SHA-256
+`D4CDD21F885EE42CEDF3D32597B03A9979B589B9FF2D44ED9BF5BC7DAD03E962` (`git diff --binary HEAD -- eng`
+before the review commit). The validator above recorded 58 named checks (exit 0). The previous presenter
+assigned another target's seven UIDs to the parent and missed a map path containing an apostrophe. An isolated
+comparison that classified an already-exited successful peer as canceled failed `ModulePoolCountsAlreadyExitedPeer`
+with one finished, one canceled and no reported count instead of two finished and three mapped tests (exit 1).
+The final replay still yielded 46 module completions, 57,399 mapped tests and 205 lines.
+
+The real entry script also collected a clean `net12.0` two-row MSTest module via SDK `12.0.100-alpha.1.26570.125`,
+MSTest `5.0.0-preview.26571.1`, MTP `3.0.0-preview.26571.1` and affected-tests provider `18.14.0-preview.26570.4`.
+With filesystem storage, exit 0 produced two distinct UIDs associated with `MapTests.cs`, matching `module.json`
+and the console. With an untracked source-tree marker, the SDK exited 1; the summary retained that exit and
+reported unavailable counts rather than zero. Both transcripts were inspected in an 80-by-24 terminal.
+Hosted Azure DevOps rendering and Linux/macOS execution of this revision have not been verified.
 
 #### Final local composition and performance evidence
 
