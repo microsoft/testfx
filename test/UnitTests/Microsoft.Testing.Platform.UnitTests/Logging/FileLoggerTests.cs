@@ -529,11 +529,6 @@ public sealed class FileLoggerTests : IDisposable
         }
     }
 
-    // Deterministic guard for the fix in https://github.com/dotnet/sdk/issues/55215.
-    // On .NET Framework (the netstandard2.0 build) the consumer loop MUST be started with the synchronous
-    // ITask.Run(Action) overload so that Dispose()'s blocking Wait() can never be starved by the thread pool.
-    // The previous implementation used the asynchronous ITask.Run(Func<Task>, ...) overload, which is exactly the
-    // regression this test locks down.
     [TestMethod]
     public void FileLogger_WhenAsyncFlush_StartsConsumerLoopWithExpectedTaskOverload()
     {
@@ -557,8 +552,10 @@ public sealed class FileLoggerTests : IDisposable
 #if NETCOREAPP
         Assert.IsTrue(recordingTask.StartedAsynchronousLoop, "netcore must run the awaited async consumer loop.");
         Assert.IsFalse(recordingTask.StartedSynchronousLoop);
+        Assert.IsFalse(recordingTask.StartedDedicatedLoop);
 #else
-        Assert.IsTrue(recordingTask.StartedSynchronousLoop, "netstandard must run a fully synchronous consumer loop that cannot be thread-pool starved during Dispose.");
+        Assert.IsTrue(recordingTask.StartedDedicatedLoop, "netstandard must start its synchronous consumer on a dedicated thread.");
+        Assert.IsFalse(recordingTask.StartedSynchronousLoop);
         Assert.IsFalse(recordingTask.StartedAsynchronousLoop);
 #endif
     }
@@ -721,6 +718,8 @@ public sealed class FileLoggerTests : IDisposable
 
         public bool StartedAsynchronousLoop { get; private set; }
 
+        public bool StartedDedicatedLoop { get; private set; }
+
         public Task Run(Func<Task> function, CancellationToken cancellationToken)
         {
             StartedAsynchronousLoop = true;
@@ -738,7 +737,10 @@ public sealed class FileLoggerTests : IDisposable
 
         [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
-            => _inner.RunLongRunning(action, name, cancellationToken);
+        {
+            StartedDedicatedLoop = true;
+            return _inner.RunLongRunning(action, name, cancellationToken);
+        }
 
         public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
 
@@ -764,7 +766,7 @@ public sealed class FileLoggerTests : IDisposable
 
         [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
-            => _inner.RunLongRunning(action, name, cancellationToken);
+            => new TaskCompletionSource<bool>().Task;
 
         public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
 
