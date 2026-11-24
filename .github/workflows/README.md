@@ -77,7 +77,50 @@ grading-weight fork.
 The primary per-test result is `Pass`, `Failed`, or `Uncertain`; a valid empty
 scope is `Not applicable`. Quality bands are secondary: a focused `B / Pass`
 needs no invented improvement, while `A / Failed` still requires a concrete
-action. Clean automatic runs still publish revision-bound test-value evidence,
+action. The repository-owned [test-quality adapter](../skills/testfx-test-quality/SKILL.md)
+adds **Follow-up** without forking the upstream rubric or its Pass/None output.
+Investigate meaningful below-A deductions; retain supported improvements even
+for Pass, or explain why no change is justified. Resolve doubts with bounded
+inspection, then prefer inline test-method **Improvement** or **Investigation**
+comments with explicit @copilot actions and acceptance criteria. Uncertain and
+material evidence gaps must not end at an informational scorecard row.
+
+Keep one comment per root cause, valid changed-line anchors, live-head checks,
+and existing-thread deduplication. When inline publication is blocked by an
+anchor, missing thread context, or the cap, retain the exact request and reason
+in the summary. An applicable existing thread is referenced with its outstanding
+action rather than duplicated. Investigation requests do not assert an
+unverified defect or include speculative suggestions.
+
+These reviews remain read-only COMMENT reviews. They request work, but do not
+start a fixing agent, run PR code, or prove that a bot mention triggered Copilot.
+The safe-output mention policy explicitly allowlists only `copilot`, disables
+collaborator/context mentions, and keeps the bot-mention cap at 10. This preserves
+live inline work requests without allowing arbitrary notifications.
+The existing `address-review` workflow requires changes_requested and does not
+consume these advisory reviews. For an authorized audit-and-fix task,
+test-engineer owns investigation, correction, and verification through a final
+disposition for each item. The managed auditor receives the same adapter through
+repository instructions; upstream skill and agent files remain unchanged.
+
+The correction is motivated by [the review on PR #12603](https://github.com/microsoft/testfx/pull/12603#pullrequestreview-6037636105):
+several Pass/B rows explained wildcard-message weaknesses but reported no
+improvement, and a packaged-consumer uncertainty stayed in the summary.
+Keeping the upstream rubric plus a follow-through adapter avoids a grading
+fork; allowing only Copilot mentions avoids arbitrary notifications. Turning
+every below-A score into a defect or converting advisory reviews to mandatory
+autofixes was rejected: neither establishes the missing behavior or evidence.
+
+Offline regression evidence uses retained tests against the old prompt and
+compiled workflows. The old prompt fails the improvement/uncertainty contract
+checks; the old publisher renders the work request as `` `@copilot` ``.
+With the adapter and mention policy, the input/report contracts and pinned
+v1.2.2 runtime suite pass, and the real handler manager/buffer submits the exact
+inline request with a live Copilot mention while neutralizing unrelated users.
+Only external GitHub I/O is doubled. This proves payload behavior, not model
+compliance, live publication, or Copilot accepting/executing the request.
+
+Clean automatic runs still publish revision-bound test-value evidence,
 regardless of letter grade. Suppress only a complete same-head duplicate when
 no new actionable findings, material evidence, or resolved analysis limitations
 remain. Command runs always return the requested result, including incomplete

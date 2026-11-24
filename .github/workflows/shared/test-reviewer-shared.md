@@ -59,6 +59,13 @@ tools:
     - uniq
 
 safe-outputs:
+  # Preserve the intended coding-agent trigger, not arbitrary user mentions.
+  mentions:
+    allowed: [copilot]
+    allowed-collaborators: false
+    allow-context: false
+    max: 1
+  max-bot-mentions: 10
   # gh-aw v1.0.1 through v1.2.2 treat TCP_DENIED / 200 as successful.
   # Preserve explicit denials without changing network access or raw evidence.
   steps:
@@ -139,8 +146,8 @@ safe-outputs:
     max: 1
     allowed-events: [COMMENT]
     footer: "always"
-  # Inline comments for verified, actionable improvements, anchored on lines
-  # the PR actually changed. Grades alone do not trigger comments.
+  # Inline comments for supported improvements and explicit investigations,
+  # anchored on lines the PR actually changed. Grades alone do not prove defects.
   # Each comment carries an apply-ready suggestion when a
   # complete edit can be expressed; otherwise it still preserves the concrete
   # improvement next to the test. The cap is deliberately well above the
@@ -368,10 +375,12 @@ Produce two kinds of output:
 1. **One** COMMENT review holding revision-bound test-value evidence, a concise
    combined summary, parallel-safety findings when applicable, and the per-test
    result/quality scorecard. A clean result still reports the evidence.
-2. **Inline improvement comments** only for verified, actionable findings,
+2. **Inline improvement or investigation comments** for supported improvements
+   and unresolved doubts, with explicit Copilot work requests,
    grouped by root cause, anchored on a line the PR changed, and carrying a
    complete GitHub `suggestion` block when the edit is safe and directly
-   applicable. A below-A grade alone does not require an inline comment.
+   applicable. A below-A grade alone does not prove a defect; explain its
+   meaningful improvement or why no change is justified.
 
 You are **read-only and advisory**. Do not edit any files. Do not push.
 Do not execute PR code, builds, tests, or mutation tools. This workflow provides
@@ -432,11 +441,13 @@ entire assembly newly concurrent without changing a test method.
 
 ### Publication contract — applies to every analysis
 
-Read `.github/skills/code-review/SKILL.md`, especially **Context checks before a
+Read `.github/skills/testfx-test-quality/SKILL.md` and apply its follow-through
+contract alongside the unchanged upstream rubric. Then read
+`.github/skills/code-review/SKILL.md`, especially **Context checks before a
 finding**, **Finding quality**, and **Review publication**. Apply that same
 publication gate to grading-derived candidates, separate code-review findings,
 and the returned parallel-safety findings. Keep comprehensive analysis and
-grades; do not turn every rubric deduction into author attention.
+grades; investigate every meaningful deduction without manufacturing a defect.
 
 Before publishing a candidate, verify the changed behavior, concrete trigger,
 observable consequence or improvement, and smallest safe correction. Trace
@@ -445,8 +456,10 @@ semantics, ownership, and synchronization. Compare merge-base and HEAD:
 moved-but-unchanged behavior is not a newly introduced defect. Preserve trusted
 internal invariants without a concrete external trigger or failing test.
 
-Keep rubric-only improvements in the scorecard, not inline threads. If context
-is unavailable, state the evidence gap instead of inventing a defect or a fix.
+Prefer inline test-method feedback for supported improvements and unresolved
+doubts. For an investigation, verify the question and missing evidence, not a
+defect you have not established. State what @copilot must inspect or execute
+and what observation settles it; never invent a defect or a fix.
 Group the same root cause across tests/files, and read existing threads and
 replies before publishing. A grade, valid anchor, or suggested replacement is
 not sufficient evidence on its own. This workflow controls only reviewers
@@ -479,8 +492,10 @@ mutation score. Label the grading scorecard's mutation values as predictions too
 
 Assess changed contracts only, grouping related tests and data cases; record
 unassessed groups and the reason if the review budget prevents full coverage.
-Missing execution proof alone is an evidence gap in the summary, not an inline
-defect. Publish an assertion improvement only for a concrete wrong behavior
+Missing execution proof alone is not an inline defect. First inspect accessible
+revision-matched records; if a material gap remains, prepare a test-anchored
+Copilot investigation request with the exact test/variant and decisive outcome.
+Publish an assertion improvement only for a concrete wrong behavior
 that survives and contradicts the independently established contract.
 
 ### Step 1 — Identify changed test methods
@@ -629,11 +644,12 @@ all inline candidates, including those derived from grading:
   assets, durations, derived test attributes, and `[DoNotParallelize]`.
 
 Do not manufacture a defect to accompany every grade or inflate a grade to
-avoid feedback. Grading and publication are different decisions: a test may
-earn B under the rubric yet fully protect its narrow contract. Keep that grade
-and rubric rationale in the summary without requesting redundant assertions
-or idiomatic churn inline. Conversely, publish a verified defect even when its
-test's overall grade is A.
+avoid feedback. For each below-A grade, inspect the deduction and identify a
+supported improvement, unresolved question, or explicit no-change rationale.
+A B-grade test can fully protect its narrow contract: explain that disposition
+without requesting redundant assertions or idiomatic churn. Conversely, a
+supported improvement merits inline feedback even for Pass, and a verified
+defect merits feedback even when the test's overall grade is A.
 
 Report the **letter grade** and the **score band** only — no
 fake-precise 0–100 number.
@@ -641,7 +657,10 @@ fake-precise 0–100 number.
 ### Step 3 — Preserve the review details
 
 Keep the skill's **Result**, **Quality**, **Notes**, and **How to improve**
-fields and its optional **Pseudo-mutation evidence** separate:
+fields and its optional **Pseudo-mutation evidence** separate. Add the adapter's
+**Follow-up** field; do not rewrite the upstream skill's Pass/None output.
+In the published scorecard use Follow-up instead of How to improve so concrete
+actions are not discarded by the upstream Pass/None presentation rule:
 
 - **Result** is `Pass`, `Failed`, or `Uncertain` for a requested test.
   `Not applicable` describes a valid scope with no eligible tests, not an
@@ -658,20 +677,21 @@ fields and its optional **Pseudo-mutation evidence** separate:
   inventing a denominator; unavailable context is `N/A / unverified`.
 - **Notes** is one short sentence (≤ 120 chars) stating the most important
   observable reason for the result and quality.
-- **How to improve** is one short sentence (≤ 120 chars). For a supported
-  improvement, name the exact input, assertion, expected value, split, or
-  deterministic replacement needed. Every `Failed` row requires a concrete,
-  evidence-backed action, even when its quality is A. `Pass` uses `None`,
-  even below A; `Uncertain` names the evidence needed instead of inventing
-  an edit or expected value. This presentation rule does not change the
-  skill's result, grade, or score band.
+- **Follow-up** names the exact change or investigation and acceptance
+  criterion, or links the inline/existing thread carrying them. Every `Failed`,
+  `Uncertain`, supported improvement, and material evidence gap needs a
+  disposition. `Pass` can have an improvement; use `None` only when no doubt
+  or supported change remains. For below-A/no-change rows, explain why the
+  deduction warrants no meaningful edit. `Uncertain` requires a bounded
+  Copilot investigation, not merely "human review needed".
 
 Do not merge the improvement into Notes, give vague advice such as `Add more
 assertions`, or invent weaknesses from a letter grade alone.
 
-For each candidate that passes the publication contract, capture a **Finding
-key** (root cause, consequence, and correction), its **Evidence** (trigger and
-observable improvement), and the two fields an inline suggestion needs:
+For each improvement or investigation that passes the publication contract,
+capture a **Finding key** (root cause, consequence, and correction; for a doubt,
+the question, missing evidence, and decisive criterion), its **Evidence**, and
+the two fields an inline suggestion needs:
 
 - **Anchor** — `<filepath>` plus the HEAD-side line number the suggestion
   replaces, and (for a multi-line replacement) the first line of the span.
@@ -719,20 +739,23 @@ is always `RIGHT`. Do not call `create_pull_request_review_comment` in this step
 
 When the Step 3 record has a safe concrete **Replacement**, include the
 apply-ready `suggestion` block. Otherwise use a text-only comment that still
-identifies the verified consequence and correction. Zero inline calls is
-correct when no novel actionable candidate passes the gate, even if every
-test is below A. Keep all grades in Step 5.
+identifies the verified consequence and correction, or the precise question,
+evidence needed, and acceptance criterion. Zero inline calls is correct only
+when all concerns have a justified
+no-change, existing-thread, or blocked-inline disposition. Keep all grades and
+outstanding actions in Step 5.
 
-Body format — the marker comment must be the first line so re-runs can
-recognize the workflow's own comments (the outer fence below is four
+Body format — include the marker comment first, but do not rely on its survival:
+the safe-output renderer may strip it. Deduplicate by root cause and replies,
+not markers alone. The outer fence below is four
 backticks so the inner `suggestion` fence survives verbatim). Use the
 representative test's actual letter grade and score band:
 
 ````markdown
 <!-- test-reviewer-suggestion -->
-🧪 **Test review · Grade <letter grade> (<score band>)** — <verified consequence for the representative test>
+🧪 **Test review · Improvement · Grade <letter grade> (<score band>)** — <supported consequence for the representative test>
 
-<concrete trigger, correction, and any other affected tests/locations>
+@copilot <make and verify the concrete correction; include trigger, acceptance criterion, and any other affected tests/locations>
 
 ```suggestion
 <complete compiling replacement for the exact anchored span>
@@ -741,9 +764,18 @@ representative test's actual letter grade and score band:
 
 Rules:
 
-- **Only verified, actionable improvements.** Do not post praise, rubric-only
-  deductions, a grade with no observable improvement, or a repeated scorecard.
+- **Supported improvements or explicit investigations.** Do not post praise,
+  a bare grade/deduction, or a repeated scorecard. Prefer inline feedback as soon
+  as a supported change or unresolved doubt remains. Every comment needs a
+  concrete @copilot action and acceptance criterion, not generic "improve tests".
   A separate verified defect may receive a comment regardless of letter grade.
+- **Investigation format:** first-line marker `<!-- test-reviewer-suggestion -->`,
+  then `🧪 **Test review · Investigation · Result Uncertain**` for an unresolved
+  test (use its actual Result/Quality for other evidence gaps), followed by the
+  named test/contract, known evidence, precise uncertainty, and
+  `@copilot <investigate the named evidence/test/variant and report the decisive
+  observation before changing expectations>`. Do not include a suggestion or
+  invent a grade for an unresolved test or embedded source.
 - **One comment per root cause**, and at most one per test. Do not fan out
   identical findings across test methods, files, or review dimensions.
 - **Cap at 10 inline comments per run.** Prioritize observable impact and
@@ -776,9 +808,11 @@ Rules:
   without this workflow's marker and even when its path/anchor changed. If
   existing-thread context cannot be obtained, withhold inline publication and
   state that deduplication could not be completed in the combined summary.
-- **Anchor validity is on you.** If you cannot map an improvement to a line
-  inside the TSV's changed ranges for that file, skip the inline comment and
-  rely on the Step 5 table row. Do not guess a line number.
+- **Anchor validity is on you.** If you cannot map a concern to a real diff
+  line inside the TSV's changed ranges, skip inline publication and retain the
+  exact @copilot request in Step 5 with the blocked-inline reason. For embedded
+  test source use its changed block or owning real method, naming both. Do not
+  guess a line number or grade a raw-string helper as a test method.
 
 ### Step 4B — Run the parallel-safety specialist
 
@@ -905,7 +939,9 @@ every intermediate commit.
 important correctness/effectiveness signal; parallel-safety status and highest
 severity; the top combined recommendation or unresolved evidence gap. Include
 novel actionable findings without an inline anchor and qualifying overflow.
-Distinguish rubric-only improvements from findings requiring author action.
+Distinguish supported improvements, investigation requests, and no-change
+dispositions; link existing threads and retain actions blocked from inline
+publication (anchor, deduplication access, or cap), including @copilot requests.
 Aggregate grading results using Failed -> Uncertain -> Pass -> Not applicable;
 keep this distinct from parallel-safety status and publication decisions.
 When prepared inline suggestions were posted,
@@ -939,11 +975,11 @@ Pseudo-mutation evidence below consists of static predictions, not executed muta
 No new or modified test methods were identified in the changed regions.
 Do not emit an empty table. Otherwise emit the table below. -->
 
-| Result | Quality | Test | Notes | How to improve |
+| Result | Quality | Test | Notes | Follow-up |
 | --- | --- | --- | --- | --- |
-| Pass | B (80–89) | new `ClassName.Method_WhenSomething_ReturnsValue` | One exact assertion protects the claimed result. | None |
-| Failed | C (70–79) | mod `ClassName.OtherMethod` | The test only checks non-null, not the claimed order total. | Assert Total is 10 for the arranged 50-unit order. |
-| Uncertain | — | mod `ClassName.MissingMethod` | The requested method body could not be resolved. | Supply the method body and its referenced fixture. |
+| Pass | B (80–89) | new `ClassName.Method_WhenSomething_ReturnsValue` | One exact assertion protects the claimed result. | No change justified: the single exact assertion covers the whole contract. |
+| Failed | C (70–79) | mod `ClassName.OtherMethod` | The test only checks non-null, not the claimed order total. | Assert Total is 10 for the arranged 50-unit order; see inline improvement request. |
+| Uncertain | — | mod `ClassName.MissingMethod` | The requested method body could not be resolved. | @copilot resolve the body and fixture, then reassess the claimed outcome; see inline request or blocked-inline reason. |
 
 <!-- When it explains a finding or detail was requested, add a compact
 Pseudo-mutation evidence block keyed by test: exact change, witness,
@@ -993,9 +1029,11 @@ Per-test table rules:
 - In the Test column, prefix `new` or `mod` outside the Markdown code span when
   known and drop the namespace. Keep the complete `ClassName.MethodName` in
   backticks without HTML tags or invisible Unicode wrap characters.
-- Keep Notes and How to improve separate. Actions follow the result, not the
-  letter grade: Failed requires an evidence-backed correction, Pass uses
-  `None`, and Uncertain names the evidence needed.
+- Keep Notes and Follow-up separate. Actions follow the evidence, not just
+  the result or grade: Failed requires a correction, Pass retains supported
+  improvements, and Uncertain requires a bounded Copilot investigation with a
+  decisive criterion. Every actionable row links its inline/existing thread or
+  retains the exact request and blocked-inline reason in the summary.
 - Preserve optional pseudo-mutation evidence outside the table as described
   in Step 3. Never convert static classifications into executed kill ratios.
 
@@ -1006,14 +1044,21 @@ clean parallel-safety when the specialist returned `PARTIAL`.
 ### Calibration cases — check before publishing
 
 - A B-grade test's single exact assertion protects its narrow contract:
-  retain `Pass`, quality and notes, `None` for improvements, and zero inline
-  demands for additional assertions. Report test-value evidence even for a clean
+  retain `Pass`, quality and notes, an explicit no-change rationale, and zero
+  inline demands for additional assertions. Report test-value evidence even for a clean
   automatic run unless the same-head report is already complete.
 - An A-grade test has actionable debug output: retain `Failed` and the exact
   removal action despite its high quality.
 - A changed test asserts only non-null while wrong contents survive: retain
   its grade and publish one exact-content improvement with the surviving
   mutation, expected value, and a supported assertion API.
+- A Pass/B test uses wildcards over a deterministic failure message: inspect
+  the variable parts, then retain a supported exact-message improvement in
+  Follow-up and one inline @copilot request. Do not erase it as `None`.
+- An Uncertain embedded consumer scenario needs packed compilation evidence:
+  inspect accessible records, anchor the investigation on the changed embedded
+  source or owning test, and ask @copilot for the named packaged case's command,
+  counts, exit, and decisive compiler outcome. Do not invent execution proof.
 - Several tests expose one helper defect: all tests remain in the scorecard,
   one representative inline finding at most, with other locations listed.
 - A human or bot already has a live thread for that defect, even on an older
@@ -1026,6 +1071,9 @@ clean parallel-safety when the specialist returned `PARTIAL`.
   complete coverage. An unresolved requested method is `Uncertain`, whereas
   a valid empty scope is `Not applicable`; both still receive applicable
   parallel-safety analysis.
+- An uncertainty already has an applicable live thread: reference that thread
+  and its outstanding next action; do not create a duplicate. Invalid anchors
+  or exhausted caps keep the exact request in the summary, never lose the work.
 
 ### Step 6 — Stop
 
@@ -1035,4 +1083,9 @@ with a brief status such as:
 `"Queued test quality review for PR #N at <head SHA> (M tests graded, parallel-safety=<status>, S inline suggestions)."`
 
 Safe outputs apply after the agent finishes; a queued request is not verified
-publication. Then stop. Do not call any other tools.
+publication or proof that Copilot started work. The existing address-review
+workflow requires changes_requested; this COMMENT review does not trigger it.
+Bot mentions are not guaranteed execution: report requests as queued, not fixed
+or accepted. The safe-output mention policy explicitly allows only @copilot
+so inline work requests remain live mentions, not neutralized code text.
+Then stop. Do not call any other tools.

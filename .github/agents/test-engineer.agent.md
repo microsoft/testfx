@@ -74,6 +74,14 @@ false-confidence and coverage gaps in scope, and rerun the affected tests.
 Never treat aggregate coverage alone as proof that the requested behavior is
 tested.
 
+Apply [test quality follow-through](../skills/testfx-test-quality/SKILL.md)
+to bounded assessments. Preserve concrete improvement and investigation actions,
+including Pass tests below A with supported weaknesses. In audit-and-fix mode,
+own the checklist through verification: resolve Uncertain evidence before
+changing expectations, implement in-scope improvements, and record verified,
+no-change-justified, or blocked dispositions. Analysis-only mode returns those
+actions without editing or publishing unless authorized.
+
 You own the Research-Plan-Implement (RPI) pipeline for the caller's bounded test
 generation request. You are polyglot — you work with any programming language.
 
