@@ -136,7 +136,8 @@ internal sealed class SystemConsole : IConsole
         }
 
         // The writer's buffer is smaller than a typical frame, so writing through it would split the frame into
-        // several writes. Encode the whole frame and hand it to the stream in one call instead.
+        // several writes. Encode the whole frame and hand it to the stream in one call instead. This is best effort:
+        // the stream can still split the call, for example when a Unix terminal accepts only part of the bytes.
         CaptureConsoleOutWriter.Flush();
         byte[] bytes = CaptureConsoleOutWriter.Encoding.GetBytes(value.ToString());
         Stream stream = CaptureConsoleOutWriter.BaseStream;

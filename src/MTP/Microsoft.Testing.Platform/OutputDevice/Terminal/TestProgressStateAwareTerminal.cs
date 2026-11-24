@@ -101,8 +101,12 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
         try
         {
-            _terminal.EraseProgress();
-            Interlocked.Exchange(ref _progressErased, 1);
+            // Erase under the lock, so that the erase cannot interleave with a write that is drawing progress.
+            lock (_lock)
+            {
+                _terminal.EraseProgress();
+                Interlocked.Exchange(ref _progressErased, 1);
+            }
         }
         catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
         {
@@ -247,35 +251,27 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     internal void WriteToTerminal(Action<ITerminal> write)
     {
-        if (GetShowProgress())
+        lock (_lock)
         {
-            lock (_lock)
+            // Once the progress is erased during teardown, drawing it again would leave it below the final output,
+            // and with the scroll-region renderer it would also reserve rows that are never released.
+            bool renderProgress = GetShowProgress() && Volatile.Read(ref _progressErased) == 0;
+            try
             {
-                try
+                _terminal.StartUpdate();
+                if (renderProgress)
                 {
-                    _terminal.StartUpdate();
                     UpdateVisibleProgressMessagesUnderLock();
                     _renderer.OnWrite(_terminal, _progressItems, write, _visibleProgressMessages);
                 }
-                finally
+                else
                 {
-                    _terminal.StopUpdate();
-                }
-            }
-        }
-        else
-        {
-            lock (_lock)
-            {
-                try
-                {
-                    _terminal.StartUpdate();
                     write(_terminal);
                 }
-                finally
-                {
-                    _terminal.StopUpdate();
-                }
+            }
+            finally
+            {
+                _terminal.StopUpdate();
             }
         }
     }

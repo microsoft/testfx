@@ -139,6 +139,12 @@ internal static class AnsiCodes
     public const string ResetScrollRegion = CSI + "r";
 
     /// <summary>
+    /// Disables origin mode (DECOM), so that cursor positions are relative to the whole screen instead of the scroll region.
+    /// Moves the cursor to the home position. The mode is saved by <see cref="SaveCursor"/> and restored by <see cref="RestoreCursor"/>.
+    /// </summary>
+    public const string DisableOriginMode = CSI + "?6l";
+
+    /// <summary>
     /// Hides the cursor.
     /// </summary>
     public const string HideCursor = $"{Esc}[?25l";

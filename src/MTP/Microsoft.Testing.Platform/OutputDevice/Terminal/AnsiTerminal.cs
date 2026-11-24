@@ -19,6 +19,12 @@ internal sealed class AnsiTerminal : ITerminal
     private const int MinimumScrollRegionHeight = 5;
 
     /// <summary>
+    /// Lets output scroll the whole window again. Resetting the scroll region moves the cursor to the top left corner,
+    /// so the cursor is saved and restored around it.
+    /// </summary>
+    private const string ResetScrollRegionKeepingCursor = AnsiCodes.SaveCursor + AnsiCodes.ResetScrollRegion + AnsiCodes.RestoreCursor;
+
+    /// <summary>
     /// File extensions that we will link to directly, all other files
     /// are linked to their directory, to avoid opening dlls, or executables.
     /// </summary>
@@ -35,10 +41,32 @@ internal sealed class AnsiTerminal : ITerminal
     private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
     private AnsiTerminalTestProgressFrame _spareFrame = new(0, 0);
 
-    // Rows reserved at the bottom of the window for progress, and the window size they were reserved for.
+    /// <summary>
+    /// How long the process exit handler waits for a batch that another thread is writing. .NET Framework gives all
+    /// process exit handlers about two seconds in total.
+    /// </summary>
+    private static readonly TimeSpan DefaultProcessExitBatchWaitTimeout = TimeSpan.FromMilliseconds(250);
+
+    private readonly TimeSpan _processExitBatchWaitTimeout;
+
+    // Rows reserved at the bottom of the window for progress, and the window size they were reserved for, as seen by
+    // the batches built by the thread that owns the terminal. Only that thread reads and writes them.
     private int _pinnedRows;
     private int _pinnedWidth;
     private int _pinnedHeight;
+    private bool _processExitHandlerSubscribed;
+
+    // The pinned rows and window height that the terminal has after the last written batch, packed by PackPinnedState.
+    // The process exit handler releases them, so a batch changes them only once it is written.
+    private long _writtenPinnedState;
+    private long _batchPinnedState;
+    private bool _batchChangesPinnedState;
+
+    // The managed thread id of the thread building a batch in scroll region mode, or 0, and whether the process is
+    // exiting. Both are only accessed with interlocked operations, so that the exit handler either sees the batch, or
+    // the batch sees that the process is exiting.
+    private int _batchThreadId;
+    private int _processExiting;
 
     public AnsiTerminal(IConsole console)
         : this(console, useScrollRegion: false)
@@ -55,9 +83,24 @@ internal sealed class AnsiTerminal : ITerminal
     /// being overwritten when the progress is redrawn.
     /// </param>
     public AnsiTerminal(IConsole console, bool useScrollRegion)
+        : this(console, useScrollRegion, DefaultProcessExitBatchWaitTimeout)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnsiTerminal"/> class.
+    /// </summary>
+    /// <param name="console">The console to write to.</param>
+    /// <param name="useScrollRegion">See <see cref="AnsiTerminal(IConsole, bool)"/>.</param>
+    /// <param name="processExitBatchWaitTimeout">
+    /// How long the process exit handler waits for a batch that another thread is writing, before releasing the
+    /// rows pinned by the last written batch.
+    /// </param>
+    public AnsiTerminal(IConsole console, bool useScrollRegion, TimeSpan processExitBatchWaitTimeout)
     {
         _console = console;
         _useScrollRegion = useScrollRegion;
+        _processExitBatchWaitTimeout = processExitBatchWaitTimeout;
         _baseDirectory = Directory.GetCurrentDirectory();
 
         // Output ansi code to get spinner on top of a terminal, to indicate in-progress task.
@@ -181,23 +224,50 @@ internal sealed class AnsiTerminal : ITerminal
         }
 
         _stringBuilder.Clear();
+        _batchChangesPinnedState = false;
+        if (_useScrollRegion)
+        {
+            Interlocked.Exchange(ref _batchThreadId, CurrentThreadId);
+        }
+
         _isBatching = true;
     }
 
     public void StopUpdate()
     {
-        if (_useScrollRegion)
+        if (!_useScrollRegion)
+        {
+            _console.Write(_stringBuilder);
+            _isBatching = false;
+            return;
+        }
+
+        try
         {
             // A frame saves the cursor, moves it to the pinned rows, and restores it. Output written by another
             // thread in the middle of the frame would land in the pinned rows, so the frame must be a single write.
             _console.WriteAtomically(_stringBuilder);
+            if (_batchChangesPinnedState)
+            {
+                Interlocked.Exchange(ref _writtenPinnedState, _batchPinnedState);
+            }
         }
-        else
+        finally
         {
-            _console.Write(_stringBuilder);
+            _isBatching = false;
+            Interlocked.Exchange(ref _batchThreadId, 0);
+            if (Volatile.Read(ref _processExiting) != 0)
+            {
+                // The process started exiting while this batch was built, and the exit handler may have stopped
+                // waiting for it. Release the rows that are pinned now, unless the exit handler already did.
+                ReleaseWrittenPinnedRows();
+            }
+            else if (_processExitHandlerSubscribed && _pinnedRows == 0 && Interlocked.Read(ref _writtenPinnedState) == 0)
+            {
+                AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+                _processExitHandlerSubscribed = false;
+            }
         }
-
-        _isBatching = false;
     }
 
     public void AppendLink(string? path, int? lineNumber)
@@ -297,7 +367,7 @@ internal sealed class AnsiTerminal : ITerminal
     {
         if (_useScrollRegion)
         {
-            ReleasePinnedRows();
+            ReleasePinnedRows(TryGetHeight());
             return;
         }
 
@@ -329,12 +399,34 @@ internal sealed class AnsiTerminal : ITerminal
 
     private void RenderPinnedProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
     {
+        if (!_isBatching)
+        {
+            // The pinned rows change only when a batch is written, see StopUpdate.
+            StartUpdate();
+            try
+            {
+                RenderPinnedProgress(progress, messages);
+            }
+            finally
+            {
+                StopUpdate();
+            }
+
+            return;
+        }
+
+        // Once the process exit handler released the rows, reserving them again would leave the scroll region set.
+        if (Volatile.Read(ref _processExiting) != 0)
+        {
+            return;
+        }
+
         int width = Width;
         int height = Height;
         if (_pinnedRows > 0 && (width != _pinnedWidth || height != _pinnedHeight))
         {
             // The rows were reserved for another window size, release them and reserve them again below.
-            ReleasePinnedRows();
+            ReleasePinnedRows(height);
         }
 
         // Without a known window height (redirected output) or with a tiny window, there is no room to pin
@@ -368,45 +460,180 @@ internal sealed class AnsiTerminal : ITerminal
 
     private void ReservePinnedRows(int rows, int width, int height)
     {
-        StringBuilder reserve = new();
+        if (!_processExitHandlerSubscribed)
+        {
+            // Make sure the shell is not left with a scroll region when the process exits without tearing down the
+            // progress, for example on a second Ctrl+C or when the parent process exits. Subscribe before the rows
+            // are reserved, so that the handler is called once they are.
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+            _processExitHandlerSubscribed = true;
+        }
 
         // Remove any previous scroll region, so that the lines below can scroll the whole window. Setting the
         // region moves the cursor to the top left corner, so the cursor is saved and restored around it.
-        reserve.Append(AnsiCodes.SaveCursor).Append(AnsiCodes.ResetScrollRegion).Append(AnsiCodes.RestoreCursor);
-
-        // The cursor is in the output area, so this clears the previously pinned rows.
-        reserve.Append(AnsiCodes.CsiEraseInDisplay);
+        Append(ResetScrollRegionKeepingCursor);
 
         // Move down as many lines as needed, scrolling the output above into the scrollback when the cursor
         // reaches the bottom of the window, then go back up. The cursor is now on the same output line and
-        // column as before, with the requested number of empty rows below the output area.
+        // column as before, with the requested number of rows below the output area. Rows that were pinned
+        // before scroll by at most the number of added rows, so they stay within the new pinned rows, which
+        // are all redrawn by the frame. Nothing is erased, so output below the cursor is kept.
         for (int i = 0; i < rows; i++)
         {
-            reserve.Append(AnsiCodes.Index);
+            Append(AnsiCodes.Index);
         }
 
-        reserve.Append(AnsiCodes.MoveCursorUp(rows));
+        Append(AnsiCodes.MoveCursorUp(rows));
 
         // Limit scrolling to the output area above the pinned rows.
-        reserve.Append(AnsiCodes.SaveCursor).Append(AnsiCodes.SetScrollRegion(1, height - rows)).Append(AnsiCodes.RestoreCursor);
+        Append(AnsiCodes.SaveCursor);
+        Append(AnsiCodes.SetScrollRegion(1, height - rows));
+        Append(AnsiCodes.RestoreCursor);
 
-        Append(reserve.ToString());
         _pinnedRows = rows;
         _pinnedWidth = width;
         _pinnedHeight = height;
+        _batchPinnedState = PackPinnedState(rows, height);
+        _batchChangesPinnedState = true;
     }
 
-    private void ReleasePinnedRows()
+    private void ReleasePinnedRows(int currentHeight)
     {
         if (_pinnedRows == 0)
         {
             return;
         }
 
-        // Let output scroll the whole window again, and clear the pinned rows below the cursor.
-        Append($"{AnsiCodes.SaveCursor}{AnsiCodes.ResetScrollRegion}{AnsiCodes.RestoreCursor}{AnsiCodes.CsiEraseInDisplay}");
+        if (!_isBatching)
+        {
+            // The pinned rows change only when a batch is written, see StopUpdate.
+            StartUpdate();
+            try
+            {
+                ReleasePinnedRows(currentHeight);
+            }
+            finally
+            {
+                StopUpdate();
+            }
+
+            return;
+        }
+
+        // Once the process is exiting, the rows are released by the exit handler, or by StopUpdate when the exit
+        // handler stopped waiting for this batch, so nothing is written after them.
+        if (Volatile.Read(ref _processExiting) == 0)
+        {
+            AppendReleaseSequence(_stringBuilder, _pinnedRows, _pinnedHeight, currentHeight);
+            _batchPinnedState = 0;
+            _batchChangesPinnedState = true;
+        }
+
         _pinnedRows = 0;
         _currentFrame.Clear();
+    }
+
+    /// <summary>
+    /// Lets output scroll the whole window again when the process exits while rows are pinned. Takes no lock, because
+    /// the thread that owns the terminal can hold it while the process exits, and never throws. When another thread is
+    /// writing a batch, waits a short time for it, so that the rows it pins or releases are known.
+    /// </summary>
+    public void ReleasePinnedRowsOnProcessExit()
+    {
+        try
+        {
+            Interlocked.Exchange(ref _processExiting, 1);
+            WaitForBatchOfAnotherThread();
+            ReleaseWrittenPinnedRows();
+        }
+        catch
+        {
+            // The process is exiting, so nothing can be done when the console cannot be written to.
+        }
+    }
+
+    private void WaitForBatchOfAnotherThread()
+    {
+        int batchThreadId = Volatile.Read(ref _batchThreadId);
+        if (batchThreadId == 0 || batchThreadId == CurrentThreadId)
+        {
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        SpinWait spinWait = default;
+        while (Volatile.Read(ref _batchThreadId) == batchThreadId && stopwatch.Elapsed < _processExitBatchWaitTimeout)
+        {
+            spinWait.SpinOnce();
+        }
+    }
+
+    private void ReleaseWrittenPinnedRows()
+    {
+        try
+        {
+            // Claim the rows, so that they are released only once when the exit handler and StopUpdate both release them.
+            long state = Interlocked.Exchange(ref _writtenPinnedState, 0);
+            int rows = (int)(state & uint.MaxValue);
+            if (rows == 0)
+            {
+                return;
+            }
+
+            StringBuilder release = new();
+            AppendReleaseSequence(release, rows, pinnedHeight: (int)(state >> 32), TryGetHeight());
+            _console.WriteAtomically(release);
+        }
+        catch
+        {
+            // The process is exiting, so nothing can be done when the console cannot be written to.
+        }
+    }
+
+    // The thread id only identifies the thread that writes a batch, it is not a property of the environment to fake.
+#pragma warning disable RS0030 // Do not use banned APIs
+    private static int CurrentThreadId => Environment.CurrentManagedThreadId;
+#pragma warning restore RS0030 // Do not use banned APIs
+
+    private static long PackPinnedState(int rows, int height)
+        => ((long)height << 32) | (uint)rows;
+
+    private void OnProcessExit(object? sender, EventArgs e)
+        => ReleasePinnedRowsOnProcessExit();
+
+    private static void AppendReleaseSequence(StringBuilder builder, int rows, int pinnedHeight, int currentHeight)
+    {
+        if (currentHeight == pinnedHeight)
+        {
+            // Let output scroll the whole window again, and clear only the pinned rows, so that output on the
+            // screen is kept wherever the cursor is. Origin mode is disabled so that the rows are addressed
+            // from the top of the screen, and restoring the cursor restores the mode.
+            builder.Append(AnsiCodes.SaveCursor)
+                .Append(AnsiCodes.DisableOriginMode)
+                .Append(AnsiCodes.ResetScrollRegion)
+                .Append(AnsiCodes.MoveCursorTo(currentHeight - rows + 1, 1))
+                .Append(AnsiCodes.CsiEraseInDisplay)
+                .Append(AnsiCodes.RestoreCursor);
+        }
+        else
+        {
+            // The window was resized or its size is unknown, so the position of the pinned rows is unknown too.
+            // Let output scroll the whole window again, and clear below the cursor, where the rows were.
+            builder.Append(ResetScrollRegionKeepingCursor).Append(AnsiCodes.CsiEraseInDisplay);
+        }
+    }
+
+    private int TryGetHeight()
+    {
+        try
+        {
+            return Height;
+        }
+        catch
+        {
+            // Treat a window whose size cannot be read as a window of unknown size.
+            return int.MaxValue;
+        }
     }
 
     public void StartBusyIndicator()

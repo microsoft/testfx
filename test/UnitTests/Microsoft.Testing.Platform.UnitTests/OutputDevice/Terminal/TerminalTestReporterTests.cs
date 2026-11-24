@@ -1472,10 +1472,11 @@ public sealed class TerminalTestReporterTests
         RenderFrame(terminal, new TerminalProgressMessageState(1, 1, "Restoring"));
 
         // Reserve 2 rows (separator + message) by scrolling the output up, limit scrolling to rows 1-18, then draw
-        // rows 19-20 between a cursor save and restore. The cursor never moves up through the output.
+        // rows 19-20 between a cursor save and restore. The cursor never moves up through the output, and nothing
+        // below the cursor is erased.
         Assert.AreEqual(
-            "␛7␛[r␛8␛[J␛D␛D␛[2A␛7␛[1;18r␛8"
-            + "␛7␛[19;1H␛[2K␛[20;1H␛[2KRestoring␛8",
+            "␛7␛[r␛8␛D␛D␛[2A␛7␛[1;18r␛8"
+            + "␛7␛[?6l␛[19;1H␛[2K␛[20;1H␛[2KRestoring␛8",
             ShowEscape(console.Output));
         Assert.AreEqual(1, console.AtomicWriteCount);
     }
@@ -1492,10 +1493,10 @@ public sealed class TerminalTestReporterTests
         int thirdFrameStart = console.Output.Length;
         RenderFrame(terminal);
 
-        Assert.AreEqual("␛7␛[19;1H␛[2K␛[20;1H␛[2KRestored␛8", ShowEscape(console.Output[secondFrameStart..thirdFrameStart]));
+        Assert.AreEqual("␛7␛[?6l␛[19;1H␛[2K␛[20;1H␛[2KRestored␛8", ShowEscape(console.Output[secondFrameStart..thirdFrameStart]));
 
         // The reserved rows never shrink during the run, shrinking would leave a gap in the output.
-        Assert.AreEqual("␛7␛[19;1H␛[2K␛[20;1H␛[2K␛8", ShowEscape(console.Output[thirdFrameStart..]));
+        Assert.AreEqual("␛7␛[?6l␛[19;1H␛[2K␛[20;1H␛[2K␛8", ShowEscape(console.Output[thirdFrameStart..]));
         Assert.AreEqual(3, console.AtomicWriteCount);
     }
 
@@ -1509,10 +1510,11 @@ public sealed class TerminalTestReporterTests
         int secondFrameStart = console.Output.Length;
         RenderFrame(terminal, new TerminalProgressMessageState(1, 1, "A"), new TerminalProgressMessageState(2, 1, "B"));
 
-        // The previous region is removed and the old pinned rows are cleared before reserving the larger region.
+        // The previous region is removed before reserving the larger region. The rows that were pinned before scroll
+        // into the new pinned rows, which are all redrawn.
         Assert.AreEqual(
-            "␛7␛[r␛8␛[J␛D␛D␛D␛[3A␛7␛[1;17r␛8"
-            + "␛7␛[18;1H␛[2K␛[19;1H␛[2KA␛[20;1H␛[2KB␛8",
+            "␛7␛[r␛8␛D␛D␛D␛[3A␛7␛[1;17r␛8"
+            + "␛7␛[?6l␛[18;1H␛[2K␛[19;1H␛[2KA␛[20;1H␛[2KB␛8",
             ShowEscape(console.Output[secondFrameStart..]));
     }
 
@@ -1529,8 +1531,8 @@ public sealed class TerminalTestReporterTests
             new TerminalProgressMessageState(3, 1, "C"));
 
         Assert.AreEqual(
-            "␛7␛[r␛8␛[J␛D␛D␛D␛[3A␛7␛[1;6r␛8"
-            + "␛7␛[7;1H␛[2K␛[8;1H␛[2KA␛[9;1H␛[2KB␛8",
+            "␛7␛[r␛8␛D␛D␛D␛[3A␛7␛[1;6r␛8"
+            + "␛7␛[?6l␛[7;1H␛[2K␛[8;1H␛[2KA␛[9;1H␛[2KB␛8",
             ShowEscape(console.Output));
     }
 
@@ -1545,7 +1547,121 @@ public sealed class TerminalTestReporterTests
         terminal.EraseProgress();
         terminal.EraseProgress();
 
+        // Only the pinned rows are cleared, output below the cursor is kept.
+        Assert.AreEqual("␛7␛[?6l␛[r␛[19;1H␛[J␛8", ShowEscape(console.Output[eraseStart..]));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_ScrollRegion_EraseProgressAfterResizeClearsBelowCursor()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 20, windowWidth: 20, windowHeight: 20);
+        var terminal = new AnsiTerminal(console, useScrollRegion: true);
+        RenderFrame(terminal, new TerminalProgressMessageState(1, 1, "Restoring"));
+
+        console.WindowHeight = 10;
+        int eraseStart = console.Output.Length;
+        terminal.EraseProgress();
+
         Assert.AreEqual("␛7␛[r␛8␛[J", ShowEscape(console.Output[eraseStart..]));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_ScrollRegion_ProcessExitReleasesPinnedRowsAtomically()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 20, windowWidth: 20, windowHeight: 20);
+        var terminal = new AnsiTerminal(console, useScrollRegion: true);
+        RenderFrame(terminal, new TerminalProgressMessageState(1, 1, "Restoring"));
+
+        int exitStart = console.Output.Length;
+        terminal.ReleasePinnedRowsOnProcessExit();
+        int afterExit = console.Output.Length;
+        Assert.AreEqual(2, console.AtomicWriteCount);
+        RenderFrame(terminal, new TerminalProgressMessageState(1, 2, "Restored"));
+        terminal.EraseProgress();
+
+        Assert.AreEqual("␛7␛[?6l␛[r␛[19;1H␛[J␛8", ShowEscape(console.Output[exitStart..afterExit]));
+
+        // Once the process is exiting, progress is not pinned again, so the scroll region stays released.
+        Assert.AreEqual(string.Empty, ShowEscape(console.Output[afterExit..]));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_ScrollRegion_ProcessExitAfterEraseProgressWritesNothing()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 20, windowWidth: 20, windowHeight: 20);
+        var terminal = new AnsiTerminal(console, useScrollRegion: true);
+        RenderFrame(terminal, new TerminalProgressMessageState(1, 1, "Restoring"));
+        terminal.EraseProgress();
+
+        int exitStart = console.Output.Length;
+        terminal.ReleasePinnedRowsOnProcessExit();
+
+        Assert.AreEqual(string.Empty, console.Output[exitStart..]);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_ScrollRegion_FrameThatReservesRowsWhileProcessExitsReleasesThemAgain()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 20, windowWidth: 20, windowHeight: 20);
+        var terminal = new AnsiTerminal(console, useScrollRegion: true);
+
+        // The exit handler runs while a frame that reserves rows is being built, on the thread that builds it, so it
+        // cannot wait for the frame, and no rows are pinned yet when it runs.
+        terminal.StartUpdate();
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "Restoring")]);
+        terminal.ReleasePinnedRowsOnProcessExit();
+        terminal.StopUpdate();
+
+        // The frame sets the scroll region after the handler ran, so it is released once the frame is written.
+        Assert.AreEqual(
+            "␛7␛[r␛8␛D␛D␛[2A␛7␛[1;18r␛8"
+            + "␛7␛[?6l␛[19;1H␛[2K␛[20;1H␛[2KRestoring␛8"
+            + "␛7␛[?6l␛[r␛[19;1H␛[J␛8",
+            ShowEscape(console.Output));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_ScrollRegion_ProcessExitReleasesRowsWhoseReleaseIsNotWritten()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 20, windowWidth: 20, windowHeight: 20);
+        var terminal = new AnsiTerminal(console, useScrollRegion: true, processExitBatchWaitTimeout: TimeSpan.Zero);
+        RenderFrame(terminal, new TerminalProgressMessageState(1, 1, "Restoring"));
+
+        // The progress is erased in a batch that is not written yet when the exit handler stops waiting for it, for
+        // example because the thread that builds it is blocked. The rows are still pinned on the terminal.
+        terminal.StartUpdate();
+        terminal.EraseProgress();
+        int exitStart = console.Output.Length;
+        var exitThread = new Thread(terminal.ReleasePinnedRowsOnProcessExit);
+        exitThread.Start();
+        exitThread.Join();
+
+        Assert.AreEqual("␛7␛[?6l␛[r␛[19;1H␛[J␛8", ShowEscape(console.Output[exitStart..]));
+        terminal.StopUpdate();
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_ScrollRegion_ProcessExitWaitsForBatchOfAnotherThread()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 20, windowWidth: 20, windowHeight: 20);
+        var terminal = new AnsiTerminal(console, useScrollRegion: true, processExitBatchWaitTimeout: TimeSpan.FromSeconds(30));
+        RenderFrame(terminal, new TerminalProgressMessageState(1, 1, "Restoring"));
+
+        terminal.StartUpdate();
+        terminal.EraseProgress();
+        int exitStart = console.Output.Length;
+        var exitThread = new Thread(terminal.ReleasePinnedRowsOnProcessExit);
+        exitThread.Start();
+
+        // The handler writes nothing while the batch is built, because the batch may change the pinned rows.
+        Assert.IsFalse(exitThread.Join(TimeSpan.FromMilliseconds(100)));
+        Assert.AreEqual(string.Empty, console.Output[exitStart..]);
+
+        terminal.StopUpdate();
+        Assert.IsTrue(exitThread.Join(TimeSpan.FromSeconds(30)));
+
+        // The batch released the rows, so the handler does not release them again.
+        Assert.AreEqual("␛7␛[?6l␛[r␛[19;1H␛[J␛8", ShowEscape(console.Output[exitStart..]));
     }
 
     [TestMethod]
@@ -1561,8 +1677,8 @@ public sealed class TerminalTestReporterTests
 
         Assert.AreEqual(
             "␛7␛[r␛8␛[J"
-            + "␛7␛[r␛8␛[J␛D␛D␛[2A␛7␛[1;8r␛8"
-            + "␛7␛[9;1H␛[2K␛[10;1H␛[2KRestoring␛8",
+            + "␛7␛[r␛8␛D␛D␛[2A␛7␛[1;8r␛8"
+            + "␛7␛[?6l␛[9;1H␛[2K␛[10;1H␛[2KRestoring␛8",
             ShowEscape(console.Output[resizedFrameStart..]));
     }
 
@@ -1619,9 +1735,28 @@ public sealed class TerminalTestReporterTests
 
         Assert.AreEqual(
             "user output"
-            + "␛7␛[r␛8␛[J␛D␛D␛[2A␛7␛[1;18r␛8"
-            + "␛7␛[19;1H␛[2K␛[20;1H␛[2KRestoring␛8",
+            + "␛7␛[r␛8␛D␛D␛[2A␛7␛[1;18r␛8"
+            + "␛7␛[?6l␛[19;1H␛[2K␛[20;1H␛[2KRestoring␛8",
             ShowEscape(console.Output));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_ScrollRegion_WritesAfterProgressStoppedDoNotPinProgressAgain()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 20, windowWidth: 20, windowHeight: 20);
+        var terminal = new AnsiTerminal(console, useScrollRegion: true);
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, new CursorProgressRenderer(useScrollRegion: true));
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.WriteToTerminal(static t => t.Append("user output"));
+
+        progressAwareTerminal.StopShowingProgress();
+        int afterStop = console.Output.Length;
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restored");
+        progressAwareTerminal.WriteToTerminal(static t => t.Append("summary"));
+
+        // The summary is written after the rows were released, without reserving them again.
+        Assert.AreEqual("summary", ShowEscape(console.Output[afterStop..]));
     }
 
     [TestMethod]

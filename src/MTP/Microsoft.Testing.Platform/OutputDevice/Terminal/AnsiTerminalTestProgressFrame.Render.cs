@@ -190,7 +190,10 @@ internal sealed partial class AnsiTerminalTestProgressFrame
     /// </summary>
     public void RenderPinnedRows(AnsiTerminal terminal, int firstRow, int rowCount)
     {
+        // Origin mode, if the code under test enabled it, would make the rows relative to the scroll region and draw
+        // them over the output. Saving the cursor also saves the mode, so restoring the cursor enables it again.
         terminal.Append(AnsiCodes.SaveCursor);
+        terminal.Append(AnsiCodes.DisableOriginMode);
         for (int row = 0; row < rowCount; row++)
         {
             terminal.Append(AnsiCodes.MoveCursorTo(firstRow + row, 1));
