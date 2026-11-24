@@ -6455,6 +6455,94 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTypeCheckHasNamedInterpolatedMessage_TypeArgumentPrecedesMessage()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    {|#0:Assert.IsTrue(x is string, message: $"value: {x}")|};
+                    {|#1:Assert.IsFalse(condition: x is not string, message: $"value: {x}")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    Assert.IsInstanceOfType(value: x, expectedType: typeof(string), message: $"value: {x}");
+                    Assert.IsInstanceOfType(value: x, expectedType: typeof(string), message: $"value: {x}");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsInstanceOfType", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsInstanceOfType", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTypeCheckHasParenthesizedNegatedPattern_FixUsesCheckedType()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    {|#0:Assert.IsTrue(x is (not string))|};
+                    {|#1:Assert.IsFalse(x is ((not (string))))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = "text";
+                    Assert.IsNotInstanceOfType<string>(x);
+                    Assert.IsInstanceOfType(x, typeof(string));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotInstanceOfType", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsInstanceOfType", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueWithMismatchedTypeCheckInScope_UsesNonGenericAssertion()
     {
         string code = """

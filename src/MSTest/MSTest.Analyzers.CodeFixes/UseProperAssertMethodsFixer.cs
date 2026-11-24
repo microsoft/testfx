@@ -222,13 +222,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             {
                 expectedTypeArgument = expectedTypeArgument.WithNameColon(
                     SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("expectedType")));
-                updatedArguments = updatedArguments.Add(expectedTypeArgument);
-            }
-            else
-            {
-                updatedArguments = updatedArguments.Insert(conditionIndex + 1, expectedTypeArgument);
             }
 
+            updatedArguments = updatedArguments.Insert(conditionIndex + 1, expectedTypeArgument);
             editor.ReplaceNode(argumentList, argumentList.WithArguments(updatedArguments));
         }
 
@@ -249,19 +245,13 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return condition switch
             {
                 BinaryExpressionSyntax { RawKind: (int)SyntaxKind.IsExpression, Right: TypeSyntax type } => type,
-                IsPatternExpressionSyntax { Pattern: UnaryPatternSyntax { Pattern: var pattern } } => GetPatternType(pattern),
+                IsPatternExpressionSyntax { Pattern: var pattern } when UnwrapPattern(pattern) is UnaryPatternSyntax { Pattern: var nestedPattern } => GetPatternType(nestedPattern),
                 _ => null,
             };
         }
 
         static TypeSyntax? GetPatternType(PatternSyntax pattern)
-        {
-            while (pattern is ParenthesizedPatternSyntax parenthesized)
-            {
-                pattern = parenthesized.Pattern;
-            }
-
-            return pattern switch
+            => UnwrapPattern(pattern) switch
             {
                 TypePatternSyntax typePattern => typePattern.Type,
 
@@ -270,6 +260,15 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 ConstantPatternSyntax { Expression: MemberAccessExpressionSyntax memberAccess } => SyntaxFactory.ParseTypeName(memberAccess.ToString()),
                 _ => null,
             };
+
+        static PatternSyntax UnwrapPattern(PatternSyntax pattern)
+        {
+            while (pattern is ParenthesizedPatternSyntax parenthesized)
+            {
+                pattern = parenthesized.Pattern;
+            }
+
+            return pattern;
         }
     }
 
