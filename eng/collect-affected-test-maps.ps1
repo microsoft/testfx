@@ -21,7 +21,6 @@ $concurrency = Get-CollectionModuleConcurrency -ConfiguredBatches $globalJson.te
     -ChildBudget $ChildBudget -MaximumParallelModules $MaximumParallelModules
 $batchesPerModule = $concurrency.BatchesPerModule
 $effectiveBudget = $concurrency.ChildBudget
-$slots = $concurrency.MaximumParallelModules
 $modules = @(Get-OrderedCollectionModule -Modules @(Get-MappableCollectionModule -Modules @(
     Get-CTSComparisonModule -Repository $Repository -Configuration $Configuration)))
 $dotnetPath = (Get-Command dotnet -CommandType Application | Select-Object -First 1).Source
@@ -32,7 +31,10 @@ $resultsRoot = if ([string]::IsNullOrEmpty($ResultsDirectory)) {
 }
 $resultsDirectory = Join-Path $resultsRoot ([guid]::NewGuid().ToString("N"))
 $moduleNoun = if ($modules.Count -eq 1) { "module" } else { "modules" }
-Write-Host "Collecting test maps for $($modules.Count) $moduleNoun (up to $slots at a time, at most $($slots * $batchesPerModule) instrumentation children)."
+$slots = [Math]::Min($modules.Count, $concurrency.MaximumParallelModules)
+$children = $slots * $batchesPerModule
+$childNoun = if ($children -eq 1) { "child" } else { "children" }
+Write-Host "Collecting test maps for $($modules.Count) $moduleNoun (up to $slots at a time, at most $children instrumentation $childNoun)."
 $timer = [System.Diagnostics.Stopwatch]::StartNew()
 $sourceRevision = & git -C $Repository rev-parse HEAD
 if ($LASTEXITCODE -ne 0) {
@@ -47,7 +49,7 @@ $packageCacheRoot = if ($DisablePackageCacheReuse) {
 }
 try {
     $result = Invoke-CollectionModulePool -Modules $modules -Repository $Repository -ResultsDirectory $resultsDirectory `
-        -DotnetPath $dotnetPath -MaximumParallelModules $slots -PackageCacheRoot $packageCacheRoot
+        -DotnetPath $dotnetPath -MaximumParallelModules $concurrency.MaximumParallelModules -PackageCacheRoot $packageCacheRoot
 } finally {
     $timer.Stop()
     $metadataError = $null
@@ -81,16 +83,5 @@ try {
         throw $metadataError
     }
 }
-$verdict = if ($result.ExitCode -eq 0) { "Completed!" } else { "Failed! (exit code $($result.ExitCode))" }
-Write-Host ""
-Write-Host "Test map collection summary: $verdict"
-Write-Host "  modules: $($result.Completed)/$($result.Planned)"
-$canceledCount = @($result.CanceledModules | Where-Object { $_.Canceled }).Count
-if ($canceledCount -gt 0) {
-    Write-Host "  canceled: $canceledCount"
-}
-Write-Host "  tests mapped: $($result.TestsMapped)"
-Write-Host "  duration: $(Format-CollectionDuration -Duration $timer.Elapsed)"
-Write-Host ""
-Write-Host "  Module logs: $resultsDirectory"
+Write-CollectionRunSummary -Result $result -Duration $timer.Elapsed -ResultsDirectory $resultsDirectory
 exit $result.ExitCode

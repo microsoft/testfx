@@ -3,6 +3,12 @@ param()
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "collection-module-pool.ps1")
+$script:passedCheckCount = 0
+function Write-PassedCheck([string]$Name) {
+    $script:passedCheckCount++
+    Write-Output "PASS $Name"
+}
+
 $fixture = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("testfx-module-pool-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $fixture | Out-Null
 try {
@@ -20,7 +26,7 @@ try {
         -not $fixtureScript.Contains('CollectionPackageCache.Select(')) {
         throw "CollectionPoolWiringPreservesBudgets: Windows collection must use the bounded pool, prioritize known long workloads and retain the cache opt-in contract."
     }
-    Write-Output "PASS CollectionPoolWiringPreservesBudgets"
+    Write-PassedCheck "CollectionPoolWiringPreservesBudgets"
 
     foreach ($case in @(
         @{ CPUs = 1; Budget = 4; Batches = $null; Slots = 1; Effective = 1 },
@@ -38,7 +44,7 @@ try {
             throw "ModulePoolNeverMultipliesChildBudget: CPU and configured per-module limits must fit the global child budget."
         }
     }
-    Write-Output "PASS ModulePoolNeverMultipliesChildBudget"
+    Write-PassedCheck "ModulePoolNeverMultipliesChildBudget"
 
     foreach ($batches in @(0, 3, -1, 2.5, "2", $true, $null)) {
         $rejected = $false
@@ -52,7 +58,7 @@ try {
             throw "ModulePoolRejectsInvalidOrOversubscribedConfiguration: invalid values or a default two-child module must not fit a one-child budget."
         }
     }
-    Write-Output "PASS ModulePoolRejectsInvalidOrOversubscribedConfiguration"
+    Write-PassedCheck "ModulePoolRejectsInvalidOrOversubscribedConfiguration"
 
     $ordered = @(Get-OrderedCollectionModule -Modules @(
         [pscustomobject]@{ Project = "Small.UnitTests"; RelativePath = "a" },
@@ -63,7 +69,7 @@ try {
     if (($ordered.RelativePath -join ",") -ne "c,d,b,a") {
         throw "ModulePoolStartsLargestKnownWorkloadsFirst: long acceptance/analyzer work must not be delayed behind small modules."
     }
-    Write-Output "PASS ModulePoolStartsLargestKnownWorkloadsFirst"
+    Write-PassedCheck "ModulePoolStartsLargestKnownWorkloadsFirst"
 
     $mappable = @(Get-MappableCollectionModule -Modules @(
         [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net462"; RelativePath = "a" },
@@ -74,7 +80,7 @@ try {
     if (($mappable.RelativePath -join ",") -ne "c,d") {
         throw "ModulePoolSkipsOnlyOversizedMaps: only the module/TFM maps above the collector's 128-MiB limit may be skipped."
     }
-    Write-Output "PASS ModulePoolSkipsOnlyOversizedMaps"
+    Write-PassedCheck "ModulePoolSkipsOnlyOversizedMaps"
 
     $mtpAcceptanceContext = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64]"
     $sampleContext = "[affected-tests] [Sample.Tests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26570.125 | win-x64]"
@@ -93,13 +99,14 @@ try {
         },
         @{
             Name = "ModuleOutputDoesNotRepeatAffectedTestContext"
+            Module = [pscustomobject]@{ Project = "Microsoft.Testing.Platform.Acceptance.IntegrationTests"; Framework = "net12.0" }
             Lines = @("$mtpAcceptanceContext Test-map collection child failed: MSTest v5.0.0-preview.26553.4")
             Expected = @("[Microsoft.Testing.Platform.Acceptance.IntegrationTests net12.0] Test-map collection child failed: MSTest v5.0.0-preview.26553.4")
         },
         @{
             Name = "ModuleOutputShortensAlternateAssemblyContext"
             Lines = @("[affected-tests] [Shared.TestAssembly | .NETFramework,Version=v4.6.2 | .NET Framework 4.8 | win-x64] Discovered 2 tests.")
-            Expected = @("[Shared.TestAssembly net462] Discovered 2 tests.")
+            Expected = @("[Shared.TestAssembly net462|x64, runtime: net48] Discovered 2 tests.")
         },
         @{
             Name = "ModuleOutputShortensAlternateAssemblyPartialContext"
@@ -108,16 +115,19 @@ try {
         },
         @{
             Name = "ModuleOutputPreservesBracketedModuleContext"
+            Module = [pscustomobject]@{ Project = "Sample.Tests[Rows](Debug)+Long.Component.Name"; Framework = "net12.0" }
             Lines = @('[affected-tests] [Sample.Tests[Rows](Debug)+Long.Component.Name | net12.0 | .NET 12.0 | win-x64] Child failed: "quoted <value> & details".')
             Expected = @('[Sample.Tests[Rows](Debug)+Long.Component.Name net12.0] Child failed: "quoted <value> & details".')
         },
         @{
             Name = "ModuleOutputDoesNotRepeatRuntimeAndRid"
+            Module = [pscustomobject]@{ Project = "Microsoft.Testing.Platform.Acceptance.IntegrationTests"; Framework = "net12.0" }
             Lines = @("$mtpAcceptanceContext Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026) [win-x64 - .NET 12.0.0-alpha.1.26509.101]")
             Expected = @("[Microsoft.Testing.Platform.Acceptance.IntegrationTests net12.0] Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026)")
         },
         @{
             Name = "ModuleOutputDoesNotRepeatRuntimeAndRidForBracketedAssembly"
+            Module = [pscustomobject]@{ Project = "Sample.Tests[Rows](Debug)"; Framework = "net12.0" }
             Lines = @("[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
             Expected = @("[Sample.Tests[Rows](Debug) net12.0] Test-map collection child failed: MSTest v5.0.0")
         },
@@ -240,8 +250,41 @@ try {
         @{
             Name = "ModuleOutputDoesNotSuppressAlternateAssemblyProgress"
             Lines = @("[affected-tests] [Other.Tests | .NETCoreApp,Version=v12.0 | .NET 12.0.0 | win-x64] Discovered 5 tests; planning to run all 5 for test-map collection (not execution results).")
-            Expected = @("[Other.Tests net12.0] Discovered 5 tests; planning to run all 5 for test-map collection (not execution results).")
+            Expected = @("[Other.Tests net12.0|x64] Discovered 5 tests; planning to run all 5 for test-map collection (not execution results).")
             Captured = @{ Discovered = $null; Runtime = $null }
+        },
+        @{
+            Name = "ModuleOutputDoesNotClaimMapFromAnotherTarget"
+            Module = $analyzersModule
+            Lines = @("[affected-tests] [MSTest.Analyzers.UnitTests | .NETCoreApp,Version=v11.0 | .NET 12.0.0 | win-arm64] Collected test map 'other': 7 discovered test UID(s) in map, 2 source paths, adaptive batches of 4-16, up to 2 concurrent (not execution results).",
+                "[affected-tests] [MSTest.Analyzers.UnitTests | .NETCoreApp,Version=v11.0] Child failed.")
+            Expected = @("[MSTest.Analyzers.UnitTests net11.0|arm64, runtime: net12.0] Collected test map 'other': 7 discovered test UID(s) in map, 2 source paths, adaptive batches of 4-16, up to 2 concurrent (not execution results).",
+                "[MSTest.Analyzers.UnitTests net11.0] Child failed.")
+            Captured = @{ Tests = $null; SourcePaths = $null; MapUri = $null; Runtime = $null; Rid = $null }
+        },
+        @{
+            Name = "ModuleOutputCapturesQuotedMapPathForPlatformTarget"
+            Module = [pscustomobject]@{ Project = "Sample.Tests"; Framework = "net12.0-windows" }
+            Lines = @("$sampleContext Collected test map 'D:\O'Brien\map.json': 0 discovered test UID(s) in map, 0 source paths, adaptive batches of 4-16, up to 2 concurrent (not execution results).")
+            Expected = @()
+            Captured = @{ Tests = 0; SourcePaths = 0; MapUri = "D:\O'Brien\map.json" }
+        },
+        @{
+            Name = "ModuleOutputPreservesUnrecognizedProviderNotice"
+            Lines = @("$sampleContext Experimental test-map collection: no storage provider was configured.")
+            Expected = @("[Sample.Tests net12.0] Experimental test-map collection: no storage provider was configured.")
+        },
+        @{
+            Name = "ModuleOutputKeepsAdditionalMapDiagnostic"
+            Lines = @("$sampleContext Collected test map 'map': 5 discovered test UID(s) in map, 2 source paths, storage is read-only on the replica.")
+            Expected = @("[Sample.Tests net12.0] Collected test map 'map': 5 discovered test UID(s) in map, 2 source paths, storage is read-only on the replica.")
+            Captured = @{ Tests = 5; SourcePaths = 2; MapUri = "map" }
+        },
+        @{
+            Name = "ModuleOutputKeepsUnparseableMapCounts"
+            Lines = @("$sampleContext Collected test map 'map': 5 discovered test UID(s) in map, 18446744073709551616 source paths, adaptive batches of 4-16, up to 2 concurrent (not execution results).")
+            Expected = @("[Sample.Tests net12.0] Collected test map 'map': 5 discovered test UID(s) in map, 18446744073709551616 source paths, adaptive batches of 4-16, up to 2 concurrent (not execution results).")
+            Captured = @{ Tests = $null; SourcePaths = $null; MapUri = $null }
         },
         @{
             Name = "ModuleOutputEndsCompletedBlockAtOtherOutput"
@@ -304,7 +347,7 @@ try {
             }
         }
         if ($outputFailures.Count -eq $previousFailureCount) {
-            Write-Output "PASS $($case.Name)"
+            Write-PassedCheck $case.Name
         }
     }
     if ($outputFailures.Count -gt 0) {
@@ -325,7 +368,7 @@ try {
     if (@($durationFailures).Count -gt 0) {
         throw "CollectionDurationMatchesTerminalReporter: $(@($durationFailures) -join '; ')."
     }
-    Write-Output "PASS CollectionDurationMatchesTerminalReporter"
+    Write-PassedCheck "CollectionDurationMatchesTerminalReporter"
 
     $displayFailures = foreach ($displayCase in @(
         @{ Framework = "net10.0"; Rid = "win-x64"; Runtime = ".NET 10.0.15"; Expected = "net10.0|x64" },
@@ -344,7 +387,7 @@ try {
     if (@($displayFailures).Count -gt 0) {
         throw "CollectionModuleDisplayOmitsMatchingRuntime: $(@($displayFailures) -join '; ')."
     }
-    Write-Output "PASS CollectionModuleDisplayOmitsMatchingRuntime"
+    Write-PassedCheck "CollectionModuleDisplayOmitsMatchingRuntime"
 
     $completionModule = [pscustomobject]@{
         Project = "Sample.Tests"
@@ -356,7 +399,7 @@ try {
         @{ ExitCode = 0; Tests = 1; SourcePaths = 1; MapUri = "azdo://map"; Rid = "win-x64"; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0|x64) mapped 1 test to 1 source path (0ms)" },
         @{ ExitCode = 37; Tests = 3060; SourcePaths = 827; MapUri = "azdo://map"; Rid = "win-x64"; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0|x64) failed with exit code 37 (0ms)" },
         @{ ExitCode = 0; Canceled = $true; Rid = "win-x64"; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0|x64) canceled (0ms)" },
-        @{ ExitCode = 0; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0) completed without a test map (0ms)" }
+        @{ ExitCode = 0; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0) completed (map counts not reported) (0ms)" }
     )) {
         $completionState = [pscustomobject]@{ Module = $completionModule; Timer = [System.Diagnostics.Stopwatch]::new() }
         $presentation = Get-CollectionOutputPresentation -State $completionState
@@ -374,7 +417,7 @@ try {
     if (@($completionFailures).Count -gt 0) {
         throw "CollectionModuleCompletionReportsOutcome: $(@($completionFailures) -join '; ')."
     }
-    Write-Output "PASS CollectionModuleCompletionReportsOutcome"
+    Write-PassedCheck "CollectionModuleCompletionReportsOutcome"
 
     $sharedPresenter = New-CollectionOutputPresenter
     $telemetryOutput = foreach ($telemetryModule in @("First.Tests", "Second.Tests")) {
@@ -388,11 +431,19 @@ try {
     if ((@($telemetryOutput) -join "`n") -cne "Telemetry is: Enabled`n[First.Tests net12.0] Ready.`n[Second.Tests net12.0] Ready.") {
         throw "CollectionTelemetryShownOncePerPool: expected one telemetry line across modules, got '$(@($telemetryOutput) -join " | ")'."
     }
-    Write-Output "PASS CollectionTelemetryShownOncePerPool"
+    Write-PassedCheck "CollectionTelemetryShownOncePerPool"
 
     $worker = Join-Path $fixture "worker.ps1"
-    @'
+    # Rendezvous may include starting three pwsh processes and compiling the handle helper on a loaded agent.
+    $workerStartupSeconds = 60
+    $workerBody = @'
 $ErrorActionPreference = "Stop"
+function Write-StartedMarker([string]$Path) {
+    # Publish the PID and the ready signal together, before the parent can terminate the writer.
+    $pending = "$Path.$PID.tmp"
+    [IO.File]::WriteAllText($pending, [string]$PID)
+    [IO.File]::Move($pending, $Path, $true)
+}
 if ($args.Count -gt 0 -and $args[0] -eq "orphan-middle") {
     $child = Start-Process -FilePath (Get-Process -Id $PID).Path `
         -ArgumentList @("-NoProfile", "-File", "`"$PSCommandPath`"", "grandchild", "`"$($args[1])`"") `
@@ -400,7 +451,7 @@ if ($args.Count -gt 0 -and $args[0] -eq "orphan-middle") {
         -RedirectStandardOutput (Join-Path $args[1] "grandchild-output.log") `
         -RedirectStandardError (Join-Path $args[1] "grandchild-error.log")
     try {
-        $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+        $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
         while (-not (Test-Path -LiteralPath (Join-Path $args[1] "grandchild.started"))) {
             if ([datetimeoffset]::UtcNow -ge $deadline) {
                 throw "The independently launched descendant did not start."
@@ -413,7 +464,7 @@ if ($args.Count -gt 0 -and $args[0] -eq "orphan-middle") {
     exit 0
 }
 if ($args.Count -gt 0 -and $args[0] -eq "grandchild") {
-    Set-Content -LiteralPath (Join-Path $args[1] "grandchild.started") -Value $PID
+    Write-StartedMarker (Join-Path $args[1] "grandchild.started")
     while ($true) {
         Start-Sleep -Seconds 1
     }
@@ -435,6 +486,10 @@ if ($module -notlike "orphan-*" -and -not [string]::IsNullOrEmpty($env:TESTFX_CO
 if ($module -eq "error-stream") {
     [Console]::Error.WriteLine("error stream first")
     [Console]::Error.WriteLine("error stream second")
+    exit 0
+}
+if ($module -eq "mapped-peer") {
+    Write-Output "[affected-tests] [mapped-peer | net10.0 | .NET 10.0.15 | win-x64] Collected test map 'map': 3 discovered test UID(s) in map, 2 source paths, adaptive batches of 4-16, up to 2 concurrent (not execution results)."
     exit 0
 }
 if ($module -like "orphan-*") {
@@ -464,14 +519,14 @@ if ($module -like "orphan-*") {
         -RedirectStandardOutput (Join-Path $root "middle-output.log") `
         -RedirectStandardError (Join-Path $root "middle-error.log")
     try {
-        if (-not $child.WaitForExit(10000) -or $child.ExitCode -ne 0) {
+        if (-not $child.WaitForExit(1000 * $workerStartupSeconds) -or $child.ExitCode -ne 0) {
             throw "The intermediate parent did not finish before SDK completion."
         }
     } finally {
         $child.Dispose()
     }
     Set-Content -LiteralPath (Join-Path $root "orphan.ready") -Value $PID
-    $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+    $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
     while (-not (Test-Path -LiteralPath (Join-Path $root "orphan.release"))) {
         if ([datetimeoffset]::UtcNow -ge $deadline) {
             throw "The SDK completion rendezvous was not released."
@@ -488,7 +543,7 @@ if ($module -eq "slow") {
     }
     $childInfo.UseShellExecute = $false
     $child = [System.Diagnostics.Process]::Start($childInfo)
-    $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+    $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
     while (-not (Test-Path -LiteralPath (Join-Path $root "grandchild.started"))) {
         if ([datetimeoffset]::UtcNow -ge $deadline) {
             throw "The child never started its owned descendant."
@@ -497,10 +552,10 @@ if ($module -eq "slow") {
     }
 }
 Write-Output "$module started"
-Set-Content -LiteralPath (Join-Path $root "$module.started") -Value $PID
+Write-StartedMarker (Join-Path $root "$module.started")
 if ($module -eq "failure") {
     if (Test-Path -LiteralPath (Join-Path $root "cancel-peer-mode")) {
-        $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+        $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
         while (-not (Test-Path -LiteralPath (Join-Path $root "slow.started"))) {
             if ([datetimeoffset]::UtcNow -ge $deadline) {
                 throw "The canceled-peer scenario never started its peer."
@@ -522,7 +577,7 @@ $waitFor = switch ($module) {
     default { $null }
 }
 if ($null -ne $waitFor) {
-    $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+    $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
     while (-not (Test-Path -LiteralPath (Join-Path $root $waitFor))) {
         if ([datetimeoffset]::UtcNow -ge $deadline) {
             throw "Worker '$module' did not observe '$waitFor' before its rendezvous deadline."
@@ -533,7 +588,8 @@ if ($null -ne $waitFor) {
 Set-Content -LiteralPath (Join-Path $root "$module.finished") -Value $PID
 Write-Output "$module finished"
 exit 0
-'@ | Set-Content -LiteralPath $worker -Encoding utf8
+'@
+    Set-Content -LiteralPath $worker -Value "`$workerStartupSeconds = $workerStartupSeconds", $workerBody -Encoding utf8
     $prefix = @("-NoProfile", "-File", $worker)
     $powershellPath = Join-Path $PSHOME $(if ($IsWindows) { "pwsh.exe" } else { "pwsh" })
     $modules = @("first", "second", "third") | ForEach-Object {
@@ -557,7 +613,7 @@ $($completed.Module.Project) finished
         }
     }
 
-    Write-Output "PASS ModulePoolRefillsWithoutWaveBarrier"
+    Write-PassedCheck "ModulePoolRefillsWithoutWaveBarrier"
 
     $modules = @("failure", "never-started") | ForEach-Object {
         [pscustomobject]@{ Project = $_; Framework = "fake"; RelativePath = $_ }
@@ -567,10 +623,11 @@ $($completed.Module.Project) finished
     $result = @($failureConsole | Where-Object { $_ -isnot [System.Management.Automation.InformationRecord] })[-1]
     $failureConsoleText = @($failureConsole | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } |
         ForEach-Object { $_.ToString() }) -join "`n"
-    if ($failureConsoleText -cnotmatch '^Collecting test map from failure \(fake\)\n\[failure fake\] failure started\n\nfailure \(fake\) failed with exit code 37 \(\d+(?:ms|s \d{3}ms)\)$') {
+    $durationPattern = '(?:\d+d )?(?:\d+h )?(?:\d+m )?(?:\d+s )?\d+ms'
+    if ($failureConsoleText -cnotmatch ('^Collecting test map from failure \(fake\)\n\[failure fake\] failure started\n\nfailure \(fake\) failed with exit code 37 \(' + $durationPattern + '\)$')) {
         throw "ModulePoolReportsModuleLikeTestRun: expected start, labeled output, and completion lines, got '$($failureConsoleText.Replace("`n", " | "))'."
     }
-    Write-Output "PASS ModulePoolReportsModuleLikeTestRun"
+    Write-PassedCheck "ModulePoolReportsModuleLikeTestRun"
     $expectedFailureLog = @'
 failure started
 
@@ -581,7 +638,7 @@ failure started
         throw "ModulePoolPreservesFailure: a native failure must stop new launches and preserve its exit code."
     }
 
-    Write-Output "PASS ModulePoolPreservesFailure"
+    Write-PassedCheck "ModulePoolPreservesFailure"
 
     $result = Invoke-CollectionModulePool -Modules @(
         [pscustomobject]@{ Project = "error-stream"; Framework = "fake"; RelativePath = "error-stream" }) `
@@ -596,13 +653,13 @@ error stream second
         (Get-Content -LiteralPath $result.Modules[0].LogPath -Raw).Replace("`r`n", "`n") -ne $expectedErrorLog.Replace("`r`n", "`n")) {
         throw "ModulePoolPreservesBufferedErrorOutput: process completion must preserve the entire stderr log."
     }
-    Write-Output "PASS ModulePoolPreservesBufferedErrorOutput"
+    Write-PassedCheck "ModulePoolPreservesBufferedErrorOutput"
 
     $savedRead = (Get-Command Read-CollectionModuleOutput).ScriptBlock
     try {
         function Read-CollectionModuleOutput {
             param($State)
-            $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+            $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
             while (-not $State.Process.HasExited) {
                 if ([datetimeoffset]::UtcNow -ge $deadline) {
                     throw "The native failure child did not exit."
@@ -630,12 +687,12 @@ error stream second
     } finally {
         Set-Item -LiteralPath function:Read-CollectionModuleOutput -Value $savedRead
     }
-    Write-Output "PASS ModulePoolPreservesNativeFailureDuringOutputError"
+    Write-PassedCheck "ModulePoolPreservesNativeFailureDuringOutputError"
 
     try {
         function Read-CollectionModuleOutput {
             param($State)
-            $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+            $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
             while (-not $State.Process.HasExited -or $null -ne $State.OutputTask -or $null -ne $State.ErrorTask) {
                 if ([datetimeoffset]::UtcNow -ge $deadline) {
                     throw "The native failure child did not exit and drain."
@@ -652,14 +709,52 @@ error stream second
         $result = @($nativeFailureConsole | Where-Object { $_ -isnot [System.Management.Automation.InformationRecord] })[-1]
         $nativeFailureText = @($nativeFailureConsole | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } |
             ForEach-Object { $_.ToString() }) -join "`n"
-        if ($result.ExitCode -ne 37 -or $result.CanceledModules.Count -ne 1 -or $result.CanceledModules[0].Canceled -or
-            $nativeFailureText -cnotmatch '\nfailure \(fake\) failed with exit code 37 \(\d+(?:ms|s \d{3}ms)\)$') {
-            throw "ModulePoolReportsNativeFailureDuringOutputError: a native failure drained after an output error must be reported as failed, got '$($nativeFailureText.Replace("`n", " | "))'."
+        if ($result.ExitCode -ne 37 -or $result.Completed -ne 1 -or $result.Modules[0].ExitCode -ne 37 -or
+            $result.CanceledModules.Count -ne 0 -or $null -ne $result.TestsMapped -or
+            $nativeFailureText -cnotmatch ('\nfailure \(fake\) failed with exit code 37 \(' + $durationPattern + '\)$')) {
+            throw "ModulePoolReportsNativeFailureDuringOutputError: expected 1 finished, 0 canceled, exit 37 and no reported map count; got $($result.Completed) finished, $($result.CanceledModules.Count) canceled, exit $($result.ExitCode), tests '$($result.TestsMapped)' and '$($nativeFailureText.Replace("`n", " | "))'."
         }
     } finally {
         Set-Item -LiteralPath function:Read-CollectionModuleOutput -Value $savedRead
     }
-    Write-Output "PASS ModulePoolReportsNativeFailureDuringOutputError"
+    Write-PassedCheck "ModulePoolReportsNativeFailureDuringOutputError"
+
+    try {
+        $script:injectAfterPeerExit = $true
+        function Read-CollectionModuleOutput {
+            param($State)
+            if (-not $State.Process.WaitForExit(1000 * $workerStartupSeconds)) {
+                throw "The collection worker did not exit before the fixture deadline."
+            }
+            if ($State.Index -eq 1 -and $script:injectAfterPeerExit) {
+                $script:injectAfterPeerExit = $false
+                throw "Injected reader error after successful peer exit."
+            }
+            & $savedRead -State $State
+        }
+        $peerDirectory = Join-Path $fixture "exited-peer"
+        $peerConsole = @(Invoke-CollectionModulePool -Modules @(
+            [pscustomobject]@{ Project = "failure"; Framework = "fake"; RelativePath = "failure" },
+            [pscustomobject]@{ Project = "mapped-peer"; Framework = "net10.0"; RelativePath = "mapped-peer" }) `
+            -Repository $fixture -ResultsDirectory $peerDirectory -DotnetPath $powershellPath -MaximumParallelModules 2 -CommandPrefix $prefix 6>&1 3>$null)
+        $result = $peerConsole[-1]
+        $peerMetadata = Get-Content -LiteralPath (Join-Path $peerDirectory "module-001\module.json") -Raw | ConvertFrom-Json
+        $peerText = @($peerConsole | Where-Object { $_ -is [System.Management.Automation.InformationRecord] }) -join "`n"
+        if ($result.Completed -ne 2 -or $result.CanceledModules.Count -ne 0 -or $result.TestsMapped -ne 3 -or
+            $peerMetadata.Canceled -or $peerMetadata.Tests -ne 3 -or $peerMetadata.ExitCode -ne 0 -or
+            $peerText -cnotmatch ('\nmapped-peer \(net10.0\|x64\) mapped 3 tests to 2 source paths \(' + $durationPattern + '\)$')) {
+            throw "ModulePoolCountsAlreadyExitedPeer: expected both native exits and 3 mapped tests, got $($result.Completed) completed, $($result.CanceledModules.Count) canceled and '$($result.TestsMapped)' tests."
+        }
+        $summary = @(Write-CollectionRunSummary -Result $result -Duration ([TimeSpan]::Zero) -ResultsDirectory $peerDirectory 6>&1) -join "`n"
+        $expectedSummary = @("", "Test map collection summary: Failed! (exit code 37)", "  modules: 2/2",
+            "  tests mapped: 3 (reported by 1/2 finished modules)", "  duration: 0ms", "", "  Module logs: $peerDirectory") -join "`n"
+        if ($summary -cne $expectedSummary) {
+            throw "ModulePoolCountsAlreadyExitedPeer: expected '$expectedSummary', got '$summary'."
+        }
+    } finally {
+        Set-Item -LiteralPath function:Read-CollectionModuleOutput -Value $savedRead
+    }
+    Write-PassedCheck "ModulePoolCountsAlreadyExitedPeer"
 
     $modules = @("slow", "failure") | ForEach-Object {
         [pscustomobject]@{ Project = $_; Framework = "fake"; RelativePath = $_ }
@@ -681,7 +776,7 @@ slow started
         throw "ModulePoolDrainsFailedPeers: the still-running child must terminate and retain its log before pool ownership is released."
     }
 
-    Write-Output "PASS ModulePoolDrainsFailedPeers"
+    Write-PassedCheck "ModulePoolDrainsFailedPeers"
 
     $savedStop = (Get-Command Stop-CollectionModuleProcess).ScriptBlock
     try {
@@ -701,21 +796,27 @@ slow started
     } finally {
         Set-Item -LiteralPath function:Stop-CollectionModuleProcess -Value $savedStop
     }
-    Write-Output "PASS ModulePoolPreservesFailureDuringCleanupError"
+    Write-PassedCheck "ModulePoolPreservesFailureDuringCleanupError"
 
     $savedRead = (Get-Command Read-CollectionModuleOutput).ScriptBlock
     $script:injectOutputFailure = $true
+    $cleanupPeers = [System.Collections.Generic.List[System.Diagnostics.Process]]::new()
     try {
         function Read-CollectionModuleOutput {
             param($State)
             if ($script:injectOutputFailure) {
-                $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+                $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
                 while (-not (Test-Path -LiteralPath (Join-Path $fixture "cleanup-first.started")) -or
                     -not (Test-Path -LiteralPath (Join-Path $fixture "cleanup-second.started"))) {
                     if ([datetimeoffset]::UtcNow -ge $deadline) {
                         throw "Cleanup peers did not start."
                     }
                     Start-Sleep -Milliseconds 10
+                }
+                foreach ($name in @("cleanup-first", "cleanup-second")) {
+                    $peer = Get-Process -Id ([int](Get-Content -LiteralPath (Join-Path $fixture "$name.started") -Raw))
+                    $null = $peer.Handle
+                    $cleanupPeers.Add($peer)
                 }
                 $script:injectOutputFailure = $false
                 throw "Injected primary output failure."
@@ -739,29 +840,25 @@ slow started
         } catch {
             $caught = $_
         }
-        $peerIds = @("cleanup-first", "cleanup-second") | ForEach-Object {
-            [int](Get-Content -LiteralPath (Join-Path $fixture "$_.started") -Raw)
-        }
         if ($null -eq $caught -or -not $caught.Exception.Message.Contains("Injected primary output failure.") -or
             @($caught.Exception.Data["CollectionCleanupErrors"]).Count -ne 1 -or
-            @($peerIds | ForEach-Object { Get-Process -Id $_ -ErrorAction SilentlyContinue }).Count -ne 0) {
-            throw "ModulePoolDrainsEveryPeerAfterCleanupError: a cleanup failure must not mask the primary error or abandon another owned child."
+            $cleanupPeers.Count -ne 2 -or @($cleanupPeers | Where-Object { -not $_.HasExited }).Count -ne 0) {
+            throw "ModulePoolDrainsEveryPeerAfterCleanupError: expected the injected primary error, one cleanup failure and two exited peers; got '$caught', peer count $($cleanupPeers.Count)."
         }
     } finally {
         Set-Item -LiteralPath function:Read-CollectionModuleOutput -Value $savedRead
         Set-Item -LiteralPath function:Stop-CollectionModuleProcess -Value $savedStop
-        foreach ($name in @("cleanup-first", "cleanup-second")) {
-            $marker = Join-Path $fixture "$name.started"
-            if (Test-Path -LiteralPath $marker) {
-                $process = Get-Process -Id ([int](Get-Content -LiteralPath $marker -Raw)) -ErrorAction SilentlyContinue
-                if ($null -ne $process) {
-                    Stop-CollectionModuleProcess -State ([pscustomobject]@{ Process = $process })
-                    $process.Dispose()
+        foreach ($peer in $cleanupPeers) {
+            try {
+                if (-not $peer.HasExited) {
+                    Stop-CollectionModuleProcess -State ([pscustomobject]@{ Process = $peer })
                 }
+            } finally {
+                $peer.Dispose()
             }
         }
     }
-    Write-Output "PASS ModulePoolDrainsEveryPeerAfterCleanupError"
+    Write-PassedCheck "ModulePoolDrainsEveryPeerAfterCleanupError"
 
     $rejected = $false
     try {
@@ -780,7 +877,7 @@ slow started
         throw "ModulePoolPreservesLaunchError: a missing executable must not become successful collection."
     }
 
-    Write-Output "PASS ModulePoolPreservesLaunchError"
+    Write-PassedCheck "ModulePoolPreservesLaunchError"
     $orphanFailures = [System.Collections.Generic.List[string]]::new()
     if ($IsWindows) {
         foreach ($case in @(
@@ -795,7 +892,7 @@ slow started
                 function Read-CollectionModuleOutput {
                     param($State)
                     if ($null -eq $script:orphanChild) {
-                        $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+                        $deadline = [datetimeoffset]::UtcNow.AddSeconds($workerStartupSeconds)
                         while (-not (Test-Path -LiteralPath (Join-Path $script:orphanRoot "orphan.ready"))) {
                             if ([datetimeoffset]::UtcNow -ge $deadline) {
                                 throw "The orphan fixture did not reach its completion rendezvous."
@@ -819,7 +916,7 @@ slow started
                     -not $result.TeardownConfirmed -or -not $script:orphanChild.WaitForExit(0)) {
                     throw "$($case.Name): SDK completion must not release its cache while an independently launched orphan is running (exit=$($result.ExitCode), completed=$($result.Completed), teardown=$($result.TeardownConfirmed), childExited=$($script:orphanChild.HasExited))."
                 }
-                Write-Output "PASS $($case.Name)"
+                Write-PassedCheck $case.Name
             } catch {
                 $orphanFailures.Add($_.Exception.Message)
                 Write-Output "FAIL $($case.Name): $($_.Exception.Message)"
@@ -840,8 +937,7 @@ slow started
     if ($orphanFailures.Count -gt 0) {
         throw ($orphanFailures -join [Environment]::NewLine)
     }
-    $passedCount = $(if ($IsWindows) { 20 } else { 18 }) + $outputCases.Count
-    Write-Output "Collection module-pool self-tests: $passedCount passed."
+    Write-Output "Collection module-pool self-tests: $script:passedCheckCount passed."
 } finally {
     Remove-Item -LiteralPath $fixture -Recurse -Force
 }

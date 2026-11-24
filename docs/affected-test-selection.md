@@ -966,29 +966,32 @@ and a `Test run summary:` block), with only the extra collection details:
 - `eng/collect-affected-test-maps.ps1` writes one header,
   `Collecting test maps for N modules (up to S at a time, at most C instrumentation children).`
 - `eng/collection-module-pool.ps1` writes `Collecting test map from <module path> (<tfm>)` when a module starts.
-- Diagnostics are prefixed with `[<project> <tfm>]` for the module's own lines and `[<assembly> <tfm>]` for other
-  assemblies. Neither `[affected-tests]` nor the runtime/RID is repeated. Azure DevOps (`##vso[`, `##[`) and
+- Diagnostics use `[<project> <tfm>]` for the module's own lines. A different assembly or target keeps its own
+  short framework, architecture and differing runtime when available, since it has no completion line here.
+  Neither `[affected-tests]` nor redundant runtime/RID details are repeated. Azure DevOps (`##vso[`, `##[`) and
   GitHub (`::`) commands pass through unlabeled; other bracket shapes are kept verbatim.
 - After a blank line, each module gets one completion line in MTP's framework display:
   `<path> (<tfm>|<arch>[, runtime: <runtime>]) <outcome> (<duration>)`. Outcome is
-  `mapped N tests to M source paths`, `completed without a test map`, `failed with exit code X` or `canceled`.
+  `mapped N tests to M source paths`, `completed (map counts not reported)`, `failed with exit code X` or `canceled`.
   As in MTP, the runtime is shown only when it differs from the TFM (`net48|x64`, not
   `.NETFramework,Version=v4.8 | .NET Framework 4.8.9363.0`).
 - The entry script ends with `Test map collection summary: Completed!` or `Failed! (exit code X)`, followed by
   `modules`, `canceled` (only when non-zero), `tests mapped`, `duration` and the module-log directory.
+  A reported zero is distinct from an absent count. The summary qualifies partial totals with the number
+  of finished modules reporting counts, or says `not reported` when none did.
 
 Only lines whose information moves into the completion line or summary are suppressed: those provider
 banners, `Mapping timing` with zero conservative fallback, the SDK's successful completion block, its
 `Child test-result reporting is suppressed` banner and repeated `Telemetry is:` lines (shown once per pool).
-Non-zero conservative fallback, failed completion blocks, warnings and errors are kept. The
+Non-zero conservative fallback, failed completion blocks, warnings and unrecognized provider details are kept. The
 `Test-map collection child failed: MSTest v...` banner drops its `[RID - runtime]` suffix because the
 completion line carries it. Per-module `collection.log` still holds the raw child output. `module.json`
 additionally records `ProcessId`, `Discovered`, `Tests`, `SourcePaths`, `MapUri`, `Runtime` and `Rid`.
 
-The same change fixes one reporting defect. A module that had already exited non-zero when the pool drained its
-active children in `finally` was reported as canceled. It is now shown as `failed with exit code X`, its
-`module.json` records `Canceled: false`, and the summary's `canceled` count excludes it. The drained
-`CanceledModules` set, cleanup behavior and pool exit code are unchanged.
+The pool checks for a native exit before stopping each remaining process tree. If the process already exited,
+its result belongs in `Modules` and counts as finished, including a nonzero exit. `CanceledModules` contains
+only peers still running when cancellation was requested. The console and JSON use the same classification;
+cleanup and native-exit precedence are unchanged.
 
 Alternatives considered:
 
@@ -1003,11 +1006,12 @@ Alternatives considered:
   for over an hour in log 244 and would give no live progress.
 
 The start line has no architecture because the RID is known only after the child reports it. Full-context
-lines are attributed to their module by assembly file name or project name, which relies on each child having
-its own output pipe. Colors and the live progress area of the MTP terminal reporter are not reproduced; this
+lines are attributed using the child's pipe, assembly file name or project name, and declared target. A bare
+provider TFM can match a platform-suffixed module; another reported target cannot supply that module's counts.
+Colors and the live progress area of the MTP terminal reporter are not reproduced; this
 is plain CI log text in English.
 
-**Evidence (2026-11-23):** the change is based on `be3cf477a83f9b94e416b0401163a48580e389aa`; its
+**Initial evidence (2026-11-23):** the change is based on `be3cf477a83f9b94e416b0401163a48580e389aa`; its
 source/test patch (`git --no-pager diff --binary -- eng`, redirected through `cmd`), excluding this document,
 has SHA-256 `49472E5378645885599C880E2DF7F7A485E89581E48C4E2DD57D95B4E4DC68F4`. All runs use Windows,
 PowerShell 7.7.0 and `pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1`, with
@@ -1023,8 +1027,23 @@ process-scoped `TEMP`/`TMP` under `artifacts\tmp`, in isolated comparisons outsi
 A session-local replay of the new presenter over log 244, attributing lines to modules by their labels,
 reduces 610 console lines to 205: 46 completion lines, a 57,399 `tests mapped` total equal to the sum of the
 original `Collected test map` counts, and two unattributed `Skipping map collection` notices printed by the
-entry script before the pool starts. It is not an SDK collection run. Linux/macOS execution (expected 49
-checks) and hosted Azure DevOps rendering remain unverified until CI runs this change.
+entry script before the pool starts. It is not an SDK collection run.
+
+**Review evidence (2026-11-24):** Windows, PowerShell 7.7.0, comparison commit
+`98a5f0a60706675f1496085eef35aebb0104dc79`, review patch SHA-256
+`D4CDD21F885EE42CEDF3D32597B03A9979B589B9FF2D44ED9BF5BC7DAD03E962` (`git diff --binary HEAD -- eng`
+before the review commit). The validator above recorded 58 named checks (exit 0). The previous presenter
+assigned another target's seven UIDs to the parent and missed a map path containing an apostrophe. An isolated
+comparison that classified an already-exited successful peer as canceled failed `ModulePoolCountsAlreadyExitedPeer`
+with one finished, one canceled and no reported count instead of two finished and three mapped tests (exit 1).
+The final replay still yielded 46 module completions, 57,399 mapped tests and 205 lines.
+
+The real entry script also collected a clean `net12.0` two-row MSTest module via SDK `12.0.100-alpha.1.26570.125`,
+MSTest `5.0.0-preview.26571.1`, MTP `3.0.0-preview.26571.1` and affected-tests provider `18.14.0-preview.26570.4`.
+With filesystem storage, exit 0 produced two distinct UIDs associated with `MapTests.cs`, matching `module.json`
+and the console. With an untracked source-tree marker, the SDK exited 1; the summary retained that exit and
+reported unavailable counts rather than zero. Both transcripts were inspected in an 80-by-24 terminal.
+Hosted Azure DevOps rendering and Linux/macOS execution of this revision have not been verified.
 
 #### Final local composition and performance evidence
 

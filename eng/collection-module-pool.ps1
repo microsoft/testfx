@@ -106,8 +106,9 @@ function ConvertTo-CollectionShortFramework {
         return "net$($Matches.major)$($Matches.minor)$($Matches.patch)"
     }
 
-    if ($Framework -cmatch '^\.NETCoreApp,Version=v(?<major>\d+)\.(?<minor>\d+)$') {
-        $prefix = if ([int]$Matches.major -ge 5) { "net" } else { "netcoreapp" }
+    $major = 0
+    if ($Framework -cmatch '^\.NETCoreApp,Version=v(?<major>\d+)\.(?<minor>\d+)$' -and [int]::TryParse($Matches.major, [ref]$major)) {
+        $prefix = if ($major -ge 5) { "net" } else { "netcoreapp" }
         return "$prefix$($Matches.major).$($Matches.minor)"
     }
 
@@ -283,52 +284,56 @@ function Get-CollectionConsoleText {
     }
 
     $moduleLabel = Get-CollectionModuleLabel -Module $State.Module
-    if ($Line -cmatch '^\[affected-tests\] \[(?<assembly>(?:[^|\[\]]|\[[^|\[\]]*\])+) \| (?<framework>[^|\[\]]+) \| (?<runtime>[^|\[\]]+) \| (?<rid>[^|\[\]]+)\] (?<message>.*)$') {
+    if ($Line -cmatch '^\[affected-tests\] \[(?<assembly>(?:[^|\[\]]|\[[^|\[\]]*\])+) \| (?<framework>[^|\[\]]+)(?: \| (?<runtime>[^|\[\]]+) \| (?<rid>[^|\[\]]+))?\] (?<message>.*)$') {
         $assembly = $Matches.assembly
-        $framework = $Matches.framework
+        $framework = ConvertTo-CollectionShortFramework -Framework $Matches.framework
         $runtime = $Matches.runtime
         $rid = $Matches.rid
         $message = $Matches.message
-        $isModule = Test-CollectionModuleAssembly -Module $State.Module -Assembly $assembly
-        if ($isModule) {
+        # TargetFrameworkAttribute can omit the platform suffix on a platform-specific module.
+        $isModule = $framework -in @($State.Module.Framework, ($State.Module.Framework -split '-', 2)[0]) -and
+            (Test-CollectionModuleAssembly -Module $State.Module -Assembly $assembly)
+        if ($isModule -and $runtime) {
             $Presentation.Runtime = $runtime
             $Presentation.Rid = $rid
-            if ($message -cmatch '^Experimental test-map collection: ' -or
+            if ($message -ceq "Experimental test-map collection: child SDK reporting is suppressed; only this parent summary and test map are produced. Counts below describe discovery and planning, not execution results." -or
                 $message -cmatch '^Mapping timing: \d+ measured batch\(es\), 0 conservative fallback batch\(es\)\.$') {
                 return $null
             }
 
-            if ($message -cmatch '^Discovered (?<discovered>\d+) tests; planning to run all \k<discovered> for test-map collection \(not execution results\)\.$') {
-                $Presentation.Discovered = [long]$Matches.discovered
+            $tests = 0
+            if ($message -cmatch '^Discovered (?<discovered>\d+) tests; planning to run all \k<discovered> for test-map collection \(not execution results\)\.$' -and
+                [int]::TryParse($Matches.discovered, [ref]$tests)) {
+                $Presentation.Discovered = $tests
                 return $null
             }
 
-            if ($message -cmatch "^Collected test map '(?<uri>[^']+)': (?<tests>\d+) discovered test UID\(s\) in map, (?<paths>\d+) source paths, ") {
+            $paths = 0
+            if ($message -cmatch "^Collected test map '(?<uri>.+)': (?<tests>\d+) discovered test UID\(s\) in map, (?<paths>\d+) source paths, (?<detail>.*)$" -and
+                [int]::TryParse($Matches.tests, [ref]$tests) -and [int]::TryParse($Matches.paths, [ref]$paths)) {
                 $Presentation.MapUri = $Matches.uri
-                $Presentation.Tests = [long]$Matches.tests
-                $Presentation.SourcePaths = [long]$Matches.paths
-                return $null
+                $Presentation.Tests = $tests
+                $Presentation.SourcePaths = $paths
+                if ($Matches.detail -cmatch '^adaptive batches of \d+-\d+, up to \d+ concurrent \(not execution results\)\.$') {
+                    return $null
+                }
             }
         }
 
-        if ($message.StartsWith("Test-map collection child failed: MSTest v", [StringComparison]::Ordinal)) {
+        if ($runtime -and $message.StartsWith("Test-map collection child failed: MSTest v", [StringComparison]::Ordinal)) {
             $suffix = " [$rid - $runtime]"
             if ($message.EndsWith($suffix, [StringComparison]::Ordinal)) {
                 $message = $message.Substring(0, $message.Length - $suffix.Length)
             }
         }
 
-        $label = if ($isModule) { $moduleLabel } else { "[$assembly $(ConvertTo-CollectionShortFramework -Framework $framework)] " }
-        return "$label$message"
-    }
-
-    if ($Line -cmatch '^\[affected-tests\] \[(?<assembly>(?:[^|\[\]]|\[[^|\[\]]*\])+) \| (?<framework>[^|\[\]]+)\] (?<message>.*)$') {
-        $label = if (Test-CollectionModuleAssembly -Module $State.Module -Assembly $Matches.assembly) {
+        $label = if ($isModule) {
             $moduleLabel
         } else {
-            "[$($Matches.assembly) $(ConvertTo-CollectionShortFramework -Framework $Matches.framework)] "
+            $display = Get-CollectionModuleDisplay -Framework $framework -Rid $rid -Runtime (ConvertTo-CollectionRuntimeFramework -Description $runtime)
+            "[$assembly $display] "
         }
-        return "$label$($Matches.message)"
+        return "$label$message"
     }
 
     # Other module-context shapes are not produced today; keep their context verbatim rather than guess.
@@ -406,11 +411,61 @@ function Write-CollectionModuleCompletion {
         $paths = if ($presentation.SourcePaths -eq 1) { "1 source path" } else { "$($presentation.SourcePaths) source paths" }
         "mapped $tests to $paths"
     } else {
-        "completed without a test map"
+        "completed (map counts not reported)"
     }
 
     Write-Host ""
     Write-Host "$identity $outcome ($(Format-CollectionDuration -Duration $State.Timer.Elapsed))"
+}
+
+function Complete-CollectionModuleResult {
+    param($State, [switch]$Canceled)
+
+    $State.Timer.Stop()
+    $presentation = Get-CollectionOutputPresentation -State $State
+    $result = [pscustomobject]@{
+        Index = $State.Index
+        Module = $State.Module
+        ProcessId = $State.Process.Id
+        ExitCode = $State.Process.ExitCode
+        DurationSeconds = $State.Timer.Elapsed.TotalSeconds
+        Started = $State.Started
+        Finished = [datetimeoffset]::UtcNow
+        LogPath = Join-Path $State.Directory "collection.log"
+        Discovered = $presentation.Discovered
+        Tests = $presentation.Tests
+        SourcePaths = $presentation.SourcePaths
+        MapUri = $presentation.MapUri
+        Runtime = $presentation.Runtime
+        Rid = $presentation.Rid
+        Canceled = [bool]$Canceled
+    }
+    $result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $State.Directory "module.json") -Encoding utf8
+    Write-CollectionModuleCompletion -State $State -ExitCode $result.ExitCode -Canceled:$Canceled
+    return $result
+}
+
+function Write-CollectionRunSummary {
+    param($Result, [timespan]$Duration, [string]$ResultsDirectory)
+
+    $verdict = if ($Result.ExitCode -eq 0) { "Completed!" } else { "Failed! (exit code $($Result.ExitCode))" }
+    Write-Host ""
+    Write-Host "Test map collection summary: $verdict"
+    Write-Host "  modules: $($Result.Completed)/$($Result.Planned)"
+    if ($Result.CanceledModules.Count -gt 0) {
+        Write-Host "  canceled: $($Result.CanceledModules.Count)"
+    }
+    $counts = if ($null -eq $Result.TestsMapped) {
+        "not reported"
+    } elseif ($Result.ModulesWithMapCounts -lt $Result.Completed) {
+        "$($Result.TestsMapped) (reported by $($Result.ModulesWithMapCounts)/$($Result.Completed) finished modules)"
+    } else {
+        $Result.TestsMapped
+    }
+    Write-Host "  tests mapped: $counts"
+    Write-Host "  duration: $(Format-CollectionDuration -Duration $Duration)"
+    Write-Host ""
+    Write-Host "  Module logs: $ResultsDirectory"
 }
 
 function Read-CollectionModuleOutput {
@@ -629,7 +684,6 @@ function Invoke-CollectionModulePool {
                     Index = $nextIndex
                     Module = $module
                     Process = $process
-                    ProcessId = $null
                     Presenter = $presenter
                     JobOwned = $IsWindows
                     Writer = $writer
@@ -660,7 +714,6 @@ function Invoke-CollectionModulePool {
                 }
 
                 $state.Process = $process
-                $state.ProcessId = $process.Id
                 $active.Add($state)
                 $state.OutputReader = $process.StandardOutput
                 $state.ErrorReader = $process.StandardError
@@ -687,26 +740,7 @@ function Invoke-CollectionModulePool {
                 }
                 Complete-CollectionModuleOutput -State $state
 
-                $state.Timer.Stop()
-                Write-CollectionModuleCompletion -State $state -ExitCode $state.Process.ExitCode
-                $presentation = Get-CollectionOutputPresentation -State $state
-                $result = [pscustomobject]@{
-                    Index = $state.Index
-                    Module = $state.Module
-                    ProcessId = $state.ProcessId
-                    ExitCode = $state.Process.ExitCode
-                    DurationSeconds = $state.Timer.Elapsed.TotalSeconds
-                    Started = $state.Started
-                    Finished = [datetimeoffset]::UtcNow
-                    LogPath = Join-Path $state.Directory "collection.log"
-                    Discovered = $presentation.Discovered
-                    Tests = $presentation.Tests
-                    SourcePaths = $presentation.SourcePaths
-                    MapUri = $presentation.MapUri
-                    Runtime = $presentation.Runtime
-                    Rid = $presentation.Rid
-                }
-                $result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $state.Directory "module.json") -Encoding utf8
+                $result = Complete-CollectionModuleResult -State $state
                 $completed.Add($result)
                 if ($result.ExitCode -ne 0 -and ($null -eq $failure -or $result.Index -lt $failure.Index)) {
                     $failure = $result
@@ -734,32 +768,16 @@ function Invoke-CollectionModulePool {
     } finally {
         foreach ($state in $active) {
             try {
-                # A child that already failed natively is the reported failure, not a canceled peer.
-                $nativeFailure = $state.Process.HasExited -and $state.Process.ExitCode -ne 0
+                # Sample before stopping the tree: a native exit (successful or failed) is not cancellation.
+                $wasRunning = -not $state.Process.HasExited
                 Stop-CollectionModuleProcess -State $state
                 Complete-CollectionModuleOutput -State $state
-                $state.Timer.Stop()
-                Write-CollectionModuleCompletion -State $state -ExitCode $state.Process.ExitCode -Canceled:(-not $nativeFailure)
-                $presentation = Get-CollectionOutputPresentation -State $state
-                $result = [pscustomobject]@{
-                    Index = $state.Index
-                    Module = $state.Module
-                    ProcessId = $state.ProcessId
-                    ExitCode = $state.Process.ExitCode
-                    DurationSeconds = $state.Timer.Elapsed.TotalSeconds
-                    Started = $state.Started
-                    Finished = [datetimeoffset]::UtcNow
-                    LogPath = Join-Path $state.Directory "collection.log"
-                    Discovered = $presentation.Discovered
-                    Tests = $presentation.Tests
-                    SourcePaths = $presentation.SourcePaths
-                    MapUri = $presentation.MapUri
-                    Runtime = $presentation.Runtime
-                    Rid = $presentation.Rid
-                    Canceled = -not $nativeFailure
+                $result = Complete-CollectionModuleResult -State $state -Canceled:$wasRunning
+                if ($wasRunning) {
+                    $canceled.Add($result)
+                } else {
+                    $completed.Add($result)
                 }
-                $result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $state.Directory "module.json") -Encoding utf8
-                $canceled.Add($result)
             } catch {
                 $message = "Collection cleanup for PID $($state.Process.Id) failed: $($_.Exception.Message)"
                 $cleanupErrors.Add($message)
@@ -787,10 +805,12 @@ function Invoke-CollectionModulePool {
         Write-Warning "Collection failed with exit $($failure.ExitCode); additional orchestration error: $($poolError.Exception.Message)"
     }
 
+    $reported = @($completed | Where-Object { $null -ne $_.Tests })
     return [pscustomobject]@{
         ExitCode = $(if ($null -ne $failure) { $failure.ExitCode } else { 0 })
         Modules = @($completed.ToArray() | Sort-Object Index)
-        TestsMapped = [long](@($completed.ToArray() | Where-Object { $null -ne $_.Tests } | ForEach-Object { $_.Tests }) | Measure-Object -Sum).Sum
+        ModulesWithMapCounts = $reported.Count
+        TestsMapped = $(if ($reported.Count -gt 0) { [long]($reported | Measure-Object -Property Tests -Sum).Sum })
         Planned = $Modules.Count
         Started = $nextIndex
         Completed = $completed.Count
