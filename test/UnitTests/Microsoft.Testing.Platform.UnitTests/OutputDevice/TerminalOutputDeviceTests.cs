@@ -109,10 +109,14 @@ public sealed class TerminalOutputDeviceTests
         Assert.Contains("observed terminal test", output);
         Assert.Contains("stdout sentinel", output);
         Assert.Contains("stderr sentinel", output);
-        Assert.Contains("total: 1", output);
-        Assert.Contains("failed: " + failures, output);
-        Assert.Contains("succeeded: " + passed, output);
-        Assert.Contains("skipped: " + skipped, output);
+        Assert.Contains(
+            $"""
+              total: 1
+              failed: {failures}
+              succeeded: {passed}
+              skipped: {skipped}
+            """.Replace("\r\n", "\n"),
+            output.Replace("\r\n", "\n"));
         if (failures > 0)
         {
             Assert.Contains("explanation sentinel", output);

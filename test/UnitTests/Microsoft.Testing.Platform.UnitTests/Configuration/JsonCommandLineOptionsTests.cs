@@ -105,7 +105,9 @@ public sealed class JsonCommandLineOptionsTests
         FormatException ex = await Assert.ThrowsExactlyAsync<FormatException>(
             () => EnumerateAsync("{\"commandLineOptions\": {\"foo\": {}}}"));
 
-        Assert.Contains("foo", ex.Message);
+        Assert.Contains("'foo'", ex.Message);
+        Assert.Contains("'commandLineOptions'", ex.Message);
+        Assert.DoesNotContain("'commandLineOptions:foo'", ex.Message);
     }
 
     [TestMethod]
@@ -114,7 +116,8 @@ public sealed class JsonCommandLineOptionsTests
         FormatException ex = await Assert.ThrowsExactlyAsync<FormatException>(
             () => EnumerateAsync("{\"commandLineOptions\": {\"foo\": {\"nested\": \"value\"}}}"));
 
-        Assert.Contains("foo", ex.Message);
+        Assert.Contains("'foo:nested'", ex.Message);
+        Assert.Contains("'commandLineOptions'", ex.Message);
         // The error message should render the entry name relative to the section
         // (e.g. 'foo') rather than the redundant flattened key ('commandLineOptions:foo').
         Assert.DoesNotContain("'commandLineOptions:foo'", ex.Message);

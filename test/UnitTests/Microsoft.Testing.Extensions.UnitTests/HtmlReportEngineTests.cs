@@ -159,9 +159,19 @@ public class HtmlReportEngineTests
         string html = memoryStream.GetUtf8Content();
         Assert.Contains("<!DOCTYPE html>", html);
         Assert.Contains("id=\"mtp-data\"", html);
-        Assert.Contains("\"passed\":1", html);
-        Assert.Contains("\"failed\":1", html);
-        Assert.Contains("\"skipped\":1", html);
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(html))!.AsObject();
+        JsonArray rows = report["tests"]!.AsArray();
+        Assert.HasCount(3, rows);
+        Assert.AreSequenceEqual(
+            [("p1", "Passing test", "passed"), ("f1", "Failing test", "failed"), ("s1", "Skipped test", "skipped")],
+            rows.Select(row => ((string?)row!["uid"], (string?)row["displayName"], (string?)row["outcome"])));
+        Assert.AreEqual("expected 1, got 2", (string?)rows[1]!["errorMessage"]);
+        Assert.AreEqual("not relevant", (string?)rows[2]!["errorMessage"]);
+        JsonNode summary = report["summary"]!;
+        Assert.AreEqual(3, (int)summary["total"]!);
+        Assert.AreEqual(1, (int)summary["passed"]!);
+        Assert.AreEqual(1, (int)summary["failed"]!);
+        Assert.AreEqual(1, (int)summary["skipped"]!);
     }
 
     [TestMethod]
@@ -193,9 +203,15 @@ public class HtmlReportEngineTests
         await engine.GenerateReportAsync([Captured("p1", "Recovered test", "passed")]);
 
         string html = memoryStream.GetUtf8Content();
-        Assert.Contains("\"incomplete\":true", html);
-        Assert.Contains("\"runStatus\":\"aborted\"", html);
-        Assert.Contains("\"displayName\":\"Recovered test\"", html);
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(html))!.AsObject();
+        Assert.IsTrue((bool)report["incomplete"]!);
+        Assert.AreEqual("aborted", (string?)report["runStatus"]);
+        JsonNode row = Assert.ContainsSingle(report["tests"]!.AsArray())!;
+        Assert.AreEqual("p1", (string?)row["uid"]);
+        Assert.AreEqual("Recovered test", (string?)row["displayName"]);
+        Assert.AreEqual("passed", (string?)row["outcome"]);
+        Assert.AreEqual(1, (int)report["summary"]!["total"]!);
+        Assert.AreEqual(1, (int)report["summary"]!["passed"]!);
         Assert.Contains("Tests absent from this report did not necessarily pass.", html);
     }
 
