@@ -7218,6 +7218,30 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenRangeArgumentsCannotInferCommonType_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    byte number = 100;
+                    int signed = 5;
+                    Assert.IsTrue('a' <= number && number <= 'z');
+                    Assert.IsTrue(1u <= signed && signed <= 10u);
+                    Assert.IsTrue(10u >= signed && signed >= 1u);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenRangeConditionHasUserDefinedConversion_NoDiagnostic()
     {
         string code = """

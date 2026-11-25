@@ -314,7 +314,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
         // Check for inclusive range patterns: lo <= x && x <= hi
         if (isTrueInvocation &&
-            TryRecognizeRangeCheck(assertion, conditionArgument, objectTypeSymbol, assertTypeSymbol, out SyntaxNode? rangeMinExpr, out SyntaxNode? rangeMaxExpr, out SyntaxNode? rangeValueExpr))
+            TryRecognizeRangeCheck(context.Compilation, assertion, conditionArgument, objectTypeSymbol, assertTypeSymbol, out SyntaxNode? rangeMinExpr, out SyntaxNode? rangeMaxExpr, out SyntaxNode? rangeValueExpr))
         {
             const string properAssertMethod = "IsInRange";
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();

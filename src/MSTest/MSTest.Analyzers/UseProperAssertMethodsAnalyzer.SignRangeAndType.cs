@@ -95,6 +95,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     /// <c>lo &lt;= x &amp;&amp; x &lt;= hi</c> (in any operand order), that can use <c>Assert.IsInRange</c>.
     /// </summary>
     private static bool TryRecognizeRangeCheck(
+        Compilation compilation,
         IInvocationOperation assertion,
         IOperation condition,
         INamedTypeSymbol objectTypeSymbol,
@@ -135,7 +136,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             return false;
         }
 
-        // All operands must share the same type so that IsInRange<T> infers T without changing semantics.
+        // All promoted operands must share the same type to preserve comparison semantics.
         // Floating-point types are excluded because NaN bounds compare differently with CompareTo.
         ITypeSymbol? type = value.Type;
         if (type is null ||
@@ -145,6 +146,17 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             !SymbolEqualityComparer.Default.Equals(max.Type, type) ||
             !IsStableAssertionArgument(min) ||
             !IsStableAssertionArgument(max))
+        {
+            return false;
+        }
+
+        // The fixer emits the original expressions, not the promoted operands. Generic inference
+        // needs a common type among those expressions, rather than a type introduced by promotion.
+        ITypeSymbol? originalMinType = WalkDownImplicitBuiltInConversions(min).Type;
+        ITypeSymbol? originalMaxType = WalkDownImplicitBuiltInConversions(max).Type;
+        ITypeSymbol? originalValueType = WalkDownImplicitBuiltInConversions(value).Type;
+        if (originalMinType is null || originalMaxType is null || originalValueType is null ||
+            !(CanInferType(originalMinType) || CanInferType(originalMaxType) || CanInferType(originalValueType)))
         {
             return false;
         }
@@ -167,6 +179,17 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         maxExpression = max.Syntax;
         valueExpression = value.Syntax;
         return true;
+
+        bool CanInferType(ITypeSymbol candidate)
+            => HasImplicitBuiltInConversion(originalMinType!, candidate) &&
+                HasImplicitBuiltInConversion(originalMaxType!, candidate) &&
+                HasImplicitBuiltInConversion(originalValueType!, candidate);
+
+        bool HasImplicitBuiltInConversion(ITypeSymbol from, ITypeSymbol to)
+        {
+            CommonConversion conversion = compilation.ClassifyCommonConversion(from, to);
+            return conversion.IsImplicit && !conversion.IsUserDefined;
+        }
 
         static bool TryGetInclusiveComparison(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out IOperation? smaller, [NotNullWhen(true)] out IOperation? bigger)
         {
