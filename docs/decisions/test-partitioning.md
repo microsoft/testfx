@@ -39,14 +39,16 @@ JSON-RPC/IDE server mode, WebAssembly, iOS/tvOS, hot reload and custom test-host
 launchers are unsupported. A distribution child is always the same local
 executable, with forwarded arguments, inherited environment and inner
 orchestrator options. Preserve response-file backing where arguments can
-round-trip through the existing parser; keep literal-quote arguments inline. Remove
+round-trip through the existing parser; keep literal quotes and line breaks inline.
+Segments preserve argument order even when other arguments exceed OS limits. Remove
 the fan-out option to prevent recursion; replace results-directory and terminal
 progress options. Each invocation gets a unique `Partitions/<run-id>/<index>`
 directory. Explicit absolute report filenames/external output paths are not
 rewritten; use relative report names to obtain isolation. Child console lines
 are serialized, prefixed with partition identity,
 and use non-ANSI, noninteractive output. The orchestrator owns and joins all
-children and output readers before returning.
+children and output readers before returning. Output draining honors application
+cancellation and fails after 30 seconds if a descendant retains an inherited pipe.
 
 Normal native `dotnet test` handshakes remain per process. Direct invocation
 requires no SDK handshake. A new orchestrator Uid must be exercised against the
@@ -87,6 +89,11 @@ executed results and remaining gaps.
 
 ### Experiments and corrections (2026-11-24)
 
+- Review follow-up: the launcher must be built and checked before local
+  distribution, and owned option names must be removed case-insensitively.
+  Separate response-file segments preserve large arguments alongside literal
+  newlines or quotes; keeping all arguments inline would reintroduce OS limits.
+  The partition capability documents the existing one-based selector contract.
 - A pack with `SkipUapTargetFramework=true` failed the Windows package-shape
   guard. Repacking without that suppression passed the complete shipping-layout
   and metadata checks; the earlier selector's partial-package limitation does
@@ -112,6 +119,40 @@ executed results and remaining gaps.
   dependency. Those pack/restore failures are not behavioral red evidence.
   Correcting the isolated setup permitted the unchanged exact-once test to
   execute and fail at its intended report-count assertion.
+
+### Review-fix validation (2026-11-25)
+
+The review fixes were tested on base
+`1349e60b01f97020ef732ebcfa3b7649b96d1395` with production/test patch SHA-256
+`1241B4189A27C094B15E1B290C1B585C25534F50B0B5FA2DA9538535D703EB45`.
+Windows x64 used repository SDK `12.0.100-alpha.1.26570.125`, the net12.0
+acceptance host, and net11.0 generated consumers. `.\build.cmd -pack -c Debug
+-bl` exited 0; `Microsoft.Testing.Platform.3.0.0-dev.nupkg` SHA-256 was
+`588197A244066A281CC38E49AEE6B139B4E206FDC606DE9AE25551EB12D67AA1`.
+
+The packed pre-fix run selected four cases: mixed-case option forwarding,
+multiline response-file forwarding with a 35,000-character filter, and both
+launcher states. Three failed at the intended assertions and the disabled
+launcher passed. An earlier cancellation test also failed its bounded-exit
+assertion with a descendant holding the pipe. That cancellation fixture was
+subsequently extended to cover the uncancelled timeout, so exact paired evidence
+for its final test shape is unavailable; the old package's resolved consumer
+hash was not captured either.
+
+After packing the fixes, the focused commands below exited 0:
+
+- `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitioningOrchestratorTests' --ansi off --progress off`:
+  17 passed, including mixed-case removal (the single-case pre-fix unit run
+  failed with nine arguments instead of three).
+- `.\.dotnet\dotnet.exe run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitionCount_' --ansi off --progress off`:
+  27 passed, including enabled/disabled launchers, mixed-case and long/multiline
+  arguments, cancellation and uncancelled output timeout, native SDK and
+  multi-module cases. An earlier run required manually stopping its owned
+  sentinel because the new test awaited output before cleaning it up; that
+  run is not used as green evidence. The final run required no intervention.
+
+The SDK control-channel cancellation, downstream rollout and release-branch
+servicing gaps recorded below remain open. No hosted CI result is implied.
 
 ### Executed validation
 

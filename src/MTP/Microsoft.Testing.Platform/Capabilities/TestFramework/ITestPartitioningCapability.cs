@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// <remarks>
 /// When <see cref="IsSupported"/> is <see langword="true"/>, the platform exposes '--partition-count &lt;count&gt;'
 /// and runs each partition in a separate test host process started with '--partition &lt;index&gt;/&lt;count&gt;',
-/// where 'index' is zero-based. The test framework must register and honor the '--partition' option so that
+/// where 'index' is one-based and ranges from 1 through 'count'. The test framework must register and honor the '--partition' option so that
 /// every test runs in exactly one partition. Test frameworks that do not provide this capability, or that report
 /// <see cref="IsSupported"/> as <see langword="false"/>, do not expose '--partition-count'.
 /// <para>

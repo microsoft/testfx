@@ -211,6 +211,132 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
+    public async Task PartitionCount_MixedCaseOptions_ExecuteAllPartitions()
+    {
+        using var run = new TempDirectory("partition-count-case");
+        TestHostResult result = await RunFanOutAsync(Independent, "--PARTITION-COUNT 2", run);
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_ResponseFileAndMultilineArgument_PreserveParameter()
+    {
+        using var run = new TempDirectory("partition-count-multiline");
+        string responseFile = Path.Combine(run.Path, "original.rsp");
+        File.WriteAllText(responseFile, $"--partition-count 2\n--filter FullyQualifiedName~Acme|Name={new string('z', 35_000)}");
+        TestHostResult result = await RunFanOutAsync(
+            Independent, $"@\"{responseFile}\" --test-parameter \"Multiline=first\nsecond\"", run,
+            new Dictionary<string, string?> { ["PARTITION_TEST_MULTILINE"] = "1" });
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Enabled custom launcher is rejected")]
+    [DataRow(false, DisplayName = "Disabled custom launcher permits fan out")]
+    public async Task PartitionCount_CustomLauncher_RejectsOnlyEnabledLauncher(bool enabled)
+    {
+        using var run = new TempDirectory("partition-count-launcher");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation);
+        environment["PARTITION_TEST_CUSTOM_LAUNCHER"] = enabled ? "enabled" : "disabled";
+        environment[ProbeVariable] = null;
+        TestHostResult result = await AssetFixture.Host(Cancellation).ExecuteAsync(
+            $"--partition-count 2 --results-directory \"{run.Path}\"",
+            environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(enabled ? ExitCode.InvalidCommandLine : ExitCode.Success);
+        if (enabled)
+        {
+            result.AssertOutputContains("requires .NET 10 or later and local process execution");
+            Assert.IsFalse(Directory.Exists(Path.Combine(run.Path, "Partitions")));
+        }
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Cancellation stops inherited pipe readers")]
+    [DataRow(false, DisplayName = "Inherited pipe readers time out without cancellation")]
+    public async Task PartitionCount_ChildExitWithInheritedPipes_StopsReaders(bool cancel)
+    {
+        using var run = new TempDirectory("partition-count-orphan");
+        ProcessStartInfo start = new(
+            AssetFixture.Host(Cancellation).FullName,
+            $"--partition-count 1 --filter FullyQualifiedName=Acme.CheckoutTests.Keep --results-directory \"{run.Path}\" --ansi off --progress off")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        start.Environment["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet");
+        start.Environment["PARTITION_TEST_HANG"] = run.Path;
+        start.Environment["PARTITION_TEST_ORPHAN"] = "1";
+        using Process parent = Process.Start(start)!;
+        Task<string> stdout = parent.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = parent.StandardError.ReadToEndAsync();
+        Process? child = null;
+        Process? grandchild = null;
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        deadline.CancelAfter(TimeSpan.FromMinutes(1));
+        try
+        {
+            string marker = Path.Combine(run.Path, "Checkout.Keep");
+            while (!File.Exists(marker))
+            {
+                await Task.Delay(25, deadline.Token);
+            }
+
+            child = Process.GetProcessById(int.Parse(await File.ReadAllTextAsync(marker, deadline.Token), System.Globalization.CultureInfo.InvariantCulture));
+            grandchild = Process.GetProcessById(int.Parse(await File.ReadAllTextAsync(marker + ".grandchild", deadline.Token), System.Globalization.CultureInfo.InvariantCulture));
+            await File.WriteAllTextAsync(Path.Combine(run.Path, "release-child"), "release", deadline.Token);
+            await child.WaitForExitAsync(deadline.Token);
+            Assert.IsFalse(grandchild.HasExited);
+            if (cancel)
+            {
+                await File.WriteAllTextAsync(Path.Combine(run.Path, "cancel"), "cancel application", deadline.Token);
+            }
+
+            Task exited = parent.WaitForExitAsync(deadline.Token);
+            Assert.AreSame(exited, await Task.WhenAny(exited, Task.Delay(TimeSpan.FromSeconds(cancel ? 15 : 45), deadline.Token)),
+                "Readers must stop even when a descendant retains inherited output handles.");
+            await exited;
+            if (cancel)
+            {
+                Assert.AreEqual((int)ExitCode.TestSessionAborted, parent.ExitCode);
+            }
+            else
+            {
+                Assert.AreNotEqual((int)ExitCode.Success, parent.ExitCode);
+                grandchild.Kill(entireProcessTree: true);
+                await grandchild.WaitForExitAsync(deadline.Token);
+                Assert.Contains("Timed out while draining partition output.", await stdout + await stderr);
+            }
+        }
+        finally
+        {
+            using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            foreach (Process? process in new[] { parent, child, grandchild })
+            {
+                if (process is not null)
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill(entireProcessTree: true);
+                    }
+
+                    await process.WaitForExitAsync(cleanup.Token);
+                }
+            }
+
+            await Task.WhenAll(stdout, stderr);
+            child?.Dispose();
+            grandchild?.Dispose();
+        }
+    }
+
+    [TestMethod]
     public async Task PartitionCount_Cancellation_JoinsUncooperativeChildren()
     {
         using var run = new TempDirectory("partition-count-cancel");
@@ -1080,8 +1206,18 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             [TestClass]
             public sealed class CheckoutTests
             {
+                public TestContext TestContext { get; set; } = null!;
+
                 [TestMethod, TestCategory("Fast")]
-                public void Keep() => Probe.Record("Checkout.Keep");
+                public void Keep()
+                {
+                    if (System.Environment.GetEnvironmentVariable("PARTITION_TEST_MULTILINE") is not null)
+                    {
+                        Assert.AreEqual("first\nsecond", TestContext.Properties["Multiline"]);
+                    }
+
+                    Probe.Record("Checkout.Keep");
+                }
                 [TestMethod, TestCategory("Slow")]
                 public void Other() => Probe.Record("Checkout.Other");
             }
@@ -1214,6 +1350,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             using System.Threading;
             using System.Threading.Tasks;
             using Microsoft.Testing.Platform.Builder;
+            using Microsoft.Testing.Platform.Extensions.TestHostControllers;
             using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
             using Microsoft.Testing.Platform.TestHostOrchestrator;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1227,15 +1364,30 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                     }
 
                     var builder = await TestApplication.CreateBuilderAsync(args);
-                    if (args.Contains("--partition-count"))
+                    if (args.Contains("--partition-count") && Environment.GetEnvironmentVariable("PARTITION_TEST_HANG") is not null)
                     {
                         builder.TestHostOrchestrator.AddTestHostExecutionOrchestratorMiddleware(services => new CancelOnMarker(services));
+                    }
+
+                    if (Environment.GetEnvironmentVariable("PARTITION_TEST_CUSTOM_LAUNCHER") is string launcher)
+                    {
+                        builder.TestHostControllers.AddTestHostLauncher(_ => new CustomLauncher(launcher == "enabled"));
                     }
 
                     builder.AddMSTest(() => new[] { Assembly.GetExecutingAssembly() });
                     using var app = await builder.BuildAsync();
                     return await app.RunAsync();
                 }
+            }
+            internal sealed class CustomLauncher(bool enabled) : ITestHostLauncher
+            {
+                public string Uid => "CustomLauncher";
+                public string Version => "1.0.0";
+                public string DisplayName => Uid;
+                public string Description => Uid;
+                public Task<bool> IsEnabledAsync() => Task.FromResult(enabled);
+                public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken token)
+                    => throw new InvalidOperationException("The custom launcher must not be invoked.");
             }
             internal sealed class CancelOnMarker(IServiceProvider services) : ITestHostExecutionOrchestratorMiddleware
             {
@@ -1296,6 +1448,16 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                         string temporary = marker + ".tmp";
                         File.WriteAllText(temporary, Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
                         File.Move(temporary, marker);
+                        if (Environment.GetEnvironmentVariable("PARTITION_TEST_ORPHAN") is not null)
+                        {
+                            while (!File.Exists(Path.Combine(hangDirectory, "release-child")))
+                            {
+                                Thread.Sleep(25);
+                            }
+
+                            return;
+                        }
+
                         Thread.Sleep(Timeout.Infinite);
                     }
 

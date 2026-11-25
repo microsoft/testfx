@@ -165,17 +165,23 @@ internal sealed partial class TestHostBuilder
             testHostOrchestratorConfiguration.TestHostOrchestrators.Length,
             testHostOrchestratorConfiguration.Middleware.Length);
 
-        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
-            static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer))
+        bool requiresAuthorization = testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
+            static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer);
+        bool requiresLauncherCheck = testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
+            static orchestrator => orchestrator is PartitioningOrchestrator);
+        if (requiresAuthorization || requiresLauncherCheck)
         {
             ITestHostLauncher? testHostLauncher =
                 await ((TestHostControllersManager)TestHostControllers).BuildTestHostLauncherAsync(context.ServiceProvider).ConfigureAwait(false);
-            ExecutableInfo executableInfo = context.ServiceProvider.GetTestApplicationModuleInfo().GetCurrentExecutableInfo();
-            await context.ServiceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
-                testHostLauncher,
-                executableInfo.FilePath,
-                context.LoggerFactory.CreateLogger<TestHostBuilder>(),
-                context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            if (requiresAuthorization)
+            {
+                ExecutableInfo executableInfo = context.ServiceProvider.GetTestApplicationModuleInfo().GetCurrentExecutableInfo();
+                await context.ServiceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                    testHostLauncher,
+                    executableInfo.FilePath,
+                    context.LoggerFactory.CreateLogger<TestHostBuilder>(),
+                    context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            }
         }
 
         context.PoliciesService.ProcessRole = TestProcessRole.TestHostOrchestrator;

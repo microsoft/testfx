@@ -140,7 +140,10 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             int separator = option.IndexOfAny(['=', ':']);
             string name = separator < 0 ? option : option.Substring(0, separator);
             if (argument.StartsWith("-", StringComparison.Ordinal)
-                && name is PartitioningCommandLineOptionsProvider.PartitionCountOptionName or "results-directory" or "progress" or "ansi")
+                && (name.Equals(PartitioningCommandLineOptionsProvider.PartitionCountOptionName, StringComparison.OrdinalIgnoreCase)
+                    || name.Equals("results-directory", StringComparison.OrdinalIgnoreCase)
+                    || name.Equals("progress", StringComparison.OrdinalIgnoreCase)
+                    || name.Equals("ansi", StringComparison.OrdinalIgnoreCase)))
             {
                 if (separator < 0)
                 {
@@ -165,22 +168,46 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
         if (responseFileIndex >= 0)
         {
             int prefixLength = RemoveOwnedArguments(originalArguments.Take(responseFileIndex).ToArray()).Length;
-            // Response-file expansion can exceed the OS command-line limit. Keep the muxer prefix
-            // inline and recreate only the application arguments after removing our activation.
-            if (!arguments.Skip(prefixLength).Any(argument => argument.IndexOf('"') >= 0))
+            // Preserve ordering while keeping arguments the line-oriented response parser cannot
+            // represent inline; other arguments may exceed the OS command-line limit.
+            List<string> commandArguments = [.. arguments.Take(prefixLength)];
+            List<string> segment = [];
+            int segmentIndex = 0;
+            foreach (string argument in arguments.Skip(prefixLength))
             {
-                string responseFile = Path.Combine(directory, "partition-arguments.rsp");
+                if (argument.IndexOfAny(['"', '\r', '\n']) >= 0)
+                {
+                    await WriteSegmentAsync().ConfigureAwait(false);
+                    commandArguments.Add(argument);
+                }
+                else
+                {
+                    segment.Add(argument);
+                }
+            }
+
+            await WriteSegmentAsync().ConfigureAwait(false);
+            arguments = commandArguments;
+
+            async Task WriteSegmentAsync()
+            {
+                if (segment.Count == 0)
+                {
+                    return;
+                }
+
+                string responseFile = Path.Combine(directory, $"partition-arguments-{segmentIndex++}.rsp");
                 using (IFileStream stream = serviceProvider.GetFileSystem().NewFileStream(responseFile, FileMode.Create, FileAccess.Write))
                 using (var writer = new StreamWriter(stream.Stream))
                 {
-                    foreach (string argument in arguments.Skip(prefixLength))
+                    foreach (string argument in segment)
                     {
                         await writer.WriteLineAsync($"\"{argument}\"").ConfigureAwait(false);
                     }
                 }
 
-                arguments.RemoveRange(prefixLength, arguments.Count - prefixLength);
-                arguments.Add($"@{responseFile}");
+                commandArguments.Add($"@{responseFile}");
+                segment.Clear();
             }
         }
 
@@ -208,6 +235,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
 
         using SystemProcess child = new(process);
         using var childStop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var readerStop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         Task stdout = ForwardAsync(process.StandardOutput);
         Task stderr = ForwardAsync(process.StandardError);
         try
@@ -235,6 +263,10 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             }
             finally
             {
+#if NET8_0_OR_GREATER
+                // A descendant can inherit the pipes after the direct child has exited.
+                readerStop.CancelAfter(TimeSpan.FromSeconds(30));
+#endif
                 if (!child.HasExited)
                 {
                     process.StandardOutput.Dispose();
@@ -245,29 +277,40 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             }
         }
 
+#if NET8_0_OR_GREATER
+        if (readerStop.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException("Timed out while draining partition output.");
+        }
+#endif
         return child.ExitCode;
 
-        // Drain redirected streams after termination as well as normal exit; cancellation must not
-        // abandon readers that still own the process pipes.
-        [SuppressMessage("Reliability", "CA2016:Forward the 'cancellationToken' parameter to methods", Justification = "Readers drain until the child closes its streams.")]
         async Task ForwardAsync(StreamReader reader)
         {
             try
             {
+#if NET8_0_OR_GREATER
+                while (await reader.ReadLineAsync(readerStop.Token).ConfigureAwait(false) is { } line)
+#else
                 while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
+#endif
                 {
-                    await outputGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+                    await outputGate.WaitAsync(readerStop.Token).ConfigureAwait(false);
                     try
                     {
                         await serviceProvider.GetOutputDevice().DisplayAsync(
                             this, new TextOutputDeviceData($"[partition {partition.ToString(CultureInfo.InvariantCulture)}/{count.ToString(CultureInfo.InvariantCulture)}] {line}"),
-                            CancellationToken.None).ConfigureAwait(false);
+                            readerStop.Token).ConfigureAwait(false);
                     }
                     finally
                     {
                         outputGate.Release();
                     }
                 }
+            }
+            catch (OperationCanceledException) when (readerStop.IsCancellationRequested)
+            {
+                // The caller handles cancellation and reports a drain timeout separately.
             }
             catch
             {

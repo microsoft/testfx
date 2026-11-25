@@ -45,6 +45,16 @@ public sealed class PartitioningOrchestratorTests
             ]));
 
     [TestMethod]
+    public void RemoveOwnedArguments_RemovesMixedCaseOptions()
+        => Assert.AreSequenceEqual(
+            new[] { "Tests.exe", "--filter-uid", "uid" },
+            PartitioningOrchestrator.RemoveOwnedArguments(
+            [
+                "Tests.exe", "--PARTITION-COUNT", "4", "--Results-Directory=old",
+                "-PROGRESS:on", "--AnSi", "on", "--filter-uid", "uid",
+            ]));
+
+    [TestMethod]
     [DataRow(8, 8, 8)]
     [DataRow(8, 0, 0)]
     [DataRow(0, 8, 0)]
