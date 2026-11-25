@@ -24,6 +24,12 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
 
         public Test(bool useMSTestV4)
         {
+            if (typeof(TAnalyzer) == typeof(PreferAsyncAssertionAnalyzer)
+                || typeof(TAnalyzer) == typeof(TestClassShouldBeValidAnalyzer))
+            {
+                MarkupOptions = MarkupOptions.UseFirstDescriptor;
+            }
+
             ReferenceAssemblies = useMSTestV4
                 ? AnalyzerTestReferenceAssemblies.MSTestV4
                 : AnalyzerTestReferenceAssemblies.Default;

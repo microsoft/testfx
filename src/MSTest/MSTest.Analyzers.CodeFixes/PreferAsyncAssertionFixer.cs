@@ -35,6 +35,14 @@ public sealed partial class PreferAsyncAssertionFixer : CodeFixProvider
     /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
+        var fixableDiagnostics = context.Diagnostics
+            .Where(static diagnostic => !diagnostic.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey))
+            .ToImmutableArray();
+        if (fixableDiagnostics.IsEmpty)
+        {
+            return;
+        }
+
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         SyntaxNode diagnosticNode = root.FindNode(context.Span);
 
@@ -60,7 +68,7 @@ public sealed partial class PreferAsyncAssertionFixer : CodeFixProvider
                 title: CodeFixResources.UseAsyncAssertionFix,
                 createChangedDocument: ct => UseAsyncAssertionAsync(context.Document, invocationExpression, ct),
                 equivalenceKey: nameof(PreferAsyncAssertionFixer)),
-            context.Diagnostics);
+            fixableDiagnostics);
     }
 
     private static bool ContainsReturnExpressionInUnawaitableContext(MethodDeclarationSyntax methodDeclaration)

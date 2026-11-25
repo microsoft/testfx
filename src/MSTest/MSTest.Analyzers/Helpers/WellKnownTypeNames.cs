@@ -19,6 +19,10 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassCleanupExecutionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingCombinatorialCombinatorialDataAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingCombinatorialCombinatorialRandomDataAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingCombinatorialCombinatorialRangeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingCombinatorialICombinatorialValuesProvider = "Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ICombinatorialValuesProvider";
     public const string MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDataTestMethodAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute";
@@ -30,6 +34,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataSourceType = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExecutableConditionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedDurationAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
@@ -83,6 +88,7 @@ internal static class WellKnownTypeNames
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
     public const string SystemRuntimeCompilerServicesCallerFilePathAttribute = "System.Runtime.CompilerServices.CallerFilePathAttribute";
     public const string SystemRuntimeCompilerServicesCallerLineNumberAttribute = "System.Runtime.CompilerServices.CallerLineNumberAttribute";
+    public const string SystemRuntimeCompilerServicesAsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
     public const string SystemRuntimeInteropServicesArchitecture = "System.Runtime.InteropServices.Architecture";
     public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";
     public const string SystemRuntimeVersioningSupportedOSPlatformAttribute = "System.Runtime.Versioning.SupportedOSPlatformAttribute";
