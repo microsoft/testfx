@@ -103,6 +103,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         TestContext.WriteLine($"Packaged shard consumer: {host.DirectoryName}");
         Dictionary<string, string?> environment = new()
         {
+            ["DOTNET_PROCESSOR_COUNT"] = "2",
             ["TF_BUILD"] = "true",
             ["SYSTEM_COLLECTIONURI"] = service.CollectionUri,
             ["SYSTEM_TEAMPROJECT"] = "project",
