@@ -396,6 +396,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         Directory.CreateDirectory(temp);
         Directory.CreateDirectory(captures);
         Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation);
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TESTINGPLATFORM_PIPE_DIRECTORY")))
+        {
+            environment["TESTINGPLATFORM_PIPE_DIRECTORY"] = Path.GetTempPath();
+        }
+
         environment["TEMP"] = temp;
         environment["TMP"] = temp;
         environment["TMPDIR"] = temp;
@@ -560,6 +565,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         {
             start.Environment["PARTITION_TEST_RESPONSE_CAPTURE"] = captures;
             start.Environment["PARTITION_TEST_RESPONSE_ORIGINAL"] = original;
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TESTINGPLATFORM_PIPE_DIRECTORY")))
+            {
+                start.Environment["TESTINGPLATFORM_PIPE_DIRECTORY"] = Path.GetTempPath();
+            }
+
             start.Environment["TEMP"] = temp;
             start.Environment["TMP"] = temp;
             start.Environment["TMPDIR"] = temp;
