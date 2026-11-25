@@ -268,6 +268,88 @@ No shared cache/server was cleared or stopped, and environment overrides were
 process-local. An internal setup-cost optimization has no changed visual surface;
 the timings, process counts and unchanged test identities are its demonstration.
 
+## CI versus local end-to-end time
+
+### 2026-11-25: attribute the hosted-CI gap
+
+Hosted evidence came from completed dnceng-public build 1699206 (definition 209),
+cross-checked against build 1699115. Local evidence came from one isolated run on
+a shared 32-logical-processor Windows machine.
+
+| Measurement | Hosted CI (Windows Release) | Local |
+| --- | --- | --- |
+| MSTest acceptance wall time | 70m 38s (13:53:38–15:04:17) | 30m 49s |
+| MSTest acceptance tests | 1,259 (1,205 passed, 54 skipped) | 1,576 (1,506 passed, 15 failed, 55 not executed) |
+| Concurrent work in the same `dotnet test` | ~45 module/TFM runs (64,534 tests, 71m 10s) | none (acceptance module only) |
+| Coverage, trace diagnostics, crash/hang dumps | on | on (same `test/Directory.Build.*` defaults) |
+
+Local command, with `PATH`/`DOTNET_ROOT` set to the repo-local `.dotnet` and
+freshly packed packages:
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -c Release --no-build -f net12.0 --results-directory artifacts\tmp\local-full-mstest-acceptance -- --report-trx --minimum-expected-tests 1
+```
+
+It exited with code 2. The 15 failures were confined to `ShippingController_*`,
+`ExplicitConsumer_*` and `TestDataSourceFromAppConfig`; they were not
+investigated, and they do not shorten the run. Summed per-test durations were
+325 minutes, showing roughly 10.5x effective concurrency inside a 31-minute
+wall time. The local tree was newer than the CI commit and ran **more** tests,
+yet took less than half the hosted wall time.
+
+Hosted job-level facts for build 1699206:
+
+- Windows Release took 102.7 minutes. That included a 16.4-minute build and a
+  73.5-minute "Test affected changes" step (74.3 minutes in build 1699115).
+  Linux Release took 50.7 minutes (36.4-minute test step) and Windows Debug
+  took 36.5 minutes (8.8-minute test step).
+- The test step runs a single `dotnet test --solution TestFx.slnx -c Release
+  --no-build --affected-tests`
+  (`eng/pipelines/steps/test-affected-tests.yml`). Unit tests for several TFMs,
+  both acceptance suites and the playgrounds all run in that one invocation.
+- Every module logged `Falling back to all tests (planned count unavailable):
+  No successful Azure DevOps collect artifact contains 'affected-tests/v2/...'`.
+  Affected-test selection therefore removed no work, and cache seeding added
+  101 seconds before the first test.
+- MSTest acceptance started first and was the critical path. MTP acceptance
+  (920 passed, 34 skipped) ran 14:12:57–14:58:10 and finished six minutes
+  earlier.
+- During MSTest acceptance's first ~20 minutes, CPU-heavy unit modules ran on
+  the same agent. Examples: `MSTest.Analyzers.UnitTests` took about 4–4.6
+  minutes for each of 3 TFMs, and `Microsoft.Testing.Platform.UnitTests` took
+  about 1 minute per TFM. MTP acceptance overlapped the remainder. The log has
+  41 `[slow] still running` warnings, for example `AnalyzersTests.MSTEST0001`.
+- Fixture builds are admitted up to `Environment.ProcessorCount`
+  (`DotnetCli`). Two acceptance suites share that agent's cores with each
+  other and with the unit modules. No hosted log prints the agent's core
+  count, so the hosted capacity is unknown.
+
+Attribution: the evidence supports a contention and capacity explanation, not
+a fixture-specific regression. Diagnostics and coverage are configured the
+same on both sides, and `DotnetCli` strips the coverage profiler from child
+fixture builds. The hosted run did extra work beyond the local acceptance
+module, and the affected-test fallback ran the full suite. The available data
+cannot separate the contribution of the unknown hosted core count from that of
+concurrent modules. Per-test hosted durations require authenticated artifact
+or test-result access that the anonymous REST endpoints did not provide, so
+uniform versus concentrated slowdown is unmeasured.
+
+Candidate levers, ordered by expected value and **not executed**:
+
+1. Run the acceptance projects in a separate job or agent from the unit-test
+   modules. Alternatively, shard MSTest acceptance, the 70-minute critical
+   path, across agents.
+2. Restore a usable `affected-tests/v2` collect artifact so PR runs stop falling
+   back to the full suite.
+3. Record `Environment.ProcessorCount` and memory in the test step, so the
+   hosted capacity is evidence rather than an assumption.
+4. Measure the cost of the TF_BUILD-only AzDO history reporters and of trace
+   diagnostics before changing them. Neither is shown to be a cause.
+
+The fixture aggregation in this change reduces work under either explanation.
+Pipeline restructuring is a separate change, and it needs hosted A/B runs with
+matched commits before any speedup is claimed.
+
 ## Remaining limits
 
 Local measurements cannot establish hosted-CI or full-suite speedup. The full
