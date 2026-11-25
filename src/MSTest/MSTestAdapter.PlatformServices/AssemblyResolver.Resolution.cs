@@ -4,6 +4,7 @@
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -171,6 +172,13 @@ internal partial class AssemblyResolver
                             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}", assemblyNameToLoad, ex);
                         }
                     });
+
+                if (!isReflectionOnly && AssemblyPreloader.IsPreloading)
+                {
+                    // The null entry guards the recursive Assembly.Load above. A speculative miss
+                    // must not prevent a later bind after a fixture has supplied the dependency.
+                    _resolvedAssemblies.Remove(assemblyNameToLoad);
+                }
             }
 
             return assembly;

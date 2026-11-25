@@ -38,6 +38,7 @@ internal sealed partial class MSTestSettings
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
         DiscoverReferencedAssemblyFixtureProviders = true;
+        PreloadReferencedAssemblies = false;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
         TestTimeout = 0;
@@ -110,6 +111,12 @@ internal sealed partial class MSTestSettings
     /// Gets a value indicating whether to look for assembly fixture providers beyond the test assembly itself.
     /// </summary>
     internal bool DiscoverReferencedAssemblyFixtureProviders { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the assemblies referenced (directly or transitively) by the test assembly are
+    /// loaded before the first test of the source starts, instead of lazily when a test first needs them.
+    /// </summary>
+    internal bool PreloadReferencedAssemblies { get; private set; }
 
     /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.

@@ -149,6 +149,7 @@ public sealed class MSTestRunSettingsContinuationTests : TestContainer
                 <TreatDiscoveryWarningsAsErrors>false</TreatDiscoveryWarningsAsErrors>
                 <LaunchDebuggerOnAssertionFailure>EnabledExcludingCI</LaunchDebuggerOnAssertionFailure>
                 <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+                <PreloadReferencedAssemblies>true</PreloadReferencedAssemblies>
               </MSTest>
             </RunSettings>
             """;
@@ -183,6 +184,7 @@ public sealed class MSTestRunSettingsContinuationTests : TestContainer
         destination.TreatDiscoveryWarningsAsErrors.Should().BeFalse();
         destination.LaunchDebuggerOnAssertionFailure.Should().Be(DebuggerLaunchMode.EnabledExcludingCI);
         destination.CaptureAssertionFailureDiagnostics.Should().BeTrue();
+        destination.PreloadReferencedAssemblies.Should().BeTrue();
     }
 
     public void InvalidCaptureModeXmlWarnsWithoutChangingDefault()

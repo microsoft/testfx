@@ -217,6 +217,71 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.CaptureAssertionFailureDiagnostics.Should().BeTrue();
     }
 
+    public void PreloadReferencedAssembliesShouldBeFalseByDefault()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.PreloadReferencedAssemblies.Should().BeFalse();
+    }
+
+    public void PreloadReferencedAssembliesShouldBeConsumedFromRunSettingsWhenSpecified()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <PreloadReferencedAssemblies>true</PreloadReferencedAssemblies>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.PreloadReferencedAssemblies.Should().BeTrue();
+    }
+
+    public void PreloadReferencedAssembliesShouldWarnAndStayDisabledForInvalidRunSettingsValue()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <PreloadReferencedAssemblies>3</PreloadReferencedAssemblies>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.PreloadReferencedAssemblies.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'PreloadReferencedAssemblies', setting will be ignored."), Times.Once);
+    }
+
+    public void PreloadReferencedAssembliesShouldBeConsumedFromConfigWhenSpecified()
+    {
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:execution:preloadReferencedAssemblies", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        settings.PreloadReferencedAssemblies.Should().BeTrue();
+    }
+
     public void CaptureDebugTracesShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingsXml =

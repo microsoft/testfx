@@ -144,6 +144,12 @@ internal partial class TestExecutionManager
         // Ensures that the cancellation token gets through AppDomain boundary.
         _testRunCancellationToken?.Register(static state => ((UnitTestRunner)state!).Cancel(), testRunner);
 
+        // Do the work in the execution domain before any test-start notification.
+        if (testsToRun.Length > 0 && MSTestSettings.CurrentSettings.PreloadReferencedAssemblies)
+        {
+            testRunner.PreloadAssemblies(source, usesAppDomains ? new RemotingMessageLogger(adapterMessageLogger) : adapterMessageLogger);
+        }
+
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
             // The runsettings value takes precedence over an assembly level setting. Reset the level.

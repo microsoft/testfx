@@ -344,6 +344,7 @@ internal sealed partial class MSTestSettings
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:discoverReferencedAssemblyFixtureProviders", logger, value => settings.DiscoverReferencedAssemblyFixtureProviders = value);
+        ParseBooleanSetting(configuration, "execution:preloadReferencedAssemblies", logger, value => settings.PreloadReferencedAssemblies = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
         ParseDebuggerLaunchModeSetting(configuration, "execution:launchDebuggerOnAssertionFailure", logger, value => settings.LaunchDebuggerOnAssertionFailure = value);
         ParseBooleanSetting(configuration, "execution:captureAssertionFailureDiagnostics", logger, value => settings.CaptureAssertionFailureDiagnostics = value);

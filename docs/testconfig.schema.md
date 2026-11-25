@@ -109,6 +109,41 @@ Assertions raised from work queued without flowing `ExecutionContext` are not ca
 neither the active diagnostic scope nor `TestContext.Current` can be attributed safely on that
 worker.
 
+### Preloading referenced assemblies
+
+Set `mstest:execution:preloadReferencedAssemblies` to `true` to load direct and transitive
+dependencies before MSTest announces the first test in a source. By default MSTest does not
+perform this walk. Dependencies not already loaded by discovery or the host may then load during a test.
+Preloading does not warm up methods or change how MSTest measures duration.
+
+```json
+{
+  "mstest": {
+    "execution": {
+      "preloadReferencedAssemblies": true
+    }
+  }
+}
+```
+
+The equivalent legacy `.runsettings` entry is:
+
+```xml
+<RunSettings>
+  <MSTest>
+    <PreloadReferencedAssemblies>true</PreloadReferencedAssemblies>
+  </MSTest>
+</RunSettings>
+```
+
+Preloading is disabled by default. MSTest resolves references by name, skipping framework and
+test-platform libraries; it does not scan the output directory for DLLs. Load failures are traced
+and the walk checks for cancellation between loads. Enabling the setting can increase startup time
+and lock otherwise-unused files. It is ignored, with a warning, on classic UWP and on .NET runtimes
+without dynamic code support (such as Native AOT). See
+[`decisions/mstest-assembly-preload.md`](./decisions/mstest-assembly-preload.md) for the design and its
+limits.
+
 ## How versioning works
 
 There are two layers of versioning to keep in mind:
