@@ -89,7 +89,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\RunSummaryRequestSerializer.cs" Link="Serializers/RunSummaryRequestSerializer.cs" />
   </ItemGroup>
 
-  <!-- This shared package-layout fixture supports simple-import tests; its writes are not declared BuildXL pip outputs. -->
+  <!-- The shared package-layout fixture writes outside BuildXL pip outputs; eng/buildxl/config.dsc sets TESTFX_BUILDXL_BUILD. -->
   <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' and '$(TESTFX_BUILDXL_BUILD)' != '1' ">
     <ItemGroup>
       <MSBuildAssetsBuildTargeting Include="buildMultiTargeting/**" />
