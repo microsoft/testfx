@@ -91,6 +91,9 @@ internal sealed partial class ServerTestHost
         {
             requestCancellationToken.ThrowIfCancellationRequested();
 
+            ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();
+            await outputDevice.InitializeAsync(this).ConfigureAwait(false);
+
             InvocationLifetimeRunner? invocationLifetimeRunner = null;
             if (method == JsonRpcMethods.TestingRunTests && serializeRequests)
             {
@@ -250,7 +253,6 @@ internal sealed partial class ServerTestHost
             perRequestServiceProvider.TryAddService(_clientInfoService);
 
             ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();
-            await outputDevice.InitializeAsync(this).ConfigureAwait(false);
 
             // Build the per request adapter
             ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(

@@ -28,6 +28,7 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
 
     private NamedPipeClient? _serverControlPipeClient;
     private Task? _serverControlListenerTask;
+    private Task? _serverControlReadyTask;
     private CancellationTokenSource? _serverControlListenerCts;
     private string? _serverControlPipeName;
     private int _cancelRequested;
@@ -239,6 +240,13 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
                 IsServerControlChannelSupported,
                 properties.ContainsKey(HandshakeMessagePropertyNames.InvocationLifetimeHandlers),
                 response.Properties);
+            if (IsInvocationLifetimeCoordinationAccepted && !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi()
+                && _transportClient is NamedPipeClient ownerClient)
+            {
+                // The accepted owner must get a chance to release resources if the SDK disappears.
+                ownerClient.AllowCooperativeConnectionLoss();
+            }
+
             return isCompatible;
         }
 

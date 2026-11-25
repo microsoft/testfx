@@ -276,6 +276,50 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    public void InvocationLifetimeMessages_UseTheAllocatedWireLayout()
+    {
+        var setup = new InvocationSetupCompletedSerializer();
+        var module = new ModuleTestsCompletedSerializer();
+        var cleanup = new InvocationCleanupCompletedSerializer();
+        var control = new ServerControlMessageSerializer();
+        Assert.AreEqual(16, setup.Id);
+        Assert.AreEqual(17, module.Id);
+        Assert.AreEqual(18, cleanup.Id);
+        Assert.AreEqual(14, control.Id);
+
+        AssertWireBytes(setup, new InvocationSetupCompleted("e", "i", true, null,
+            [new InvocationLifetimeOutput("N", true, "V"), new InvocationLifetimeOutput("R", false, null)]),
+            [
+                4, 0,
+                1, 0, 1, 0, 0, 0, (byte)'e',
+                2, 0, 1, 0, 0, 0, (byte)'i',
+                3, 0, 1, 0, 0, 0, 1,
+                5, 0, 43, 0, 0, 0,
+                2, 0, 0, 0,
+                3, 0,
+                1, 0, 1, 0, 0, 0, (byte)'N',
+                2, 0, 1, 0, 0, 0, 1,
+                3, 0, 1, 0, 0, 0, (byte)'V',
+                2, 0,
+                1, 0, 1, 0, 0, 0, (byte)'R',
+                2, 0, 1, 0, 0, 0, 0,
+            ]);
+        AssertWireBytes(module, new ModuleTestsCompleted("e", "i", 2),
+            [3, 0, 1, 0, 1, 0, 0, 0, (byte)'e', 2, 0, 1, 0, 0, 0, (byte)'i', 3, 0, 4, 0, 0, 0, 2, 0, 0, 0]);
+        AssertWireBytes(cleanup, new InvocationCleanupCompleted("e", "i", false, "x"),
+            [4, 0, 1, 0, 1, 0, 0, 0, (byte)'e', 2, 0, 1, 0, 0, 0, (byte)'i', 3, 0, 1, 0, 0, 0, 0, 4, 0, 1, 0, 0, 0, (byte)'x']);
+        AssertWireBytes(control, new ServerControlMessage(3, 2, true),
+            [3, 0, 1, 0, 1, 0, 0, 0, 3, 2, 0, 4, 0, 0, 0, 2, 0, 0, 0, 3, 0, 1, 0, 0, 0, 1]);
+
+        static void AssertWireBytes<T>(object serializer, T message, byte[] expected)
+        {
+            using MemoryStream stream = new();
+            Serialize(serializer, message, stream);
+            Assert.AreSequenceEqual(expected, stream.ToArray());
+        }
+    }
+
+    [TestMethod]
     public void InvocationSetupCompletedSerializeDeserialize_FailureWithoutOutputs()
     {
         InvocationSetupCompleted actual = RoundTrip(

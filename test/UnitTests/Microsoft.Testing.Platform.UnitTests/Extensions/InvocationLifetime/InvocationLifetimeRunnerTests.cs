@@ -336,12 +336,25 @@ public sealed class InvocationLifetimeRunnerTests
                 context.SetEnvironmentVariable("EXISTING", null);
             },
         };
-        FakeCoordinationChannel channel = new(_calls) { CleanupRequest = new InvocationCleanupRequest((int)ExitCode.AtLeastOneTestFailed, IsCanceled: false) };
+        TaskCompletionSource<InvocationCleanupRequest?> cleanupRequest = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeCoordinationChannel channel = new(_calls) { PendingCleanupRequest = cleanupRequest.Task };
         InvocationLifetimeRunner runner = CreateRunner([handler]);
         runner.EnableCoordination(channel);
 
         Assert.IsNull(await runner.RunSetupAsync(CancellationToken.None));
-        int exitCode = await runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false);
+        Task<int> cleanup = runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false);
+        try
+        {
+            Assert.IsFalse(cleanup.IsCompleted);
+            Assert.AreSequenceEqual(["setup:a", "setupCompleted:True:", "moduleCompleted:0", "waitCleanup"], _calls);
+        }
+        finally
+        {
+            cleanupRequest.TrySetResult(new InvocationCleanupRequest((int)ExitCode.AtLeastOneTestFailed, IsCanceled: false));
+            await cleanup.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        }
+
+        int exitCode = await cleanup;
 
         // The module keeps its own result; the handlers see the aggregate verdict of the invocation.
         Assert.AreEqual((int)ExitCode.Success, exitCode);
@@ -412,9 +425,9 @@ public sealed class InvocationLifetimeRunnerTests
         runner.EnableCoordination(channel);
 
         await runner.RunSetupAsync(CancellationToken.None);
-        int exitCode = await runner.RunCleanupAsync((int)ExitCode.TestSessionAborted, isCanceled: true);
+        int exitCode = await runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false);
 
-        Assert.AreEqual((int)ExitCode.TestSessionAborted, exitCode);
+        Assert.AreEqual((int)ExitCode.Success, exitCode);
         Assert.Contains("cleanup:a(3,True)", _calls);
         Assert.AreEqual("cleanupCompleted:True:", _calls[^1]);
     }
@@ -554,6 +567,8 @@ public sealed class InvocationLifetimeRunnerTests
 
         public InvocationCleanupRequest? CleanupRequest { get; set; } = new((int)ExitCode.Success, IsCanceled: false);
 
+        public Task<InvocationCleanupRequest?>? PendingCleanupRequest { get; set; }
+
         public Exception? SetupCompletedException { get; set; }
 
         public IReadOnlyList<InvocationLifetimeOutput>? Outputs { get; private set; }
@@ -574,7 +589,7 @@ public sealed class InvocationLifetimeRunnerTests
         public Task<InvocationCleanupRequest?> WaitForInvocationCleanupRequestAsync(CancellationToken cancellationToken)
         {
             calls.Add("waitCleanup");
-            return Task.FromResult(CleanupRequest);
+            return PendingCleanupRequest ?? Task.FromResult(CleanupRequest);
         }
 
         public Task SendInvocationCleanupCompletedAsync(bool succeeded, string? errorMessage)

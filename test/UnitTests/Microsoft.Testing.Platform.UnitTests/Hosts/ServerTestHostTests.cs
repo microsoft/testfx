@@ -280,6 +280,51 @@ public sealed class ServerTestHostTests
     }
 
     [TestMethod]
+    public async Task RunAsync_FirstSetupFailureIsReportedToClientBeforeRequestError()
+    {
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+        await using ServerFixture fixture = new(serverOutput: true);
+        int nextHandlerId = 0;
+        fixture.InvocationLifetime.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "A", Interlocked.Increment(ref nextHandlerId), _ => { }));
+        fixture.InvocationLifetime.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "B", Interlocked.Increment(ref nextHandlerId), _ => { }, failOnSetup: true));
+
+        Task<int> server = fixture.StartAsync();
+        Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            1,
+            JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true))));
+
+        fixture.Incoming.Write(new RequestMessage(2, JsonRpcMethods.TestingRunTests, new RunRequestArgs(Guid.NewGuid(), null, null)));
+        List<ServerLogMessage> logs = [];
+        ErrorMessage? error = null;
+        while (error is null)
+        {
+            RpcMessage message = await fixture.Written.ReadAsync().WaitAsync(Limit, TestContext.CancellationToken);
+            if (message is NotificationMessage { Method: JsonRpcMethods.ClientLog, Params: LogEventArgs log })
+            {
+                logs.Add(log.LogMessage);
+            }
+            else if (message is ErrorMessage { Id: 2 } requestError)
+            {
+                error = requestError;
+            }
+        }
+
+        Assert.AreEqual(ErrorCodes.InternalError, error.ErrorCode);
+        ServerLogMessage diagnostic = Assert.ContainsSingle(logs);
+        Assert.AreEqual(LogLevel.Error, diagnostic.Level);
+        Assert.Contains("ServerHandlerB", diagnostic.Message);
+        Assert.Contains("setup failed", diagnostic.Message);
+
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+        Assert.AreEqual(0, await server.WaitAsync(Limit, TestContext.CancellationToken));
+#pragma warning restore TPEXP
+    }
+
+    [TestMethod]
     [DataRow("setup")]
     [DataRow("cleanup")]
     public async Task RunAsync_HandlerFailureReturnsRequestErrorAndServerRemainsUsable(string failurePhase)
@@ -752,7 +797,7 @@ public sealed class ServerTestHostTests
         private Task<int>? _run;
         private bool _failureObserved;
 
-        public ServerFixture(CancellationToken token = default, bool fastFail = true)
+        public ServerFixture(CancellationToken token = default, bool fastFail = true, bool serverOutput = false)
         {
             Logger.Setup(l => l.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception?>(), It.IsAny<Func<string, Exception?, string>>())).Returns(Task.CompletedTask);
             Mock<ILoggerFactory> loggerFactory = new();
@@ -796,7 +841,9 @@ public sealed class ServerTestHostTests
                     }
                 })
                 .Returns(Task.CompletedTask);
-            Services.AddService(new ProxyOutputDevice(Output.Object, null));
+            Services.AddService(new ProxyOutputDevice(
+                Output.Object,
+                serverOutput ? new ServerModePerCallOutputDevice(null, policies) : null));
             HandlerDisposal = Handler.As<IDisposable>();
             Handler.Setup(h => h.ReadAsync(It.IsAny<CancellationToken>())).Returns<CancellationToken>(cancellationToken =>
             {

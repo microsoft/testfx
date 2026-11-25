@@ -14,6 +14,21 @@ public sealed class InvocationLifetimeHandlerTests : ServerModeTestsBase<Invocat
     private const string AssetName = "InvocationLifetimeHandler";
     private const string Test = "test:{0}:value-A:value-B:no-marker:{1}";
 
+    [TestMethod]
+    [DataRow("", "true")]
+    [DataRow("-p:TestingPlatformInvocationLifetimeCoordinationSupported=false", "false")]
+    public async Task PackagedPlatform_ExposesCoordinationCapabilityAndRespectsOverride(string propertyOverride, string expected)
+    {
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{AssetFixture.TargetAssetPath}\" -p:TargetFramework={TargetFrameworks.NetCurrent} -getProperty:TestingPlatformInvocationLifetimeCoordinationSupported {propertyOverride}",
+            workingDirectory: AssetFixture.TargetAssetPath,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        Assert.AreEqual(expected, result.StandardOutput.Trim(), result.ToString());
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task ConsoleHost_RunsSetupBeforeTheTestsAndCleanupAfterThemInReverseOrder(string currentTfm)

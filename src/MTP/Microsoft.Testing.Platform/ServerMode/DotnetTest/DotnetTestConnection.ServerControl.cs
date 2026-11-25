@@ -24,24 +24,29 @@ internal sealed partial class DotnetTestConnection
     /// The reaction to a server-initiated cancel. It receives the test application cancellation token.
     /// </param>
     /// <remarks>
-    /// Both the connect and the long-poll run entirely on a background task, so test start is never blocked on
-    /// this auxiliary channel. This is best-effort: if the control pipe cannot be established the test run
-    /// continues unaffected (the feature simply stays off). Callers should only invoke this after a successful
-    /// handshake and when <see cref="IsServerControlChannelSupported"/> is <see langword="true"/>. It is invoked
+    /// The long-poll runs on a background task. An accepted owner waits for the connection before starting setup;
+    /// other runs retain best-effort, non-blocking control-channel initialization. Callers should invoke this after
+    /// a successful handshake and when <see cref="IsServerControlChannelSupported"/> is <see langword="true"/>. It is invoked
     /// once per connection on the awaited run path (before the test run starts), so the control-channel fields
     /// below are written here and only read later during exit/dispose - the single-threaded lifecycle makes the
     /// plain fields safe without extra synchronization.
     /// </remarks>
     public Task StartServerControlChannelAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync)
     {
+        if (_serverControlPipeClient is not null)
+        {
+            return _serverControlReadyTask ?? Task.CompletedTask;
+        }
+
         if (_transportKind != DotnetTestTransportKind.NamedPipe
             || OperatingSystem.IsBrowser()
             || OperatingSystem.IsWasi()
             || !IsServerControlChannelSupported
-            || RoslynString.IsNullOrEmpty(_serverControlPipeName)
-            || _serverControlPipeClient is not null)
+            || RoslynString.IsNullOrEmpty(_serverControlPipeName))
         {
-            return Task.CompletedTask;
+            return IsInvocationLifetimeCoordinationAccepted
+                ? Task.FromException(new InvalidOperationException("The coordinated owner requires a server control pipe."))
+                : Task.CompletedTask;
         }
 
         // An accepted invocation-lifetime owner must keep listening after the test session was canceled, because
@@ -57,18 +62,20 @@ internal sealed partial class DotnetTestConnection
         controlClient.RegisterAllSerializers();
         _serverControlPipeClient = controlClient;
 
-        // Connect AND listen on a background task: we deliberately do not await the connect on the run path so a
-        // slow/absent control server can never delay (or fail) test execution start.
+        TaskCompletionSource<bool>? ready = IsInvocationLifetimeCoordinationAccepted
+            ? new(TaskCreationOptions.RunContinuationsAsynchronously)
+            : null;
+        _serverControlReadyTask = ready?.Task;
 #pragma warning disable CA1416 // The runtime guards above exclude browser before the named-pipe operation is scheduled.
         _serverControlListenerTask = Task.Run(
-            () => ConnectAndListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, _serverControlListenerCts.Token));
+            () => ConnectAndListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, ready, _serverControlListenerCts.Token));
 #pragma warning restore CA1416
-        return Task.CompletedTask;
+        return _serverControlReadyTask ?? Task.CompletedTask;
     }
 
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("wasi")]
-    private async Task ConnectAndListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
+    private async Task ConnectAndListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, TaskCompletionSource<bool>? ready, CancellationToken cancellationToken)
     {
         try
         {
@@ -77,12 +84,14 @@ internal sealed partial class DotnetTestConnection
             using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             connectCts.CancelAfter(TimeSpan.FromSeconds(30));
             await controlClient.ConnectAsync(connectCts.Token).ConfigureAwait(false);
+            ready?.TrySetResult(true);
         }
         catch (Exception ex)
         {
-            // Best-effort: failing to establish the control channel degrades to "no server-initiated cancel"
-            // rather than affecting the test run.
-            await TryLogAsync(LogLevel.Debug, $"Failed to connect to the server control pipe '{_serverControlPipeName}'; the server-initiated cancel feature will stay disabled for this run: {ex}").ConfigureAwait(false);
+            // An accepted owner must fail before setup if it cannot receive the eventual cleanup request.
+            ready?.TrySetException(ex);
+            string consequence = ready is null ? "server-initiated cancellation is unavailable" : "coordinated setup cannot start";
+            await TryLogAsync(LogLevel.Debug, $"Failed to connect to the server control pipe '{_serverControlPipeName}'; {consequence}: {ex}").ConfigureAwait(false);
             _invocationCleanupRequest.TrySetResult(null);
             return;
         }
@@ -113,7 +122,7 @@ internal sealed partial class DotnetTestConnection
 
                 if (message.Kind == ServerControlKinds.CancelSession)
                 {
-                    await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+                    await RequestControlCancellationAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
                     if (!IsInvocationLifetimeCoordinationAccepted)
                     {
                         return;
@@ -145,7 +154,7 @@ internal sealed partial class DotnetTestConnection
             // cooperative cancel so we still try to wind down and report whatever completed. NOTE: this makes it a
             // protocol requirement that the SDK keep the control pipe open until the data session ends - an early
             // close for any reason is interpreted here as a cancel.
-            await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+            await RequestControlCancellationAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
             await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener failed while the session was live; ensuring cooperative cancellation: {ex}").ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -165,4 +174,33 @@ internal sealed partial class DotnetTestConnection
 
         await onCancelSessionRequestedAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
+
+    private async Task RequestControlCancellationAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync)
+    {
+        try
+        {
+            await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (IsInvocationLifetimeCoordinationAccepted && IsNonFatalControlException(ex))
+        {
+            await TryLogAsync(LogLevel.Error, $"Server control cancellation callback failed: {ex}").ConfigureAwait(false);
+            try
+            {
+                _cancellationTokenSource.Cancel();
+            }
+            catch (Exception cancelException) when (IsNonFatalControlException(cancelException))
+            {
+                await TryLogAsync(LogLevel.Error, $"Fallback application cancellation failed: {cancelException}").ConfigureAwait(false);
+            }
+        }
+    }
+
+    private static bool IsNonFatalControlException(Exception exception)
+        => exception is AggregateException aggregateException
+            ? aggregateException.Flatten().InnerExceptions.All(IsNonFatalControlException)
+            : exception is not OutOfMemoryException
+                and not StackOverflowException
+                and not AccessViolationException
+                and not AppDomainUnloadedException
+                and not BadImageFormatException;
 }
