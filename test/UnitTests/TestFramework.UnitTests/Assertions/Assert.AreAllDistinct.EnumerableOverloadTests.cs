@@ -17,9 +17,19 @@ public sealed class AreAllDistinctEnumerableOverloadTests : TestContainer
         Action compare = () => Assert.AreAllDistinct(values, collectionExpression: "multi-line\nexpression");
 
         AssertFailedException failure = compare.Should().ThrowExactly<AssertFailedException>().Which;
-        failure.Message.Should().Contain("duplicates: [1]");
-        failure.Message.Should().Contain("Assert.AreAllDistinct(<collection>)");
+        failure.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assertion failed. Expected all items in collection to be distinct.
+
+            duplicates: [1]
+            collection: [1, 2, 1]
+
+            Assert.AreAllDistinct(<collection>)
+            """.Replace("\r\n", "\n"));
         failure.ActualText.Should().Be("[1, 2, 1]");
+        IEnumerable<int> distinctValues = [1, 2, 3];
+        Action distinct = () => Assert.AreAllDistinct(distinctValues);
+        distinct.Should().NotThrow();
     }
 
     public void AreAllDistinct_GenericEnumerableWithComparer_UsesComparerAndValidatesParameters()
@@ -30,11 +40,23 @@ public sealed class AreAllDistinctEnumerableOverloadTests : TestContainer
         Action nullComparer = () => Assert.AreAllDistinct(values, (IEqualityComparer<string>?)null);
 
         duplicate.Should().ThrowExactly<AssertFailedException>()
-            .Which.Message.Should().Contain("duplicates: [\"VALUE\"]");
+            .Which.Message.Replace("\r\n", "\n").Should().Be(
+                $$"""
+                Assertion failed. Expected all items in collection to be distinct.
+
+                duplicates: ["VALUE"]
+                collection: ["value", "VALUE"]
+                comparer:   {{StringComparer.OrdinalIgnoreCase.GetType().Name}}
+
+                Assert.AreAllDistinct(values, <comparer>)
+                """.Replace("\r\n", "\n"));
         nullCollection.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("Assert.AreAllDistinct failed. The parameter 'collection' is invalid. The value cannot be null.");
         nullComparer.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("Assert.AreAllDistinct failed. The parameter 'comparer' is invalid. The value cannot be null.");
+        IEnumerable<string> distinctValues = ["value", "other"];
+        Action distinct = () => Assert.AreAllDistinct(distinctValues, StringComparer.OrdinalIgnoreCase);
+        distinct.Should().NotThrow();
     }
 
     public void AreAllDistinct_NonGenericEnumerableOverloadsDetectDuplicatesAndValidateParameters()
@@ -51,14 +73,34 @@ public sealed class AreAllDistinctEnumerableOverloadTests : TestContainer
         nullCollectionWithComparer.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("Assert.AreAllDistinct failed. The parameter 'collection' is invalid. The value cannot be null.");
         AssertFailedException defaultFailure = defaultComparer.Should().ThrowExactly<AssertFailedException>().Which;
-        defaultFailure.Message.Should().Contain("duplicates: [1]");
+        defaultFailure.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assertion failed. Expected all items in collection to be distinct.
+
+            duplicates: [1]
+            collection: [1, 2, 1]
+
+            Assert.AreAllDistinct(values)
+            """.Replace("\r\n", "\n"));
         defaultFailure.ActualText.Should().Be("[1, 2, 1]");
         customComparer.Should().ThrowExactly<AssertFailedException>()
-            .Which.Message.Should().Contain("duplicates: [\"VALUE\"]");
+            .Which.Message.Replace("\r\n", "\n").Should().Be(
+                $$"""
+                Assertion failed. Expected all items in collection to be distinct.
+
+                duplicates: ["VALUE"]
+                collection: ["value", "VALUE"]
+                comparer:   {{StringComparer.OrdinalIgnoreCase.GetType().Name}}
+
+                Assert.AreAllDistinct(strings, <comparer>)
+                """.Replace("\r\n", "\n"));
         nullCollection.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("Assert.AreAllDistinct failed. The parameter 'collection' is invalid. The value cannot be null.");
         nullComparer.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("Assert.AreAllDistinct failed. The parameter 'comparer' is invalid. The value cannot be null.");
+        IEnumerable distinctValues = new ArrayList { "value", "other" };
+        Action distinct = () => Assert.AreAllDistinct(distinctValues, StringComparer.OrdinalIgnoreCase);
+        distinct.Should().NotThrow();
     }
 
     public void AreAllDistinct_MixedNullAndValueDuplicatesPreserveBoth()
@@ -67,6 +109,14 @@ public sealed class AreAllDistinctEnumerableOverloadTests : TestContainer
         Action compare = () => Assert.AreAllDistinct(values);
 
         compare.Should().ThrowExactly<AssertFailedException>()
-            .Which.Message.Should().Contain("duplicates: [1, null]");
+            .Which.Message.Replace("\r\n", "\n").Should().Be(
+                """
+                Assertion failed. Expected all items in collection to be distinct.
+
+                duplicates: [1, null]
+                collection: [1, null, 2, 1, null]
+
+                Assert.AreAllDistinct(values)
+                """.Replace("\r\n", "\n"));
     }
 }

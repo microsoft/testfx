@@ -92,15 +92,21 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
             Assert.HasCount(2, trxFiles);
-            string[] trxContents = [.. trxFiles.Select(File.ReadAllText)];
-            Assert.HasCount(2, trxContents.Distinct(StringComparer.Ordinal));
-            string[] ids =
-            [
-                .. trxContents
-                    .Select(contents => Regex.Match(contents, "<TestRun id=\"(.+?)\"").Groups[1].Value)
-                    .Distinct(StringComparer.Ordinal),
-            ];
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            XDocument[] reports = [.. trxFiles.Select(XDocument.Load)];
+            string[] ids = [.. reports.Select(report => report.Root!.Attribute("id")!.Value).Distinct(StringComparer.Ordinal)];
             Assert.HasCount(1, ids);
+            Assert.AreNotEqual(string.Empty, ids[0]);
+            (string Name, string Outcome)[] results =
+            [
+                .. reports.SelectMany(report => report.Descendants(ns + "UnitTestResult"))
+                    .Select(result => (result.Attribute("testName")!.Value, result.Attribute("outcome")!.Value))
+                    .OrderBy(result => result.Item1, StringComparer.Ordinal)
+                    .ThenBy(result => result.Item2, StringComparer.Ordinal),
+            ];
+            Assert.AreSequenceEqual(
+                [("TestMethod1", "Failed"), ("TestMethod1", "Passed"), ("TestMethod2", "Passed"), ("TestMethod3", "Passed")],
+                results);
         }
         else
         {

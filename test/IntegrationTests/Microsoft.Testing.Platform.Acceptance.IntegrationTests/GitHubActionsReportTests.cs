@@ -38,6 +38,8 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         // A clean run must not emit an exit-code annotation or a warning callout.
         result.AssertOutputDoesNotContain("::error title=Test run failed");
         Assert.Contains("✅ Test Run Summary", summary);
+        Assert.Contains("| 1 | 1 | 0 | 0 | 0 |", summary);
+        Assert.DoesNotContain("❌ Test Run Summary", summary);
         Assert.DoesNotContain("[!WARNING]", summary);
     }
 

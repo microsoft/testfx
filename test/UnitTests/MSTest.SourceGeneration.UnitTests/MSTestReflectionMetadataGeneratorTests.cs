@@ -5,6 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
@@ -297,12 +298,14 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         registry.Should().Contain("internal static class MSTestReflectionMetadata");
         registry.Should().Contain("public const string AssemblyName = \"TestSample\";");
-        registry.Should().Contain("Type = typeof(global::Sample.MyTests)");
-        registry.Should().Contain("Name = \"Test1\"");
-        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.MyTests)instance!).Test1(); return Task.CompletedTask; },");
-        registry.Should().Contain("SupportsGeneratedDescriptors = true");
-        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
-        registry.Should().Contain("IsDescriptorSupported = true");
+        string testClass = GetDescriptors(registry, "TestClassReflectionInfo").Should().ContainSingle().Which;
+        testClass.Should().Contain("Type = typeof(global::Sample.MyTests)");
+        testClass.Should().Contain("SupportsGeneratedDescriptors = true");
+        testClass.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        string method = GetDescriptors(registry, "TestMethodReflectionInfo").Should().ContainSingle().Which;
+        method.Should().Contain("Name = \"Test1\"");
+        method.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.MyTests)instance!).Test1(); return Task.CompletedTask; },");
+        method.Should().Contain("IsDescriptorSupported = true");
     }
 
     [TestMethod]
@@ -591,8 +594,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
         registry.Should().Contain("public static IReadOnlyList<TestClassReflectionInfo> TestClasses { get; } = new TestClassReflectionInfo[]");
-        // No concrete TestClassReflectionInfo instance is emitted (note the open paren).
-        registry.Should().NotContain("new TestClassReflectionInfo(");
+        GetDescriptors(registry, "TestClassReflectionInfo").Should().BeEmpty();
     }
 
     [TestMethod]
@@ -650,7 +652,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(result);
         // Abstract classes are filtered in BuildModel — they cannot be instantiated.
         registry.Should().NotContain("AbstractTests");
-        registry.Should().Contain("typeof(global::Sample.ConcreteTests)");
+        string testClass = GetDescriptors(registry, "TestClassReflectionInfo").Should().ContainSingle().Which;
+        testClass.Should().Contain("typeof(global::Sample.ConcreteTests)");
+        GetDescriptors(registry, "TestMethodReflectionInfo").Should().ContainSingle()
+            .Which.Should().Contain("Name = \"Test2\"");
     }
 
     [TestMethod]
@@ -702,7 +707,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
         registry.Should().Contain("Constructors = new TestConstructorReflectionInfo[]");
-        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
+        string constructor = GetDescriptors(registry, "TestConstructorReflectionInfo").Should().ContainSingle().Which;
+        constructor.Should().Contain("ParameterTypes = Array.Empty<Type>()");
+        constructor.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
     }
 
     [TestMethod]
@@ -740,9 +747,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
 
-        // Parameterless and single-TestContext ctors are registered.
-        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
-        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests((global::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext)args![0]!),");
+        string[] constructors = GetDescriptors(registry, "TestConstructorReflectionInfo");
+        constructors.Should().HaveCount(2);
+        string parameterless = constructors.Single(ctor => ctor.Contains("ParameterTypes = Array.Empty<Type>()", StringComparison.Ordinal));
+        parameterless.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
+        string withContext = constructors.Single(ctor => ctor.Contains("ParameterTypes = new Type[] { typeof(global::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext) }", StringComparison.Ordinal));
+        withContext.Should().Contain("Invoke = static args => new global::Sample.CtorTests((global::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext)args![0]!),");
 
         // The unsupported ctor(object) is not registered.
         registry.Should().NotContain("new global::Sample.CtorTests((object)args![0]!)");
@@ -798,10 +808,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("Name = \"Test1\"");
-        registry.Should().Contain("ReturnsTask = true");
-        registry.Should().Contain("Name = \"Test2\"");
-        registry.Should().Contain("ReturnsValueTask = true");
+        string[] methods = GetDescriptors(registry, "TestMethodReflectionInfo");
+        methods.Should().HaveCount(2);
+        string task = methods.Single(method => method.Contains("Name = \"Test1\"", StringComparison.Ordinal));
+        task.Should().Contain("ReturnsTask = true").And.Contain("ReturnsValueTask = false");
+        string valueTask = methods.Single(method => method.Contains("Name = \"Test2\"", StringComparison.Ordinal));
+        valueTask.Should().Contain("ReturnsTask = false").And.Contain("ReturnsValueTask = true");
     }
 
     [TestMethod]
@@ -937,10 +949,11 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("Name = \"Context\"");
-        registry.Should().Contain("HasPublicSetter = true");
-        registry.Should().Contain("Get = static instance => instance is null ? null : (object?)((global::Sample.PropTests)instance).Context,");
-        registry.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext)value!,");
+        string property = GetDescriptors(registry, "TestPropertyReflectionInfo").Should().ContainSingle().Which;
+        property.Should().Contain("Name = \"Context\"");
+        property.Should().Contain("HasPublicSetter = true");
+        property.Should().Contain("Get = static instance => instance is null ? null : (object?)((global::Sample.PropTests)instance).Context,");
+        property.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext)value!,");
     }
 
     [TestMethod]
@@ -972,8 +985,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         // A non-public setter is not callable from the generated code, so the registry emits a
         // throwing setter (never a direct assignment) and reports HasPublicSetter = false.
-        registry.Should().Contain("HasPublicSetter = false");
-        registry.Should().Contain("Property 'Context' has no public setter.");
+        string property = GetDescriptors(registry, "TestPropertyReflectionInfo").Should().ContainSingle().Which;
+        property.Should().Contain("Name = \"Context\"");
+        property.Should().Contain("HasPublicSetter = false");
+        property.Should().Contain("Property 'Context' has no public setter.");
         registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
 
         // The module initializer gates setter registration on HasPublicSetter, so this property's
@@ -1014,8 +1029,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
 
-        registry.Should().Contain("HasPublicSetter = false");
-        registry.Should().Contain("Property 'Context' has no public setter.");
+        string property = GetDescriptors(registry, "TestPropertyReflectionInfo").Should().ContainSingle().Which;
+        property.Should().Contain("Name = \"Context\"");
+        property.Should().Contain("HasPublicSetter = false");
+        property.Should().Contain("Property 'Context' has no public setter.");
         registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
     }
 
@@ -1042,12 +1059,13 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("Name = \"Value\"");
+        string property = GetDescriptors(registry, "TestPropertyReflectionInfo").Should().ContainSingle().Which;
+        property.Should().Contain("Name = \"Value\"");
 
         // A static member must be accessed through the type, never through an instance cast,
         // otherwise the generated code fails to compile with CS0176.
-        registry.Should().Contain("Get = static instance => (object?)global::Sample.StaticProps.Value,");
-        registry.Should().Contain("Set = static (instance, value) => global::Sample.StaticProps.Value = (int)value!,");
+        property.Should().Contain("Get = static instance => (object?)global::Sample.StaticProps.Value,");
+        property.Should().Contain("Set = static (instance, value) => global::Sample.StaticProps.Value = (int)value!,");
         registry.Should().NotContain("((global::Sample.StaticProps)instance).Value");
     }
 
@@ -1113,12 +1131,13 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
             .ToString();
 
-        registry.Should().Contain("Name = \"Value\"");
+        string property = GetDescriptors(registry, "TestPropertyReflectionInfo").Should().ContainSingle().Which;
+        property.Should().Contain("Name = \"Value\"");
 
         // A set-only property has no readable getter; emitting `instance.Value` would not compile,
         // so the Get delegate throws instead.
-        registry.Should().Contain("Get = static instance => throw new InvalidOperationException(\"Property 'Value' has no accessible getter.\"),");
-        registry.Should().Contain("((global::Sample.WriteOnly)instance!).Value = (int)value!");
+        property.Should().Contain("Get = static instance => throw new InvalidOperationException(\"Property 'Value' has no accessible getter.\"),");
+        property.Should().Contain("((global::Sample.WriteOnly)instance!).Value = (int)value!");
 
         IEnumerable<Diagnostic> errors = outputCompilation
             .GetDiagnostics()
@@ -5776,6 +5795,16 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .Single(s => s.HintName == "MSTestReflectionMetadata.Registry.g.cs")
             .SourceText.ToString()
             .Replace("\r\n", "\n");
+
+    private static string[] GetDescriptors(string source, string typeName)
+        =>
+        [
+            .. CSharpSyntaxTree.ParseText(source).GetRoot()
+                .DescendantNodes()
+                .OfType<ObjectCreationExpressionSyntax>()
+                .Where(node => node.Type.ToString() == typeName)
+                .Select(node => node.ToString()),
+        ];
 
     private static GeneratorRunResult RunGenerator(params string[] sources)
     {

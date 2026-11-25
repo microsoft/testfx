@@ -49,8 +49,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
         await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
 
         string markdown = File.ReadAllText(fixture.SummaryPath);
-        Assert.Contains("Tests.WithHistory", markdown);
-        Assert.Contains("boom Historical context: failed 3 and flaked 1 of 10 prior runs within the 30-day history window.", markdown);
+        string details = FailureDetailsFor(markdown, "Tests.WithHistory");
+        Assert.Contains("boom Historical context: failed 3 and flaked 1 of 10 prior runs within the 30-day history window.", details);
         Assert.AreEqual("failed", Assert.ContainsSingle(Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes)).HistoryTests).Outcome);
     }
 
@@ -66,8 +66,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
         await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
 
         string markdown = File.ReadAllText(fixture.SummaryPath);
-        Assert.Contains("Tests.WithHistory", markdown);
-        Assert.Contains("boom Historical context: failed 1 and flaked 1 of 3 prior run attempts within the latest 5 run attempts and 30-day history window.", markdown);
+        string details = FailureDetailsFor(markdown, "Tests.WithHistory");
+        Assert.Contains("boom Historical context: failed 1 and flaked 1 of 3 prior run attempts within the latest 5 run attempts and 30-day history window.", details);
     }
 
     [TestMethod]
@@ -3549,6 +3549,17 @@ public sealed partial class GitHubActionsSummaryReporterTests
         fileSystem.Setup(f => f.NewFileStream(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(fileStream.Object);
         return fileSystem;
+    }
+
+    private static string FailureDetailsFor(string markdown, string name)
+    {
+        string summary = $"<summary><code>{name}</code>";
+        int start = markdown.IndexOf(summary, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, start);
+        Assert.AreEqual(start, markdown.LastIndexOf(summary, StringComparison.Ordinal));
+        int end = markdown.IndexOf("</details>", start, StringComparison.Ordinal);
+        Assert.IsGreaterThan(start, end);
+        return markdown.Substring(start, end - start);
     }
 
     private static TestNodeUpdateMessage CreateRetryUpdate(
