@@ -22,6 +22,24 @@ It covers:
 
 The schema is the source for IDE auto-completion and validation when authoring `testconfig.json`.
 
+For modern .NET runs with deployment enabled but no deployment items, MSTest creates per-run result
+directories by default. To restore the v4 behavior and use the test assembly directory for these
+properties, set `mstest:deployment:createDirectoriesWithoutDeploymentItems` to `false`:
+
+```json
+{
+  "mstest": {
+    "deployment": {
+      "createDirectoriesWithoutDeploymentItems": false
+    }
+  }
+}
+```
+
+The equivalent `.runsettings` entry is
+`<MSTest><CreateDeploymentDirectoriesWithoutDeploymentItems>false</CreateDeploymentDirectoriesWithoutDeploymentItems></MSTest>`.
+This compatibility setting does not affect runs with deployment items or .NET Framework runs.
+
 ## Referencing the schema
 
 Editors that honor [SchemaStore](https://www.schemastore.org) (Visual Studio, VS Code, Rider, …)

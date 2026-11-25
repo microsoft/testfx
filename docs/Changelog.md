@@ -22,6 +22,7 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 * Raise the minimum compiler host for `MSTest.Analyzers` and its code fixes to Roslyn 4.14: Visual Studio 2022 17.14 or .NET SDK 9.0.300 or newer. Roslyn is supplied by the host, not bundled with the package; older hosts can continue using `MSTest.Analyzers` 4.x. See [#10446](https://github.com/microsoft/testfx/issues/10446) and [#12201](https://github.com/microsoft/testfx/pull/12201).
 * Drop .NET 8 and .NET 9 support from MSTest, including the framework, adapter, SDK, hosting and UI Automation packages, and the modern UWP/WinUI assets. The supported modern .NET targets are .NET 10 and .NET 11; .NET Framework, .NET Standard and classic UWP assets remain where previously provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
 * Remove `DeploymentItemAttribute` from the .NET Standard 2.0 assembly. Projects using `[DeploymentItem]` must target a supported .NET Framework or .NET version; deployment remains unsupported for UWP and WinUI, in [#12223](https://github.com/microsoft/testfx/pull/12223).
+* On modern .NET, create per-run directories when deployment is enabled even if no deployment items are present. `TestRunDirectory`, `ResultsDirectory`, `TestRunResultsDirectory`, and `TestResultsDirectory` no longer fall back to the assembly directory; `DeploymentDirectory` is unchanged. Set `mstest:deployment:createDirectoriesWithoutDeploymentItems` to `false` to restore v4 behavior. See [#12598](https://github.com/microsoft/testfx/issues/12598).
 
 ### Added
 
