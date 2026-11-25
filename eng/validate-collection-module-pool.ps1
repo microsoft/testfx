@@ -80,7 +80,7 @@ try {
         [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net11.0"; RelativePath = "f" }
     ) 6>$null)
     if (($mappable.RelativePath -join ",") -ne "e,f") {
-        throw "ModulePoolSkipsOnlyOversizedMaps: only the module/TFM maps above the collector's 128-MiB limit may be skipped."
+        throw "ModulePoolSkipsOnlyOversizedMaps: only the module/TFM maps that exceed supported size limits may be skipped."
     }
     Write-PassedCheck "ModulePoolSkipsOnlyOversizedMaps"
 
