@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.DotnetTestConnection.SendDisplayMessageAsync(Microsoft.Testing.Platform.IPC.Models.DisplayMessage! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider
 Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.PartitioningCommandLineOptionsProvider() -> void
 const Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.PartitionCountOptionName = "partition-count" -> string!

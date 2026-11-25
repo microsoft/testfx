@@ -89,6 +89,12 @@ executed results and remaining gaps.
 
 ### Experiments and corrections (2026-11-24)
 
+- Follow-up investigation (2026-11-25): an explicit manual selector must
+  override a configured count before distribution-only runtime and server-mode
+  restrictions are evaluated. SDK display forwarding also needs bounded
+  cancellation when a peer reads a diagnostic but never acknowledges it. The
+  data connection is request/reply serialized, so cancelling an in-flight pipe
+  request must not let a later request consume its stale acknowledgement.
 - Review follow-up (2026-11-25): preserve an existing consumed orchestrator
   chain and explicitly pass the distribution UID to standalone children. The
   argument filter now follows the parser's treatment of three or more leading
@@ -129,6 +135,48 @@ executed results and remaining gaps.
   execute and fail at its intended report-count assertion.
 
 ### Review-fix validation (2026-11-25)
+
+Further review fixes were tested on `4b9930a2a1b4f9387740eb63baab5c9c54abddfa`
+with production/test patch SHA-256
+`E2A6C4BA56006B54909788045198C6662D16E90C3B06FF614EC356E7C484A026`.
+The explicit selector now bypasses restrictions that apply only to distribution.
+SDK display sends link the reader and application cancellation tokens. A
+cancelled in-flight request makes its pipe unusable, because a partial request
+or a late response cannot safely be associated with another request; cancelling
+a request while it waits for the pipe lock does not poison the connection.
+Client writes no longer synchronously wait for a Windows pipe drain: their
+reply already establishes that the peer consumed the request. Server writes
+retain their prior drain behavior.
+
+- Before the fixes, `ConfiguredPartitionCount_ExplicitSelectorBypassesDistributionOnlyRestrictions`
+  executed and failed its validity assertion (1/1 failed); the caller-cancellation
+  row of `DisplayAsync_StalledDisplayAcknowledgementHonorsCancellation` failed
+  its stop assertion (1 failed, 1 passed). The earlier pipe-reuse test failed
+  because the second request timed out instead of being rejected. Its final
+  shape additionally attempts a late reply; paired sensitivity for that final
+  shape and for the undrained-write case remains unverified.
+- `.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -f <tfm> -c Debug -v:q`
+  followed by `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -f <tfm> -c Debug --no-build -- --filter 'FullyQualifiedName~PartitioningOrchestratorTests|FullyQualifiedName~DotnetTestPassthroughOutputDeviceTests|FullyQualifiedName~DotnetTestConnectionTests|FullyQualifiedName~IPCTests' --ansi off --progress off`
+  exited 0 on net10.0 (146 passed) and net462 (142 passed), with no failures,
+  skips or build warnings. After adding the late-reply attempt, the three pipe
+  cancellation tests were rebuilt and rerun on net10.0: 3 passed.
+- `.\build.cmd -pack -c Release -bl` exited 0 with no warnings. The
+  `PartitionCount_` packed acceptance selection, run using the net12.0 Release
+  host and `--report-trx`, exited 0: 34 executed and passed, none skipped.
+  It includes native SDK happy paths, two modules, configured count,
+  cancellation and an inherited-pipe timeout. The native run used the repository
+  SDK `12.0.100-alpha.1.26570.125`, not a newly validated released SDK.
+  A generated net11.0 consumer's isolated cache contained the current MTP
+  `3.0.0-dev`, Retry/TRX `3.0.0-dev`, and adapter/framework `5.0.0-dev` packages;
+  their SHA-256 hashes matched the Release shipping packages. Its output MTP
+  DLL and the cached net11.0 DLL both had SHA-256
+  `C3C1E4FD915B02496508FADED8EB625C3C996FA428A16379A67A5FD114BA282E`.
+  The MTP package SHA-256 was
+  `5F383ACA8DB03AC681B1A1611FF401365916F83A0B36D6DBC3332D9E754ED2E8`.
+
+These are local results, not CI results. Real SDK control-channel cancellation,
+a real stalled SDK acknowledgement, Unix behavior and the remaining compatibility,
+absolute-output-path and servicing gaps below remain unverified.
 
 Further follow-up was run on Windows x64 with local changes based on
 `cd40018e0174ed7fd3e3c27ef31de435991d42c9`, repository SDK

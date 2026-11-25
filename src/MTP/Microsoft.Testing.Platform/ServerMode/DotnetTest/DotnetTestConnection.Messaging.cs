@@ -25,6 +25,15 @@ internal sealed partial class DotnetTestConnection
         await client.RequestReplyAsync<FileArtifactMessages, VoidResponse>(message, cancellationToken).ConfigureAwait(false);
     }
 
+    internal async Task SendDisplayMessageAsync(DisplayMessage message, CancellationToken cancellationToken)
+    {
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not connected.");
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
+            _cancellationTokenSource.CancellationToken, cancellationToken);
+        await transportClient.RequestReplyAsync<DisplayMessage, VoidResponse>(message, cancellation.Token).ConfigureAwait(false);
+    }
+
     public async Task SendMessageAsync(IRequest message)
     {
         IClient transportClient = _transportClient

@@ -31,7 +31,10 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
     /// 4-byte size header and 4-byte serializer-ID prefix, writes the frame to <paramref name="stream"/>,
     /// flushes, and (on Windows) waits for the pipe to drain.
     /// </summary>
-    protected async Task WriteMessageAsync(Stream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken)
+    protected Task WriteMessageAsync(Stream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken)
+        => WriteMessageAsync(stream, serializer, message, cancellationToken, waitForPipeDrain: true);
+
+    protected async Task WriteMessageAsync(Stream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken, bool waitForPipeDrain)
     {
         // Serialize the message body
         _serializationBuffer.Position = 0;
@@ -111,7 +114,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
             // Stryker disable once Boolean: continuation scheduling does not change flush completion.
             await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
             // Stryker disable once all: request/reply serialization prevents another message until the peer has consumed this frame.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && stream is PipeStream pipeStream)
+            if (waitForPipeDrain && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && stream is PipeStream pipeStream)
             {
                 pipeStream.WaitForPipeDrain();
             }

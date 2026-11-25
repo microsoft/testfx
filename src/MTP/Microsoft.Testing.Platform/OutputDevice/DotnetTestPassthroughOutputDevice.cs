@@ -122,7 +122,7 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
             return;
         }
 
-        await connection.SendMessageAsync(new DisplayMessage(GetExecutionId(), DotnetTestConnection.InstanceId, level, text)).ConfigureAwait(false);
+        await connection.SendDisplayMessageAsync(new DisplayMessage(GetExecutionId(), DotnetTestConnection.InstanceId, level, text), cancellationToken).ConfigureAwait(false);
     }
 
     private string? GetExecutionId()

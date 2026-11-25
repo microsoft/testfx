@@ -29,6 +29,7 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
     private readonly bool _exitProcessOnConnectionLoss;
 
     private bool _disposed;
+    private bool _requestCancelled;
 
     public NamedPipeClient(string name)
         : this(name, new SystemEnvironment())
@@ -89,13 +90,19 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_requestCancelled)
+            {
+                throw new InvalidOperationException($"Pipe '{PipeName}' cannot be reused after a request was cancelled.");
+            }
+
             INamedPipeSerializer requestNamedPipeSerializer = GetSerializer(typeof(TRequest));
 
             // Serialize and send the request
             try
             {
                 // Stryker disable once Boolean: continuation scheduling does not change the request bytes.
-                await WriteMessageAsync(_namedPipeClientStream, requestNamedPipeSerializer, request, cancellationToken).ConfigureAwait(false);
+                // A reply already proves the peer consumed the request; WaitForPipeDrain is synchronous and cannot be cancelled.
+                await WriteMessageAsync(_namedPipeClientStream, requestNamedPipeSerializer, request, cancellationToken, waitForPipeDrain: false).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is IOException or ObjectDisposedException)
             {
@@ -157,6 +164,12 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             }
 
             return (TResponse)response!;
+        }
+        catch (OperationCanceledException)
+        {
+            // A partial frame or a late reply would corrupt the next request/reply exchange.
+            _requestCancelled = true;
+            throw;
         }
         finally
         {

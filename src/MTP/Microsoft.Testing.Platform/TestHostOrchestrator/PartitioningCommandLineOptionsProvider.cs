@@ -38,8 +38,9 @@ internal sealed class PartitioningCommandLineOptionsProvider()
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => !commandLineOptions.IsOptionSet(PartitionCountOptionName)
+            || IsPartitionedChildInvocation(commandLineOptions)
             ? ValidationResult.ValidTask
-            : commandLineOptions.IsOptionSet(PartitionOptionName) && !IsPartitionedChildInvocation(commandLineOptions)
+            : commandLineOptions.IsOptionSet(PartitionOptionName)
             ? ValidationResult.InvalidTask(PlatformResources.PartitionCountAndPartitionAreExclusive)
             : !IsProcessTreeTerminationSupported
             || OperatingSystem.IsBrowser() || OperatingSystem.IsWasi() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()

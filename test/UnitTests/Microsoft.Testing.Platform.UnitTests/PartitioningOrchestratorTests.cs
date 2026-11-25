@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -130,6 +131,23 @@ public sealed class PartitioningOrchestratorTests
         using ITestApplication application = await builder.BuildAsync();
 
         Assert.AreEqual((int)ExitCode.InvalidCommandLine, await application.RunAsync());
+    }
+
+    [TestMethod]
+    public async Task ConfiguredPartitionCount_ExplicitSelectorBypassesDistributionOnlyRestrictions()
+    {
+        string[] args = ["--partition", "1/2", "--server", "jsonrpc"];
+        Mock<IConfiguration> configuration = new();
+        configuration.Setup(c => c["commandLineOptions:partition-count:0"]).Returns("2");
+        configuration.Setup(c => c["commandLineOptions:partition:0"]).Returns("1/2");
+        configuration.Setup(c => c["commandLineOptions:server:0"]).Returns("jsonrpc");
+        CommandLineHandler handler = new(
+            CommandLineParser.Parse(args, new SystemEnvironment()),
+            [], [], Mock.Of<ITestApplicationModuleInfo>(), Mock.Of<IRuntimeFeature>(), configuration.Object);
+
+        ValidationResult result = await new PartitioningCommandLineOptionsProvider().ValidateCommandLineOptionsAsync(handler);
+
+        Assert.IsTrue(result.IsValid, result.ErrorMessage);
     }
 
     private static ITestFramework CreateEmptyFramework()
