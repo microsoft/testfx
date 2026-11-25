@@ -459,6 +459,54 @@ public sealed partial class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public async Task SummaryPostProcessor_OnFailurePolicyIgnoresEmptyPartitionsWhenAggregatePassedAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-empty-shard-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule emptyPartition = CreateAggregateModule("Empty", null, "Empty.Run");
+            emptyPartition.ExitCode = ZeroTestsExitCode;
+            emptyPartition.TotalTests = 0;
+            emptyPartition.PassedTests = 0;
+            emptyPartition.TestDurationTicks = 0;
+            emptyPartition.SlowestTests = [];
+            emptyPartition.WriteOnFailureOnly = true;
+            GitHubCiRunSummaryModule passingPartition = CreateAggregateModule("Passing", null, "Passing.Run");
+            passingPartition.WriteOnFailureOnly = true;
+            string emptyFragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, emptyPartition);
+            string passingFragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, passingPartition);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]),
+                environment.Object,
+                new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(),
+                static () => false);
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [
+                    new InputArtifact(emptyFragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, emptyPartition.ExecutionId),
+                    new InputArtifact(passingFragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, passingPartition.ExecutionId),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            Assert.IsFalse(File.Exists(stepSummaryPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task SummaryPostProcessor_HistoryOnlyWritesHistoryWithoutSummaryAsync()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-history-only-{Guid.NewGuid():N}");
@@ -1418,6 +1466,100 @@ public sealed partial class GitHubActionsSummaryReporterTests
         Assert.Contains("attempt 1, session session-1", markdown);
         Assert.Contains("attempt 2, session session-2", markdown);
         Assert.Contains("This summary is partial because the test run was truncated.", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_EmptyPartitionIsAcceptedWhenAggregateContainsTests()
+    {
+        GitHubCiRunSummaryModule emptyPartition = CreateAggregateModule("Empty", null, "Empty.Run");
+        emptyPartition.ExitCode = ZeroTestsExitCode;
+        emptyPartition.TotalTests = 0;
+        emptyPartition.PassedTests = 0;
+        emptyPartition.TestDurationTicks = 0;
+        emptyPartition.SlowestTests = [];
+
+        GitHubCiRunSummaryModule passingPartition = CreateAggregateModule("Passing", null, "Passing.Run");
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [emptyPartition, passingPartition],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(2),
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
+
+        Assert.StartsWith("## ⚠️ Overall Test Run Summary", markdown);
+        Assert.Contains("### ✅ Empty", markdown);
+        Assert.DoesNotContain("### ❌ Empty", markdown);
+        Assert.DoesNotContain("ZeroTests", markdown);
+
+        string condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, condenseAllModules: true).Markdown;
+        Assert.Contains("✅ `Empty`", condensed);
+        Assert.DoesNotContain("❌ `Empty`", condensed);
+        Assert.DoesNotContain("ZeroTests", condensed);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_EmptyAggregateKeepsZeroTestsFailure()
+    {
+        GitHubCiRunSummaryModule emptyPartition = CreateAggregateModule("Empty", null, "Empty.Run");
+        emptyPartition.ExitCode = ZeroTestsExitCode;
+        emptyPartition.TotalTests = 0;
+        emptyPartition.PassedTests = 0;
+        emptyPartition.TestDurationTicks = 0;
+        emptyPartition.SlowestTests = [];
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [emptyPartition],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
+
+        Assert.StartsWith("## ❌ Overall Test Run Summary", markdown);
+        Assert.Contains("### ❌ Empty", markdown);
+        Assert.Contains("ZeroTests", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_EmptyPartitionDoesNotHideMinimumExpectedTestsFailure()
+    {
+        GitHubCiRunSummaryModule emptyPartition = CreateAggregateModule("Empty", null, "Empty.Run");
+        emptyPartition.ExitCode = MinimumExpectedTestsExitCode;
+        emptyPartition.TotalTests = 0;
+        emptyPartition.PassedTests = 0;
+        emptyPartition.TestDurationTicks = 0;
+        emptyPartition.SlowestTests = [];
+
+        GitHubCiRunSummaryModule passingPartition = CreateAggregateModule("Passing", null, "Passing.Run");
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [emptyPartition, passingPartition],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(2),
+            exitCode: MinimumExpectedTestsExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
+
+        Assert.StartsWith("## ❌ Overall Test Run Summary", markdown);
+        Assert.Contains("### ❌ Empty", markdown);
+        Assert.Contains("MinimumExpectedTestsPolicyViolation", markdown);
     }
 
     [TestMethod]

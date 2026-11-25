@@ -83,6 +83,40 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
+    public async Task ShardCount_NativeDotnetTest_EmptyPartitionsKeepGitHubSummaryPassing()
+    {
+        using var run = new TempDirectory("shard-count-github-summary");
+        string summaryPath = Path.Combine(run.Path, "summary.md");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment["GITHUB_ACTIONS"] = "true";
+        environment["GITHUB_STEP_SUMMARY"] = summaryPath;
+        environment["TF_BUILD"] = "false";
+        string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build"
+            + $" --filter FullyQualifiedName=Acme.CartTests.Keep --shard-count 4 --report-gh --report-trx --report-trx-filename run.trx"
+            + $" --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-github-summary", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(4, reports);
+        Assert.AreEqual(3, reports.Count(report => ReadResults(report).Length == 0));
+        Assert.AreSequenceEqual(
+            [$"{Cart}.Keep|Passed"],
+            reports.SelectMany(ReadResults).Select(test => test.FullyQualifiedName + "|" + test.Outcome));
+
+        string summary = File.ReadAllText(summaryPath);
+        Assert.Contains("## ✅ Overall Test Run Summary", summary);
+        Assert.Contains("| 1 | 1 | 0 | 0 | 0 |", summary);
+        Assert.AreEqual(4, summary.Split("### ✅ ", StringSplitOptions.None).Length - 1);
+        Assert.DoesNotContain("### ❌", summary);
+        Assert.DoesNotContain("ZeroTests", summary);
+    }
+
+    [TestMethod]
     [DataRow("DOTNET_WATCH", DisplayName = "Shard count rejects dotnet watch")]
     [DataRow("TESTINGPLATFORM_HOTRELOAD_ENABLED", DisplayName = "Shard count rejects hot reload")]
     public async Task ShardCount_HotReload_FailsBeforeExecution(string variable)
@@ -1229,6 +1263,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$PlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$RetryVersion$", MicrosoftTestingExtensionsRetryVersion)
+                .PatchCodeWithReplace(
+                    "$GitHubActionsReportPackageReference$",
+                    name == Independent
+                        ? $"<PackageReference Include=\"Microsoft.Testing.Extensions.GitHubActionsReport\" Version=\"{MicrosoftTestingExtensionsGitHubActionsReportVersion}\" />"
+                        : string.Empty)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$SdkVersion$", sdkVersion);
             if (name == Cancellation)
@@ -1296,6 +1335,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$PlatformVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$RetryVersion$" />
+                $GitHubActionsReportPackageReference$
               </ItemGroup>
             </Project>
             #file global.json

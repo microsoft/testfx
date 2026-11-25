@@ -123,7 +123,11 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             || aggregate.FailedTests > 0
             || (aggregate.ExitCode is int exitCode
                 ? GitHubActionsExitCode.IndicatesFailure(exitCode)
-                : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
+                : aggregate.Modules.Any(module =>
+                    GitHubActionsExitCode.IndicatesFailure(module.ExitCode)
+                    && !(aggregate.TotalTests > 0
+                        && module.TotalTests == 0
+                        && module.ExitCode == (int)ExitCode.ZeroTests)));
         StepSummaryWriter? writer = downstreamPostProcessingWillPublishSummary
             || RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
             || (writeOnFailureOnly && !runFailed)

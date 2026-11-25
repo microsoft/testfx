@@ -56,10 +56,81 @@ source-generation DataRow cases:
 The packaged acceptance case has not been run against the pre-fix product;
 its regression sensitivity is therefore not established independently of the
 unit red/green result. The Azure DevOps Tests tab, Unix, servicing branches,
-and externally hosted CI remain unverified. A separate observed issue remains
-open: the GitHub Actions reporter can mark empty shards as failed while the
-aggregate invocation succeeds. Suppressing every zero-test exit would also
-hide all-empty and minimum-test-policy failures.
+and externally hosted CI remain unverified. The related GitHub Actions
+empty-shard summary finding was addressed in the follow-up below.
+
+### GitHub Actions empty-shard summaries (2026-11-25)
+
+The GitHub Actions reporter previously treated every child `ZeroTests` exit as
+a failure, so an otherwise successful sharded run could show failed step
+summary sections. The fix treats a module as an empty shard only when its exit
+is `ZeroTests`, it reports zero tests, and the aggregate reports at least one
+test. That rule is used for aggregate, condensed, and per-project rendering and
+for the post-processor's on-failure policy. An all-empty aggregate still fails,
+and a `MinimumExpectedTestsPolicyViolation` is not suppressed.
+
+On the current PR source based on
+`5dc3b721cf3fb0429655aba29762025d6cf61ed2`, the following repository-pinned
+Release pack completed with exit 0, 0 warnings, and 0 errors. The shipping
+`Microsoft.Testing.Extensions.GitHubActionsReport.3.0.0-dev.nupkg` SHA-256 was
+`D6457AD8D43BC379DB8987F0FF8D2A11E14AEDE419C729AF14B14300355CB128`.
+
+```powershell
+.\build.cmd -pack -c Release -bl
+```
+
+The focused unit-test project was rebuilt after extending its aggregate case to
+cover the missing-authoritative-exit-code path; the build exited 0 with 0
+warnings and 0 errors. Its binlog is
+`artifacts/log/gh-empty-shard-unit.binlog`.
+
+```powershell
+.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj -f net10.0 -c Release -v:q -bl:artifacts\log\gh-empty-shard-unit.binlog
+```
+
+The focused unit selection passed 164 tests, skipped 6 platform-specific tests,
+and failed 0:
+
+```powershell
+.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj -f net10.0 -c Release --no-build -- --filter 'FullyQualifiedName~GitHubActionsSummaryReporterTests' --ansi off --progress off --show-test-results all
+```
+
+The new direct cases are
+`BuildAggregateMarkdown_EmptyPartitionIsAcceptedWhenAggregateContainsTests`,
+`BuildAggregateMarkdown_EmptyAggregateKeepsZeroTestsFailure`,
+`BuildAggregateMarkdown_EmptyPartitionDoesNotHideMinimumExpectedTestsFailure`,
+and
+`SummaryPostProcessor_OnFailurePolicyIgnoresEmptyPartitionsWhenAggregatePassedAsync`.
+The first also checks condensed rendering and the aggregate-without-an-authoritative
+exit-code path; the existing per-project implementation is exercised through the
+packed acceptance case.
+
+The packed MSTest consumer passed its single selected case (1 passed, 0 failed,
+0 skipped; outer host exit 0):
+
+```powershell
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~PartitionTests.ShardCount_NativeDotnetTest_EmptyPartitionsKeepGitHubSummaryPassing' --ansi off --progress off --show-test-results all
+```
+
+`ShardCount_NativeDotnetTest_EmptyPartitionsKeepGitHubSummaryPassing` ran the
+Release shipping consumer with three empty shards and one passing test. It
+asserted four TRX files, the exact passing test identity/outcome, four passing
+summary sections, one passing aggregate, and no zero-test diagnostic. The
+consumer's loaded net11.0 reporter DLL SHA-256
+`817477D84B0C3AA74B0AF403EBFC25202BE402FF2816190E9CAFF72D88A69E82`
+matched the corresponding DLL in the shipping package.
+
+For sensitivity, the same retained acceptance test and assertions ran against
+a separately packed comparison with the reporter fix removed. It executed
+`ShardCount_NativeDotnetTest_EmptyPartitionsKeepGitHubSummaryPassing`
+(test ID `16a7ee88-84ad-83dc-9f50-443046b67709`) and failed at the intended
+assertion: expected four passing shard sections, observed one. The comparison
+package SHA-256 was
+`D8418166785F34B97A04397209A7C718EEC771D28D3774EAE8AFDB594D4C83E8`;
+the exact comparison commit was not retained. The final package's corresponding
+net11.0 DLL hash matched its shipping package as noted above. The hosted GitHub
+Actions summary UI, Unix, and CI for the updated PR head have not been
+independently inspected.
 
 ### Naming decision: framework partitions, platform shards (2026-11-25)
 

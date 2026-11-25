@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
@@ -16,7 +17,10 @@ internal sealed partial class GitHubActionsSummaryReporter
         GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules);
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
-            : aggregate.FailedTests > 0;
+            : aggregate.FailedTests > 0
+                || aggregate.Modules.Any(module =>
+                    GitHubActionsExitCode.IndicatesFailure(module.ExitCode)
+                    && !IsEmptyShard(module, aggregate.TotalTests));
         string statusIcon = failed
             ? "❌"
             : aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary
@@ -115,7 +119,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             // full — so past this point a module reports only its verdict, exactly as the per-project path does.
             if (stage == SummaryStage.Condensed)
             {
-                AppendCondensedModuleLine(builder, module);
+                AppendCondensedModuleLine(builder, module, aggregate.TotalTests);
                 condensedModules++;
                 listedModules++;
                 continue;
@@ -141,7 +145,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             // Hand this module its share, keeping whatever earlier modules left unspent.
             budget.GrantModuleShare(moduleCount - listedModules);
-            if (AppendModuleMarkdown(builder, module, headingLevel: 3, sections, includeFailureDetails, budget) > 0)
+            if (AppendModuleMarkdown(builder, module, aggregate.TotalTests, headingLevel: 3, sections, includeFailureDetails, budget) > 0)
             {
                 modulesWithOmittedDetails++;
             }
@@ -186,7 +190,12 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// Renders one module as a single-line verdict, for when the combined summary has grown too large to give it
     /// a section of its own.
     /// </summary>
-    private static void AppendCondensedModuleLine(StringBuilder builder, CiRunSummaryModule module)
+    private static bool IsEmptyShard(CiRunSummaryModule module, long aggregateTotalTests)
+        => aggregateTotalTests > 0
+            && module.TotalTests == 0
+            && module.ExitCode == (int)ExitCode.ZeroTests;
+
+    private static void AppendCondensedModuleLine(StringBuilder builder, CiRunSummaryModule module, long aggregateTotalTests)
         => builder.Append(BuildCondensedLine(
             module.AssemblyName,
             module.TargetFramework,
@@ -194,5 +203,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             module.PassedTests,
             module.FailedTests,
             module.SkippedTests,
-            module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
+            module.FailedTests > 0
+                || (GitHubActionsExitCode.IndicatesFailure(module.ExitCode)
+                    && !IsEmptyShard(module, aggregateTotalTests))));
 }
