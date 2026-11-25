@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -133,6 +135,82 @@ public sealed class GitHubActionsDotnetTestTests : AcceptanceTestBase<NopAssetFi
         string summary = File.ReadAllText(environment["GITHUB_STEP_SUMMARY"]!);
         GitHubActionsReportTests.AssertModuleSummary(summary, AssetName, "pass");
         GitHubActionsReportTests.AssertModuleSummary(summary, FailingAssetName, "location");
+    }
+
+    [TestMethod]
+    public async Task DotnetTest_HistoryRemainsAssociatedWithItsModuleAndDataRow()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(multipleModules: true);
+        string historyPath = Path.Join(asset.TargetAssetPath, "history.json");
+        Dictionary<string, string?> environment = CreateEnvironment(asset.TargetAssetPath, "history-pass");
+        environment["RUNNER_OS"] = "TestOs";
+        environment["GITHUB_RUN_ID"] = "run-1";
+        environment["GITHUB_RUN_ATTEMPT"] = "1";
+        environment[$"GH_TEST_MODE_{AssetName}"] = "history-fail";
+        environment[$"GH_TEST_MODE_{FailingAssetName}"] = "history-pass";
+        string arguments = $"{ReportingArguments} --report-gh-history \"{historyPath}\"";
+
+        DotnetMuxerResult first = await RunDotnetTestAsync(asset, environment, "solution", arguments);
+        first.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        environment["GITHUB_RUN_ID"] = "run-2";
+        environment["GITHUB_STEP_SUMMARY"] = Path.Join(asset.TargetAssetPath, "second-summary.md");
+        environment["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = Guid.NewGuid().ToString("N");
+        environment[$"GH_TEST_MODE_{AssetName}"] = "history-pass";
+        DotnetMuxerResult second = await RunDotnetTestAsync(asset, environment, "solution", arguments);
+        second.AssertExitCodeIs(ExitCode.Success);
+
+        string summary = File.ReadAllText(environment["GITHUB_STEP_SUMMARY"]!).ReplaceLineEndings("\n");
+        string failedBefore = GetModuleSummary(AssetName);
+        string alwaysPassed = GetModuleSummary(FailingAssetName);
+        Assert.Contains("| 2 | 2 | 0 | 0 | 0 |", failedBefore);
+        Assert.Contains("| 2 | 2 | 0 | 0 | 0 |", alwaysPassed);
+        Assert.Contains("Passing tests with previous failures (1)", failedBefore);
+        Assert.Contains("- `Tests.HistoryCase (1)` — prior attempts: 0 passed, 1 failed", failedBefore);
+        Assert.DoesNotContain("Tests.HistoryCase (2)", failedBefore);
+        Assert.DoesNotContain("Passing tests with previous failures", alwaysPassed);
+        Assert.DoesNotContain("Flaky tests (", summary);
+
+        using var snapshot = JsonDocument.Parse(File.ReadAllText(historyPath));
+        Assert.AreEqual(1, snapshot.RootElement.GetProperty("schemaVersion").GetInt32());
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                ("run-1", AssetName, "history-1", "failed", false),
+                ("run-1", AssetName, "history-2", "passed", false),
+                ("run-1", FailingAssetName, "history-1", "passed", false),
+                ("run-1", FailingAssetName, "history-2", "passed", false),
+                ("run-2", AssetName, "history-1", "passed", false),
+                ("run-2", AssetName, "history-2", "passed", false),
+                ("run-2", FailingAssetName, "history-1", "passed", false),
+                ("run-2", FailingAssetName, "history-2", "passed", false),
+            },
+            snapshot.RootElement.GetProperty("samples").EnumerateArray()
+                .Select(sample => (
+                    sample.GetProperty("runId").GetString()!,
+                    sample.GetProperty("assemblyName").GetString()!,
+                    sample.GetProperty("testId").GetString()!,
+                    sample.GetProperty("outcome").GetString()!,
+                    sample.GetProperty("isFlaky").GetBoolean()))
+                .OrderBy(sample => sample.Item1, StringComparer.Ordinal)
+                .ThenBy(sample => sample.Item2, StringComparer.Ordinal)
+                .ThenBy(sample => sample.Item3, StringComparer.Ordinal));
+
+        string GetModuleSummary(string assemblyName)
+        {
+            string[] lines = summary.Split('\n');
+            string aggregateHeading = "<summary>" + assemblyName + " (";
+            int heading = Array.FindIndex(
+                lines,
+                line => (line.StartsWith('#') && line.Contains(assemblyName + " (", StringComparison.Ordinal))
+                    || line.StartsWith(aggregateHeading, StringComparison.Ordinal));
+            Assert.IsGreaterThanOrEqualTo(0, heading, $"Missing summary for {assemblyName}:{Environment.NewLine}{summary}");
+            int level = lines[heading].TakeWhile(character => character == '#').Count();
+            IEnumerable<string> moduleLines = lines[heading].StartsWith(aggregateHeading, StringComparison.Ordinal)
+                ? lines.Skip(heading + 1).TakeWhile(line => !line.StartsWith("<summary>", StringComparison.Ordinal) || line.StartsWith("<summary><code>", StringComparison.Ordinal))
+                : lines.Skip(heading + 1).TakeWhile(line => !line.StartsWith('#') || line.TakeWhile(character => character == '#').Count() > level);
+            return string.Join("\n", moduleLines);
+        }
     }
 
     private static Dictionary<string, string?> CreateEnvironment(string workspace, string mode)

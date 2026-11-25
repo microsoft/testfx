@@ -21,7 +21,8 @@ internal static partial class CiRunSummaryAggregation
     public static CiRunSummaryAggregate ReadAndAggregate(
         IReadOnlyList<InputArtifact> inputs,
         string provider,
-        ArtifactPostProcessingContext context)
+        ArtifactPostProcessingContext context,
+        bool prioritizeHistoricalFailures = false)
     {
         var modules = new List<CiRunSummaryModule>(inputs.Count);
         var identities = new HashSet<string>(StringComparer.Ordinal);
@@ -52,7 +53,7 @@ internal static partial class CiRunSummaryAggregation
         }
 
         modules.Sort(CompareModules);
-        ApplyAggregateBounds(modules);
+        ApplyAggregateBounds(modules, context.Mode, prioritizeHistoricalFailures);
 
         long observedPassed = 0;
         long observedFailed = 0;
@@ -196,21 +197,60 @@ internal static partial class CiRunSummaryAggregation
         }
     }
 
-    private static void ApplyAggregateBounds(IReadOnlyList<CiRunSummaryModule> modules)
+    private static void ApplyAggregateBounds(
+        IReadOnlyList<CiRunSummaryModule> modules,
+        ArtifactPostProcessingMode mode,
+        bool prioritizeHistoricalFailures)
     {
+        HashSet<CiRunSummaryHistoryTest>? prioritized = null;
+        HashSet<(string TestId, string FullyQualifiedName, string DisplayName)>? excludedRetryIdentities = null;
+        if (prioritizeHistoricalFailures && modules.Sum(static module => (long)module.HistoryTests.Length) > MaxHistoryTests)
+        {
+            prioritized = GetPrioritizedHistoryTests(modules, mode, out excludedRetryIdentities);
+        }
+
         int remainingHistoryTests = MaxHistoryTests;
+        if (prioritized is not null)
+        {
+            remainingHistoryTests -= prioritized.Count;
+        }
+
         int remainingDependencies = MaxDependencies;
         foreach (CiRunSummaryModule module in modules)
         {
-            if (module.HistoryTests.Length > remainingHistoryTests)
+            if (prioritized is not null)
             {
-                module.HistoryTests =
-                [
-                    .. module.HistoryTests.Take(remainingHistoryTests),
-                ];
+                var selected = new List<CiRunSummaryHistoryTest>();
+                foreach (CiRunSummaryHistoryTest test in module.HistoryTests)
+                {
+                    if (prioritized.Contains(test))
+                    {
+                        selected.Add(test);
+                    }
+                    else if (remainingHistoryTests > 0
+                        && (excludedRetryIdentities is null
+                            || !excludedRetryIdentities.Contains((test.TestId, test.FullyQualifiedName, test.DisplayName))))
+                    {
+                        selected.Add(test);
+                        remainingHistoryTests--;
+                    }
+                }
+
+                module.HistoryTests = [.. selected];
+            }
+            else
+            {
+                if (module.HistoryTests.Length > remainingHistoryTests)
+                {
+                    module.HistoryTests =
+                    [
+                        .. module.HistoryTests.Take(remainingHistoryTests),
+                    ];
+                }
+
+                remainingHistoryTests -= module.HistoryTests.Length;
             }
 
-            remainingHistoryTests -= module.HistoryTests.Length;
             if (module.Dependencies.Length > remainingDependencies)
             {
                 module.Dependencies =
@@ -221,6 +261,105 @@ internal static partial class CiRunSummaryAggregation
 
             remainingDependencies -= module.Dependencies.Length;
         }
+    }
+
+    private static HashSet<CiRunSummaryHistoryTest> GetPrioritizedHistoryTests(
+        IReadOnlyList<CiRunSummaryModule> modules,
+        ArtifactPostProcessingMode mode,
+        out HashSet<(string TestId, string FullyQualifiedName, string DisplayName)>? excludedRetryIdentities)
+    {
+        HashSet<CiRunSummaryHistoryTest> prioritized = [];
+        excludedRetryIdentities = null;
+        if (mode != ArtifactPostProcessingMode.RetryAttempts)
+        {
+            foreach (CiRunSummaryModule module in modules)
+            {
+                foreach (CiRunSummaryHistoryTest test in module.HistoryTests
+                    .Where(static test => test.Outcome == "passed" && test.HistoricalFailCount > 0))
+                {
+                    if (prioritized.Count < MaxHistoryTests)
+                    {
+                        prioritized.Add(test);
+                    }
+                }
+            }
+
+            return prioritized;
+        }
+
+        var groups = new Dictionary<
+            (string TestId, string FullyQualifiedName, string DisplayName),
+            (int Count, CiRunSummaryHistoryTest Latest, bool HasPreviousFailure)>();
+        var encounterOrder = new List<(string TestId, string FullyQualifiedName, string DisplayName)>();
+        foreach (CiRunSummaryModule module in modules.OrderBy(static module => module.AttemptNumber))
+        {
+            foreach (CiRunSummaryHistoryTest test in module.HistoryTests)
+            {
+                (string TestId, string FullyQualifiedName, string DisplayName) identity =
+                    (test.TestId, test.FullyQualifiedName, test.DisplayName);
+                bool hasPreviousFailure = test.Outcome == "passed" && test.HistoricalFailCount > 0;
+                if (groups.TryGetValue(
+                    identity,
+                    out (int Count, CiRunSummaryHistoryTest Latest, bool HasPreviousFailure) group))
+                {
+                    groups[identity] = (group.Count + 1, test, group.HasPreviousFailure || hasPreviousFailure);
+                }
+                else
+                {
+                    groups.Add(identity, (1, test, hasPreviousFailure));
+                    encounterOrder.Add(identity);
+                }
+            }
+        }
+
+        HashSet<(string TestId, string FullyQualifiedName, string DisplayName)> selectedIdentities = [];
+        int remaining = MaxHistoryTests;
+        foreach (KeyValuePair<
+            (string TestId, string FullyQualifiedName, string DisplayName),
+            (int Count, CiRunSummaryHistoryTest Latest, bool HasPreviousFailure)> group in groups
+            .Where(static group => group.Value.HasPreviousFailure)
+            .OrderBy(static group => group.Value.Latest.Outcome == "passed" ? 0 : 1)
+            .ThenBy(static group => group.Key.FullyQualifiedName, StringComparer.Ordinal)
+            .ThenBy(static group => group.Key.DisplayName, StringComparer.Ordinal)
+            .ThenBy(static group => group.Key.TestId, StringComparer.Ordinal))
+        {
+            if (group.Value.Count <= remaining)
+            {
+                selectedIdentities.Add(group.Key);
+                remaining -= group.Value.Count;
+            }
+        }
+
+        IEnumerable<(string TestId, string FullyQualifiedName, string DisplayName)> otherIdentities =
+            encounterOrder.Where(identity => !groups[identity].HasPreviousFailure);
+        foreach ((string TestId, string FullyQualifiedName, string DisplayName) identity in otherIdentities
+            .Where(identity => groups[identity].Count > 1)
+            .Concat(otherIdentities.Where(identity => groups[identity].Count == 1)))
+        {
+            int count = groups[identity].Count;
+            if (count <= remaining)
+            {
+                selectedIdentities.Add(identity);
+                remaining -= count;
+            }
+        }
+
+        excludedRetryIdentities =
+        [
+            .. groups
+                .Where(group => !selectedIdentities.Contains(group.Key))
+                .Select(static group => group.Key),
+        ];
+        foreach (CiRunSummaryModule module in modules)
+        {
+            foreach (CiRunSummaryHistoryTest test in module.HistoryTests
+                .Where(test => selectedIdentities.Contains((test.TestId, test.FullyQualifiedName, test.DisplayName))))
+            {
+                prioritized.Add(test);
+            }
+        }
+
+        return prioritized;
     }
 
     private static bool IsValidTest(CiRunSummaryTest test)

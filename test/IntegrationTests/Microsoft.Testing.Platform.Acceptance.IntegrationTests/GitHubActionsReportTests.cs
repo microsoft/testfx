@@ -303,6 +303,68 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         Assert.AreEqual("run-2", runIds[1]);
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenPassingTestPreviouslyFailed_SummaryUsesHistoryAndRunAttemptWindow(string tfm)
+    {
+        string historyPath = Path.Combine(
+            TestContext.TestRunDirectory!,
+            Path.GetFileName($"gh-mixed-history-{Guid.NewGuid():N}.json"));
+        static Dictionary<string, string?> RunEnvironment(string runId) => new()
+        {
+            ["GITHUB_RUN_ID"] = runId,
+            ["GITHUB_RUN_ATTEMPT"] = "1",
+            ["RUNNER_OS"] = "TestOs",
+        };
+        string historyArguments = $"--report-gh-history \"{historyPath}\" --report-gh-history-window-runs 1";
+
+        (TestHostResult firstResult, string firstSummary) = await RunAsync(
+            tfm, "history-fail", historyArguments, RunEnvironment("run-1"));
+        firstResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.DoesNotContain("Passing tests with previous failures", firstSummary);
+
+        (TestHostResult secondResult, string secondSummary) = await RunAsync(
+            tfm, "history-pass", historyArguments, RunEnvironment("run-2"));
+        secondResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.Contains(
+            """
+            ### Passing tests with previous failures (1)
+
+            - `Tests.HistoryCase (1)` — prior attempts: 0 passed, 1 failed
+            """.Replace("\r\n", "\n"),
+            secondSummary.Replace("\r\n", "\n"));
+        Assert.DoesNotContain("Tests.HistoryCase (2)", secondSummary);
+        Assert.DoesNotContain("Flaky tests (", secondSummary);
+
+        (TestHostResult thirdResult, string thirdSummary) = await RunAsync(
+            tfm, "history-pass", historyArguments, RunEnvironment("run-3"));
+        thirdResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.DoesNotContain("Passing tests with previous failures", thirdSummary);
+
+        using var snapshot = JsonDocument.Parse(File.ReadAllText(historyPath));
+        Assert.AreEqual(1, snapshot.RootElement.GetProperty("schemaVersion").GetInt32());
+        JsonElement[] samples = [.. snapshot.RootElement.GetProperty("samples").EnumerateArray()];
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                ("run-1", "history-1", "HistoryCase (1)", "failed", false),
+                ("run-1", "history-2", "HistoryCase (2)", "passed", false),
+                ("run-2", "history-1", "HistoryCase (1)", "passed", false),
+                ("run-2", "history-2", "HistoryCase (2)", "passed", false),
+                ("run-3", "history-1", "HistoryCase (1)", "passed", false),
+                ("run-3", "history-2", "HistoryCase (2)", "passed", false),
+            },
+            samples
+                .Select(sample => (
+                    sample.GetProperty("runId").GetString()!,
+                    sample.GetProperty("testId").GetString()!,
+                    sample.GetProperty("displayName").GetString()!,
+                    sample.GetProperty("outcome").GetString()!,
+                    sample.GetProperty("isFlaky").GetBoolean()))
+                .OrderBy(sample => sample.Item1, StringComparer.Ordinal)
+                .ThenBy(sample => sample.Item2, StringComparer.Ordinal));
+    }
+
     [TestMethod]
     [DataRow("pass", (int)ExitCode.Success, DisplayName = "GitHubWire_Pass")]
     [DataRow("location", (int)ExitCode.AtLeastOneTestFailed, DisplayName = "GitHubWire_FailureAndSkipped")]
@@ -628,6 +690,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         //   "timed"    -> publish several passing tests, each carrying a TimingProperty with a distinct duration, so the
         //                 job summary's slow-tests section has real durations to rank
         //   "data-driven" -> publish timed data rows sharing a method identity, distinguished by display-name arguments
+        //   "history-fail" / "history-pass" -> publish two stable data-row identities across different runs
         //   "location" -> publish a failing and a skipped test, both carrying a TestFileLocationProperty and no
         //                 exception, so the annotations can only be pinned through the declared-location fallback
         //   "discovery" -> publish one discovered test, leaving --list-tests json responsible for its rendering
@@ -695,6 +758,26 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                         new SkippedTestNodeStateProperty("Not today"),
                         new TestFileLocationProperty(file, new LinePositionSpan(new LinePosition(9, -1), new LinePosition(9, -1)))),
                 }));
+        }
+        else if (mode is "history-fail" or "history-pass")
+        {
+            for (int row = 1; row <= 2; row++)
+            {
+                TestNodeStateProperty state = mode == "history-fail" && row == 1
+                    ? new FailedTestNodeStateProperty("Previous failure")
+                    : PassedTestNodeStateProperty.CachedInstance;
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                    context.Request.Session.SessionUid,
+                    new TestNode()
+                    {
+                        Uid = $"history-{row}",
+                        DisplayName = $"HistoryCase ({row})",
+                        Properties = new PropertyBag(
+                            state,
+                            new TestMethodIdentifierProperty(
+                                "GitHubActionsReportBehavior", string.Empty, "Tests", "HistoryCase", 0, ["System.Int32"], "System.Void")),
+                    }));
+            }
         }
         else if (mode is "timed" or "data-driven")
         {

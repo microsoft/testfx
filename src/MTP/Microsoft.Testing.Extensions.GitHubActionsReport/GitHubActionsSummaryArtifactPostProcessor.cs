@@ -73,7 +73,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         if (context.Mode == ArtifactPostProcessingMode.RetryAttempts && context.RunSummary is null)
         {
-            CiRunSummaryAggregate historyAggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
+            CiRunSummaryAggregate historyAggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context, prioritizeHistoricalFailures: true);
             await _historyService.WriteAsync(
                 [CreateRetryHistoryModule(historyAggregate.Modules)],
                 cancellationToken).ConfigureAwait(false);
@@ -84,7 +84,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             return null;
         }
 
-        CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
+        CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context, prioritizeHistoricalFailures: true);
         bool downstreamPostProcessingWillPublishSummary =
             context.Mode == ArtifactPostProcessingMode.RetryAttempts
             && downstreamRequiredPostProcessingSupported();
@@ -342,6 +342,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                     Outcome = test.Outcome,
                     DurationTicks = test.DurationTicks,
                     IsFlaky = test.IsFlaky || recovered,
+                    HistoricalPassCount = test.HistoricalPassCount,
+                    HistoricalFailCount = test.HistoricalFailCount,
+                    HistoryWindowInDays = test.HistoryWindowInDays,
                 };
 
                 if (test.Outcome == GitHubActionsHistoryOutcome.Failed)
