@@ -369,10 +369,12 @@ matched commits before any speedup is claimed.
 ## Remaining limits
 
 Local measurements cannot establish hosted-CI or full-suite speedup. The full
-acceptance suite, Linux/macOS and other release branches were not executed.
-This test-only optimization needs no downstream package rollout, temporary flag
-or product servicing/backport; existing acceptance CI can exercise the changed
-fixture, but no exact-head hosted execution is claimed here.
+local MSTest acceptance run exited with 15 uninvestigated failures; a passing
+full run and a full local MTP acceptance run were not established. Linux/macOS
+and other release branches were not executed. This test-only optimization needs
+no downstream package rollout, temporary flag or product servicing/backport;
+existing acceptance CI can exercise the changed fixture, but no exact-head
+hosted execution is claimed here.
 
 Active-build cancellation and injected build failures were not separately
 executed. Existing `DotnetCli` failure/retry handling and cancellation-token
