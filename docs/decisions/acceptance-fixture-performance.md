@@ -275,6 +275,9 @@ the timings, process counts and unchanged test identities are its demonstration.
 Hosted evidence came from completed dnceng-public build 1699206 (definition 209),
 cross-checked against build 1699115. Local evidence came from one isolated run on
 a shared 32-logical-processor Windows machine.
+Build 1699206 tested source revision
+`94a19aec18007665ffede752aefb5ff7e5d0ee45` from PR #12631's merge ref, not this
+PR's current head.
 
 | Measurement | Hosted CI (Windows Release) | Local |
 | --- | --- | --- |
@@ -307,10 +310,12 @@ Hosted job-level facts for build 1699206:
   --no-build --affected-tests`
   (`eng/pipelines/steps/test-affected-tests.yml`). Unit tests for several TFMs,
   both acceptance suites and the playgrounds all run in that one invocation.
-- Every module logged `Falling back to all tests (planned count unavailable):
+- The cache-seed step imported 46 maps from build 1695348 in 101 seconds, but
+  modules still logged `Falling back to all tests (planned count unavailable):
   No successful Azure DevOps collect artifact contains 'affected-tests/v2/...'`.
-  Affected-test selection therefore removed no work, and cache seeding added
-  101 seconds before the first test.
+  The imported artifact therefore did not provide the requested map objects
+  for this run, and affected-test selection removed no work. The exact reason
+  those object names were unavailable remains unresolved.
 - MSTest acceptance started first and was the critical path. MTP acceptance
   (920 passed, 34 skipped) ran 14:12:57–14:58:10 and finished six minutes
   earlier.
@@ -334,17 +339,28 @@ concurrent modules. Per-test hosted durations require authenticated artifact
 or test-result access that the anonymous REST endpoints did not provide, so
 uniform versus concentrated slowdown is unmeasured.
 
-Candidate levers, ordered by expected value and **not executed**:
+Candidate levers, ordered by expected value:
 
 1. Run the acceptance projects in a separate job or agent from the unit-test
    modules. Alternatively, shard MSTest acceptance, the 70-minute critical
-   path, across agents.
-2. Restore a usable `affected-tests/v2` collect artifact so PR runs stop falling
-   back to the full suite.
-3. Record `Environment.ProcessorCount` and memory in the test step, so the
-   hosted capacity is evidence rather than an assumption.
+   path, across agents. **Not attempted:** no matched hosted CI A/B run yet
+   measures whether the extra job capacity reduces wall time enough to justify
+   the extra build/agent cost.
+2. Resolve why the 46 imported maps did not satisfy the requested object names.
+   The earlier local provider check showed an imported map can be consumed
+   when its identity matches, but does not explain this hosted run's misses.
+3. This PR now logs `.NET Environment.ProcessorCount` immediately before the
+   affected-test invocation. The metric is a diagnostic only; it has no
+   runtime speedup, and no hosted run of this change is available yet.
 4. Measure the cost of the TF_BUILD-only AzDO history reporters and of trace
    diagnostics before changing them. Neither is shown to be a cause.
+
+Validation for the added capacity line: the PowerShell expression printed
+`ProcessorCount=32` locally, and
+`pwsh -NoLogo -NoProfile -NonInteractive -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false`
+exited 0 with 92 pipeline-configuration checks passed. This does not substitute
+for an Azure Pipelines run; the hosted value and any performance effect remain
+unmeasured.
 
 The fixture aggregation in this change reduces work under either explanation.
 Pipeline restructuring is a separate change, and it needs hosted A/B runs with
