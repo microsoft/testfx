@@ -61,6 +61,7 @@ config({
             ["DOTNET_MULTILEVEL_LOOKUP", "0"],
             ["DOTNET_NOLOGO", "1"],
             ["DOTNET_CLI_TELEMETRY_OPTOUT", "1"],
+            ["TESTFX_BUILDXL_BUILD", "1"],
             ["NUGET_PACKAGES", Environment.getStringValue("NUGET_PACKAGES")]
         ),
         globalProperties: Map.empty<string, string>().addRange(

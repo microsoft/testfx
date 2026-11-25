@@ -8,10 +8,12 @@ param(
     [switch] $NoJournal,
     [ValidateSet('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
         'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored',
+        'BuildXLDoesNotWriteTestPackageLayout', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
     [string[]] $Case = @('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
         'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored',
+        'BuildXLDoesNotWriteTestPackageLayout', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
     [string] $BuildScript = (Join-Path (Split-Path $PSScriptRoot -Parent) 'buildxl.ps1')
 )
 
@@ -450,6 +452,19 @@ using System.Reflection;
 
             Pop-Location
         }
+    }
+    Test-Case 'BuildXLDoesNotWriteTestPackageLayout' {
+        $outputId = "validation-layout-$([Guid]::NewGuid().ToString('N'))"
+        $project = 'src\MTP\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj'
+        $run = Invoke-Build 'test-package-layout' @('-Project', $project, '-TargetFramework', 'net10.0', '-OutputId', $outputId)
+        Assert-Equal 0 $run.ExitCode
+
+        $buildLog = Join-Path $repo "artifacts\buildxl-runs\$outputId\logs\BuildXL.log"
+        if (-not (Test-Path -LiteralPath $buildLog -PathType Leaf)) {
+            throw "Expected BuildXL log at $buildLog."
+        }
+
+        Assert-Equal $false (Get-Content -LiteralPath $buildLog -Raw).Contains('nugetPackageFolder')
     }
     Test-Case 'UnchangedBuildUsesCache' {
         $stats = Read-FreshStats (Invoke-Build 'warm-build')

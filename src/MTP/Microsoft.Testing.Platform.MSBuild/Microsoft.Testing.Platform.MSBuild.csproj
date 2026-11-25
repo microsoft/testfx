@@ -89,8 +89,8 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\RunSummaryRequestSerializer.cs" Link="Serializers/RunSummaryRequestSerializer.cs" />
   </ItemGroup>
 
-  <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
-  <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' ">
+  <!-- This shared package-layout fixture supports simple-import tests; its writes are not declared BuildXL pip outputs. -->
+  <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' and '$(TESTFX_BUILDXL_BUILD)' != '1' ">
     <ItemGroup>
       <MSBuildAssetsBuildTargeting Include="buildMultiTargeting/**" />
       <MSBuildAssetsBuildTransitive Include="buildTransitive/**" />
