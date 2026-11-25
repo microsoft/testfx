@@ -20,10 +20,13 @@ public static class TestApplicationBuilderExtensions
 
     // NOTE: We intentionally do not use the bridge's VSTestBridgeExtensionBaseCapabilities because we don't want
     // MSTest to use the vstestProvider capability. This implements MSTest's native TRX capability, read by
-    // MSTestTestFramework.
-    private sealed class MSTestCapabilities : IMSTestTrxReportCapability
+    // MSTestTestFramework, and opts into platform-owned test partitioning.
+    private sealed class MSTestCapabilities : IMSTestTrxReportCapability, ITestPartitioningCapability
     {
         public bool IsTrxEnabled { get; private set; }
+
+        // MSTest honors --partition <index>/<count> in each child test host, so the platform can expose --partition-count.
+        bool ITestPartitioningCapability.IsSupported => true;
 
         bool ITrxReportCapability.IsSupported { get; } = true;
 

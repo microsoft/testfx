@@ -41,3 +41,5 @@ Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInform
 [TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationCompletedContext.IsCanceled.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationStartingContext
 [TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationStartingContext.SetEnvironmentVariable(string! name, string? value) -> void
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.ITestPartitioningCapability
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.ITestPartitioningCapability.IsSupported.get -> bool

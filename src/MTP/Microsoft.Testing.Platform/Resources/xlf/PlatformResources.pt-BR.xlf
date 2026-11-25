@@ -669,6 +669,11 @@
         <target state="translated">Argumentos de linha de comando inválidos:</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidPartitionCountOptionArgument">
+        <source>The '--partition-count' option requires a positive decimal Int32 value.</source>
+        <target state="new">The '--partition-count' option requires a positive decimal Int32 value.</target>
+        <note>{Locked="--partition-count"}{Locked="Int32"}</note>
+      </trans-unit>
       <trans-unit id="InvocationLifetimeCleanupFailedErrorMessage">
         <source>Invocation lifetime handler '{0}' failed after the tests ran: {1}</source>
         <target state="new">Invocation lifetime handler '{0}' failed after the tests ran: {1}</target>
@@ -803,6 +808,21 @@
         <source>Only one test host launcher can be registered.</source>
         <target state="translated">Somente um inicializador de host de teste pode ser registrado.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="PartitionCountAndPartitionAreExclusive">
+        <source>The '--partition-count' and '--partition' options cannot be used together.</source>
+        <target state="new">The '--partition-count' and '--partition' options cannot be used together.</target>
+        <note>{Locked="--partition-count"}{Locked="--partition"}</note>
+      </trans-unit>
+      <trans-unit id="PartitionCountOptionDescription">
+        <source>Run all partitions in separate local processes, keeping test classes and dependencies together.</source>
+        <target state="new">Run all partitions in separate local processes, keeping test classes and dependencies together.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PartitionCountUnsupportedMode">
+        <source>The '--partition-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</source>
+        <target state="new">The '--partition-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</target>
+        <note>{Locked="--partition-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>

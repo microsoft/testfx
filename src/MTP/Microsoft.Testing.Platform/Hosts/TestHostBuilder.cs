@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -54,7 +55,7 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
     public IInvocationLifetimeManager InvocationLifetime { get; } = new InvocationLifetimeManager();
 
-    private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new();
+    private readonly TestHostOrchestratorManager _testHostOrchestratorManager = CreateTestHostOrchestratorManager();
 
     public ITestHostOrchestratorManager TestHostOrchestrator => _testHostOrchestratorManager;
 
@@ -62,6 +63,21 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     {
         CommandLineManager manager = new(runtimeFeature, testApplicationModuleInfo);
         manager.AddProvider(() => new ArtifactPostProcessingDispatcherToolCommandLine());
+        manager.AddProvider(() => new PartitioningCommandLineOptionsProvider());
+        return manager;
+    }
+
+    private static TestHostOrchestratorManager CreateTestHostOrchestratorManager()
+    {
+        TestHostOrchestratorManager manager = new();
+        if (!OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi() && !OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS())
+        {
+            manager.AddTestHostOrchestrator(serviceProvider =>
+                !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi() && !OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS()
+                    ? new PartitioningOrchestrator(serviceProvider)
+                    : throw new PlatformNotSupportedException(PlatformResources.PartitionCountUnsupportedMode));
+        }
+
         return manager;
     }
 

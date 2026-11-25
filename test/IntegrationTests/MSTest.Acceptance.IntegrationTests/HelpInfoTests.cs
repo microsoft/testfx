@@ -112,6 +112,8 @@ Extension options:
         Specifies a maximum number of test failures that, when exceeded, will abort the test run.
     --partition
         Run partition 'index/count' of the tests, keeping test classes and dependencies together.
+    --partition-count
+        Run all partitions in separate local processes, keeping test classes and dependencies together.
     --settings
         The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.
     --test-parameter
@@ -159,6 +161,20 @@ Extension options:
 """;
 
         testHostResult.AssertOutputContains(output);
+
+        // Partitioning is a platform extension that is only exposed because MSTest declares ITestPartitioningCapability.
+        testHostResult.AssertOutputContains("""
+  TestPartitioning
+    Name: Test partitioning
+""");
+        testHostResult.AssertOutputContains("""
+    Description: Run all partitions in separate local processes, keeping test classes and dependencies together.
+    Options:
+      --partition-count
+        Arity: 1
+        Hidden: False
+        Description: Run all partitions in separate local processes, keeping test classes and dependencies together.
+""");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

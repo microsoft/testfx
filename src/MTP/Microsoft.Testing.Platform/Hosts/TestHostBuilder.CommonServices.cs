@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
@@ -243,6 +244,12 @@ internal sealed partial class TestHostBuilder
         }
 
         serviceProvider.AddService(context.TestFrameworkCapabilities);
+
+        if (!PartitioningCommandLineOptionsProvider.IsSupportedBy(context.TestFrameworkCapabilities))
+        {
+            context.CommandLineHandler.RemoveExtensionsCommandLineOptionsProviders(
+                provider => provider.Uid == PartitioningExtension.Instance.Uid);
+        }
 
         IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptions;
         IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptionDefaults;

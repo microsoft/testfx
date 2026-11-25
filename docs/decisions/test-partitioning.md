@@ -1,13 +1,344 @@
-# MSTest partition selection: research and decisions
+# MSTest partition selection and MTP distribution: research and decisions
 
-Status: implemented; bounded local unit and packed acceptance gates passed,
-2026-11-06. Remaining evidence limits are recorded below.
-The user narrowed the feature to
-**only `--partition` at MSTest level**. This supersedes the earlier, broader D2
-proposal; it does not claim that its unimplemented orchestration/protocol work
-has shipped.
+Status: selector and MTP-owned local fan-out implemented and locally validated
+(2026-11-24). The follow-up below records the current distribution contract.
+The original selector history later in this document predates fan-out and is
+not evidence for it. Its initial scope was **only `--partition` at MSTest level**;
+the renewed request extends that scope without replacing the selector.
+Local implementation and validation do not imply a published release.
 
-## Problem and contract
+## Follow-up: MTP-owned local fan-out
+
+### Contract and decision (2026-11-24)
+
+The renewed requirement is to split one invocation into child invocations now
+that MTP supports composable orchestrators. Preserve `--partition i/n` as the
+manual CI selector and add opt-in `--partition-count N` for local distribution.
+MTP owns argument forwarding, child scheduling, cancellation, results-directory
+isolation and exit aggregation; MSTest still owns class/dependency assignment.
+Initially only native MSTest registered the MTP distribution implementation;
+this was later replaced by a public opt-in capability (see "Framework capability
+gate" below). No separately shipped package is necessary.
+Other frameworks must not silently accept an unsupported selector.
+
+Assumptions, not additional confirmed requirements: one module is partitioned
+independently; concurrency is bounded by the lesser of N and the logical CPU
+count; reports remain separate rather than being merged across partitions.
+Distribution runs outside Retry, so each partition independently retries its
+own failed tests. Existing filters and policies apply in every child. Explicit
+minimum-test limits are per child, not an aggregate minimum.
+
+`--partition-count` and `--partition` are mutually exclusive when both are
+explicitly supplied on the command line. If `--partition-count` is inherited
+from configuration, an explicit `--partition` selector takes precedence; this
+also prevents fan-out children from recursively distributing. Discovery does not
+fan out and lists the ordinary unpartitioned selection. Distribution requires
+the .NET 10+ platform implementation: its process wrapper can terminate child
+trees, whereas the netstandard implementation only terminates direct children.
+JSON-RPC/IDE server mode, WebAssembly, iOS/tvOS, hot reload and custom test-host
+launchers are unsupported. A distribution child is always the same local
+executable, with forwarded arguments, inherited environment and inner
+orchestrator options. Preserve response-file backing where arguments can
+round-trip through the existing parser; keep literal-quote arguments inline. Remove
+the fan-out option to prevent recursion; replace results-directory and terminal
+progress options. Each invocation gets a unique `Partitions/<run-id>/<index>`
+directory. Explicit absolute report filenames/external output paths are not
+rewritten; use relative report names to obtain isolation. Child console lines
+are serialized, prefixed with partition identity,
+and use non-ANSI, noninteractive output. The orchestrator owns and joins all
+children and output readers before returning.
+
+Normal native `dotnet test` handshakes remain per process. Direct invocation
+requires no SDK handshake. A new orchestrator Uid must be exercised against the
+shipping SDK before claiming CLI support. Cancellation stops scheduling and
+terminates active child process trees; it returns the platform's abort verdict.
+Any nonzero child other than ZeroTests fails the invocation (including unknown
+native crash exits). A mixture of success and empty partitions succeeds; all
+empty partitions return ZeroTests. Never inject `--ignore-exit-code 8`, because
+that would conceal an entirely empty invocation.
+
+Alternatives considered: external scripts (no product-owned lifecycle or
+aggregation); moving discovery and UID replay into MTP (unnecessary discovery
+process, and risks splitting data/fixture affinity); a new extension package
+(extra package/registration contract without a second framework consumer).
+The initial implementation kept the existing selector and put only distribution
+in MTP. The user later requested a framework capability before another framework
+adopts the contract; the decision below supersedes the initial decision against
+adding that capability, while retaining the existing framework-owned selector.
+
+Producer/consumer train: mainline MTP 3 / MSTest 5, aligned repository-built
+Microsoft.Testing.Platform, MSTest.TestAdapter/PlatformServices, TestFramework,
+Retry and TRX packages. No stable backport or downstream rollout is enabled.
+The implementation owner retains integration/release-branch follow-through;
+servicing requires a separate maintainer decision.
+
+### Coverage plan recorded before implementation
+
+| Requirement / risk | Automated E2E evidence | Rendered check / gap |
+| --- | --- | --- |
+| One call executes disjoint partitions exactly once | Extend `PartitionTests` using the existing packed independent-class asset; assert union, UIDs, outcomes and separate reports. | Direct terminal transcript, normal and constrained width. |
+| Defaults, filters, empty and failure policies | Existing selector tests plus fan-out filtered/all-empty and nonzero-child cases. | Empty/error diagnostics must remain attributable to their partition. |
+| Retry stays inside distribution | Packed dependency asset with its existing deliberate first-attempt failure; inspect per-partition retry artifacts and identities. | Real SDK must tolerate per-partition attempt counters. |
+| CLI/protocol compatibility | Real native `dotnet test`, discovery and help/info expectations. | SDK-specific rendering and legacy compatibility remain unverified until executed. |
+| Cancellation and isolation | Cancel active children, join them, and verify no child work continues; independent results roots for concurrent modules. | No hosted UI change intended; reports are intentionally not merged. |
+
+The planned rows above are not validation claims. The following records the
+executed results and remaining gaps.
+
+### Experiments and corrections (2026-11-24)
+
+- A pack with `SkipUapTargetFramework=true` failed the Windows package-shape
+  guard. Repacking without that suppression passed the complete shipping-layout
+  and metadata checks; the earlier selector's partial-package limitation does
+  not describe this follow-up's final packages.
+- Current CLI validation rejects the older `--no-ansi` spelling. Distribution
+  and the directly affected selector acceptance call now use `--ansi off`.
+- Expanding a large response file into an inline Windows child command can
+  exceed the OS limit. Rebuilding a child response file preserves a tested
+  35,000-character filter. Literal quotes remain inline because the existing
+  response-file parser strips them; a general parser redesign was not attempted.
+- Two same-named `Acme.Tests.csproj` projects were rejected in one root solution
+  folder. Separate solution folders enable the real two-module SDK experiment.
+- Throwing for hot reload initially produced an unhandled CLR exit. The
+  distributor now emits the normal error output and returns invalid-CLI exit
+  `5`; both hot-reload activation variables execute this rejection.
+- `--exit-on-process-exit` deliberately invokes noncooperative `Environment.Exit`
+  with exit `11`; it is not an application-cancellation trigger. The cancellation
+  fixture instead requests the real application token through test-only
+  middleware, avoiding console signals to unrelated processes. Active child
+  tests and their grandchildren deliberately ignore cancellation; the root
+  returns abort exit `3` and the test joins every tracked descendant.
+- Counterfactual setup first lacked repository metadata and a NonShipping
+  dependency. Those pack/restore failures are not behavioral red evidence.
+  Correcting the isolated setup permitted the unchanged exact-once test to
+  execute and fail at its intended report-count assertion.
+
+### Executed validation
+
+Source state: local, uncommitted changes on base
+`09c901458d491e05a8a2c9adc89ee6ddfea834cc`. The reproducible production/test/resource
+patch, including all three untracked C# files, is
+`artifacts/TestResults/Release/partition-green-final/tested-source.patch`,
+SHA-256 `B606CDEED0FA93AE5AF576FC6D526387039B5F9B09B6FE45306CB9DD1895DB3E`.
+Reverse-apply checking verifies that it matches the worktree; no source was
+reverted. Documentation changes are deliberately outside this tested-source hash.
+No commit, push, PR publication or CI result is claimed.
+
+The pinned SDK was `12.0.100-alpha.1.26570.125`; outer acceptance targets
+net12.0, generated consumers net11.0. Packages are aligned MSTest `5.0.0-dev`
+and MTP/Retry/TRX `3.0.0-dev`. Executed pack commands:
+
+```powershell
+.\build.cmd -c Release -pack -bl
+.\build.cmd -c Release -pack -projects src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -bl
+```
+
+Both exited `0`. The first established the complete Windows shipping layout;
+the second repacked the final core error-handling change against that aligned
+set. Logs: `artifacts/log/partition-pack-verified.log` and
+`artifacts/log/partition-final-core-pack.log`.
+
+The executed acceptance commands used this process-local setup:
+
+```powershell
+$env:DOTNET_ROOT = Join-Path (Get-Location) '.dotnet'
+$env:DOTNET_CLI_CONTEXT_VERBOSE = '1'
+$env:Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup = '0'
+$results = Join-Path (Get-Location) 'artifacts\TestResults\Release\partition-green-final'
+& .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~PartitionCount' --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
+
+$results = Join-Path (Get-Location) 'artifacts\TestResults\Release\partition-baseline-help'
+$filter = '(FullyQualifiedName~PartitionTests&FullyQualifiedName!~PartitionCount)|FullyQualifiedName~HelpInfoTests'
+& .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter $filter --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
+```
+
+Results: first exit `0`, planned/selected/executed/passed **20**, failed/skipped
+**0**, independently reconciled by the execution gate; second exit `0`,
+**34 passed**, failed/skipped **0**, comprising 28 existing selector cases and
+six help/info cases on net11.0, net10.0 and net462.
+
+| Requirement | Executed named evidence and distinguishing outcome |
+| --- | --- |
+| One invocation, exact disjoint identities and isolated final outputs | `PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports`: four reports, exact five-test union, golden partition placement, matching discovery UIDs, no shared root report. |
+| Filter and zero-result policy | `PartitionCount_FilterAndEmptySelections_PreserveAggregatePolicy`: one selected result succeeds despite empty children; all-empty returns `8`. `PartitionCount_Discovery_DoesNotFanOut` retains ordinary discovery. |
+| Dependency affinity and Retry composition | `PartitionCount_FailureAndRetry_StayInsideDependencyPartition`: exact four initial outcomes, failing `Buy` remains partition 4, final retry narrows to the same UID. `PartitionCount_NativeDotnetTest_ExecutesAllPartitions` covers normal and ordered retries in two nonempty partitions. |
+| CLI, unsupported modes and long arguments | Eight `PartitionCount_InvalidOptions_FailBeforeExecution` rows, two `PartitionCount_HotReload_FailsBeforeExecution` rows, and `PartitionCount_LongResponseFile_PreservesSelection`; exact expected exits and selected results, no body execution for rejected modes. |
+| Cancellation and cleanup | `PartitionCount_Cancellation_JoinsUncooperativeChildren`: readiness markers precede cancellation; original process handles confirm root exit `3` and termination of every active child/grandchild. |
+| Multiple SDK modules | Both `PartitionCount_NativeDotnetTest_MultipleModulesPreserveResults` rows: two independent result roots, four reports per module, exact nine name/outcome associations, parent `0` or `2` according to the one deliberately failing module. |
+| Defaults and existing manual selection | The 28 unchanged selector cases include `Partition_AbsentAndOneOfOne_PreserveExactBaselineIdentitiesAndOutcomes`; help/info expectations include the new registered option. |
+
+Pure helper tests passed **12 on each of net10.0, net11.0 and net462**:
+
+```powershell
+$env:DOTNET_ROOT = Join-Path (Get-Location) '.dotnet'
+foreach ($tfm in @('net10.0', 'net11.0', 'net462')) {
+    $arguments = @('--filter', 'FullyQualifiedName~PartitioningOrchestratorTests', '--report-trx', '--report-trx-filename', 'unit.trx', '--results-directory', "artifacts\TestResults\Release\partition-unit-final-$tfm", '--ansi', 'off', '--progress', 'off')
+    if ($tfm -eq 'net462') {
+        & "artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\$tfm\Microsoft.Testing.Platform.UnitTests.exe" @arguments
+    } else {
+        & .\.dotnet\dotnet.exe "artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\$tfm\Microsoft.Testing.Platform.UnitTests.dll" @arguments
+    }
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+
+Each exited `0`, with no skips/failures: **90 automated passing executions**
+across the feature, baseline/help and helper gates. All changed/new C# files
+retain UTF-8 BOM; `git diff --check` is clean. Owning-project `UpdateXlf`
+regenerated all 13 catalogs. `python .github\scripts\test_check_localization.py`
+passed 41 self-tests; `python .github\scripts\check_localization.py` validated
+all 364 catalogs.
+
+Assembly scheduling was not weakened: acceptance retains method parallelization
+with 32 workers and the existing class-level `[DoNotParallelize]` protecting its
+shared mutable generated assets. Fan-out disables the selector fixture's shared
+append-only body log and uses isolated TRX identities instead. Cancellation and
+retry rendezvous paths are run-owned; environment changes are child-process
+overrides, and cleanup joins retained process/task handles with an independent
+deadline. Pure helper tests introduce no shared resources.
+
+### Test-value evidence
+
+The isolated comparison uses the same base and retained source/test snapshot,
+changing only `nextPartition == count` to
+`nextPartition == Math.Min(count, 1)`. This is a compiling behavior-removal
+mutation, not a pristine-baseline execution.
+
+| Contract / case | Without distribution behavior | Correct implementation | Evidence / gap |
+| --- | --- | --- | --- |
+| Exact-once fan-out / `PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports` | Executed: detected. Selected/executed 1, failed 1, skipped 0, outer exit `2`; expected four reports, actual one. | Same case passed in the 20-case green gate and again after the red run: selected/executed/passed 1, failed/skipped 0, exit `0`. | Repacked variants, separate effective caches, matching loaded binaries; unchanged assertions and identical outer harness. |
+| Forwarding, exit policy, Retry, cancellation, SDK aggregation | No individual compiling mutation executed for each contract. | Named cases above execute and pass. | Green consumer evidence; paired sensitivity for these additional contracts remains unverified. |
+
+The red command, run from the isolated comparison after repacking its core, was:
+
+```powershell
+$results = Join-Path (Get-Location) 'artifacts\TestResults\Release\partition-red-final'
+& .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports' --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
+```
+
+The post-red green command used that same selector and command from the primary
+worktree with `$results` set to
+`artifacts/TestResults/Release/partition-paired-green`. Its TRX and
+`resolved-provenance.json` confirm the single named case and final loaded
+platform DLL. This additional passing execution is separate from the 90-case
+matrix above.
+
+Green package SHA-256:
+`614BC09B450A58CA1BBE20DC1142196BD33BEDBF47A534064E46C2FCAA7F0B09`;
+mutated package SHA-256:
+`B6981E382CDD3263D2DA86C41865A761BD45BBA2473445CF311A20FAC4863599`.
+Each consumer's cached archive and loaded platform DLL matched its producer.
+Green net11 platform DLL SHA-256:
+`C27909631AFC74D57F8B2F6E51F259F6575E02F2E8C39693154C5373A30445C2`.
+Both outer acceptance assemblies have SHA-256
+`60978570051CBA0C436161B50CC7B9365878405BD77E578724767B4F24F41DDF`.
+
+Green TRX/log/provenance files are under
+`artifacts/TestResults/Release/partition-green-final`; red equivalents are
+under the session-owned `files/partition-comparison/artifacts/TestResults/Release/partition-red-final`.
+These are retained local evidence, not uploaded reviewer-accessible artifacts.
+
+### Released SDK and rendered demonstration
+
+The released SDK **10.0.404**, selected by an isolated `global.json`, executed
+the final packed net11 application: ordinary fan-out and ordered two-partition
+Retry both returned `0` with five final passing logical results. The latter
+reported five results plus two retries and produced all three rendezvous markers.
+For built modules use a rooted relative glob; an absolute `--test-modules`
+pattern was not accepted:
+
+```powershell
+# In the isolated directory selecting SDK 10.0.404:
+& $env:DOTNET_HOST_PATH test --root-directory $bin --test-modules Acme.Tests.exe --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory $results --ansi off --progress off
+& $env:DOTNET_HOST_PATH test --root-directory $modules --test-modules '**/Acme.Tests.exe' --max-parallel-test-modules 2 --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory $results --ansi off --progress off
+```
+
+The second command also executed both two-module states: parent `0` with nine
+passed results, and parent `2` with eight passed/one failed. Each had eight
+reports, two distinct module roots and exact per-module outcome associations.
+Logs/reports remain in the session-owned `files/partition-sdk10` directory.
+An isolated net10 consumer built against the same final package also returned
+`0`, four reports and five passing identities. With
+`DOTNET_ROLL_FORWARD=LatestPatch`, host tracing confirms root and all four
+children resolve **.NET 10.0.15**, rather than silently using the installed
+net11 runtime.
+
+The terminal canvas rendered the final packed application at **80 columns by
+24 rows**, with outer `--ansi on --progress on --show-test-results all`.
+Child output remained static/non-ANSI and correctly partition-prefixed. Inspected
+states included passed tests, empty partitions, the failed `Buy` result, its
+associated assertion/stack trace, long paths and parent exits `0`/`2`.
+The frontend did not resize when the backend window width was changed to 60;
+an actual narrower viewport remains unverified, and the backend was restored.
+No hosted report/IDE UI mapping is changed; TRX remains partition-separated.
+
+### Framework capability gate (2026-11-24)
+
+Requirement (user-directed): the platform must know whether the active framework
+supports partitioning and must not show `--partition-count` for xUnit or other
+frameworks until they explicitly add support. MSTest opts in.
+
+Decision: add experimental public `ITestPartitioningCapability : ITestFrameworkCapability`
+with `bool IsSupported`. Absent or `false` means unsupported, so frameworks that
+predate the capability keep their current option set. MTP now registers the
+`--partition-count` provider (extension Uid `TestPartitioning`) and the
+`PartitioningOrchestrator` itself; MSTest no longer calls an internal
+registration hook and only declares the capability. After framework
+capabilities are created, and before options are validated or rendered in
+`--help`/`--info`/the SDK handshake, MTP removes the provider when the capability
+is not supported. An unsupported framework therefore rejects the option as
+unknown (exit code 5). The orchestrator also checks the capability in
+`IsEnabledAsync` as defense in depth.
+
+The child selector `--partition <index>/<count>` stays framework-owned: only the
+framework knows its affinity units (MSTest classes and dependencies). The
+capability documents this contract. Alternatives rejected: keep the internal
+MSTest-only registration (third parties cannot opt in); have MTP own `--partition`
+and select by discovered UIDs (extra discovery process and loses framework
+affinity); a separate extension package (extra registration step without
+avoiding the framework contract). A boolean property, rather than marker-type
+presence alone, follows existing capability shape and lets a framework decide
+at run time.
+
+Evidence on this working tree (base `09c901458d491e05a8a2c9adc89ee6ddfea834cc`,
+uncommitted): `PartitioningOrchestratorTests` covers absent/false/true capability
+evaluation, provider removal, and a real `TestApplicationBuilder` run passing
+`--partition-count 2` with no capability and with `IsSupported = false`.
+Behavior-removal comparison: with the filtering condition replaced by `false &&`,
+the same 16 selected tests ran; the two end-to-end cases failed at
+`Assert.AreEqual(5, RunAsync())` with actual `8` (the option was accepted and an
+empty ordinary run executed). With filtering restored, 16/16 passed. The MTP
+`HelpInfoTests` now explicitly assert that `--partition-count` is absent from
+both no-extension Help and Info output. The MTP
+`HelpInfoTests|HelpInfoAllExtensionsTests` selection passed 31/31 after those
+assertions were added. The MSTest `--info` expectation asserts a separate
+`TestPartitioning` extension block.
+
+Packed composed-product run on the same tree: `.\build.cmd -pack -c Debug`
+(exit 0, 0 warnings), then
+`dotnet run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 --no-build -- --filter "FullyQualifiedName~MSTest.Acceptance.IntegrationTests.HelpInfoTests|FullyQualifiedName~MSTest.Acceptance.IntegrationTests.PartitionTests"`
+passed 54/54 (exit 0), and the MTP acceptance `HelpInfoTests|HelpInfoAllExtensionsTests`
+selection passed 31/31 (exit 0). After the config-inheritance fix, the renamed
+`PartitionCount_ConfiguredOptionDoesNotRecurseIntoChildren` regression ran
+inside `PartitionTests`; the full partition acceptance selection passed 49/49.
+It first reproduced the failure with inherited `partition-count` in the
+children, then passed with the fix. The config regression run confirms the
+configured count does not re-trigger fan-out when children receive
+`--partition <index>/<count>`.
+
+Remaining limits: no cross-machine scheduler or report merge;
+no netstandard/.NET Framework distribution;
+explicit absolute outputs can still be shared. Custom-launcher rejection is
+a static guard, not a separately executed case. Genuine application-token
+cleanup is executed, but the SDK cancellation control-channel itself has not
+received a new E2E case. The cancellation test joins captured descendants after
+observing the root exit; it does not assert strict descendant-versus-root exit
+timestamp ordering. No release backport, downstream enablement or live CI
+validation is claimed.
+
+## Original selector record (historical)
+
+### Problem and contract
 
 Teams that cannot enable in-process parallelization should be able to run
 independent selections of the same assembly in separate CI jobs without

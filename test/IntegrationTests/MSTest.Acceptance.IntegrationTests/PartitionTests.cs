@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -19,6 +20,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     private const string Dependencies = "PartitionDependencies";
     private const string Rows = "PartitionRows";
     private const string RuntimeRows = "PartitionRuntimeRows";
+    private const string Cancellation = "PartitionCancellation";
     private const string Checkout = "Acme.CheckoutTests";
     private const string Cart = "Acme.CartTests";
     private const string Coffee = "Acme.Caf\u00e9Tests.Coffee";
@@ -29,6 +31,333 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     private static readonly string[] DependencyTests = [$"{Checkout}.Prepare", $"{Checkout}.Other", $"{Cart}.Buy", $"{Cart}.Other"];
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Partition count SDK modules both pass")]
+    [DataRow(true, DisplayName = "Partition count SDK modules preserve one failure")]
+    public async Task PartitionCount_NativeDotnetTest_MultipleModulesPreserveResults(bool fail)
+    {
+        using var run = new TempDirectory("partition-count-modules");
+        string solution = Path.Combine(run.Path, "Partitions.slnx");
+        File.WriteAllText(solution, $"""
+            <Solution>
+              <Folder Name="/Independent/">
+                <Project Path="{AssetFixture.ProjectPath(Independent)}" />
+              </Folder>
+              <Folder Name="/Dependencies/">
+                <Project Path="{AssetFixture.ProjectPath(Dependencies)}" />
+              </Folder>
+            </Solution>
+            """);
+        string sentinel = Path.Combine(run.Path, "failure-reached");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment[ProbeVariable] = null;
+        environment[SentinelVariable] = fail ? sentinel : null;
+        string arguments = $"test --solution \"{solution}\" -c Release --no-build --max-parallel-test-modules 2"
+            + $" --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "partition-count-modules", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+        Assert.AreEqual(fail ? 2 : 0, result.ExitCode, result.StandardOutput + result.StandardError);
+        Assert.AreEqual(fail, File.Exists(sentinel));
+        string[] modules = Directory.GetDirectories(Path.Combine(run.Path, "Partitions"));
+        Assert.HasCount(2, modules);
+        List<string> observedModules = [];
+        foreach (string module in modules)
+        {
+            string[] reports = Directory.GetFiles(module, "run.trx", SearchOption.AllDirectories);
+            Assert.HasCount(4, reports);
+            ReportResult[] results = [.. reports.SelectMany(ReadResults)];
+            bool dependencies = results.Any(test => test.FullyQualifiedName == $"{Cart}.Buy");
+            observedModules.Add(dependencies ? Dependencies : Independent);
+            string[] expected = dependencies ? DependencyTests : Baseline;
+            Assert.AreSequenceEqual(
+                expected.Select(name => name + (dependencies && fail && name == $"{Cart}.Buy" ? "|Failed" : "|Passed")),
+                results.Select(test => test.FullyQualifiedName + "|" + test.Outcome),
+                SequenceOrder.InAnyOrder);
+        }
+
+        Assert.AreSequenceEqual(new[] { Independent, Dependencies }, observedModules, SequenceOrder.InAnyOrder);
+    }
+
+    [TestMethod]
+    [DataRow("DOTNET_WATCH", DisplayName = "Partition count rejects dotnet watch")]
+    [DataRow("TESTINGPLATFORM_HOTRELOAD_ENABLED", DisplayName = "Partition count rejects hot reload")]
+    public async Task PartitionCount_HotReload_FailsBeforeExecution(string variable)
+    {
+        using var run = new TempDirectory("partition-count-hot-reload");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, run);
+        environment[variable] = "1";
+        TestHostResult result = await AssetFixture.Host(Independent).ExecuteAsync(
+            "--partition-count 2", environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        result.AssertOutputContains("requires .NET 10 or later and local process execution");
+        Assert.IsFalse(File.Exists(ProbePath(run)));
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports()
+    {
+        DiscoveredNode[] discovered = await DiscoverAsync(Independent, string.Empty);
+        using var run = new TempDirectory("partition-count");
+        TestHostResult result = await RunFanOutAsync(Independent, "--partition-count 4", run);
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(4, reports);
+        foreach (string report in reports)
+        {
+            int index = int.Parse(Path.GetFileName(Path.GetDirectoryName(report))!, System.Globalization.CultureInfo.InvariantCulture);
+            AssertResults(ReadResults(report), ExpectedBucket(index));
+        }
+
+        ReportResult[] results = [.. reports.SelectMany(ReadResults)];
+        AssertResults(results, Baseline);
+        AssertDiscoveryIdentities(discovered, results);
+        Assert.HasCount(Baseline.Length, results.Select(test => test.Id).Distinct(StringComparer.Ordinal));
+        Assert.IsFalse(File.Exists(Path.Combine(run.Path, "run.trx")), "Partitions must not overwrite one shared report.");
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_ConfiguredOptionDoesNotRecurseIntoChildren()
+    {
+        using var configuration = new TempDirectory("partition-count-config");
+        string configurationFile = Path.Combine(configuration.Path, "partition.testconfig.json");
+        await TempDirectory.WriteFileAsync(configuration.Path, Path.GetFileName(configurationFile), """
+            {
+              "commandLineOptions": {
+                "partition-count": [ "2" ]
+              }
+            }
+            """);
+
+        using var run = new TempDirectory("partition-count-configured");
+        TestHostResult result = await RunFanOutAsync(
+            Independent, $"--config-file \"{configurationFile}\"", run);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_FilterAndEmptySelections_PreserveAggregatePolicy()
+    {
+        foreach ((string filter, ExitCode exit, string[] expected) in new[]
+        {
+            ("FullyQualifiedName=Acme.CartTests.Keep", ExitCode.Success, new[] { $"{Cart}.Keep" }),
+            ("Name=NotAnExistingMethod", ExitCode.ZeroTests, Array.Empty<string>()),
+        })
+        {
+            using var run = new TempDirectory("partition-count-filter");
+            TestHostResult result = await RunFanOutAsync(Independent, $"--partition-count 4 --filter {filter}", run);
+            result.AssertExitCodeIs(exit);
+            string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+            Assert.HasCount(4, reports);
+            AssertResults([.. reports.SelectMany(ReadResults)], expected);
+        }
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_FailureAndRetry_StayInsideDependencyPartition()
+    {
+        foreach (bool retry in new[] { false, true })
+        {
+            using var run = new TempDirectory("partition-count-retry");
+            string sentinel = Path.Combine(run.Path, "retry-sentinel.txt");
+            TestHostResult result = await RunFanOutAsync(
+                Dependencies, "--partition-count 4" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
+                new Dictionary<string, string?> { [SentinelVariable] = sentinel });
+            result.AssertExitCodeIs(retry ? ExitCode.Success : ExitCode.AtLeastOneTestFailed);
+            Assert.IsTrue(File.Exists(sentinel), "The deliberate failure must execute.");
+            string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Partitions")));
+            string activePartition = Path.Combine(partitionRoot, "4");
+            ReportResult[] first = ReadResults(retry
+                ? Assert.ContainsSingle(Directory.GetFiles(Path.Combine(activePartition, "Retries"), "run.trx", SearchOption.AllDirectories))
+                : Path.Combine(activePartition, "run.trx"));
+            Assert.AreSequenceEqual(
+                DependencyTests.Select(name => name + (name == $"{Cart}.Buy" ? "|Failed" : "|Passed")),
+                first.Select(test => test.FullyQualifiedName + "|" + test.Outcome),
+                SequenceOrder.InAnyOrder);
+            if (retry)
+            {
+                ReportResult[] final = ReadResults(Path.Combine(activePartition, "run.trx"));
+                AssertResults(final, [$"{Cart}.Buy"]);
+                Assert.AreEqual(first.Single(test => test.FullyQualifiedName == $"{Cart}.Buy").Id, final.Single().Id);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_Discovery_DoesNotFanOut()
+        => AssertDiscovery(await DiscoverAsync(Independent, "--partition-count 4"), Baseline);
+
+    [TestMethod]
+    public async Task PartitionCount_LongResponseFile_PreservesSelection()
+    {
+        using var run = new TempDirectory("partition-count-response");
+        string responseFile = Path.Combine(run.Path, "original.rsp");
+        File.WriteAllText(responseFile, $"""
+            --partition-count 4
+            --filter FullyQualifiedName=Acme.CartTests.Keep|Name={new string('z', 35_000)}
+            """);
+        TestHostResult result = await RunFanOutAsync(Independent, $"@\"{responseFile}\"", run);
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(4, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], [$"{Cart}.Keep"]);
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_Cancellation_JoinsUncooperativeChildren()
+    {
+        using var run = new TempDirectory("partition-count-cancel");
+        ProcessStartInfo start = new(
+            AssetFixture.Host(Cancellation).FullName,
+            $"--partition-count 2 --results-directory \"{run.Path}\" --ansi off --progress off")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        start.Environment["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet");
+        start.Environment["PARTITION_TEST_HANG"] = run.Path;
+        using Process parent = Process.Start(start)!;
+        Task<string> stdout = parent.StandardOutput.ReadToEndAsync(TestContext.CancellationToken);
+        Task<string> stderr = parent.StandardError.ReadToEndAsync(TestContext.CancellationToken);
+        List<Process> children = [];
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        deadline.CancelAfter(TimeSpan.FromMinutes(1));
+        try
+        {
+            foreach (string identity in new[] { "Checkout.Keep", "Cart.Keep" }.Take(Math.Min(2, Environment.ProcessorCount)))
+            {
+                string marker = Path.Combine(run.Path, identity);
+                while (!File.Exists(marker))
+                {
+                    await Task.Delay(25, deadline.Token);
+                }
+
+                children.Add(Process.GetProcessById(int.Parse(
+                    await File.ReadAllTextAsync(marker, deadline.Token), System.Globalization.CultureInfo.InvariantCulture)));
+                children.Add(Process.GetProcessById(int.Parse(
+                    await File.ReadAllTextAsync(marker + ".grandchild", deadline.Token), System.Globalization.CultureInfo.InvariantCulture)));
+            }
+
+            await File.WriteAllTextAsync(Path.Combine(run.Path, "cancel"), "cancel application", deadline.Token);
+            await parent.WaitForExitAsync(deadline.Token);
+            await Task.WhenAll(children.Select(child => child.WaitForExitAsync(deadline.Token)));
+            Assert.AreEqual((int)ExitCode.TestSessionAborted, parent.ExitCode, await stdout + await stderr);
+            Assert.IsTrue(children.All(child => child.HasExited), "Returning from cancellation must join every active partition.");
+        }
+        finally
+        {
+            using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            foreach (Process process in children.Append(parent))
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+
+                await process.WaitForExitAsync(cleanup.Token);
+            }
+
+            await Task.WhenAll(stdout, stderr);
+            foreach (Process child in children)
+            {
+                child.Dispose();
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Partition count native SDK without retry")]
+    [DataRow(true, DisplayName = "Partition count native SDK with per-partition retry")]
+    public async Task PartitionCount_NativeDotnetTest_ExecutesAllPartitions(bool retry)
+    {
+        using var run = new TempDirectory("partition-count-sdk");
+        string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build -p:SkipUapTargetFramework=true"
+            + $" --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
+        if (retry)
+        {
+            arguments += " --retry-failed-tests 1";
+        }
+
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment[ProbeVariable] = null;
+        environment["PARTITION_TEST_FANOUT_RETRY"] = retry ? run.Path : null;
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "partition-count-sdk", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
+        string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Partitions")));
+        List<ReportResult> logicalResults = [];
+        foreach (string partition in Directory.GetDirectories(partitionRoot))
+        {
+            string retries = Path.Combine(partition, "Retries");
+            IEnumerable<ReportResult> firstAttempts = Directory.Exists(retries)
+                ? Directory.GetFiles(retries, "run.trx", SearchOption.AllDirectories).SelectMany(ReadResults)
+                : [];
+            logicalResults.AddRange(firstAttempts.Concat(ReadResults(Path.Combine(partition, "run.trx")))
+                .GroupBy(test => test.Id, StringComparer.Ordinal).Select(group => group.Last()));
+        }
+
+        AssertResults([.. logicalResults], Baseline);
+        if (retry)
+        {
+            Assert.IsTrue(File.Exists(Path.Combine(run.Path, "Checkout.Keep")));
+            Assert.IsTrue(File.Exists(Path.Combine(run.Path, "Cart.Keep")));
+            Assert.IsTrue(File.Exists(Path.Combine(run.Path, "checkout-recovered")));
+        }
+    }
+
+    [TestMethod]
+    [DataRow("--partition-count", DisplayName = "Partition count rejects missing count")]
+    [DataRow("--partition-count 2 extra", DisplayName = "Partition count rejects extra count")]
+    [DataRow("--partition-count 0", DisplayName = "Partition count rejects zero")]
+    [DataRow("--partition-count=-1", DisplayName = "Partition count rejects negative")]
+    [DataRow("--partition-count 2147483648", DisplayName = "Partition count rejects overflow")]
+    [DataRow("--partition-count 1/2", DisplayName = "Partition count rejects fraction")]
+    [DataRow("--partition-count 2 --partition 1/2", DisplayName = "Partition count rejects manual partition")]
+    [DataRow("--partition-count 2 --server jsonrpc", DisplayName = "Partition count rejects JSON RPC server")]
+    public async Task PartitionCount_InvalidOptions_FailBeforeExecution(string arguments)
+    {
+        using var run = new TempDirectory("partition-count-invalid");
+        TestHostResult result = await AssetFixture.Host(Independent).ExecuteAsync(
+            arguments, environmentVariables: AssetFixture.EnvironmentFor(Independent, run),
+            cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        result.AssertOutputContains("--partition-count");
+        Assert.IsFalse(File.Exists(ProbePath(run)));
+    }
+
+    private async Task<TestHostResult> RunFanOutAsync(
+        string asset, string arguments, TempDirectory run, Dictionary<string, string?>? extraEnvironment = null)
+    {
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(asset);
+        // The selector fixture's shared append-only body log is intentionally process-local.
+        // Fan-out asserts the independent per-partition TRX identities instead.
+        environment[ProbeVariable] = null;
+        if (extraEnvironment is not null)
+        {
+            foreach ((string key, string? value) in extraEnvironment)
+            {
+                environment[key] = value;
+            }
+        }
+
+        TestHostResult result = await AssetFixture.Host(asset).ExecuteAsync(
+            $"{arguments} --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\"",
+            environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(asset, MetadataMode.Reflection, "partition-count", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+        return result;
+    }
 
     [TestMethod]
     public async Task Partition_AbsentAndOneOfOne_PreserveExactBaselineIdentitiesAndOutcomes()
@@ -85,7 +414,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             DiscoveredNode[] discovered = await DiscoverAsync(Independent, $"--partition {index}/4");
             using var run = new TempDirectory("partition-dotnet-test");
             string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build -p:SkipUapTargetFramework=true --partition {index}/4"
-                + $" --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --no-ansi --progress off";
+                + $" --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
             DotnetMuxerResult result = await DotnetCli.RunAsync(
                 arguments,
                 workingDirectory: AssetFixture.AssetPath(Independent),
@@ -657,6 +986,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             await GenerateAsync(Rows, RowsSource, sdkVersion, includeMetadataModes: false, cancellationToken);
             await GenerateAsync(RuntimeRows, RowsSource.Replace("TestDataSourceDiscoveryOption.DuringDiscovery", "TestDataSourceDiscoveryOption.DuringExecution", StringComparison.Ordinal),
                 sdkVersion, includeMetadataModes: false, cancellationToken);
+            await GenerateAsync(Cancellation, IndependentSource + CancellationProgram, sdkVersion, includeMetadataModes: false, cancellationToken);
         }
 
         private async Task GenerateAsync(string name, string tests, string sdkVersion, bool includeMetadataModes, CancellationToken cancellationToken)
@@ -667,6 +997,13 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 .PatchCodeWithReplace("$RetryVersion$", MicrosoftTestingExtensionsRetryVersion)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$SdkVersion$", sdkVersion);
+            if (name == Cancellation)
+            {
+                source = source.Replace(
+                    "<EnableMSTestRunner>true</EnableMSTestRunner>",
+                    "<EnableMSTestRunner>true</EnableMSTestRunner><GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>", StringComparison.Ordinal);
+            }
+
             TestAsset asset = await TestAsset.GenerateAssetAsync(name, source);
             _assets.Add(name, asset);
             MetadataMode[] modes = includeMetadataModes
@@ -867,15 +1204,124 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
 
             """;
 
+        private const string CancellationProgram = """
+            #file Program.cs
+            #pragma warning disable TPEXP
+            using System;
+            using System.IO;
+            using System.Linq;
+            using System.Reflection;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using Microsoft.Testing.Platform.Builder;
+            using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
+            using Microsoft.Testing.Platform.TestHostOrchestrator;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public static class Program
+            {
+                public static async Task<int> Main(string[] args)
+                {
+                    if (args is ["--sentinel"])
+                    {
+                        Thread.Sleep(Timeout.Infinite);
+                    }
+
+                    var builder = await TestApplication.CreateBuilderAsync(args);
+                    if (args.Contains("--partition-count"))
+                    {
+                        builder.TestHostOrchestrator.AddTestHostExecutionOrchestratorMiddleware(services => new CancelOnMarker(services));
+                    }
+
+                    builder.AddMSTest(() => new[] { Assembly.GetExecutingAssembly() });
+                    using var app = await builder.BuildAsync();
+                    return await app.RunAsync();
+                }
+            }
+            internal sealed class CancelOnMarker(IServiceProvider services) : ITestHostExecutionOrchestratorMiddleware
+            {
+                public string Uid => "CancelOnMarker";
+                public string Version => "1.0.0";
+                public string DisplayName => Uid;
+                public string Description => Uid;
+                public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+                public async Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken token)
+                {
+                    // This test-only trigger requests genuine application cancellation without
+                    // broadcasting console signals to unrelated processes on a shared machine.
+                    Type type = typeof(TestApplication).Assembly.GetType(
+                        "Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource", throwOnError: true)!;
+                    object source = services.GetService(type)!;
+                    Task<int> execution = next(token);
+                    try
+                    {
+                        string marker = Path.Combine(Environment.GetEnvironmentVariable("PARTITION_TEST_HANG")!, "cancel");
+                        while (!File.Exists(marker) && !execution.IsCompleted)
+                        {
+                            await Task.Delay(25, token);
+                        }
+                    }
+                    finally
+                    {
+                        type.GetMethod("Cancel")!.Invoke(source, null);
+                        await execution;
+                    }
+
+                    return await execution;
+                }
+            }
+
+            """;
+
         private const string ProbeSource = """
             #file Probe.cs
             using System;
             using System.IO;
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
             namespace Acme;
             internal static class Probe
             {
                 public static void Record(string identity)
                 {
+                    string? hangDirectory = Environment.GetEnvironmentVariable("PARTITION_TEST_HANG");
+                    if (hangDirectory is not null)
+                    {
+                        string marker = Path.Combine(hangDirectory, identity);
+                        var grandchildStart = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!, "--sentinel")
+                        {
+                            UseShellExecute = false,
+                        };
+                        using var grandchild = System.Diagnostics.Process.Start(grandchildStart)!;
+                        File.WriteAllText(marker + ".grandchild", grandchild.Id.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        string temporary = marker + ".tmp";
+                        File.WriteAllText(temporary, Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        File.Move(temporary, marker);
+                        Thread.Sleep(Timeout.Infinite);
+                    }
+
+                    string? retryDirectory = Environment.GetEnvironmentVariable("PARTITION_TEST_FANOUT_RETRY");
+                    if (retryDirectory is not null && identity is "Checkout.Keep" or "Cart.Keep")
+                    {
+                        string recovered = Path.Combine(retryDirectory, "checkout-recovered");
+                        if (identity == "Cart.Keep")
+                        {
+                            Assert.IsTrue(SpinWait.SpinUntil(() => File.Exists(recovered), TimeSpan.FromMinutes(1)),
+                                "Checkout must finish its retry before Cart starts attempt one.");
+                        }
+
+                        string sentinel = Path.Combine(retryDirectory, identity);
+                        if (!File.Exists(sentinel))
+                        {
+                            File.WriteAllText(sentinel, "first attempt reached");
+                            Assert.Fail("Deliberate partition-local first attempt failure");
+                        }
+
+                        if (identity == "Checkout.Keep")
+                        {
+                            File.WriteAllText(recovered, "checkout recovered");
+                        }
+                    }
+
                     string? path = Environment.GetEnvironmentVariable("PARTITION_TEST_PROBE");
                     if (path is not null)
                     {

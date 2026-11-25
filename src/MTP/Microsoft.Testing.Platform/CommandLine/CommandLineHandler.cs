@@ -46,7 +46,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         _configuration = configuration;
     }
 
-    public IEnumerable<ICommandLineOptionsProvider> CommandLineOptionsProviders { get; }
+    public IEnumerable<ICommandLineOptionsProvider> CommandLineOptionsProviders { get; private set; }
 
     public string Uid => nameof(CommandLineHandler);
 
@@ -56,11 +56,19 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     public string Description => string.Empty;
 
-    internal IReadOnlyCollection<ICommandLineOptionsProvider> ExtensionsCommandLineOptionsProviders { get; }
+    internal IReadOnlyCollection<ICommandLineOptionsProvider> ExtensionsCommandLineOptionsProviders { get; private set; }
 
     internal IReadOnlyCollection<ICommandLineOptionsProvider> SystemCommandLineOptionsProviders { get; }
 
     internal CommandLineParseResult ParseResult { get; }
+
+    // Removes extension options whose availability depends on services created after the command line
+    // (for example, test framework capabilities). It must run before options are validated or displayed.
+    internal void RemoveExtensionsCommandLineOptionsProviders(Func<ICommandLineOptionsProvider, bool> predicate)
+    {
+        ExtensionsCommandLineOptionsProviders = [.. ExtensionsCommandLineOptionsProviders.Where(provider => !predicate(provider))];
+        CommandLineOptionsProviders = SystemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders);
+    }
 
     public async Task PrintInfoAsync(IOutputDevice outputDevice, IReadOnlyList<ITool>? availableTools, CancellationToken cancellationToken)
     {
