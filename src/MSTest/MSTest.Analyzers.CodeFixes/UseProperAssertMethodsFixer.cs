@@ -74,7 +74,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeSimpleWithTypeArgument:
-                createChangedDocument = ct => FixAssertMethodForSimpleWithTypeArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], root, simpleNameSyntax, properAssertMethodName, ct);
+                createChangedDocument = ct => FixAssertMethodForSimpleWithTypeArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations.Count > 2 ? diagnostic.AdditionalLocations[2] : null, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeAddArgument:
                 createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, simpleNameSyntax, properAssertMethodName, ct);
@@ -113,11 +113,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 
         for (int i = 0; i < additionalLocations.Count; i += 2)
         {
-            // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
-            // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
-            // Or: Assert.IsNull(x, "My message")
-            // For now this is not handled.
-            if (root.FindNode(additionalLocations[i].SourceSpan) is not ArgumentSyntax conditionNodeToBeReplaced)
+            SyntaxNode condition = root.FindNode(additionalLocations[i].SourceSpan, getInnermostNodeForTie: true);
+            if (condition.FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNodeToBeReplaced ||
+                (conditionNodeToBeReplaced.NameColon is not null && properAssertMethodName is not ("IsPositive" or "IsNegative")))
             {
                 return document;
             }
@@ -132,19 +130,30 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 replacementExpressionNode
                     .WithLeadingTrivia(conditionNodeToBeReplaced.GetLeadingTrivia())
                     .WithoutTrailingTrivia());
+            if (conditionNodeToBeReplaced.NameColon is { } nameColon)
+            {
+                newArgument = newArgument.WithNameColon(
+                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("value")).WithTriviaFrom(nameColon));
+            }
+
             editor.ReplaceNode(conditionNodeToBeReplaced, newArgument);
         }
 
         return editor.GetChangedDocument();
     }
 
-    private static async Task<Document> FixAssertMethodForSimpleWithTypeArgumentModeAsync(Document document, Location conditionLocation, Location valueLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForSimpleWithTypeArgumentModeAsync(Document document, Location conditionLocation, Location valueLocation, Location? typeCheckLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         SyntaxNode conditionExpression = root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true);
+
+        // When the type check is nested in the condition (e.g. 'collection.All(x => x is T)'), it is reported as a separate location.
+        SyntaxNode typeCheckExpression = typeCheckLocation is null
+            ? conditionExpression
+            : root.FindNode(typeCheckLocation.SourceSpan, getInnermostNodeForTie: true);
         if (conditionExpression.FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNode ||
             conditionNode.Parent is not ArgumentListSyntax argumentList ||
             root.FindNode(valueLocation.SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax valueExpression ||
-            GetCheckedType(conditionExpression) is not { } checkedType)
+            GetCheckedType(typeCheckExpression) is not { } checkedType)
         {
             return document;
         }
@@ -167,7 +176,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             if (conditionNode.NameColon is not null)
             {
                 valueArgument = valueArgument.WithNameColon(
-                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("value"))
+                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(properAssertMethodName == "AreAllOfType" ? "collection" : "value"))
                         .WithTriviaFrom(conditionNode.NameColon));
             }
 
@@ -367,7 +376,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
     private static async Task<Document> FixAssertMethodForAddTwoArgumentsModeAsync(Document document, Location conditionLocation, Location firstArgLocation, Location secondArgLocation, Location thirdArgLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         // Handle Contains with comparer: Assert.IsTrue(enumerable.Contains(item, comparer)) -> Assert.Contains(item, enumerable, comparer)
-        if (root.FindNode(conditionLocation.SourceSpan) is not ArgumentSyntax conditionNode)
+        if (root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true).FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNode)
         {
             return document;
         }
@@ -398,6 +407,10 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         int conditionIndex = argumentList.Arguments.IndexOf(conditionNode);
+        if (conditionIndex != 0)
+        {
+            return document;
+        }
 
         // Build the new arguments list: (firstArg, secondArg, thirdArg, ...remaining)
         var newArguments = new List<ArgumentSyntax>();

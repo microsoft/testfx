@@ -3371,15 +3371,15 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 {
                     var customCollection = new MyCustomCollection<string>();
                     // This should use the generic comparison logic since it's not a BCL collection
-                    Assert.IsGreaterThan(0, customCollection.Count);
+                    Assert.IsPositive(customCollection.Count);
                 }
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(25,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+            // /0/Test0.cs(25,9): info MSTEST0037: Use 'Assert.IsPositive' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsPositive", "IsTrue"),
             fixedCode);
     }
 
@@ -5202,11 +5202,11 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertIsTrueWithSpanLengthGreaterThanZero_UsesIsGreaterThanNotIsNotEmpty()
+    public async Task WhenAssertIsTrueWithSpanLengthGreaterThanZero_UsesIsPositiveNotIsNotEmpty()
     {
         // Span/Memory have no IsNotEmpty overload, so 'span.Length > 0' must NOT be rewritten to
         // Assert.IsNotEmpty(span). It still flows through the generic integer-comparison path,
-        // which suggests Assert.IsGreaterThan(0, span.Length).
+        // which suggests Assert.IsPositive(span.Length).
         string code = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -5234,14 +5234,14 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     Span<int> span = new int[] { 1, 2, 3 };
-                    Assert.IsGreaterThan(0, span.Length);
+                    Assert.IsPositive(span.Length);
                 }
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsPositive", "IsTrue"),
             fixedCode);
     }
 
@@ -6821,6 +6821,555 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             TestCode = code,
         };
         await test.RunAsync(CancellationToken.None);
+    }
+
+    #endregion
+
+    #region Sign, range and AreAllOfType checks
+
+    [TestMethod]
+    public async Task WhenSignOrRangeConditionIsNamed_CodeFixPreservesNamedArguments()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    {|#0:Assert.IsTrue(condition: x > 0, message: "positive")|};
+                    {|#1:Assert.IsTrue(condition: 1 <= x && x <= 10, message: "range")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    Assert.IsPositive(value: x, message: "positive");
+                    Assert.IsInRange(1, 10, x, message: "range");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsPositive", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsInRange", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenSignComparisonUsesUserDefinedConversion_DoesNotSuggestSignAssertion()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct Number
+            {
+                public static implicit operator int(Number value) => 1;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Number value = default;
+                    {|#0:Assert.IsTrue(value > 0)|};
+                    {|#1:Assert.IsTrue((int)value > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct Number
+            {
+                public static implicit operator int(Number value) => 1;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Number value = default;
+                    Assert.IsGreaterThan(0, value);
+                    Assert.IsPositive((int)value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsPositive", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAllTypeCheckUsesLazySequence_KeepsShortCircuitingContainsOnly()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<object> items = ThrowingSequence();
+                    {|#0:Assert.IsTrue(items.All(item => item is string))|};
+                }
+
+                private static IEnumerable<object> ThrowingSequence()
+                {
+                    yield return 1;
+                    throw new InvalidOperationException();
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<object> items = ThrowingSequence();
+                    Assert.ContainsOnly(item => item is string, items);
+                }
+
+                private static IEnumerable<object> ThrowingSequence()
+                {
+                    yield return 1;
+                    throw new InvalidOperationException();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue")],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseComparesWithZero_SuggestsIsPositiveOrIsNegative()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    long l = -5;
+                    double d = 1.5;
+                    {|#0:Assert.IsTrue(x > 0)|};
+                    {|#1:Assert.IsTrue(0 < x)|};
+                    {|#2:Assert.IsTrue(l < 0)|};
+                    {|#3:Assert.IsTrue(0 > l)|};
+                    {|#4:Assert.IsFalse(x <= 0)|};
+                    {|#5:Assert.IsFalse(l >= 0)|};
+                    {|#6:Assert.IsTrue(d > 0, "message")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    long l = -5;
+                    double d = 1.5;
+                    Assert.IsPositive(x);
+                    Assert.IsPositive(x);
+                    Assert.IsNegative(l);
+                    Assert.IsNegative(l);
+                    Assert.IsPositive(x);
+                    Assert.IsNegative(l);
+                    Assert.IsPositive(d, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsPositive", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsPositive", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsNegative", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsNegative", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("IsPositive", "IsFalse"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("IsNegative", "IsFalse"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(6).WithArguments("IsPositive", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenZeroComparisonIsNotStrictlySignedOrMayBeNaN_KeepsComparisonAssertion()
+    {
+        // 'x >= 0' has no IsNonNegative equivalent, and 'IsFalse(d <= 0)' also passes for NaN,
+        // which Assert.IsPositive would reject, so both keep the regular comparison suggestion.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    double d = 1.5;
+                    {|#0:Assert.IsTrue(x >= 0)|};
+                    {|#1:Assert.IsFalse(d <= 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    double d = 1.5;
+                    Assert.IsGreaterThanOrEqualTo(0, x);
+                    Assert.IsGreaterThan(0, d);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThanOrEqualTo", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsGreaterThan", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithInclusiveRangeCheckAndOrderedConstantBounds_SuggestsIsInRange()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    {|#0:Assert.IsTrue(1 <= x && x <= 10)|};
+                    {|#1:Assert.IsTrue(x >= 1 && x <= 10, "message")|};
+                    {|#2:Assert.IsTrue(10 >= x && 1 <= x)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    Assert.IsInRange(1, 10, x);
+                    Assert.IsInRange(1, 10, x, "message");
+                    Assert.IsInRange(1, 10, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsInRange", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsInRange", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsInRange", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenRangeCheckCannotBeSafelyRewritten_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod(int y, int min, int max)
+                {
+                    int x = 5;
+                    double d = 1.5;
+                    Assert.IsTrue(1 < x && x < 10);
+                    Assert.IsTrue(10 <= x && x <= 1);
+                    Assert.IsTrue(GetMin() <= x && x <= 10);
+                    Assert.IsTrue(1 <= x && y <= 10);
+                    Assert.IsTrue(0.5 <= d && d <= 2.5);
+                    Assert.IsFalse(1 <= x && x <= 10);
+                    Assert.IsTrue(min <= x && x <= max);
+                    Assert.IsTrue(max >= x && min <= x);
+                }
+
+                private static int GetMin() => 1;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenRangeValueUsesIntegralPromotion_SuggestsIsInRange()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    byte number = 5;
+                    char letter = 'm';
+                    {|#0:Assert.IsTrue(1 <= number && number <= 10)|};
+                    {|#1:Assert.IsTrue('a' <= letter && letter <= 'z')|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    byte number = 5;
+                    char letter = 'm';
+                    Assert.IsInRange(1, 10, number);
+                    Assert.IsInRange('a', 'z', letter);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsInRange", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsInRange", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenRangeArgumentsCannotInferCommonType_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    byte number = 100;
+                    int signed = 5;
+                    Assert.IsTrue('a' <= number && number <= 'z');
+                    Assert.IsTrue(1u <= signed && signed <= 10u);
+                    Assert.IsTrue(10u >= signed && signed >= 1u);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenRangeConditionHasUserDefinedConversion_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public readonly struct Truth
+            {
+                private readonly bool value;
+                private Truth(bool value) => this.value = value;
+                public static explicit operator Truth(bool value) => new(value);
+                public static implicit operator bool?(Truth value) => !value.value;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    Assert.IsTrue((Truth)(1 <= x && x <= 10));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenRangeAssertionUsesInterpolatedStringHandler_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    Assert.IsTrue(1 <= x && x <= 10, $"{Throw()}");
+                }
+
+                private static string Throw() => throw new System.InvalidOperationException();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithAllIsTypePredicate_SuggestsAreAllOfType()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object[] items = { "a", "b" };
+                    {|#0:Assert.IsTrue(items.All(i => i is string))|};
+                    {|#1:Assert.IsTrue(Enumerable.All(items, i => i is string), "message")|};
+                    {|#2:Assert.IsTrue(condition: items.All(i => i is string))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object[] items = { "a", "b" };
+                    Assert.AreAllOfType<string>(items);
+                    Assert.AreAllOfType<string>(items, "message");
+                    Assert.AreAllOfType<string>(collection: items);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreAllOfType", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreAllOfType", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("AreAllOfType", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAllPredicateIsNotAPlainTypeCheckOfTheElement_KeepsContainsOnlyDiagnostic()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object[] items = { "a", "b" };
+                    object other = "c";
+                    {|#0:Assert.IsTrue(items.All(i => i is not string))|};
+                    {|#1:Assert.IsTrue(items.All(i => i is string s && s.Length > 0))|};
+                    {|#2:Assert.IsTrue(items.All(i => other is string))|};
+                    Assert.IsFalse(items.All(i => i is string));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("ContainsOnly", "IsTrue"),
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("ContainsOnly", "IsTrue"));
     }
 
     #endregion
