@@ -113,11 +113,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 
         for (int i = 0; i < additionalLocations.Count; i += 2)
         {
-            // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
-            // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
-            // Or: Assert.IsNull(x, "My message")
-            // For now this is not handled.
-            if (root.FindNode(additionalLocations[i].SourceSpan) is not ArgumentSyntax conditionNodeToBeReplaced)
+            SyntaxNode condition = root.FindNode(additionalLocations[i].SourceSpan, getInnermostNodeForTie: true);
+            if (condition.FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNodeToBeReplaced ||
+                (conditionNodeToBeReplaced.NameColon is not null && properAssertMethodName is not ("IsPositive" or "IsNegative")))
             {
                 return document;
             }
@@ -132,6 +130,12 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 replacementExpressionNode
                     .WithLeadingTrivia(conditionNodeToBeReplaced.GetLeadingTrivia())
                     .WithoutTrailingTrivia());
+            if (conditionNodeToBeReplaced.NameColon is { } nameColon)
+            {
+                newArgument = newArgument.WithNameColon(
+                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("value")).WithTriviaFrom(nameColon));
+            }
+
             editor.ReplaceNode(conditionNodeToBeReplaced, newArgument);
         }
 
@@ -372,7 +376,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
     private static async Task<Document> FixAssertMethodForAddTwoArgumentsModeAsync(Document document, Location conditionLocation, Location firstArgLocation, Location secondArgLocation, Location thirdArgLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         // Handle Contains with comparer: Assert.IsTrue(enumerable.Contains(item, comparer)) -> Assert.Contains(item, enumerable, comparer)
-        if (root.FindNode(conditionLocation.SourceSpan) is not ArgumentSyntax conditionNode)
+        if (root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true).FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNode)
         {
             return document;
         }
@@ -403,6 +407,10 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         int conditionIndex = argumentList.Arguments.IndexOf(conditionNode);
+        if (conditionIndex != 0)
+        {
+            return document;
+        }
 
         // Build the new arguments list: (firstArg, secondArg, thirdArg, ...remaining)
         var newArguments = new List<ArgumentSyntax>();

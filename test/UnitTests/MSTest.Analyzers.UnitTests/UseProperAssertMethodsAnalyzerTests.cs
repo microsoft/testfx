@@ -6828,6 +6828,161 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     #region Sign, range and AreAllOfType checks
 
     [TestMethod]
+    public async Task WhenSignOrRangeConditionIsNamed_CodeFixPreservesNamedArguments()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    {|#0:Assert.IsTrue(condition: x > 0, message: "positive")|};
+                    {|#1:Assert.IsTrue(condition: 1 <= x && x <= 10, message: "range")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    Assert.IsPositive(value: x, message: "positive");
+                    Assert.IsInRange(1, 10, x, message: "range");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsPositive", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsInRange", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenSignComparisonUsesUserDefinedConversion_DoesNotSuggestSignAssertion()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct Number
+            {
+                public static implicit operator int(Number value) => 1;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Number value = default;
+                    {|#0:Assert.IsTrue(value > 0)|};
+                    {|#1:Assert.IsTrue((int)value > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct Number
+            {
+                public static implicit operator int(Number value) => 1;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Number value = default;
+                    Assert.IsGreaterThan(0, value);
+                    Assert.IsPositive((int)value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsPositive", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAllTypeCheckUsesLazySequence_KeepsShortCircuitingContainsOnly()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<object> items = ThrowingSequence();
+                    {|#0:Assert.IsTrue(items.All(item => item is string))|};
+                }
+
+                private static IEnumerable<object> ThrowingSequence()
+                {
+                    yield return 1;
+                    throw new InvalidOperationException();
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<object> items = ThrowingSequence();
+                    Assert.ContainsOnly(item => item is string, items);
+                }
+
+                private static IEnumerable<object> ThrowingSequence()
+                {
+                    yield return 1;
+                    throw new InvalidOperationException();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue")],
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueOrIsFalseComparesWithZero_SuggestsIsPositiveOrIsNegative()
     {
         string code = """
@@ -7020,7 +7175,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAssertIsTrueWithAllIsTypePredicate_SuggestsAreAllOfType()
     {
         string code = """
-            using System.Collections.Generic;
             using System.Linq;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7030,7 +7184,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    List<object> items = new() { "a", "b" };
+                    object[] items = { "a", "b" };
                     {|#0:Assert.IsTrue(items.All(i => i is string))|};
                     {|#1:Assert.IsTrue(Enumerable.All(items, i => i is string), "message")|};
                     {|#2:Assert.IsTrue(condition: items.All(i => i is string))|};
@@ -7039,7 +7193,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             """;
 
         string fixedCode = """
-            using System.Collections.Generic;
             using System.Linq;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7049,7 +7202,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    List<object> items = new() { "a", "b" };
+                    object[] items = { "a", "b" };
                     Assert.AreAllOfType<string>(items);
                     Assert.AreAllOfType<string>(items, "message");
                     Assert.AreAllOfType<string>(collection: items);

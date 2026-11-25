@@ -63,7 +63,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
         // Numeric conversions are sign-preserving, so the value can be passed with its own type.
         valueOperand = WalkDownImplicitBuiltInConversions(valueOperand);
-        if (valueOperand.Type is not { } valueType ||
+        if (valueOperand is IConversionOperation { IsImplicit: true, Conversion.IsUserDefined: true } ||
+            valueOperand.Type is not { } valueType ||
             !IsSignedComparableNumericType(valueType.SpecialType))
         {
             return false;
@@ -198,9 +199,12 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         collectionExpression = null;
         typeCheckExpression = null;
 
+        // AreAllOfType enumerates the whole collection; only arrays are known not to have a lazy or throwing iterator.
         if (RecognizeLinqPredicateCheck(condition, enumerableTypeSymbol, out SyntaxNode? collection, out _, out _) != LinqPredicateCheckStatus.All ||
             collection is null ||
             !CanRewriteAllWithoutReorderingEffects(assertion, condition) ||
+            !TryGetArgumentForParameterOrdinal((IInvocationOperation)condition, 0, out IArgumentOperation? collectionArgument) ||
+            WalkDownImplicitBuiltInConversions(collectionArgument.Value).Type is not IArrayTypeSymbol ||
             !TryGetArgumentForParameterOrdinal((IInvocationOperation)condition, 1, out IArgumentOperation? predicateArgument))
         {
             return false;
