@@ -53,9 +53,9 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
     public async Task DependencyCopiedByAssemblyInitializeCanStillBeResolved(bool preload)
     {
         string directory = TestContext.TestTempDirectory!;
-        string settings = Path.Combine(directory, "late-dependency.runsettings");
+        string settings = Path.Join(directory, "late-dependency.runsettings");
         string filename = TestAssetFixture.ProjectName + ".dll";
-        string destination = Path.Combine(directory, filename);
+        string destination = Path.Combine(directory, Path.GetFileName(filename));
         new XDocument(
             new XElement(
                 "RunSettings",
@@ -66,7 +66,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
                     new XElement("AssemblyResolution", new XElement("Directory", new XAttribute("path", directory)))),
                 new XElement(
                     "TestRunParameters",
-                    new XElement("Parameter", new XAttribute("name", "DependencySource"), new XAttribute("value", Path.Combine(AssetFixture.MainDllFolder.Path, filename))),
+                    new XElement("Parameter", new XAttribute("name", "DependencySource"), new XAttribute("value", Path.Combine(AssetFixture.MainDllFolder.Path, Path.GetFileName(filename)))),
                     new XElement("Parameter", new XAttribute("name", "DependencyDestination"), new XAttribute("value", destination)))))
             .Save(settings);
 
