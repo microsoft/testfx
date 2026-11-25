@@ -202,7 +202,11 @@ internal sealed partial class MtpServerClient : IMtpServerClient
         var args = new InitializeRequestArgs(
             MtpServerConnector.GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
-            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful) { ShowMessage = _options.ShowMessage })
+            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful)
+            {
+                ShowMessage = _options.ShowMessage,
+                SupportsTestNodeHierarchy = _options.SupportsTestNodeHierarchy,
+            })
         {
             ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
         };

@@ -48,6 +48,19 @@ public sealed class FormatterUtilitiesTests
     }
 
     [TestMethod]
+    [DataRow("", null)]
+    [DataRow("\"supportsTestNodeHierarchy\":false,", false)]
+    [DataRow("\"supportsTestNodeHierarchy\":true,", true)]
+    public void Deserialize_TestNodeHierarchy_RequestPreservesOptionalValue(string capability, bool? expected)
+    {
+        string json = $$"""
+            {"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{ "testing":{ {{capability}} "debuggerProvider":false} } }
+            """;
+
+        Assert.AreEqual(expected, Deserialize<InitializeRequestArgs>(json).Capabilities.SupportsTestNodeHierarchy);
+    }
+
+    [TestMethod]
     [DataRow("\"true\"")]
     [DataRow("1")]
     [DataRow("{}")]

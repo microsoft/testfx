@@ -58,6 +58,36 @@ public class TrxTestResultExtractorTests
     }
 
     [TestMethod]
+    public void Extract_FailedFixtureGroup_ProjectsAsIndependentFailedResult()
+    {
+        const string uid = "mstest-class:9:Tests.dll:12:Tests.Sample";
+        const string parentUid = "mstest-assembly:9:Tests.dll";
+        const string displayName = "Tests.Sample ClassCleanup";
+        const string errorMessage = "class cleanup failed";
+        var properties = new PropertyBag(
+            new SerializableKeyValuePairStringProperty("node-type", "group"),
+            new FailedTestNodeStateProperty(errorMessage),
+            new TrxExceptionProperty(errorMessage, "cleanup stack"),
+            new TrxTestDefinitionName(displayName),
+            new TrxFullyQualifiedTypeNameProperty("Tests.Sample"));
+        var message = new TestNodeUpdateMessage(
+            new SessionUid("1"),
+            new TestNode { Uid = uid, DisplayName = displayName, Properties = properties },
+            new TestNodeUid(parentUid));
+
+        (TrxTestResult result, _) = TrxTestResultExtractor.Extract(message);
+
+        Assert.AreEqual(uid, result.Uid);
+        Assert.AreEqual(displayName, result.DisplayName);
+        Assert.AreEqual(TrxTestOutcome.Failed, result.Outcome);
+        Assert.AreEqual(displayName, result.TrxTestDefinitionName);
+        Assert.AreEqual("Tests.Sample", result.TrxFullyQualifiedTypeName);
+        Assert.IsNull(result.TestMethodIdentifier);
+        Assert.AreEqual(errorMessage, result.ExceptionMessage);
+        Assert.AreEqual("cleanup stack", result.ExceptionStackTrace);
+    }
+
+    [TestMethod]
     public void Extract_InProgressState_ThrowsUnreachableException()
     {
         // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so asserting on the

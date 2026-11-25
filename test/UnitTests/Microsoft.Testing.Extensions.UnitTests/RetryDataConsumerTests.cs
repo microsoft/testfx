@@ -149,6 +149,30 @@ public sealed class RetryDataConsumerTests
         Assert.IsEmpty(fixture.Server.FailedTests);
     }
 
+    [TestMethod]
+    public async Task ConsumeAsync_FailedFixtureGroup_IsIgnoredByRetryTracking()
+    {
+        using ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync(["uid"], TestContext.CancellationToken);
+
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate(
+                "class-cleanup",
+                new SerializableKeyValuePairStringProperty("node-type", "group"),
+                new FailedTestNodeStateProperty()),
+            TestContext.CancellationToken);
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate("uid", new FailedTestNodeStateProperty()),
+            TestContext.CancellationToken);
+        await fixture.FinishAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, fixture.Server.TotalTestRan);
+        Assert.AreEqual(1, fixture.Server.FailedTestResults);
+        Assert.HasCount(1, fixture.Server.FailedTests);
+        Assert.IsTrue(fixture.Server.FailedTests.ContainsKey("uid"));
+    }
+
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]

@@ -78,6 +78,11 @@ internal static partial class SerializerUtilities
                 testingCapabilities[JsonRpcStrings.ShowMessage] = showMessage;
             }
 
+            if (capabilities.SupportsTestNodeHierarchy is { } supportsTestNodeHierarchy)
+            {
+                testingCapabilities[JsonRpcStrings.SupportsTestNodeHierarchy] = supportsTestNodeHierarchy;
+            }
+
             return new Dictionary<string, object?>
             {
                 [JsonRpcStrings.Testing] = testingCapabilities,

@@ -19,3 +19,9 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.set -> voi
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Current.set -> void
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassNameLabel -> string!
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestNameLabel -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.CleanupKind.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.CleanupKind.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind.AssemblyCleanup = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind.ClassCleanup = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind.None = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResultCleanupKind

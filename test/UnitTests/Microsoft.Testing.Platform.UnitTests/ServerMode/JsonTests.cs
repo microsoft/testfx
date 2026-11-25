@@ -59,6 +59,51 @@ public sealed class JsonTests
     }
 
     [TestMethod]
+    public async Task Serialize_StatefulGroup_PreservesGroupNodeType()
+    {
+        TestNode testNode = new()
+        {
+            DisplayName = "Class cleanup",
+            Properties = new PropertyBag(
+                new SerializableKeyValuePairStringProperty("node-type", "group"),
+                new FailedTestNodeStateProperty("cleanup failed")),
+            Uid = new TestNodeUid("class"),
+        };
+
+        string actual = await _json.SerializeAsync(testNode);
+
+        AssertStatefulGroupJson(actual);
+    }
+
+    [TestMethod]
+    public async Task Serialize_StatefulGroup_WithJsonRuntime_PreservesGroupNodeType()
+    {
+        Json json = new();
+        TestNode testNode = new()
+        {
+            DisplayName = "Class cleanup",
+            Properties = new PropertyBag(
+                new SerializableKeyValuePairStringProperty("node-type", "group"),
+                new FailedTestNodeStateProperty("cleanup failed")),
+            Uid = new TestNodeUid("class"),
+        };
+
+        string actual = await json.SerializeAsync(testNode);
+
+        AssertStatefulGroupJson(actual);
+    }
+
+    private static void AssertStatefulGroupJson(string actual)
+    {
+        using var document = JsonDocument.Parse(actual);
+        JsonElement serializedNode = document.RootElement;
+        Assert.AreEqual("class", serializedNode.GetProperty("uid").GetString());
+        Assert.AreEqual("group", serializedNode.GetProperty("node-type").GetString());
+        Assert.AreEqual("failed", serializedNode.GetProperty("execution-state").GetString());
+        Assert.AreEqual("cleanup failed", serializedNode.GetProperty("error.message").GetString());
+    }
+
+    [TestMethod]
     [DynamicData(
         nameof(TestNodeTimingData.Cases),
         typeof(TestNodeTimingData),

@@ -64,7 +64,9 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
         using var harness = new NativeHarness();
         await harness.OpenAsync();
         await harness.DiscoverAsync(nameof(NativeCoverageFixture.Succeeds));
-        TestNodeUpdateMessage discovered = harness.Messages.OfType<TestNodeUpdateMessage>().Single();
+        TestNodeUpdateMessage[] discoveryNodes = harness.Messages.OfType<TestNodeUpdateMessage>().ToArray();
+        discoveryNodes.Should().HaveCount(3);
+        TestNodeUpdateMessage discovered = discoveryNodes.Single(message => message.TestNode.Properties.Any<DiscoveredTestNodeStateProperty>());
         discovered.TestNode.DisplayName.Should().Be("Succeeds");
         discovered.TestNode.Properties.Any<DiscoveredTestNodeStateProperty>().Should().BeTrue();
         discovered.SessionUid.Should().Be(harness.Session);
@@ -72,7 +74,9 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
 
         await harness.RunAsync(new TestNodeUidListFilter([discovered.TestNode.Uid]));
 
-        TestNodeUpdateMessage[] nodes = harness.Messages.OfType<TestNodeUpdateMessage>().ToArray();
+        TestNodeUpdateMessage[] nodes = harness.Messages.OfType<TestNodeUpdateMessage>()
+            .Where(message => message.TestNode.Uid == discovered.TestNode.Uid)
+            .ToArray();
         nodes.Should().HaveCount(2);
         nodes[0].TestNode.Uid.Should().Be(discovered.TestNode.Uid);
         nodes[0].TestNode.Properties.Any<InProgressTestNodeStateProperty>().Should().BeTrue();
@@ -107,7 +111,7 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
             await harness.RunAsync(harness.Filter(nameof(NativeCoverageFixture.AttachesFiles)));
 
             TestNodeUpdateMessage result = harness.Messages.OfType<TestNodeUpdateMessage>()
-                .Single(message => !message.TestNode.Properties.Any<InProgressTestNodeStateProperty>());
+                .Single(message => message.TestNode.Properties.Any<PassedTestNodeStateProperty>());
             result.TestNode.Properties.Any<PassedTestNodeStateProperty>().Should().BeTrue();
             FileArtifactProperty[] artifacts = result.TestNode.Properties.OfType<FileArtifactProperty>().ToArray();
             artifacts.Should().HaveCount(2);

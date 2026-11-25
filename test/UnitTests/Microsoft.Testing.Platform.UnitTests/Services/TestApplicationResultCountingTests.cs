@@ -43,6 +43,18 @@ public sealed class TestApplicationResultCountingTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_FailedFixtureGroup_FailsRunWithoutChangingTestStatistics()
+    {
+        using TestApplicationResult result = Create();
+
+        await ConsumeAsync(result, new FailedTestNodeStateProperty("cleanup failed"), isFixtureGroup: true);
+
+        Assert.AreEqual(0, result.GetStatistics().TotalRanTests);
+        Assert.AreEqual(0, result.GetStatistics().TotalFailedTests);
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, result.GetProcessExitCode());
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_SkippedTests_AreNotCountedAsRan()
     {
         using TestApplicationResult result = Create();
@@ -110,11 +122,19 @@ public sealed class TestApplicationResultCountingTests
             policies ?? Mock.Of<IStopPoliciesService>(),
             otelService: null);
 
-    private static Task ConsumeAsync(TestApplicationResult result, IProperty state)
-        => result.ConsumeAsync(
+    private static Task ConsumeAsync(TestApplicationResult result, IProperty state, bool isFixtureGroup = false)
+    {
+        PropertyBag properties = new(state);
+        if (isFixtureGroup)
+        {
+            properties.Add(new SerializableKeyValuePairStringProperty("node-type", "group"));
+        }
+
+        return result.ConsumeAsync(
             new Producer(),
-            new TestNodeUpdateMessage(default, new TestNode { Uid = "uid", DisplayName = "test", Properties = new PropertyBag(state) }),
+            new TestNodeUpdateMessage(default, new TestNode { Uid = "uid", DisplayName = "test", Properties = properties }),
             CancellationToken.None);
+    }
 
     private sealed class Producer : IDataProducer
     {

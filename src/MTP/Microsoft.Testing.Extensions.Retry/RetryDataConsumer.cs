@@ -77,6 +77,12 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         }
 
         var testNodeUpdateMessage = (TestNodeUpdateMessage)value;
+        if (testNodeUpdateMessage.TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Any(property => property.Key == "node-type" && property.Value == "group"))
+        {
+            return;
+        }
+
         TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         // Stryker disable once all: without a state none of the mutually exclusive outcome branches below can run.
         if (nodeState is null)

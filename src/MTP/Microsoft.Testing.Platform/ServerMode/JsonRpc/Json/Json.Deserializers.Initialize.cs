@@ -53,6 +53,7 @@ internal sealed partial class Json
                     IsStateful: isStateful)
             {
                 ShowMessage = GetOptionalBoolean(testing, JsonRpcStrings.ShowMessage),
+                SupportsTestNodeHierarchy = GetOptionalBoolean(testing, JsonRpcStrings.SupportsTestNodeHierarchy),
             };
         });
 

@@ -21,6 +21,7 @@ internal sealed class MtpUnitTestElementSink : IUnitTestElementSink
     private readonly IDataProducer _dataProducer;
     private readonly SessionUid _sessionUid;
     private readonly bool _isTrxEnabled;
+    private readonly MtpTestNodeHierarchyPublisher _hierarchyPublisher;
 
     public MtpUnitTestElementSink(IMessageBus messageBus, IDataProducer dataProducer, SessionUid sessionUid, bool isTrxEnabled)
     {
@@ -28,11 +29,15 @@ internal sealed class MtpUnitTestElementSink : IUnitTestElementSink
         _dataProducer = dataProducer;
         _sessionUid = sessionUid;
         _isTrxEnabled = isTrxEnabled;
+        _hierarchyPublisher = new(messageBus, dataProducer, sessionUid);
     }
 
-    public Task SendTestElementAsync(UnitTestElement testElement)
+    public async Task SendTestElementAsync(UnitTestElement testElement)
     {
+        await _hierarchyPublisher.PublishForTestElementAsync(testElement).ConfigureAwait(false);
         TestNode testNode = MSTestTestNodeConverter.ToDiscoveredTestNode(testElement, _isTrxEnabled);
-        return _messageBus.PublishAsync(_dataProducer, new TestNodeUpdateMessage(_sessionUid, testNode));
+        await _messageBus.PublishAsync(
+            _dataProducer,
+            new TestNodeUpdateMessage(_sessionUid, testNode, MSTestTestNodeConverter.GetClassTestNodeUid(testElement))).ConfigureAwait(false);
     }
 }

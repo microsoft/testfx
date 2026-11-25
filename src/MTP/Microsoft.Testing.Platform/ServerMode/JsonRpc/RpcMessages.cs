@@ -112,6 +112,8 @@ internal sealed record ClientInfo(string Name, string Version);
 internal sealed record ClientCapabilities(bool DebuggerProvider, bool? IsStateful)
 {
     public bool? ShowMessage { get; init; }
+
+    public bool? SupportsTestNodeHierarchy { get; init; }
 }
 
 internal sealed record ServerInfo(string Name, string Version);

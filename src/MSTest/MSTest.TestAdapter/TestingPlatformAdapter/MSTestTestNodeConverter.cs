@@ -58,6 +58,71 @@ internal static class MSTestTestNodeConverter
         return testNode;
     }
 
+    public static TestNodeUid GetAssemblyTestNodeUid(UnitTestElement element)
+    {
+        string assemblyName = element.TestMethod.AssemblyName;
+        return new TestNodeUid($"mstest-assembly:{assemblyName.Length}:{assemblyName}");
+    }
+
+    public static TestNodeUid GetClassTestNodeUid(UnitTestElement element)
+    {
+        TestMethod testMethod = element.TestMethod;
+        string assemblyName = testMethod.AssemblyName;
+        string className = testMethod.FullClassName;
+        return new TestNodeUid($"mstest-class:{assemblyName.Length}:{assemblyName}:{className.Length}:{className}");
+    }
+
+    public static TestNode ToAssemblyTestNode(UnitTestElement element)
+    {
+        string assemblyName = element.TestMethod.AssemblyName;
+        return CreateGroupNode(
+            GetAssemblyTestNodeUid(element),
+            System.IO.Path.GetFileNameWithoutExtension(assemblyName));
+    }
+
+    public static TestNode ToClassTestNode(UnitTestElement element)
+        => CreateGroupNode(GetClassTestNodeUid(element), element.TestMethod.FullClassName);
+
+    public static TestNode ToFixtureCleanupTestNode(UnitTestElement element, FrameworkTestResult result, bool isTrxEnabled, MSTestSettings settings)
+    {
+        TestNodeUid uid = result.CleanupKind switch
+        {
+            TestResultCleanupKind.ClassCleanup => GetClassTestNodeUid(element),
+            TestResultCleanupKind.AssemblyCleanup => GetAssemblyTestNodeUid(element),
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result.CleanupKind, "The result is not a fixture cleanup failure."),
+        };
+        string displayName = result.DisplayName
+            ?? (result.CleanupKind == TestResultCleanupKind.ClassCleanup
+                ? $"{element.TestMethod.FullClassName} ClassCleanup"
+                : $"{System.IO.Path.GetFileNameWithoutExtension(element.TestMethod.AssemblyName)} AssemblyCleanup");
+        var testNode = new TestNode { Uid = uid, DisplayName = displayName };
+        testNode.Properties.Add(new SerializableKeyValuePairStringProperty("node-type", "group"));
+
+        string? errorMessage = result.ExceptionMessage ?? result.IgnoreReason;
+        string? errorStackTrace = result.ExceptionStackTrace;
+        AddOutcome(testNode, UnitTestOutcomeHelper.ToTestOutcome(result.Outcome, settings), errorMessage, errorStackTrace);
+
+        if (result.ExceptionExpectedText is not null || result.ExceptionActualText is not null)
+        {
+            testNode.Properties.Add(new AssertionFailureProperty(result.ExceptionExpectedText, result.ExceptionActualText));
+        }
+
+        if (isTrxEnabled)
+        {
+            if (!StringEx.IsNullOrEmpty(errorMessage) || !StringEx.IsNullOrEmpty(errorStackTrace))
+            {
+                testNode.Properties.Add(new TrxExceptionProperty(errorMessage, errorStackTrace));
+            }
+
+            testNode.Properties.Add(new TrxTestDefinitionName(displayName));
+            testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(element.TestMethod.FullClassName));
+        }
+
+        AddMessagesAndOutput(testNode, result, isTrxEnabled);
+        AddAttachments(testNode, result);
+        return testNode;
+    }
+
     /// <summary>
     /// Builds an in-progress-state <see cref="TestNode"/> reported when a test starts executing.
     /// </summary>
@@ -137,6 +202,13 @@ internal static class MSTestTestNodeConverter
 
         baseData.AddProperties(testNode.Properties, isTrxEnabled);
 
+        return testNode;
+    }
+
+    private static TestNode CreateGroupNode(TestNodeUid uid, string displayName)
+    {
+        var testNode = new TestNode { Uid = uid, DisplayName = displayName };
+        testNode.Properties.Add(new SerializableKeyValuePairStringProperty("node-type", "group"));
         return testNode;
     }
 

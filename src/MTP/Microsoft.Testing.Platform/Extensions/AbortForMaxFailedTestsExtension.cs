@@ -63,6 +63,12 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             return;
         }
 
+        if (node.TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Any(property => property.Key == "node-type" && property.Value == "group"))
+        {
+            return;
+        }
+
         TestNodeStateProperty? testNodeStateProperty = node.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (testNodeStateProperty is null)
         {

@@ -57,6 +57,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     private IMessageHandler? _messageHandler;
     private TestHost.ClientInfo? _client;
     private IClientInfo? _clientInfoService;
+    private bool _supportsTestNodeHierarchy;
     private TaskCompletionSource<bool>? _initializationCompletionSource;
     private int _initializeState;
 

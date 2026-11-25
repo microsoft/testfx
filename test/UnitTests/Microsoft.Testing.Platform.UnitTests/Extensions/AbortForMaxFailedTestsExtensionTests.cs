@@ -106,6 +106,24 @@ public sealed class AbortForMaxFailedTestsExtensionTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_FailedFixtureGroup_DoesNotSpendFailureBudget()
+    {
+        using var fixture = new Fixture();
+        AbortForMaxFailedTestsExtension extension = fixture.Create("1");
+
+        await fixture.ConsumeAsync(
+            extension,
+            new PropertyBag(
+                new FailedTestNodeStateProperty(),
+                new SerializableKeyValuePairStringProperty("node-type", "group")),
+            "class-cleanup");
+        Assert.IsEmpty(fixture.Calls);
+
+        await fixture.ConsumeAsync(extension, new PropertyBag(new FailedTestNodeStateProperty()));
+        Assert.AreSequenceEqual(new[] { "stop", "policy:1" }, fixture.Calls);
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_SupersededRetry_DoesNotSpendFailureBudget()
     {
         using var fixture = new Fixture();

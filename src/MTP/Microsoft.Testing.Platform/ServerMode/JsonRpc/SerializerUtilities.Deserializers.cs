@@ -162,6 +162,7 @@ internal static partial class SerializerUtilities
             return new ClientCapabilities(debuggerProvider, isStateful)
             {
                 ShowMessage = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.ShowMessage),
+                SupportsTestNodeHierarchy = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.SupportsTestNodeHierarchy),
             };
         });
 

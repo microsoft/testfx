@@ -28,9 +28,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 /// </summary>
 public sealed class MSTestTestNodeConverterTests : TestContainer
 {
-    private static UnitTestElement CreateElement(string? managedMethodName = "MyMethod", string fullClassName = "MyNamespace.MyClass", string name = "MyMethod")
+    private static UnitTestElement CreateElement(
+        string? managedMethodName = "MyMethod",
+        string fullClassName = "MyNamespace.MyClass",
+        string name = "MyMethod",
+        string assemblyName = "MyAssembly.dll")
     {
-        var testMethod = new TestMethod(managedMethodName, hierarchyValues: null, name, fullClassName, "MyAssembly.dll", displayName: null, parameterTypes: null);
+        var testMethod = new TestMethod(managedMethodName, hierarchyValues: null, name, fullClassName, assemblyName, displayName: null, parameterTypes: null);
         return new UnitTestElement(testMethod);
     }
 
@@ -166,6 +170,36 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             .Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
         property.WorkItemIds.Should().Equal("123", "456");
         property.WorkItemIds.Should().NotBeSameAs(element.WorkItemIds);
+    }
+
+    public void ToFixtureCleanupTestNode_CreatesFailedClassAndAssemblyGroups()
+    {
+        UnitTestElement element = CreateElement(assemblyName: System.IO.Path.Combine("bin", "Debug", "MyAssembly.dll"));
+        FrameworkTestResult classCleanup = new()
+        {
+            Outcome = UnitTestOutcome.Failed,
+            ExceptionMessage = "class cleanup failed",
+            CleanupKind = TestResultCleanupKind.ClassCleanup,
+        };
+        FrameworkTestResult assemblyCleanup = new()
+        {
+            Outcome = UnitTestOutcome.Failed,
+            ExceptionMessage = "assembly cleanup failed",
+            CleanupKind = TestResultCleanupKind.AssemblyCleanup,
+        };
+
+        TestNode classNode = MSTestTestNodeConverter.ToFixtureCleanupTestNode(element, classCleanup, isTrxEnabled: false, new MSTestSettings());
+        TestNode assemblyNode = MSTestTestNodeConverter.ToFixtureCleanupTestNode(element, assemblyCleanup, isTrxEnabled: false, new MSTestSettings());
+
+        classNode.Uid.Should().Be(MSTestTestNodeConverter.GetClassTestNodeUid(element));
+        classNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Should().ContainSingle(property => property.Key == "node-type" && property.Value == "group");
+        classNode.Properties.Single<FailedTestNodeStateProperty>().Exception!.Message.Should().Be("class cleanup failed");
+        assemblyNode.Uid.Should().Be(MSTestTestNodeConverter.GetAssemblyTestNodeUid(element));
+        assemblyNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Should().ContainSingle(property => property.Key == "node-type" && property.Value == "group");
+        assemblyNode.Properties.Single<FailedTestNodeStateProperty>().Exception!.Message.Should().Be("assembly cleanup failed");
+        assemblyNode.DisplayName.Should().Be("MyAssembly AssemblyCleanup");
     }
 
     public void RepeatedConversions_ReuseImmutableBaseProperties_WithoutSharingNodesOrPropertyBags()
@@ -693,14 +727,21 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     {
         var messageBus = new CapturingMessageBus();
         var sessionUid = new SessionUid("session-1");
+        UnitTestElement element = CreateElement();
         var sink = new MtpUnitTestElementSink(messageBus, new StubDataProducer(), sessionUid, isTrxEnabled: false);
 
-        await sink.SendTestElementAsync(CreateElement());
+        await sink.SendTestElementAsync(element);
 
-        messageBus.Published.Should().ContainSingle();
-        var message = (TestNodeUpdateMessage)messageBus.Published[0];
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        messages.Should().HaveCount(3);
+        messages[0].TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Should().ContainSingle(property => property.Key == "node-type" && property.Value == "group");
+        messages[1].TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Should().ContainSingle(property => property.Key == "node-type" && property.Value == "group");
+        TestNodeUpdateMessage message = messages.Single(update => update.TestNode.Properties.Any<DiscoveredTestNodeStateProperty>());
         message.SessionUid.Value.Should().Be("session-1");
         message.TestNode.Properties.Any<DiscoveredTestNodeStateProperty>().Should().BeTrue();
+        message.ParentTestNodeUid.Should().Be(MSTestTestNodeConverter.GetClassTestNodeUid(element));
     }
 
     public async Task MtpTestResultRecorder_RecordStart_PublishesInProgressNode()
@@ -710,8 +751,10 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
         await recorder.RecordStartAsync(CreateElement());
 
-        var message = (TestNodeUpdateMessage)messageBus.Published.Single();
+        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>()
+            .Single(update => update.TestNode.Properties.Any<InProgressTestNodeStateProperty>());
         message.TestNode.Properties.Any<InProgressTestNodeStateProperty>().Should().BeTrue();
+        message.ParentTestNodeUid.Should().NotBeNull();
     }
 
     public async Task MtpTestResultRecorder_RecordEmptyResult_PublishesExecutionCompletedNode()
@@ -721,9 +764,11 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
         await recorder.RecordEmptyResultAsync(CreateElement());
 
-        var message = (TestNodeUpdateMessage)messageBus.Published.Single();
+        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>()
+            .Single(update => update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>());
         message.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>().Should().BeTrue();
         message.TestNode.Properties.Any<TestNodeStateProperty>().Should().BeFalse();
+        message.ParentTestNodeUid.Should().NotBeNull();
     }
 
     public async Task MtpTestResultRecorder_RecordEmptyResult_CompletesPublicExecution()
@@ -748,10 +793,14 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         await recorder.RecordStartAsync(element);
         await recorder.RecordEmptyResultAsync(element);
 
-        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>()
+            .Where(update => update.TestNode.Properties.Any<TestExecutionActivityProperty>())
+            .ToArray();
         messages.Should().HaveCount(2);
-        TestExecutionActivityProperty startProperty = messages[0].TestNode.Properties.Single<TestExecutionActivityProperty>();
-        TestExecutionActivityProperty completionProperty = messages[1].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty startProperty = messages.Single(update => update.TestNode.Properties.Any<InProgressTestNodeStateProperty>())
+            .TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty completionProperty = messages.Single(update => update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
+            .TestNode.Properties.Single<TestExecutionActivityProperty>();
         completionProperty.Reservation.Should().BeSameAs(startProperty.Reservation);
         completionProperty.IsFinalResult.Should().BeTrue();
         messages[1].TestNode.Properties.Any<TestNodeExecutionCompletedProperty>().Should().BeTrue();
@@ -767,8 +816,11 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         bool isFailed = await recorder.RecordResultAsync(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now);
 
         isFailed.Should().BeTrue();
-        var message = (TestNodeUpdateMessage)messageBus.Published.Single();
+        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>()
+            .Single(update => update.TestNode.Properties.Any<FailedTestNodeStateProperty>());
         message.TestNode.Properties.Any<FailedTestNodeStateProperty>().Should().BeTrue();
+        message.TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Should().NotContain(property => property.Key == "node-type" && property.Value == "group");
     }
 
     public async Task MtpTestResultRecorder_RecordResult_ReturnsFalse_ForPassedTest()
@@ -779,6 +831,52 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         bool isFailed = await recorder.RecordResultAsync(CreateElement(), new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now);
 
         isFailed.Should().BeFalse();
+    }
+
+    public async Task MtpTestResultRecorder_RecordClassCleanup_EmitsSeparateGroupAfterPassingTest()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using var broker = new TestExecutionActivityBroker(service.Object);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            CreateExecuteRequestContext(messageBus, broker),
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings());
+        UnitTestElement element = CreateElement();
+        FrameworkTestResult passed = new() { Outcome = UnitTestOutcome.Passed };
+        FrameworkTestResult cleanup = new()
+        {
+            Outcome = UnitTestOutcome.Failed,
+            ExceptionMessage = "cleanup failed",
+            CleanupKind = TestResultCleanupKind.ClassCleanup,
+        };
+        FrameworkTestResult[] results = [passed, cleanup];
+
+        await recorder.RecordStartAsync(element);
+        ((Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder)recorder)
+            .PrepareResults(element, results);
+        await recorder.RecordResultAsync(element, passed, DateTimeOffset.Now, DateTimeOffset.Now);
+        bool cleanupFailed = await recorder.RecordResultAsync(element, cleanup, DateTimeOffset.Now, DateTimeOffset.Now);
+
+        TestNodeUpdateMessage[] updates = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        TestNodeUpdateMessage testResult = updates.Single(update => update.TestNode.Properties.Any<PassedTestNodeStateProperty>());
+        TestNodeUpdateMessage cleanupResult = updates.Single(update => update.TestNode.Properties.Any<FailedTestNodeStateProperty>());
+        cleanupFailed.Should().BeTrue();
+        testResult.TestNode.Uid.Value.Should().Be(element.GetTestId().ToString());
+        testResult.TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Should().NotContain(property => property.Key == "node-type" && property.Value == "group");
+        cleanupResult.TestNode.Uid.Should().Be(MSTestTestNodeConverter.GetClassTestNodeUid(element));
+        cleanupResult.TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Should().ContainSingle(property => property.Key == "node-type" && property.Value == "group");
+        cleanupResult.ParentTestNodeUid.Should().Be(MSTestTestNodeConverter.GetAssemblyTestNodeUid(element));
     }
 
     public async Task MtpTestResultRecorder_CarriesOneOpaqueOccurrenceAcrossMultipleResults()
@@ -809,10 +907,13 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         ((Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder)recorder)
             .PrepareResults(element, results);
         await recorder.RecordResultAsync(element, results[0], DateTimeOffset.Now, DateTimeOffset.Now);
-        messageBus.Published.Should().ContainSingle();
+        messageBus.Published.Should().HaveCount(3);
         await recorder.RecordResultAsync(element, results[1], DateTimeOffset.Now, DateTimeOffset.Now);
 
-        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>()
+            .Where(update => update.TestNode.Properties.Any<TestExecutionActivityProperty>())
+            .ToArray();
+        messages.Should().HaveCount(3);
         TestExecutionActivityProperty startProperty = messages[0].TestNode.Properties.Single<TestExecutionActivityProperty>();
         TestExecutionActivityProperty firstResultProperty = messages[1].TestNode.Properties.Single<TestExecutionActivityProperty>();
         TestExecutionActivityProperty finalResultProperty = messages[2].TestNode.Properties.Single<TestExecutionActivityProperty>();
@@ -829,10 +930,15 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         var publishStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowPublishToComplete = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         bool publishCompleted = false;
+        int publishedMessages = 0;
         var messageBus = new CapturingMessageBus(async () =>
         {
-            publishStarted.SetResult(true);
-            await allowPublishToComplete.Task;
+            if (Interlocked.Increment(ref publishedMessages) == 3)
+            {
+                publishStarted.SetResult(true);
+                await allowPublishToComplete.Task;
+            }
+
             publishCompleted = true;
         });
         Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
@@ -893,7 +999,8 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
         await recorder.RecordStartAsync(element);
 
-        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>().Single();
+        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>()
+            .Single(update => update.TestNode.Properties.Any<InProgressTestNodeStateProperty>());
         message.TestNode.Properties.Any<TestExecutionActivityProperty>().Should().BeFalse();
         element.ExecutionActivityLease.Should().BeNull();
         service.Verify(

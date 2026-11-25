@@ -174,6 +174,7 @@ internal sealed partial class TestClassInfo
                     Outcome = UnitTestOutcome.Failed,
                     DisplayName = $"[{ClassType.FullName} ClassCleanup]",
                     TestFailureException = ex,
+                    CleanupKind = TestResultCleanupKind.ClassCleanup,
                 };
                 failedResult.SetOutputAndTraces(testContextImpl, testContext);
                 return failedResult;

@@ -22,7 +22,8 @@ internal sealed partial class Json
 #pragma warning restore IDE0028 // Collection initialization can be simplified
 
         List<KeyValuePair<string, string>>? traits = null;
-        bool hasActionNodeType = false;
+        bool hasActionNodeType = message.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Any(property => property.Key == "node-type");
 
         // Collected up-front because the assertion values are rendered inside the failed-state branch below,
         // and property order inside the bag is not guaranteed. The state lookup is O(1) (it is a dedicated
@@ -82,7 +83,11 @@ internal sealed partial class Json
             {
                 // The server protocol has no outcome-less terminal state. Return the action to discovered
                 // so clients clear in-progress state without recording a test outcome.
-                properties.Add(("node-type", "action"));
+                if (!hasActionNodeType)
+                {
+                    properties.Add(("node-type", "action"));
+                }
+
                 properties.Add(("execution-state", "discovered"));
                 hasActionNodeType = true;
                 continue;
@@ -90,7 +95,11 @@ internal sealed partial class Json
 
             if (property is TestNodeStateProperty testNodeStateProperty)
             {
-                properties.Add(("node-type", "action"));
+                if (!hasActionNodeType)
+                {
+                    properties.Add(("node-type", "action"));
+                }
+
                 hasActionNodeType = true;
                 switch (property)
                 {

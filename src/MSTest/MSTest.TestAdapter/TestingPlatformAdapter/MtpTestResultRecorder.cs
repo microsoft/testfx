@@ -31,6 +31,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
     private readonly MSTestSettings _settings;
     private readonly Action<FrameworkTestResult> _stageResultFiles;
     private readonly Dictionary<UnitTestElement, Occurrence> _occurrences = [];
+    private readonly MtpTestNodeHierarchyPublisher _hierarchyPublisher;
 #if NET9_0_OR_GREATER
     private readonly Lock _syncRoot = new();
 #else
@@ -95,6 +96,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         _isTrxEnabled = isTrxEnabled;
         _settings = settings;
         _stageResultFiles = stageResultFiles;
+        _hierarchyPublisher = new(messageBus, dataProducer, sessionUid);
     }
 
     void ITestResultRecorder.PrepareResults(UnitTestElement testElement, FrameworkTestResult[] results)
@@ -110,7 +112,9 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
 
     public async Task RecordStartAsync(UnitTestElement testElement)
     {
+        await _hierarchyPublisher.PublishForTestElementAsync(testElement).ConfigureAwait(false);
         TestNode testNode = MSTestTestNodeConverter.ToInProgressTestNode(testElement, _isTrxEnabled);
+        TestNodeUid parentUid = MSTestTestNodeConverter.GetClassTestNodeUid(testElement);
         if (testElement.SupportsExecutionActivityLease && _executeRequestContext is not null)
         {
             Occurrence occurrence;
@@ -120,7 +124,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
                 {
                     occurrence = new Occurrence(_executeRequestContext.StartTestExecutionAsync(
                         _dataProducer,
-                        new TestNodeUpdateMessage(_sessionUid, testNode)));
+                        new TestNodeUpdateMessage(_sessionUid, testNode, parentUid)));
                     _occurrences.Add(testElement, occurrence);
                 }
             }
@@ -146,38 +150,49 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
             }
         }
 
-        await PublishAsync(testNode).ConfigureAwait(false);
+        await PublishAsync(testNode, parentUid).ConfigureAwait(false);
     }
 
     public async Task RecordEmptyResultAsync(UnitTestElement testElement)
     {
+        await _hierarchyPublisher.PublishForTestElementAsync(testElement).ConfigureAwait(false);
         TestNode testNode = MSTestTestNodeConverter.ToEmptyResultTestNode(testElement, _isTrxEnabled);
+        TestNodeUid parentUid = MSTestTestNodeConverter.GetClassTestNodeUid(testElement);
         Occurrence? occurrence = TakeOccurrence(testElement, isResult: true);
         if (occurrence is not null)
         {
             TestExecution execution = await occurrence.ExecutionTask.ConfigureAwait(false);
             await execution.CompleteAsync(
-                [new TestNodeUpdateMessage(_sessionUid, testNode)],
+                [new TestNodeUpdateMessage(_sessionUid, testNode, parentUid)],
                 DateTimeOffset.UtcNow).ConfigureAwait(false);
             return;
         }
 
-        await PublishAsync(testNode).ConfigureAwait(false);
+        await PublishAsync(testNode, parentUid).ConfigureAwait(false);
     }
 
     public async Task<bool> RecordResultAsync(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime)
     {
         var outcome = UnitTestOutcomeHelper.ToTestOutcome(unitTestResult.Outcome, _settings);
         bool isFailed = outcome == TestOutcome.Failed;
+        bool isFixtureCleanup = unitTestResult.CleanupKind != TestResultCleanupKind.None;
         Occurrence? occurrence = TakeOccurrence(testElement, isResult: true);
         TestNodeUpdateMessage? resultMessage = null;
+        await _hierarchyPublisher.PublishForTestElementAsync(testElement).ConfigureAwait(false);
 
         // Mirror TestResultRecorderExtensions: a NotFound result is not reported while hot reload is enabled.
         if (outcome != TestOutcome.NotFound || !RuntimeContext.IsHotReloadEnabled)
         {
             _stageResultFiles(unitTestResult);
-            TestNode testNode = MSTestTestNodeConverter.ToResultTestNode(testElement, unitTestResult, startTime, endTime, _isTrxEnabled, _settings);
-            resultMessage = new TestNodeUpdateMessage(_sessionUid, testNode);
+            TestNode testNode = isFixtureCleanup
+                ? MSTestTestNodeConverter.ToFixtureCleanupTestNode(testElement, unitTestResult, _isTrxEnabled, _settings)
+                : MSTestTestNodeConverter.ToResultTestNode(testElement, unitTestResult, startTime, endTime, _isTrxEnabled, _settings);
+            TestNodeUid? parentUid = isFixtureCleanup
+                ? unitTestResult.CleanupKind == TestResultCleanupKind.ClassCleanup
+                    ? MSTestTestNodeConverter.GetAssemblyTestNodeUid(testElement)
+                    : null
+                : MSTestTestNodeConverter.GetClassTestNodeUid(testElement);
+            resultMessage = new TestNodeUpdateMessage(_sessionUid, testNode, parentUid);
         }
 
         if (occurrence is null)
@@ -193,7 +208,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         TestNodeUpdateMessage[]? messagesToComplete = null;
         lock (_syncRoot)
         {
-            if (resultMessage is not null)
+            if (resultMessage is not null && !isFixtureCleanup)
             {
                 occurrence.ResultMessages.Add(resultMessage);
             }
@@ -210,11 +225,16 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
             await execution.CompleteAsync(messagesToComplete, endTime).ConfigureAwait(false);
         }
 
+        if (resultMessage is not null && isFixtureCleanup)
+        {
+            await _messageBus.PublishAsync(_dataProducer, resultMessage).ConfigureAwait(false);
+        }
+
         return isFailed;
     }
 
-    private Task PublishAsync(TestNode testNode)
-        => _messageBus.PublishAsync(_dataProducer, new TestNodeUpdateMessage(_sessionUid, testNode));
+    private Task PublishAsync(TestNode testNode, TestNodeUid? parentTestNodeUid)
+        => _messageBus.PublishAsync(_dataProducer, new TestNodeUpdateMessage(_sessionUid, testNode, parentTestNodeUid));
 
     private Occurrence? TakeOccurrence(UnitTestElement testElement, bool isResult)
     {

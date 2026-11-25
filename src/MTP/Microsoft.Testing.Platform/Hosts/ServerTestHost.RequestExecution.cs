@@ -35,6 +35,7 @@ internal sealed partial class ServerTestHost
 
                 _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
                 _clientInfoService = new ClientInfoService(args.ClientInfo.Name, args.ClientInfo.Version, new ClientCapabilitiesService(args.Capabilities.IsStateful));
+                _supportsTestNodeHierarchy = args.Capabilities.SupportsTestNodeHierarchy == true;
                 await _logger.LogDebugAsync(
                     $"Connection established with '{_client.Id}' version '{_client.Version}', protocol version '{negotiatedProtocolVersion}'").ConfigureAwait(false);
 
@@ -147,7 +148,12 @@ internal sealed partial class ServerTestHost
             // Build the per request objects
             ServerTestExecutionFilterFactory filterFactory = new();
             TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
-            testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
+            testNodeUpdateProcessor = new(
+                perRequestServiceProvider,
+                this,
+                args.RunId,
+                perRequestServiceProvider.GetTask(),
+                supportsTestNodeHierarchy: _supportsTestNodeHierarchy);
 
             adapterLoadStart = _clock.UtcNow;
 
