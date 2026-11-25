@@ -164,6 +164,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             coverage: coverage,
             writeOnFailureOnly: _writeOnFailureOnly);
         module.HistoryTests = [.. snapshot.HistoryTests];
+        module.ShardGroupId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_SHARD_GROUP_ID);
         module.GitHubActionsStepSummaryEnabled = _isSummaryEnabled;
         module.GitHubActionsHistoryPath = _historyService.HistoryPath;
         module.GitHubActionsHistoryWindowInDays = _historyService.IsEnabled

@@ -60,7 +60,8 @@ internal sealed class ShardingOrchestrator(IServiceProvider serviceProvider)
         int count = int.Parse(values![0], CultureInfo.InvariantCulture);
         ExecutableInfo executable = serviceProvider.GetTestApplicationModuleInfo().GetCurrentExecutableInfo();
         string[] forwardedArguments = RemoveOwnedArguments([.. executable.ExpandedArguments]);
-        string root = Path.Combine(serviceProvider.GetConfiguration().GetTestResultDirectory(), "Shards", Guid.NewGuid().ToString("N"));
+        string shardGroupId = Guid.NewGuid().ToString("N");
+        string root = Path.Combine(serviceProvider.GetConfiguration().GetTestResultDirectory(), "Shards", shardGroupId);
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         using var outputGate = new SemaphoreSlim(1);
         int nextPartition = 0;
@@ -98,7 +99,7 @@ internal sealed class ShardingOrchestrator(IServiceProvider serviceProvider)
                         "--results-directory", directory,
                         "--ansi", "off", "--progress", "off",
                     ];
-                    int exit = await RunChildAsync(executable, arguments, partition, count, outputGate, stop.Token).ConfigureAwait(false);
+                    int exit = await RunChildAsync(executable, arguments, partition, count, shardGroupId, outputGate, stop.Token).ConfigureAwait(false);
                     lock (verdictGate)
                     {
                         aggregateExit = AggregateExitCode(aggregateExit, exit);
@@ -167,7 +168,7 @@ internal sealed class ShardingOrchestrator(IServiceProvider serviceProvider)
     }
 
     private async Task<int> RunChildAsync(
-        ExecutableInfo executable, List<string> arguments, int partition, int count,
+        ExecutableInfo executable, List<string> arguments, int partition, int count, string shardGroupId,
         SemaphoreSlim outputGate, CancellationToken cancellationToken)
     {
         using var responseFiles = new TemporaryResponseFiles();
@@ -234,6 +235,7 @@ internal sealed class ShardingOrchestrator(IServiceProvider serviceProvider)
                 RedirectStandardError = true,
             },
         };
+        process.StartInfo.EnvironmentVariables[EnvironmentVariableConstants.TESTINGPLATFORM_SHARD_GROUP_ID] = shardGroupId;
         const string chainVariable = EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN;
         if (RoslynString.IsNullOrEmpty(serviceProvider.GetEnvironment().GetEnvironmentVariable(chainVariable)))
         {

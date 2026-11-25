@@ -472,8 +472,10 @@ public sealed partial class GitHubActionsSummaryReporterTests
             emptyPartition.TestDurationTicks = 0;
             emptyPartition.SlowestTests = [];
             emptyPartition.WriteOnFailureOnly = true;
+            emptyPartition.ShardGroupId = "group-a";
             GitHubCiRunSummaryModule passingPartition = CreateAggregateModule("Passing", null, "Passing.Run");
             passingPartition.WriteOnFailureOnly = true;
+            passingPartition.ShardGroupId = "group-a";
             string emptyFragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
                 directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, emptyPartition);
             string passingFragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
@@ -499,6 +501,62 @@ public sealed partial class GitHubActionsSummaryReporterTests
 
             Assert.IsNotNull(output);
             Assert.IsFalse(File.Exists(stepSummaryPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "On-failure keeps an unsharded empty project")]
+    [DataRow(true, DisplayName = "On-failure keeps a different empty shard group")]
+    public async Task SummaryPostProcessor_OnFailurePolicyReportsEmptyOtherProjectAsync(bool isShard)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-empty-project-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule empty = CreateAggregateModule("Empty", null, "Empty.Run");
+            empty.ExitCode = ZeroTestsExitCode;
+            empty.TotalTests = 0;
+            empty.PassedTests = 0;
+            empty.TestDurationTicks = 0;
+            empty.SlowestTests = [];
+            empty.WriteOnFailureOnly = true;
+            empty.ShardGroupId = isShard ? "group-b" : null;
+            GitHubCiRunSummaryModule passing = CreateAggregateModule("Passing", null, "Passing.Run");
+            passing.WriteOnFailureOnly = true;
+            passing.ShardGroupId = "group-a";
+            string emptyPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, empty);
+            string passingPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, passing);
+            string summaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(summaryPath);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]),
+                environment.Object,
+                new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(),
+                static () => false);
+
+            await processor.ProcessAsync(
+                [
+                    new InputArtifact(emptyPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, empty.ExecutionId),
+                    new InputArtifact(passingPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, passing.ExecutionId),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsTrue(File.Exists(summaryPath), "A failed empty project must trigger the on-failure summary.");
+            string summary = File.ReadAllText(summaryPath);
+            Assert.Contains("## ❌ Overall Test Run Summary", summary);
+            Assert.Contains("### ❌ Empty", summary);
+            Assert.Contains("ZeroTests", summary);
+            Assert.Contains("### ✅ Passing", summary);
         }
         finally
         {
@@ -656,6 +714,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
                 DurationTicks = TimeSpan.FromMilliseconds(10).Ticks,
             };
             GitHubCiRunSummaryModule first = CreateRetryModule("session-1", attempt: 1, passed: 2, failed: 1);
+            first.ShardGroupId = "group-a";
             first.Failures = [flakyTest];
             first.HistoryTests =
             [
@@ -664,6 +723,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
             ];
             first.TestDurationTicks = TimeSpan.FromMilliseconds(100).Ticks;
             GitHubCiRunSummaryModule retry = CreateRetryModule("session-2", attempt: 2, passed: 1, failed: 0);
+            retry.ShardGroupId = "group-a";
             retry.FlakyTests = [flakyTest];
             retry.HistoryTests = [CreateHistoryTest("flaky", "Tests.Flaky", "passed")];
             retry.TestDurationTicks = TimeSpan.FromMilliseconds(200).Ticks;
@@ -716,6 +776,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
             Assert.AreEqual(3, aggregate.TotalTests);
             Assert.AreEqual(3, aggregate.PassedTests);
             Assert.AreEqual(0, aggregate.FailedTests);
+            Assert.AreEqual("group-a", aggregate.Modules.Single().ShardGroupId);
             Assert.AreEqual("Tests.Flaky", aggregate.FlakyTests.Single().FullyQualifiedName);
             Assert.HasCount(2, aggregate.Modules.Single().HistoryTests);
             GitHubCiRunSummaryHistoryTest flakyHistory =
@@ -1477,8 +1538,10 @@ public sealed partial class GitHubActionsSummaryReporterTests
         emptyPartition.PassedTests = 0;
         emptyPartition.TestDurationTicks = 0;
         emptyPartition.SlowestTests = [];
+        emptyPartition.ShardGroupId = "group-a";
 
         GitHubCiRunSummaryModule passingPartition = CreateAggregateModule("Passing", null, "Passing.Run");
+        passingPartition.ShardGroupId = "group-a";
         var aggregate = new GitHubCiRunSummaryAggregate(
             [emptyPartition, passingPartition],
             new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
@@ -1502,6 +1565,43 @@ public sealed partial class GitHubActionsSummaryReporterTests
         Assert.Contains("✅ `Empty`", condensed);
         Assert.DoesNotContain("❌ `Empty`", condensed);
         Assert.DoesNotContain("ZeroTests", condensed);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Unsharded empty project remains failed")]
+    [DataRow(true, DisplayName = "Empty shard group remains failed")]
+    public void BuildAggregateMarkdown_EmptyOtherProjectRemainsFailed(bool isShard)
+    {
+        GitHubCiRunSummaryModule empty = CreateAggregateModule("Empty", null, "Empty.Run");
+        empty.ExitCode = ZeroTestsExitCode;
+        empty.TotalTests = 0;
+        empty.PassedTests = 0;
+        empty.TestDurationTicks = 0;
+        empty.SlowestTests = [];
+        empty.ShardGroupId = isShard ? "group-b" : null;
+        GitHubCiRunSummaryModule passing = CreateAggregateModule("Passing", null, "Passing.Run");
+        passing.ShardGroupId = "group-a";
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [empty, passing],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
+        Assert.StartsWith("## ❌ Overall Test Run Summary", markdown);
+        Assert.Contains("### ❌ Empty", markdown);
+        Assert.Contains("ZeroTests", markdown);
+        Assert.Contains("### ✅ Passing", markdown);
+
+        string condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, condenseAllModules: true).Markdown;
+        Assert.Contains("❌ `Empty`", condensed);
+        Assert.Contains("✅ `Passing`", condensed);
     }
 
     [TestMethod]

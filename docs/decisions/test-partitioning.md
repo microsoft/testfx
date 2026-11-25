@@ -61,15 +61,98 @@ empty-shard summary finding was addressed in the follow-up below.
 
 ### GitHub Actions empty-shard summaries (2026-11-25)
 
-The GitHub Actions reporter previously treated every child `ZeroTests` exit as
-a failure, so an otherwise successful sharded run could show failed step
-summary sections. The fix treats a module as an empty shard only when its exit
-is `ZeroTests`, it reports zero tests, and the aggregate reports at least one
-test. That rule is used for aggregate, condensed, and per-project rendering and
-for the post-processor's on-failure policy. An all-empty aggregate still fails,
-and a `MinimumExpectedTestsPolicyViolation` is not suppressed.
+Review of `b71177e5e5e02ef80b0aea30f8c95311f064293a` found that aggregate-wide
+test counts also suppress `ZeroTests` for a different, empty project. An
+aggregate count or a matching assembly name cannot identify sibling shards.
+The correction carries an invocation-specific shard group from the sharding
+orchestrator into each GitHub summary fragment, preserves it across Retry's
+merged fragment, and suppresses `ZeroTests` only when that group itself contains
+tests. Older fragments without the optional group retain their zero-test
+failure instead of being guessed to be shards. The same decision must govern
+full and condensed output and the `on-failure` policy. Retry preserves the ID
+only when all its input IDs agree.
 
-On the current PR source based on
+The earlier implementation described below is **superseded** by group-scoped
+handling: an unrelated nonempty project must not suppress an empty project's
+failure. The GitHub Actions reporter previously treated every child `ZeroTests` exit as
+a failure, so an otherwise successful sharded run could show failed step
+summary sections. That earlier fix treated a module as an empty shard when its exit
+is `ZeroTests`, it reports zero tests, and the aggregate reports at least one
+test. That rule was used for aggregate, condensed, and per-project rendering and
+for the post-processor's on-failure policy. The revised rule continues to fail
+an all-empty group and does not suppress `MinimumExpectedTestsPolicyViolation`.
+
+#### Group-isolation regression evidence
+
+The source under test was the uncommitted review fix based on
+`b71177e5e5e02ef80b0aea30f8c95311f064293a`. The focused Release net10.0
+selection below executed nine cases: nine passed, none failed or skipped,
+exit 0. The comparison retained the same tests and changed only the
+empty-shard predicate to accept any nonempty group. It executed nine cases:
+four failed and five passed, exit 2. Both distinct/unknown-group rendering
+rows and both on-failure rows failed at their intended assertions. This is a
+targeted behavioral mutation, not a pristine-base comparison.
+
+```powershell
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Release\net10.0\Microsoft.Testing.Extensions.UnitTests.dll --filter 'FullyQualifiedName~BuildAggregateMarkdown_Empty|FullyQualifiedName~SummaryPostProcessor_OnFailurePolicyIgnoresEmptyPartitionsWhenAggregatePassedAsync|FullyQualifiedName~SummaryPostProcessor_OnFailurePolicyReportsEmptyOtherProjectAsync|FullyQualifiedName~SummaryPostProcessor_ForRetryAttempts_ReturnsChainableFragmentAndWritesSummary' --ansi off --progress off --show-test-results all
+```
+
+The previous head's hosted Windows and Ubuntu Bazel checks both failed
+`GitHubPostProcessor_OnFailureOnly_UsesModuleExitCodeWhenRunSummaryIsUnavailableAsync`:
+the test expected a warning while the reporter correctly rendered the
+nonzero module exit as a failure. Its expectation now verifies the failed
+overall and project verdicts and the `ZeroTests` diagnostic. After rebuilding,
+the wider reporter and aggregation selection executed 281 cases: 275 passed,
+six platform-specific cases skipped, none failed, exit 0.
+
+```powershell
+.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj -f net10.0 -c Release -v:q -bl:artifacts\log\shard-review-final-unit.binlog
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Release\net10.0\Microsoft.Testing.Extensions.UnitTests.dll --filter 'FullyQualifiedName~GitHubActionsSummaryReporterTests|FullyQualifiedName~CiRunSummaryAggregationTests' --ansi off --progress off
+```
+
+The correct-source `.\build.cmd -pack -c Release -bl` exited 0 with no
+warnings or errors. For the isolated comparison, a full pack failed with
+`PRI210` on a Windows app-model PRI move in its long path. Individual
+platform and reporter packs succeeded; unchanged packages were copied from the
+correct pack. An initial missing nonshipping package prevented setup, so that
+attempt is not behavioral evidence. After restoring the missing package, the
+same two packed SDK acceptance cases executed with the mutated reporter:
+one passed, one failed, none skipped, exit 2. The failing
+`ShardCount_NativeDotnetTest_EmptyModuleIsNotHiddenByPassingModule` expected
+`### ❌ Acme.Tests` but observed `### ✅ Acme.Tests`. Repacking the restored
+reporter in the same comparison and rerunning the same selection yielded two
+passed, none failed or skipped, exit 0.
+
+```powershell
+.\eng\build.ps1 -restore -build -pack -projects 'src\MTP\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj' -c Release -bl
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-build --filter 'FullyQualifiedName~PartitionTests.ShardCount_NativeDotnetTest_EmptyPartitionsKeepGitHubSummaryPassing|FullyQualifiedName~PartitionTests.ShardCount_NativeDotnetTest_EmptyModuleIsNotHiddenByPassingModule' -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=<results-directory> -bl:<results-directory>\test.binlog --show-test-results all
+```
+
+Windows x64 used the pinned SDK `12.0.100-alpha.1.26570.125`, an outer
+net12.0 host and generated net11.0 modules. MTP, GitHubActionsReport and
+Retry were `3.0.0-dev`; MSTest adapter and framework were `5.0.0-dev`. Each
+generated module used its own NuGet cache. Both modules' loaded reporter DLLs
+matched the respective packed payload: mutated SHA-256
+`BD69FBE35F699CE4316BFE5661FD940048C9F6DCF0B10BA1C6EB25D7BD47194A`,
+restored SHA-256
+`DDCE83F1B98E5A067202C85EB246CEFB11BE9F3622117241B119F38F236591AD`.
+The mutated and restored reporter package SHA-256 values were respectively
+`B10E0902F5449886A3A9A6C4CAF09633E417FE55F620EEE8A39AF67BD8912FD5`
+and `68EF1FFCDFC4E1B0337C25948FBB5777DC57413C519A76A9AF136D35FE0B1A4D`.
+The captured pre-documentation correct and mutated source patches have SHA-256
+`C2E75D2D12EC31D7858B75DFC7530AF1978E50828410629EF74CE9D87076E42F`
+and `BB6CC1868B871620342702DA92A547CE8C91AE2D85A060CC4B46E971C50FE646`.
+
+The real mixed-module SDK invocation returned parent exit 0 and an
+authoritative overall success, while identifying the empty module as zero
+tests with exit 8. The assertion therefore preserves overall success but
+requires four failed sections and four `ZeroTests` diagnostics for that
+module, alongside four passing sections for the other module. Fragments,
+module paths, shard groups, session identities, and TRX results are correlated.
+Hosted GitHub Actions rendering, Unix, servicing branches, and CI for the new
+head remain unverified; the local Markdown output is not hosted UI evidence.
+
+For the earlier, superseded implementation based on
 `5dc3b721cf3fb0429655aba29762025d6cf61ed2`, the following repository-pinned
 Release pack completed with exit 0, 0 warnings, and 0 errors. The shipping
 `Microsoft.Testing.Extensions.GitHubActionsReport.3.0.0-dev.nupkg` SHA-256 was

@@ -119,15 +119,14 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         // the run actually passed.
         bool writeOnFailureOnly = aggregate.Modules.Count > 0
             && aggregate.Modules.All(static module => module.WriteOnFailureOnly);
+        HashSet<string> nonEmptyShardGroups = GitHubActionsSummaryReporter.GetNonEmptyShardGroups(aggregate.Modules);
         bool runFailed = aggregate.IsPartial
             || aggregate.FailedTests > 0
             || (aggregate.ExitCode is int exitCode
                 ? GitHubActionsExitCode.IndicatesFailure(exitCode)
                 : aggregate.Modules.Any(module =>
                     GitHubActionsExitCode.IndicatesFailure(module.ExitCode)
-                    && !(aggregate.TotalTests > 0
-                        && module.TotalTests == 0
-                        && module.ExitCode == (int)ExitCode.ZeroTests)));
+                    && !GitHubActionsSummaryReporter.IsEmptyShard(module, nonEmptyShardGroups)));
         StepSummaryWriter? writer = downstreamPostProcessingWillPublishSummary
             || RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
             || (writeOnFailureOnly && !runFailed)
@@ -253,6 +252,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             Architecture = first.Architecture,
             ExecutionId = first.ExecutionId,
             SessionUid = last.SessionUid,
+            ShardGroupId = aggregate.Modules.All(module => string.Equals(module.ShardGroupId, first.ShardGroupId, StringComparison.Ordinal))
+                ? first.ShardGroupId
+                : null,
             RequestedOutputPath = first.RequestedOutputPath,
             WriteOnFailureOnly = aggregate.Modules.All(static module => module.WriteOnFailureOnly),
             GitHubActionsStepSummaryEnabled = aggregate.Modules.Any(static module => module.GitHubActionsStepSummaryEnabled is not false),

@@ -1,4 +1,7 @@
 #nullable enable
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.GetNonEmptyShardGroups(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.CiRunSummaryModule!>! modules) -> System.Collections.Generic.HashSet<string!>!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.IsEmptyShard(Microsoft.Testing.Extensions.CiRunSummaryModule! module, System.Collections.Generic.HashSet<string!>! nonEmptyShardGroups) -> bool
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_SHARD_GROUP_ID = "TESTINGPLATFORM_SHARD_GROUP_ID" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
 static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsAttachments = "report-gh-attachments" -> string!

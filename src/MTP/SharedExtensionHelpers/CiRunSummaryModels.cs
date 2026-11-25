@@ -27,6 +27,9 @@ internal sealed class CiRunSummaryModule
 
     public string SessionUid { get; set; } = string.Empty;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ShardGroupId { get; set; }
+
     public string RequestedOutputPath { get; set; } = string.Empty;
 
     public bool WriteOnFailureOnly { get; set; }

@@ -117,6 +117,88 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
+    public async Task ShardCount_NativeDotnetTest_EmptyModuleIsNotHiddenByPassingModule()
+    {
+        using var run = new TempDirectory("shard-count-github-mixed-modules");
+        string solution = Path.Combine(run.Path, "Partitions.slnx");
+        File.WriteAllText(solution, $"""
+            <Solution>
+              <Folder Name="/Independent/">
+                <Project Path="{AssetFixture.ProjectPath(Independent)}" />
+              </Folder>
+              <Folder Name="/Dependencies/">
+                <Project Path="{AssetFixture.ProjectPath(Dependencies)}" />
+              </Folder>
+            </Solution>
+            """);
+        string summaryPath = Path.Combine(run.Path, "summary.md");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment["GITHUB_ACTIONS"] = "true";
+        environment["GITHUB_STEP_SUMMARY"] = summaryPath;
+        environment["TF_BUILD"] = "false";
+        string arguments = $"test --solution \"{solution}\" -c Release --no-build --max-parallel-test-modules 2"
+            + $" --filter FullyQualifiedName=Acme.CartTests.Keep --shard-count 4 --report-gh --report-trx --report-trx-filename run.trx"
+            + $" --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-github-mixed-modules", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
+        Assert.Contains("Zero tests ran", result.StandardOutput);
+        Assert.Contains("Exit code: 8", result.StandardOutput);
+        string[] groups = Directory.GetDirectories(Path.Combine(run.Path, "Shards"));
+        Assert.HasCount(2, groups);
+        string summary = File.ReadAllText(summaryPath);
+        List<int> counts = [];
+        foreach (string group in groups)
+        {
+            string[] reports = Directory.GetFiles(group, "run.trx", SearchOption.AllDirectories);
+            Assert.HasCount(4, reports);
+            ReportResult[] results = [.. reports.SelectMany(ReadResults)];
+            if (results.Length > 0)
+            {
+                Assert.AreSequenceEqual([$"{Cart}.Keep|Passed"], results.Select(test => test.FullyQualifiedName + "|" + test.Outcome));
+            }
+
+            string[] fragments = Directory.GetFiles(group, "github-actions-*.json", SearchOption.AllDirectories);
+            Assert.HasCount(4, fragments);
+            foreach (string fragment in fragments)
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(fragment));
+                JsonElement module = document.RootElement.GetProperty("module");
+                Assert.AreEqual(Path.GetFileName(group), module.GetProperty("shardGroupId").GetString());
+                string session = module.GetProperty("sessionUid").GetString()!;
+                string modulePath = module.GetProperty("modulePath").GetString()!;
+                bool isEmptyProject = modulePath.StartsWith(AssetFixture.AssetPath(Dependencies), StringComparison.OrdinalIgnoreCase);
+                Assert.StartsWith(isEmptyProject ? AssetFixture.AssetPath(Dependencies) : AssetFixture.AssetPath(Independent), modulePath);
+                Assert.AreEqual(isEmptyProject ? 0 : 1, results.Length);
+                string[] sectionParts = summary.Split($"session {session})", StringSplitOptions.None);
+                Assert.HasCount(2, sectionParts);
+                string section = sectionParts[1].Split("</details>", StringSplitOptions.None)[0];
+                Assert.Contains(isEmptyProject ? "### ❌ Acme.Tests" : "### ✅ Acme.Tests", section);
+                if (isEmptyProject)
+                {
+                    Assert.Contains("ZeroTests", section);
+                }
+                else
+                {
+                    Assert.DoesNotContain("ZeroTests", section);
+                }
+            }
+
+            counts.Add(results.Length);
+        }
+
+        Assert.AreSequenceEqual([0, 1], counts, SequenceOrder.InAnyOrder);
+        Assert.Contains("## ✅ Overall Test Run Summary", summary);
+        Assert.AreEqual(4, summary.Split("### ✅ ", StringSplitOptions.None).Length - 1);
+        Assert.AreEqual(4, summary.Split("### ❌ ", StringSplitOptions.None).Length - 1);
+        Assert.AreEqual(4, summary.Split("ZeroTests", StringSplitOptions.None).Length - 1);
+    }
+
+    [TestMethod]
     [DataRow("DOTNET_WATCH", DisplayName = "Shard count rejects dotnet watch")]
     [DataRow("TESTINGPLATFORM_HOTRELOAD_ENABLED", DisplayName = "Shard count rejects hot reload")]
     public async Task ShardCount_HotReload_FailsBeforeExecution(string variable)
@@ -1265,7 +1347,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 .PatchCodeWithReplace("$RetryVersion$", MicrosoftTestingExtensionsRetryVersion)
                 .PatchCodeWithReplace(
                     "$GitHubActionsReportPackageReference$",
-                    name == Independent
+                    name is Independent or Dependencies
                         ? $"<PackageReference Include=\"Microsoft.Testing.Extensions.GitHubActionsReport\" Version=\"{MicrosoftTestingExtensionsGitHubActionsReportVersion}\" />"
                         : string.Empty)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)

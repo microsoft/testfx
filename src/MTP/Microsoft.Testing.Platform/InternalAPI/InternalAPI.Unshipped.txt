@@ -22,6 +22,7 @@ Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.g
 Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.set -> void
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManager.BuildAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider, string? orchestratorChain) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration!>!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_SHARD_GROUP_ID = "TESTINGPLATFORM_SHARD_GROUP_ID" -> string!
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.ConsumedOrchestratorUids.get -> string![]!
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.IsCompositionActive.get -> bool
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.IsOutermostProcess.get -> bool

@@ -190,14 +190,14 @@ internal sealed partial class GitHubActionsSummaryReporter
     private static int AppendModuleMarkdown(
         StringBuilder builder,
         CiRunSummaryModule module,
-        long aggregateTotalTests,
+        HashSet<string> nonEmptyShardGroups,
         int headingLevel,
         GitHubActionsStepSummarySections sections,
         bool includeFailureDetails,
         SummaryBudget budget)
     {
         string heading = new('#', headingLevel);
-        bool emptyShard = GitHubActionsSummaryReporter.IsEmptyShard(module, aggregateTotalTests);
+        bool emptyShard = GitHubActionsSummaryReporter.IsEmptyShard(module, nonEmptyShardGroups);
         bool runFailed = module.FailedTests > 0
             || (GitHubActionsExitCode.IndicatesFailure(module.ExitCode) && !emptyShard);
         builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
