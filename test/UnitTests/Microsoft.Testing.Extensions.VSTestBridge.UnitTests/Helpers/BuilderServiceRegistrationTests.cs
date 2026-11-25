@@ -32,7 +32,7 @@ public sealed class BuilderServiceRegistrationTests
         ICommandLineOptionsProvider[] providers = handler.ExtensionsCommandLineOptionsProviders.ToArray();
 
         Assert.AreSequenceEqual(
-            new[] { "manifest", "settings", "filter", "test-parameter" },
+            new[] { "manifest", "partition-count", "settings", "filter", "test-parameter" },
             providers.SelectMany(provider => provider.GetCommandLineOptions()).Select(option => option.Name));
         Assert.HasCount(3, providers.Where(provider => provider.Uid == "Uid"));
         foreach (ICommandLineOptionsProvider provider in providers.Where(provider => provider.Uid == "Uid"))

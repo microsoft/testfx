@@ -79,7 +79,6 @@ public sealed class RetryExtensionsTests
             "_factories",
             BindingFlags.Instance | BindingFlags.NonPublic)!;
         var factories = (List<Func<IServiceProvider, ITestHostExecutionOrchestrator>>)factoriesField.GetValue(orchestratorManager)!;
-        Assert.HasCount(1, factories);
         var serviceProvider = new ServiceProvider();
         serviceProvider.AddService(new TestCommandLineOptions(new()
         {
@@ -87,8 +86,6 @@ public sealed class RetryExtensionsTests
         }));
         serviceProvider.AddService(new SystemFileSystem());
 
-        ITestHostExecutionOrchestrator orchestrator = factories.Single()(serviceProvider);
-
-        Assert.IsInstanceOfType<RetryOrchestrator>(orchestrator);
+        Assert.ContainsSingle(factories.Select(factory => factory(serviceProvider)).OfType<RetryOrchestrator>());
     }
 }

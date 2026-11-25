@@ -222,6 +222,36 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
+    public async Task PartitionCount_LeadingHyphensInParameter_AreForwarded()
+    {
+        using var run = new TempDirectory("partition-count-hyphens");
+        TestHostResult result = await RunFanOutAsync(
+            Independent, "--test-parameter ---ansi=off --partition-count 2", run,
+            new Dictionary<string, string?> { ["PARTITION_TEST_HYPHENS"] = "1" });
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Partition middleware wraps standalone distribution once")]
+    [DataRow(true, DisplayName = "Partition middleware wraps distribution and retry once")]
+    public async Task PartitionCount_UnconditionalMiddleware_WrapsOnlyTheOuterProcess(bool retry)
+    {
+        using var run = new TempDirectory("partition-count-middleware");
+        string marker = Path.Combine(run.Path, "middleware.txt");
+        TestHostResult result = await RunFanOutAsync(
+            Cancellation, "--partition-count 2" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
+            new Dictionary<string, string?> { ["PARTITION_TEST_MIDDLEWARE"] = marker });
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreSequenceEqual(new[] { "middleware" }, File.ReadAllLines(marker));
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
     public async Task PartitionCount_ResponseFileAndMultilineArgument_PreserveParameter()
     {
         using var run = new TempDirectory("partition-count-multiline");
@@ -234,6 +264,58 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
         Assert.HasCount(2, reports);
         AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Temporary response files are removed after success")]
+    [DataRow(true, DisplayName = "Temporary response files are removed after child failure")]
+    public async Task PartitionCount_ResponseFiles_ArePrivateAndRemoved(bool failChild)
+    {
+        using var run = new TempDirectory("partition-count-private-response");
+        using var input = new TempDirectory("partition-count-input-response");
+        string original = Path.Combine(input.Path, "original.rsp");
+        File.WriteAllText(original, "--partition-count 1");
+        string temp = Path.Combine(run.Path, "temp");
+        string captures = Path.Combine(run.Path, "captures");
+        Directory.CreateDirectory(temp);
+        Directory.CreateDirectory(captures);
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation);
+        environment["TEMP"] = temp;
+        environment["TMP"] = temp;
+        environment["TMPDIR"] = temp;
+        environment["PARTITION_TEST_RESPONSE_CAPTURE"] = captures;
+        environment["PARTITION_TEST_RESPONSE_ORIGINAL"] = original;
+        environment["PARTITION_TEST_FAIL_CHILD"] = failChild ? "1" : null;
+        TestHostResult result = await AssetFixture.Host(Cancellation).ExecuteAsync(
+            $"@\"{original}\" --results-directory \"{run.Path}\"",
+            environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(failChild ? 42 : 0, result.ExitCode, result.StandardOutput + result.StandardError);
+        string capture = Assert.ContainsSingle(Directory.GetFiles(captures, "*.txt"));
+        string[] paths = File.ReadAllLines(capture);
+        Assert.IsNotEmpty(paths);
+        foreach (string path in paths)
+        {
+            Assert.StartsWith(Path.GetFullPath(temp) + Path.DirectorySeparatorChar, Path.GetFullPath(path));
+            Assert.IsFalse(File.Exists(path), $"Response file was not removed: {path}");
+        }
+
+        Assert.IsEmpty(Directory.GetFiles(Path.Combine(run.Path, "Partitions"), "*.rsp", SearchOption.AllDirectories));
+    }
+
+    [TestMethod]
+    public async Task PartitionCount_NativeDotnetTest_PreservesChildStartupDiagnostic()
+    {
+        using var run = new TempDirectory("partition-count-sdk-diagnostic");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation, forDotnetCli: true);
+        environment["PARTITION_TEST_CHILD_DIAGNOSTIC"] = "1";
+        string arguments = $"test --project \"{AssetFixture.ProjectPath(Cancellation)}\" -c Release --no-build"
+            + $" --partition-count 1 --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Cancellation), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        Assert.Contains("partition startup diagnostic marker", result.StandardOutput + result.StandardError);
     }
 
     [TestMethod]
@@ -337,12 +419,20 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_Cancellation_JoinsUncooperativeChildren()
+    [DataRow(false, DisplayName = "Cancellation joins uncooperative children")]
+    [DataRow(true, DisplayName = "Cancellation removes temporary response files")]
+    public async Task PartitionCount_Cancellation_JoinsUncooperativeChildren(bool useResponseFile)
     {
         using var run = new TempDirectory("partition-count-cancel");
+        string original = Path.Combine(run.Path, "original.rsp");
+        string captures = Path.Combine(run.Path, "captures");
+        string temp = Path.Combine(run.Path, "temp");
+        Directory.CreateDirectory(captures);
+        Directory.CreateDirectory(temp);
+        File.WriteAllText(original, "--filter FullyQualifiedName~Acme");
         ProcessStartInfo start = new(
             AssetFixture.Host(Cancellation).FullName,
-            $"--partition-count 2 --results-directory \"{run.Path}\" --ansi off --progress off")
+            $"--partition-count 2 {(useResponseFile ? $"@\"{original}\"" : string.Empty)} --results-directory \"{run.Path}\" --ansi off --progress off")
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -350,6 +440,15 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         };
         start.Environment["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet");
         start.Environment["PARTITION_TEST_HANG"] = run.Path;
+        if (useResponseFile)
+        {
+            start.Environment["PARTITION_TEST_RESPONSE_CAPTURE"] = captures;
+            start.Environment["PARTITION_TEST_RESPONSE_ORIGINAL"] = original;
+            start.Environment["TEMP"] = temp;
+            start.Environment["TMP"] = temp;
+            start.Environment["TMPDIR"] = temp;
+        }
+
         using Process parent = Process.Start(start)!;
         Task<string> stdout = parent.StandardOutput.ReadToEndAsync(TestContext.CancellationToken);
         Task<string> stderr = parent.StandardError.ReadToEndAsync(TestContext.CancellationToken);
@@ -377,6 +476,15 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             await Task.WhenAll(children.Select(child => child.WaitForExitAsync(deadline.Token)));
             Assert.AreEqual((int)ExitCode.TestSessionAborted, parent.ExitCode, await stdout + await stderr);
             Assert.IsTrue(children.All(child => child.HasExited), "Returning from cancellation must join every active partition.");
+            if (useResponseFile)
+            {
+                string[] files = Directory.GetFiles(captures, "*.txt");
+                Assert.HasCount(Math.Min(2, Environment.ProcessorCount), files);
+                foreach (string path in files.SelectMany(File.ReadAllLines))
+                {
+                    Assert.IsFalse(File.Exists(path), $"Response file was not removed: {path}");
+                }
+            }
         }
         finally
         {
@@ -1216,6 +1324,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                         Assert.AreEqual("first\nsecond", TestContext.Properties["Multiline"]);
                     }
 
+                    if (System.Environment.GetEnvironmentVariable("PARTITION_TEST_HYPHENS") is not null)
+                    {
+                        Assert.AreEqual("off", TestContext.Properties["---ansi"]);
+                    }
+
                     Probe.Record("Checkout.Keep");
                 }
                 [TestMethod, TestCategory("Slow")]
@@ -1347,8 +1460,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             using System.IO;
             using System.Linq;
             using System.Reflection;
+            using System.Security.AccessControl;
+            using System.Security.Principal;
             using System.Threading;
             using System.Threading.Tasks;
+            using Microsoft.Testing.Extensions;
             using Microsoft.Testing.Platform.Builder;
             using Microsoft.Testing.Platform.Extensions.TestHostControllers;
             using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -1363,10 +1479,63 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                         Thread.Sleep(Timeout.Infinite);
                     }
 
+                    string? capture = Environment.GetEnvironmentVariable("PARTITION_TEST_RESPONSE_CAPTURE");
+                    if (capture is not null)
+                    {
+                        string original = Environment.GetEnvironmentVariable("PARTITION_TEST_RESPONSE_ORIGINAL")!;
+                        string[] paths = args.Where(arg => arg.StartsWith("@", StringComparison.Ordinal))
+                            .Select(arg => arg.Substring(1))
+                            .Where(path => !string.Equals(path, original, StringComparison.OrdinalIgnoreCase))
+                            .ToArray();
+                        if (paths.Length > 0)
+                        {
+                            foreach (string path in paths)
+                            {
+                                if (!File.Exists(path))
+                                {
+                                    throw new InvalidOperationException("The child response file is missing.");
+                                }
+                                if (!OperatingSystem.IsWindows()
+                                    && (File.GetUnixFileMode(path) & (UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute
+                                        | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute)) != 0)
+                                {
+                                    throw new InvalidOperationException("The child response file is not private.");
+                                }
+                                if (OperatingSystem.IsWindows())
+                                {
+                                    FileSecurity security = new FileInfo(path).GetAccessControl();
+                                    using WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                                    if (!security.AreAccessRulesProtected || security.GetAccessRules(true, true, typeof(SecurityIdentifier))
+                                        .Cast<FileSystemAccessRule>()
+                                        .Any(rule => rule.AccessControlType == AccessControlType.Allow && !rule.IdentityReference.Equals(identity.User)))
+                                    {
+                                        throw new InvalidOperationException("The child response file is not private.");
+                                    }
+                                }
+                            }
+                            File.WriteAllLines(Path.Combine(capture, Environment.ProcessId + ".txt"), paths);
+                            if (Environment.GetEnvironmentVariable("PARTITION_TEST_FAIL_CHILD") is not null)
+                            {
+                                return 42;
+                            }
+                        }
+                    }
+
+                    if (args.Contains("--partition") && Environment.GetEnvironmentVariable("PARTITION_TEST_CHILD_DIAGNOSTIC") is not null)
+                    {
+                        Console.Error.WriteLine("partition startup diagnostic marker");
+                        return 42;
+                    }
+
                     var builder = await TestApplication.CreateBuilderAsync(args);
                     if (args.Contains("--partition-count") && Environment.GetEnvironmentVariable("PARTITION_TEST_HANG") is not null)
                     {
                         builder.TestHostOrchestrator.AddTestHostExecutionOrchestratorMiddleware(services => new CancelOnMarker(services));
+                    }
+
+                    if (Environment.GetEnvironmentVariable("PARTITION_TEST_MIDDLEWARE") is string marker)
+                    {
+                        builder.TestHostOrchestrator.AddTestHostExecutionOrchestratorMiddleware(_ => new RecordMiddleware(marker));
                     }
 
                     if (Environment.GetEnvironmentVariable("PARTITION_TEST_CUSTOM_LAUNCHER") is string launcher)
@@ -1375,6 +1544,8 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                     }
 
                     builder.AddMSTest(() => new[] { Assembly.GetExecutingAssembly() });
+                    builder.AddTrxReportProvider();
+                    builder.AddRetryProvider();
                     using var app = await builder.BuildAsync();
                     return await app.RunAsync();
                 }
@@ -1388,6 +1559,19 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 public Task<bool> IsEnabledAsync() => Task.FromResult(enabled);
                 public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken token)
                     => throw new InvalidOperationException("The custom launcher must not be invoked.");
+            }
+            internal sealed class RecordMiddleware(string marker) : ITestHostExecutionOrchestratorMiddleware
+            {
+                public string Uid => "RecordMiddleware";
+                public string Version => "1.0.0";
+                public string DisplayName => Uid;
+                public string Description => Uid;
+                public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+                public Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken token)
+                {
+                    File.AppendAllText(marker, "middleware" + Environment.NewLine);
+                    return next(token);
+                }
             }
             internal sealed class CancelOnMarker(IServiceProvider services) : ITestHostExecutionOrchestratorMiddleware
             {

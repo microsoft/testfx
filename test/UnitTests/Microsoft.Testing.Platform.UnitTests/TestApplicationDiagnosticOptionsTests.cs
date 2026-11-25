@@ -339,7 +339,7 @@ public sealed class TestApplicationDiagnosticOptionsTests
                 options.Configuration.ConfigurationSources.RegisterEnvironmentVariablesConfigurationSource = false;
                 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(["--no-banner", .. args], options);
                 _ = builder.RegisterTestFramework(
-                    _ => Mock.Of<ITestFrameworkCapabilities>(),
+                    _ => new TestFrameworkCapabilities(),
                     (_, _) => Mock.Of<ITestFramework>());
                 using ITestApplication application = await builder.BuildAsync();
 

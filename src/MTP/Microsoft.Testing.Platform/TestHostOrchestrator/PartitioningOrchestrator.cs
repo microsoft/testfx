@@ -10,7 +10,13 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+
+#if NETCOREAPP
+using System.Security.AccessControl;
+using System.Security.Principal;
+#endif
 
 namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
@@ -92,7 +98,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
                         "--results-directory", directory,
                         "--ansi", "off", "--progress", "off",
                     ];
-                    int exit = await RunChildAsync(executable, arguments, directory, partition, count, outputGate, stop.Token).ConfigureAwait(false);
+                    int exit = await RunChildAsync(executable, arguments, partition, count, outputGate, stop.Token).ConfigureAwait(false);
                     lock (verdictGate)
                     {
                         aggregateExit = AggregateExitCode(aggregateExit, exit);
@@ -140,6 +146,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             int separator = option.IndexOfAny(['=', ':']);
             string name = separator < 0 ? option : option.Substring(0, separator);
             if (argument.StartsWith("-", StringComparison.Ordinal)
+                && !argument.StartsWith("---", StringComparison.Ordinal)
                 && (name.Equals(PartitioningCommandLineOptionsProvider.PartitionCountOptionName, StringComparison.OrdinalIgnoreCase)
                     || name.Equals("results-directory", StringComparison.OrdinalIgnoreCase)
                     || name.Equals("progress", StringComparison.OrdinalIgnoreCase)
@@ -160,9 +167,10 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
     }
 
     private async Task<int> RunChildAsync(
-        ExecutableInfo executable, List<string> arguments, string directory, int partition, int count,
+        ExecutableInfo executable, List<string> arguments, int partition, int count,
         SemaphoreSlim outputGate, CancellationToken cancellationToken)
     {
+        using var responseFiles = new TemporaryResponseFiles();
         string[] originalArguments = [.. executable.Arguments];
         int responseFileIndex = Array.FindIndex(originalArguments, argument => argument.StartsWith("@", StringComparison.Ordinal));
         if (responseFileIndex >= 0)
@@ -172,7 +180,6 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             // represent inline; other arguments may exceed the OS command-line limit.
             List<string> commandArguments = [.. arguments.Take(prefixLength)];
             List<string> segment = [];
-            int segmentIndex = 0;
             foreach (string argument in arguments.Skip(prefixLength))
             {
                 if (argument.IndexOfAny(['"', '\r', '\n']) >= 0)
@@ -196,9 +203,9 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
                     return;
                 }
 
-                string responseFile = Path.Combine(directory, $"partition-arguments-{segmentIndex++}.rsp");
-                using (IFileStream stream = serviceProvider.GetFileSystem().NewFileStream(responseFile, FileMode.Create, FileAccess.Write))
-                using (var writer = new StreamWriter(stream.Stream))
+                (string responseFile, FileStream stream) = responseFiles.Create();
+                using (stream)
+                using (var writer = new StreamWriter(stream))
                 {
                     foreach (string argument in segment)
                     {
@@ -227,6 +234,12 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
                 RedirectStandardError = true,
             },
         };
+        const string chainVariable = EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN;
+        if (RoslynString.IsNullOrEmpty(serviceProvider.GetEnvironment().GetEnvironmentVariable(chainVariable)))
+        {
+            process.StartInfo.EnvironmentVariables[chainVariable] = Convert.ToBase64String(Encoding.UTF8.GetBytes(Uid));
+        }
+
         cancellationToken.ThrowIfCancellationRequested();
         if (!process.Start())
         {
@@ -298,9 +311,21 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
                     await outputGate.WaitAsync(readerStop.Token).ConfigureAwait(false);
                     try
                     {
-                        await serviceProvider.GetOutputDevice().DisplayAsync(
-                            this, new TextOutputDeviceData($"[partition {partition.ToString(CultureInfo.InvariantCulture)}/{count.ToString(CultureInfo.InvariantCulture)}] {line}"),
-                            readerStop.Token).ConfigureAwait(false);
+                        string text = $"[partition {partition.ToString(CultureInfo.InvariantCulture)}/{count.ToString(CultureInfo.InvariantCulture)}] {line}";
+                        IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
+                        if (outputDevice is ProxyOutputDevice { OriginalOutputDevice: DotnetTestPassthroughOutputDevice }
+                            && serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsDisplayMessageForwardingSupported: false })
+                        {
+                            // Protocol 1.1 and 1.2 SDKs relay host console output but cannot receive DisplayMessage.
+                            serviceProvider.GetConsole().WriteLine(text);
+                        }
+                        else
+                        {
+                            IOutputDeviceData data = outputDevice is ProxyOutputDevice { OriginalOutputDevice: DotnetTestPassthroughOutputDevice }
+                                ? new SessionMessageOutputDeviceData(text)
+                                : new TextOutputDeviceData(text);
+                            await outputDevice.DisplayAsync(this, data, readerStop.Token).ConfigureAwait(false);
+                        }
                     }
                     finally
                     {
@@ -320,6 +345,66 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
                 childStop.Cancel();
 #endif
                 throw;
+            }
+        }
+    }
+
+    private sealed class TemporaryResponseFiles : IDisposable
+    {
+        private readonly List<string> _paths = [];
+
+        public (string Path, FileStream Stream) Create()
+        {
+#if NETCOREAPP
+            string path = Path.Combine(Path.GetTempPath(), $"mtp-partition-{Guid.NewGuid():N}.rsp");
+            FileStream stream;
+            if (OperatingSystem.IsWindows())
+            {
+                using var identity = WindowsIdentity.GetCurrent();
+                SecurityIdentifier owner = identity.User ?? throw new InvalidOperationException("The current Windows identity has no security identifier.");
+                FileSecurity security = new();
+                security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+                security.AddAccessRule(new FileSystemAccessRule(owner, FileSystemRights.FullControl, AccessControlType.Allow));
+                stream = FileSystemAclExtensions.Create(new FileInfo(path), FileMode.CreateNew, FileSystemRights.Read | FileSystemRights.Write,
+                    FileShare.Read, 4096, FileOptions.None, security);
+            }
+            else
+            {
+                stream = new FileStream(path, new FileStreamOptions
+                {
+                    Mode = FileMode.CreateNew,
+                    Access = FileAccess.Write,
+                    Share = FileShare.Read,
+                    UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                });
+            }
+
+            _paths.Add(path);
+            return (path, stream);
+#else
+            _ = _paths;
+            throw new PlatformNotSupportedException("Partitioning requires a supported .NET runtime.");
+#endif
+        }
+
+        public void Dispose()
+        {
+            List<Exception>? failures = null;
+            foreach (string path in _paths)
+            {
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    (failures ??= []).Add(ex);
+                }
+            }
+
+            if (failures is not null)
+            {
+                throw new AggregateException("Unable to remove temporary partition response files.", failures);
             }
         }
     }

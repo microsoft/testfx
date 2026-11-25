@@ -89,6 +89,14 @@ executed results and remaining gaps.
 
 ### Experiments and corrections (2026-11-24)
 
+- Review follow-up (2026-11-25): preserve an existing consumed orchestrator
+  chain and explicitly pass the distribution UID to standalone children. The
+  argument filter now follows the parser's treatment of three or more leading
+  hyphens as values. Child SDK diagnostics are forwarded via display messages
+  when supported, with console fallback for older protocol versions. Segmented
+  response files use private temporary files and are removed after the child,
+  including cancellation and failures. The acceptance class remains nonparallel
+  and uses per-test assets and per-run result paths.
 - Review follow-up: the launcher must be built and checked before local
   distribution, and owned option names must be removed case-insensitively.
   Separate response-file segments preserve large arguments alongside literal
@@ -121,6 +129,39 @@ executed results and remaining gaps.
   execute and fail at its intended report-count assertion.
 
 ### Review-fix validation (2026-11-25)
+
+Further follow-up was run on Windows x64 with local changes based on
+`cd40018e0174ed7fd3e3c27ef31de435991d42c9`, repository SDK
+`12.0.100-alpha.1.26570.125`, net12.0 acceptance host and net11.0 generated
+consumers. `.\build.cmd -pack -c Debug -bl` exited 0; the shipping
+`Microsoft.Testing.Platform.3.0.0-dev.nupkg` SHA-256 was
+`203271BF24BE3DCEA3ECED1A43CC0206713C49409120A50A5591C5747566E584`.
+
+- `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitioningOrchestratorTests' --ansi off --progress off`:
+  18 passed.
+- `.\.dotnet\dotnet.exe run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitionCount_' --ansi off --progress off`:
+  34 passed, including `PartitionCount_LeadingHyphensInParameter_AreForwarded`,
+  both `PartitionCount_UnconditionalMiddleware_WrapsOnlyTheOuterProcess` rows,
+  `PartitionCount_NativeDotnetTest_PreservesChildStartupDiagnostic`, and both
+  `PartitionCount_ResponseFiles_ArePrivateAndRemoved` rows.
+- Before the production fixes, these new argument, standalone middleware, SDK
+  diagnostics and response-file location checks failed at their behavioral
+  assertions. The response-file fixture was corrected after an initial run
+  failed on duplicate terminal options, so that setup failure is not counted as
+  regression evidence. Exact paired consumer package provenance is unavailable.
+- Hosted CI exposed two assertions assuming a fixed set of built-in providers
+  and diagnostic fixtures returning a null capability collection. After
+  correcting those tests, focused net10.0 runs of
+  `TestApplicationDiagnosticOptionsTests`, `RetryExtensionsTests`, and
+  `BuilderServiceRegistrationTests` exited 0 with 13, 3, and 2 passes
+  respectively, using `--filter 'FullyQualifiedName~<class>' --ansi off
+  --progress off` with `dotnet run --no-build`.
+
+Windows response-file permissions and cleanup were exercised; Unix permissions
+and a real older SDK's console fallback were not. SDK control-channel
+cancellation, shared explicit absolute output paths, and downstream
+release-branch validation and servicing remain open. Local results are not hosted
+CI results.
 
 The review fixes were tested on base
 `1349e60b01f97020ef732ebcfa3b7649b96d1395` with production/test patch SHA-256

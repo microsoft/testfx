@@ -55,6 +55,16 @@ public sealed class PartitioningOrchestratorTests
             ]));
 
     [TestMethod]
+    public void RemoveOwnedArguments_PreservesArgumentsWithThreeOrMoreLeadingHyphens()
+        => Assert.AreSequenceEqual(
+            new[] { "Tests.exe", "--test-parameter", "---ansi=off", "--filter", "----results-directory:value" },
+            PartitioningOrchestrator.RemoveOwnedArguments(
+            [
+                "Tests.exe", "--partition-count", "2", "--test-parameter", "---ansi=off",
+                "--filter", "----results-directory:value",
+            ]));
+
+    [TestMethod]
     [DataRow(8, 8, 8)]
     [DataRow(8, 0, 0)]
     [DataRow(0, 8, 0)]
