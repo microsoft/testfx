@@ -58,13 +58,21 @@ This is a loader-state change; those observations are more useful than a screens
 | Settings parsing and copying | `MSTestSettingsTests` and `MSTestRunSettingsContinuationTests` cover both settings channels, the default, invalid input and copying into the execution domain. |
 | Trimmed consumers | The existing `TrimTests.Publish_WithTestAdapter_DoesNotSurfaceWarningsFromSuppressedSources` check covers `AssemblyPreloader.cs`. The walk needs only references that survived trimming. Before the method-level suppression, both `net10.0` and `net11.0` consumers reported IL2026 on `Assembly.GetReferencedAssemblies()`. |
 
-Build the Debug shipping packages with `.\build.cmd -pack -c Debug -bl`. Run the built
-`MSTest.Acceptance.IntegrationTests.exe --filter "FullyQualifiedName~AssemblyPreloadTests"` to exercise
-the packed-consumer cases. To check sensitivity without removing the configuration API, omit just
-the gated `testRunner.PreloadAssemblies(...)` call in `TestExecutionManager.SourceExecution.cs`
-in an isolated build, repack, and run the identical cases against that package. The expected
-observable difference is the presence of the direct and transitive libraries with preloading on;
-preload-off controls must not change.
+Windows results for implementation `8b7e63da3d70e8b5a07faa5bfe74d9332d74abca`, using the pinned
+SDK `12.0.100-alpha.1.26570.125` and the Debug `MSTest.TestAdapter.5.0.0-dev` package:
+
+| Comparison | Result |
+|---|---|
+| Feature build | `.\build.cmd -pack -c Debug -bl` exited 0. All ten packed cases passed (exit 0). In all five opt-in cases both sample libraries were present; in all five default cases both were absent. VSTest reported `Preloaded 2 referenced assemblies before running tests. 0 could not be loaded.` for the opt-in sample. |
+| Same cases, preload call removed | Kept the configuration and tests, omitted only the guarded `testRunner.PreloadAssemblies(...)` call from the production code, and repacked the adapter in isolation. All five opt-in cases failed at the direct-library assertion (expected `"True"`, actual `"False"`); all five default controls passed (exit 2). The ten child tests still passed and the loaded adapter digest matched its respective package in every case. |
+| Review fixes | The two trimmed publishes that had reported IL2026 now passed on `net10.0` and `net11.0`. Four focused adapter unit classes passed on `net10.0` (127) and `net462` (126), including the cross-referrer binding and pre-start ordering checks. |
+
+To reproduce the paired comparison, run the same built `net12.0` acceptance host from each
+checkout, so it resolves that checkout's packages. Use separate results directories:
+
+```powershell
+.\artifacts\bin\MSTest.Acceptance.IntegrationTests\Debug\net12.0\MSTest.Acceptance.IntegrationTests.exe --filter "FullyQualifiedName~AssemblyPreloadTests" --ansi off --results-directory $results --report-trx --report-trx-filename run.trx
+```
 
 ## Limits
 
