@@ -1369,7 +1369,7 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https
       </trans-unit>
       <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
         <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
-        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <target state="translated">Le gestionnaire de contrôleurs hôtes de test de type '{0}' ne prend pas en charge l’inscription des consommateurs de données de contrôleur. Implémentez 'ITestHostControllerDataConsumerManager' sur le type de gestionnaire pour le prendre en charge.</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">

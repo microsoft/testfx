@@ -1369,7 +1369,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
         <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
-        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <target state="translated">유형 '{0}'의 테스트 호스트 컨트롤러 관리자는 컨트롤러 데이터 소비자 등록을 지원하지 않습니다. 관리자 유형에 'ITestHostControllerDataConsumerManager' 구현하여 지원하세요.</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">
