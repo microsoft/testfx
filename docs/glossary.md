@@ -43,6 +43,12 @@ Local hooks take precedence independently, and providers fill only missing slots
 
 Discovery can load and lock otherwise-unused DLLs on .NET Framework: MSTest reads metadata where the binding is unambiguous, but strong-named references are resolved by the CLR. If you do not need automatic discovery in referenced assemblies, set `<DiscoverReferencedAssemblyFixtureProviders>false</DiscoverReferencedAssemblyFixtureProviders>` under `<RunSettings><MSTest>` in `.runsettings`, or set `mstest.execution.discoverReferencedAssemblyFixtureProviders` to `false` in `testconfig.json`. This skips both direct and transitive reference searches. Local hooks and markers declared on the test assembly itself still work; fixtures supplied only by markers on dependencies will not run. The default is `true`. See the [discovery decision and validation record](decisions/assembly-fixture-provider-discovery.md) for binding and servicing details.
 
+### PreloadReferencedAssemblies
+
+An opt-in MSTest setting (default `false`) that loads referenced libraries before MSTest announces the first test in a source. Enable it with `<PreloadReferencedAssemblies>true</PreloadReferencedAssemblies>` under `<RunSettings><MSTest>` in `.runsettings` (VSTest), or `mstest.execution.preloadReferencedAssemblies` in `testconfig.json` (Microsoft.Testing.Platform).
+
+MSTest follows direct and transitive references by name, skipping framework and test-platform libraries. This can move loading cost out of a test, but can also increase startup time and lock otherwise-unused DLLs. It does not precompile test methods or change timeout accounting. See the [configuration examples and runtime limits](testconfig.schema.md#preloading-referenced-assemblies).
+
 ### Assert.Scope (soft assertions)
 
 An experimental MSTest feature (`[MSTESTEXP]`) that defers assertion failures instead of throwing immediately. Calling `Assert.Scope()` returns an `IDisposable` scope; while the scope is active, assertion failures are collected rather than thrown. When the scope is disposed, all collected failures are reported together as a single `AssertFailedException`. Nesting scopes is not allowed. `Assert.Fail()` and `Assert.Inconclusive()` still throw immediately inside a scope; all other assertions participate in soft collection. Use this to check multiple conditions in one test pass without stopping on the first failure:

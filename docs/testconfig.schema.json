@@ -176,6 +176,11 @@
               "default": true,
               "description": "Search referenced assemblies for AssemblyFixtureProvider attributes. Set to false to search only the test assembly itself; fixtures supplied only by markers on dependencies will not run."
             },
+            "preloadReferencedAssemblies": {
+              "type": "boolean",
+              "default": false,
+              "description": "Load direct and transitive references before the first test in a source, skipping framework and test-platform libraries. Load failures do not fail the run. Ignored on classic UWP and on .NET runtimes without dynamic code support (such as Native AOT). Defaults to false."
+            },
             "considerEmptyDataSourceAsInconclusive": {
               "type": "boolean",
               "description": "When true, a data-driven test whose data source yields no rows is reported as inconclusive instead of failing. Defaults to false."

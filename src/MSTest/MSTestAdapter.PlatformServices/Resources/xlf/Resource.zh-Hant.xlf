@@ -353,6 +353,16 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">元件中已載入舊版的 MSTestV2 套件，如果測試探索相依於 '.runsettings' 檔案，則測試探索可能無法探索所有資料測試。</target>
         <note>{Locked="MSTestV2"}{Locked=".runsettings"}</note>
       </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesNotSupported">
+        <source>'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</source>
+        <target state="new">'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</target>
+        <note>{Locked="PreloadReferencedAssemblies"}</note>
+      </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesSummary">
+        <source>Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</source>
+        <target state="new">Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</target>
+        <note>{0} is the number of assemblies that were loaded. {1} is the number of referenced assemblies that could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
         <target state="translated">已設定 'RandomizeTestOrder' 與 'OrderTestsByNameInClass'。將會忽略 'OrderTestsByNameInClass'。</target>

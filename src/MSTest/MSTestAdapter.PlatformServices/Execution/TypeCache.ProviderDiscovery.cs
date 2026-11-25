@@ -341,7 +341,7 @@ internal sealed partial class TypeCache
         }
     }
 
-    private static bool IsFrameworkAssemblyName(string name)
+    internal static bool IsFrameworkAssemblyName(string name)
         => name.StartsWith("System.", StringComparison.Ordinal)
             || name.Equals("System", StringComparison.Ordinal)
             || name.Equals("mscorlib", StringComparison.Ordinal)
