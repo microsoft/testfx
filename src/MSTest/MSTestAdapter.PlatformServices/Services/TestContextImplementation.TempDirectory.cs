@@ -123,7 +123,8 @@ internal sealed partial class TestContextImplementation
     /// Creates the per-test temporary directory. The directory lives under the run's results
     /// directory (so it is discoverable next to other run output). For result-only deployment
     /// directories, it uses the test assembly's output directory so run cleanup does not delete
-    /// retained per-test directories. On Windows the readable-name budget
+    /// retained per-test directories; if that directory is unavailable, it uses the results
+    /// directory. On Windows the readable-name budget
     /// is sized adaptively from how much room the base path leaves under <c>MAX_PATH</c>, and — when
     /// the results directory is so deep that even a minimal readable name cannot preserve the
     /// reserved headroom for the test's own files — the implementation falls back to the short
@@ -133,10 +134,13 @@ internal sealed partial class TestContextImplementation
     /// </summary>
     private string CreateTestTempDirectory()
     {
-        string? resultsDirectory = TestDeployment.DeploymentDirectoriesCreatedWithoutDeploymentItems
-            ? DeploymentDirectory
-            : TestResultsDirectory;
-        resultsDirectory = resultsDirectory is { Length: > 0 } ? resultsDirectory : null;
+        string? resultsDirectory = TestResultsDirectory is { Length: > 0 } results ? results : null;
+        if (TestDeployment.DeploymentDirectoriesCreatedWithoutDeploymentItems
+            && DeploymentDirectory is { Length: > 0 } deploymentDirectory)
+        {
+            resultsDirectory = deploymentDirectory;
+        }
+
         string baseDirectory = resultsDirectory ?? Path.GetTempPath();
         bool baseIsTemp = resultsDirectory is null;
 
