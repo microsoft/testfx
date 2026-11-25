@@ -388,6 +388,13 @@ The type declaring these methods should also respect the following rules:
 - it should not be generic.</value>
     <comment>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</comment>
   </data>
+  <data name="TestClassShouldBeValidDescription_WithOpenGeneric" xml:space="preserve">
+    <value>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
+- it should not be an open generic type unless it is abstract.</value>
+    <comment>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</comment>
+  </data>
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
   </data>
@@ -535,7 +542,7 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="MSTest"}</comment>
   </data>
   <data name="UseAttributeOnTestMethodAnalyzerFixtureMessageFormat" xml:space="preserve">
-    <value>[{0}] has no effect on fixture methods; apply it to test methods or to the test class</value>
+    <value>[{0}] has no effect on fixture methods; coordinate all affected tests or synchronize the fixture explicitly</value>
     <comment>{0} is the attribute name without brackets.</comment>
   </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
@@ -657,6 +664,10 @@ The type declaring these methods should also respect the following rules:
   <data name="TestClassShouldBeValidMessageFormat" xml:space="preserve">
     <value>Test class '{0}' should be valid</value>
     <comment>{0} is the test class name. {Locked="class"}</comment>
+  </data>
+  <data name="TestClassShouldBeValidMessageFormat_OpenGeneric" xml:space="preserve">
+    <value>Test class '{0}' cannot be an open generic type</value>
+    <comment>{0} is the test class name.</comment>
   </data>
   <data name="DoNotUseShadowingDescription" xml:space="preserve">
     <value>Shadowing test members could cause testing issues (such as NRE).</value>
@@ -1090,9 +1101,57 @@ The type declaring these methods should also respect the following rules:
     <value>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</value>
     <comment>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</comment>
   </data>
+  <data name="PreferAsyncAssertionMessageFormat_AsyncVoid" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of passing an async void delegate to 'Assert.{1}'</value>
+    <comment>{0} is the async assert method name. {1} is the synchronous assert method name. {Locked="Assert"}{Locked="async void"}</comment>
+  </data>
   <data name="PreferAsyncAssertionDescription" xml:space="preserve">
     <value>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</value>
     <comment>{Locked="GetAwaiter().GetResult()"}</comment>
+  </data>
+  <data name="PreferAsyncAssertionDescription_WithAsyncVoid" xml:space="preserve">
+    <value>When verifying exceptions from asynchronous code, use the async assertion methods instead of passing an async void delegate or blocking the asynchronous operation with GetAwaiter().GetResult().</value>
+    <comment>{Locked="GetAwaiter().GetResult()"}{Locked="async void"}</comment>
+  </data>
+  <data name="CombinatorialDataShouldBeValidTitle" xml:space="preserve">
+    <value>Combinatorial test data should be valid</value>
+  </data>
+  <data name="CombinatorialDataShouldBeValidDescription" xml:space="preserve">
+    <value>Combinatorial test parameters need an unambiguous value provider or a supported inferred type, and built-in providers require valid configuration.</value>
+  </data>
+  <data name="CombinatorialDataShouldBeValidMessageFormat_MultipleProviders" xml:space="preserve">
+    <value>Parameter '{0}' has multiple combinatorial value providers</value>
+    <comment>{0} is the parameter name.</comment>
+  </data>
+  <data name="CombinatorialDataShouldBeValidMessageFormat_UnsupportedType" xml:space="preserve">
+    <value>Cannot infer combinatorial values for parameter '{0}' of type '{1}'</value>
+    <comment>{0} is the parameter name. {1} is the parameter type.</comment>
+  </data>
+  <data name="CombinatorialDataShouldBeValidMessageFormat_InvalidRange" xml:space="preserve">
+    <value>CombinatorialRange arguments must define a valid non-empty range</value>
+    <comment>{Locked="CombinatorialRange"}</comment>
+  </data>
+  <data name="CombinatorialDataShouldBeValidMessageFormat_InvalidRandom" xml:space="preserve">
+    <value>CombinatorialRandomData requires a positive Count and ordered bounds containing at least Count values</value>
+    <comment>{Locked="CombinatorialRandomData"}{Locked="Count"}</comment>
+  </data>
+  <data name="TestAttributeValuesShouldBeValidTitle" xml:space="preserve">
+    <value>Test attribute values should be valid</value>
+  </data>
+  <data name="TestAttributeValuesShouldBeValidDescription" xml:space="preserve">
+    <value>Timeout, retry, and expected-duration attributes require valid values when used by a test or fixture.</value>
+  </data>
+  <data name="TestAttributeValuesShouldBeValidMessageFormat_Positive" xml:space="preserve">
+    <value>'{0}' requires a positive '{1}' value</value>
+    <comment>{0} is the attribute type name. {1} is the constructor parameter name.</comment>
+  </data>
+  <data name="TestAttributeValuesShouldBeValidMessageFormat_Delay" xml:space="preserve">
+    <value>MillisecondsDelayBetweenRetries must be -1 or greater</value>
+    <comment>{Locked="MillisecondsDelayBetweenRetries"}</comment>
+  </data>
+  <data name="TestAttributeValuesShouldBeValidMessageFormat_Backoff" xml:space="preserve">
+    <value>The Retry.BackoffType value is not defined</value>
+    <comment>{Locked="Retry.BackoffType"}</comment>
   </data>
   <data name="IgnoreShouldHaveJustificationTitle" xml:space="preserve">
     <value>'[Ignore]' should specify a justification</value>

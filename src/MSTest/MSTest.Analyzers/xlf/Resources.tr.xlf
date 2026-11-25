@@ -340,6 +340,36 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'CollectionAssert' yerine 'Assert' kullanın</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="CombinatorialDataShouldBeValidDescription">
+        <source>Combinatorial test parameters need an unambiguous value provider or a supported inferred type, and built-in providers require valid configuration.</source>
+        <target state="new">Combinatorial test parameters need an unambiguous value provider or a supported inferred type, and built-in providers require valid configuration.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CombinatorialDataShouldBeValidMessageFormat_InvalidRandom">
+        <source>CombinatorialRandomData requires a positive Count and ordered bounds containing at least Count values</source>
+        <target state="new">CombinatorialRandomData requires a positive Count and ordered bounds containing at least Count values</target>
+        <note>{Locked="CombinatorialRandomData"}{Locked="Count"}</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialDataShouldBeValidMessageFormat_InvalidRange">
+        <source>CombinatorialRange arguments must define a valid non-empty range</source>
+        <target state="new">CombinatorialRange arguments must define a valid non-empty range</target>
+        <note>{Locked="CombinatorialRange"}</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialDataShouldBeValidMessageFormat_MultipleProviders">
+        <source>Parameter '{0}' has multiple combinatorial value providers</source>
+        <target state="new">Parameter '{0}' has multiple combinatorial value providers</target>
+        <note>{0} is the parameter name.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialDataShouldBeValidMessageFormat_UnsupportedType">
+        <source>Cannot infer combinatorial values for parameter '{0}' of type '{1}'</source>
+        <target state="new">Cannot infer combinatorial values for parameter '{0}' of type '{1}'</target>
+        <note>{0} is the parameter name. {1} is the parameter type.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialDataShouldBeValidTitle">
+        <source>Combinatorial test data should be valid</source>
+        <target state="new">Combinatorial test data should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesDescription">
         <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
         <target state="translated">Tam test çalıştırması adı için 'DisplayName' değerini belirtin veya yöntem görünen adını saklayan bağımsız değişken etiketi için 'ArgumentsDisplayName' değerini belirtin, ancak ikisini birden belirtmeyin. Mevcut adı korumak için yoksayılan 'ArgumentsDisplayName' değerini kaldırın veya bağımsız değişken etiketini kullanmak için 'DisplayName' değerini kaldırın.</target>
@@ -860,10 +890,20 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Asynchronous koddan gelen özel durumları doğrularken GetAwaiter().GetResult() ile async işlemi engellemek yerine asynchronous onaylama yöntemlerini kullanın.</target>
         <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
+      <trans-unit id="PreferAsyncAssertionDescription_WithAsyncVoid">
+        <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of passing an async void delegate or blocking the asynchronous operation with GetAwaiter().GetResult().</source>
+        <target state="new">When verifying exceptions from asynchronous code, use the async assertion methods instead of passing an async void delegate or blocking the asynchronous operation with GetAwaiter().GetResult().</target>
+        <note>{Locked="GetAwaiter().GetResult()"}{Locked="async void"}</note>
+      </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
         <target state="translated">'Assert.{0}' içinde async bir çağrıyı engellemek yerine 'Assert.{1}' kullanın</target>
         <note>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</note>
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionMessageFormat_AsyncVoid">
+        <source>Use 'Assert.{0}' instead of passing an async void delegate to 'Assert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of passing an async void delegate to 'Assert.{1}'</target>
+        <note>{0} is the async assert method name. {1} is the synchronous assert method name. {Locked="Assert"}{Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
@@ -1070,6 +1110,31 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">‘StringAssert’ yerine ‘Assert’ kullanın</target>
         <note>{Locked="StringAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="TestAttributeValuesShouldBeValidDescription">
+        <source>Timeout, retry, and expected-duration attributes require valid values when used by a test or fixture.</source>
+        <target state="new">Timeout, retry, and expected-duration attributes require valid values when used by a test or fixture.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestAttributeValuesShouldBeValidMessageFormat_Backoff">
+        <source>The Retry.BackoffType value is not defined</source>
+        <target state="new">The Retry.BackoffType value is not defined</target>
+        <note>{Locked="Retry.BackoffType"}</note>
+      </trans-unit>
+      <trans-unit id="TestAttributeValuesShouldBeValidMessageFormat_Delay">
+        <source>MillisecondsDelayBetweenRetries must be -1 or greater</source>
+        <target state="new">MillisecondsDelayBetweenRetries must be -1 or greater</target>
+        <note>{Locked="MillisecondsDelayBetweenRetries"}</note>
+      </trans-unit>
+      <trans-unit id="TestAttributeValuesShouldBeValidMessageFormat_Positive">
+        <source>'{0}' requires a positive '{1}' value</source>
+        <target state="new">'{0}' requires a positive '{1}' value</target>
+        <note>{0} is the attribute type name. {1} is the constructor parameter name.</note>
+      </trans-unit>
+      <trans-unit id="TestAttributeValuesShouldBeValidTitle">
+        <source>Test attribute values should be valid</source>
+        <target state="new">Test attribute values should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassDescription">
         <source>MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</source>
         <target state="translated">MSTest, soyut sınıflara uygulanan '[TestClass]' özniteliklerini yok sayar. Soyut bir sınıf tarafından bildirilen test yöntemleri, kendi '[TestClass]' özniteliklerini bildirmesi gereken somut türetilmiş test sınıfları aracılığıyla bulunur.</target>
@@ -1095,10 +1160,26 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'{0}' test sınıfında ActivatorUtilitiesConstructorAttribute ile işaretlenmiş birden çok public oluşturucu var. Tam olarak bir oluşturucu işaretle.</target>
         <note>{0} is the test class name. {Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidDescription_WithOpenGeneric">
+        <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
+- it should not be an open generic type unless it is abstract.</source>
+        <target state="new">Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
+- it should not be an open generic type unless it is abstract.</target>
+        <note>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</note>
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
         <target state="translated">'{0}' test class geçerli olmalıdır</target>
         <note>{0} is the test class name. {Locked="class"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_OpenGeneric">
+        <source>Test class '{0}' cannot be an open generic type</source>
+        <target state="new">Test class '{0}' cannot be an open generic type</target>
+        <note>{0} is the test class name.</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
@@ -1216,8 +1297,8 @@ The type declaring these methods should also respect the following rules:
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerFixtureMessageFormat">
-        <source>[{0}] has no effect on fixture methods; apply it to test methods or to the test class</source>
-        <target state="new">[{0}] has no effect on fixture methods; apply it to test methods or to the test class</target>
+        <source>[{0}] has no effect on fixture methods; coordinate all affected tests or synchronize the fixture explicitly</source>
+        <target state="new">[{0}] has no effect on fixture methods; coordinate all affected tests or synchronize the fixture explicitly</target>
         <note>{0} is the attribute name without brackets.</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">

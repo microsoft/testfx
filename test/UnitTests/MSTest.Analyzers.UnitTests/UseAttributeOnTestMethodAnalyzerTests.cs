@@ -358,8 +358,54 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.ResourceLockOnFixtureRule).WithLocation(0).WithMessage("[ResourceLock] has no effect on fixture methods; apply it to test methods or to the test class"),
+            VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.ResourceLockOnFixtureRule).WithLocation(0).WithMessage("[ResourceLock] has no effect on fixture methods; coordinate all affected tests or synchronize the fixture explicitly"),
             code);
+    }
+
+    [TestMethod]
+    public async Task OverridableFixtureSchedulingAttributes_MayBeInheritedByTest_NoDiagnosticAsync()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Base
+            {
+                [TestInitialize, ResourceLock("db"), DoNotParallelize]
+                public virtual void Initialize() { }
+            }
+
+            [TestClass]
+            public class Derived : Base
+            {
+                [TestMethod]
+                public override void Initialize() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task AbstractFixtureSchedulingAttributes_MayBeInheritedByTest_NoDiagnosticAsync()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public abstract class Base
+            {
+                [TestInitialize, ResourceLock("db"), DoNotParallelize]
+                public abstract void Initialize();
+            }
+
+            [TestClass]
+            public class Derived : Base
+            {
+                [TestMethod]
+                public override void Initialize() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]

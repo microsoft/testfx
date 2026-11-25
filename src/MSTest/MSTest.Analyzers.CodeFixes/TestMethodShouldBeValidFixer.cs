@@ -40,6 +40,11 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
         Diagnostic diagnostic = context.Diagnostics[0];
+        if (diagnostic.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey))
+        {
+            return;
+        }
+
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
@@ -49,7 +54,40 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
         }
 
         // Find the method declaration identified by the diagnostic.
-        MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
+        if (syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault() is not { } methodDeclaration)
+        {
+            return;
+        }
+
+        SemanticModel semanticModel = await context.Document.GetRequiredSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+        if (semanticModel.GetDeclaredSymbol(methodDeclaration, context.CancellationToken) is not IMethodSymbol method)
+        {
+            return;
+        }
+
+        if (method.IsStatic || method.IsAbstract || method.IsOverride || (method.IsAsync && method.ReturnsVoid))
+        {
+            return;
+        }
+
+        if (methodDeclaration.TypeParameterList is not null)
+        {
+            bool allInferable = method.TypeParameters.All(typeParameter =>
+                method.Parameters.Any(parameter => TestMethodShouldBeValidAnalyzer.IsOrHasTypeParameter(parameter.Type, typeParameter)));
+            if (!allInferable)
+            {
+                return;
+            }
+        }
+
+        INamedTypeSymbol? taskSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+        INamedTypeSymbol? valueTaskSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+        if (!method.ReturnsVoid
+            && !SymbolEqualityComparer.Default.Equals(method.ReturnType, taskSymbol)
+            && !SymbolEqualityComparer.Default.Equals(method.ReturnType, valueTaskSymbol))
+        {
+            return;
+        }
 
         context.RegisterCodeFix(
             CodeAction.Create(
@@ -65,30 +103,6 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
 
         MethodDeclarationSyntax newMethodDeclaration = methodDeclaration;
 
-        // Remove static modifier if present.
-        SyntaxToken staticModifier = newMethodDeclaration.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.StaticKeyword));
-        if (staticModifier != default)
-        {
-            newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Remove(staticModifier));
-        }
-
-        // Remove abstract modifier if present and ensure the method has a body.
-        SyntaxToken abstractModifier = newMethodDeclaration.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.AbstractKeyword));
-        if (abstractModifier != default)
-        {
-            newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Remove(abstractModifier));
-            if (newMethodDeclaration.Body is null)
-            {
-                newMethodDeclaration = newMethodDeclaration.WithBody(SyntaxFactory.Block()).WithSemicolonToken(default);
-            }
-        }
-
-        // Remove type parameters to make the method non-generic.
-        if (newMethodDeclaration.TypeParameterList is not null)
-        {
-            newMethodDeclaration = newMethodDeclaration.WithTypeParameterList(null);
-        }
-
         // Ensure the method has public visibility.
         SyntaxToken publicModifier = newMethodDeclaration.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.PublicKeyword));
         if (publicModifier == default)
@@ -101,36 +115,6 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
             newMethodDeclaration = newMethodDeclaration.WithModifiers(
                 new SyntaxTokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddRange(modifiersWithoutAccessModifiers));
-        }
-
-        // Ensure the method returns void or Task/ValueTask.
-        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
-        INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-        INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-
-        if (newMethodDeclaration.ReturnType is not null &&
-            !newMethodDeclaration.ReturnType.IsVoid() &&
-            (taskSymbol is null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
-            (valueTaskSymbol is null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
-        {
-            // Change return type to void and remove return statements
-            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)));
-
-            if (newMethodDeclaration.Body is not null)
-            {
-                SyntaxList<StatementSyntax> statements = newMethodDeclaration.Body.Statements;
-                IEnumerable<StatementSyntax> newStatements = statements.Where(s => s is not ReturnStatementSyntax);
-                newMethodDeclaration = newMethodDeclaration.WithBody(newMethodDeclaration.Body.WithStatements(SyntaxFactory.List(newStatements)));
-            }
-        }
-
-        // Ensure async methods do not return void.
-        bool asyncModifier = newMethodDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.AsyncKeyword));
-        if (asyncModifier && newMethodDeclaration.ReturnType is not null && newMethodDeclaration.ReturnType.IsVoid())
-        {
-            // Change the return type to Task. We have a space after Task to ensure we have a trailing trivia (space) after Task.
-            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.IdentifierName("Task"));
         }
 
         // Apply changes.

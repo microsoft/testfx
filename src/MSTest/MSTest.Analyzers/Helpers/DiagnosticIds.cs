@@ -96,4 +96,6 @@ internal static class DiagnosticIds
     public const string ConflictingDataRowDisplayNamesRuleId = "MSTEST0089";
     public const string AvoidEnumerableAssertionsOnQueryableRuleId = "MSTEST0090";
     public const string PublicTestClassSuppressorRuleId = "MSTEST0091";
+    public const string CombinatorialDataShouldBeValidRuleId = "MSTEST0092";
+    public const string TestAttributeValuesShouldBeValidRuleId = "MSTEST0093";
 }

@@ -14,6 +14,46 @@ Roslyn assemblies are supplied by the host and are not included in this package.
 Older hosts cannot load these analyzers; use MSTest.Analyzers 4.x if you cannot
 upgrade the host.
 
+## Test discovery and synchronization
+
+MSTEST0002 and MSTEST0003 validate classes and methods marked with attributes
+derived from `TestClassAttribute` or `TestMethodAttribute`. MSTEST0002 also
+reports concrete open generic test classes, including classes nested in open
+generic types. Abstract generic base classes and closed derived classes remain
+valid. No automatic fix removes generic parameters or changes static, abstract,
+override, async-void, or other invalid return signatures; those edits can break
+callers or inherited contracts.
+
+MSTEST0007 reports `ResourceLock` and `DoNotParallelize` on non-overridable
+fixture methods because discovery ignores those declarations. Overridable
+fixtures are excluded because a test override may inherit the attributes.
+No automatic move is offered:
+placing a lock on a test or class can change its lifetime. MSTEST0074 and
+MSTEST0075 require an effective exclusive lock for protected mutations; a
+read-only lock alone is not sufficient.
+
+## Combinatorial data and test attribute values
+
+MSTEST0092 reports conflicting combinatorial value providers, unsupported
+inferred parameter types, and invalid constant range or random-data settings.
+Custom implementations of `ICombinatorialValuesProvider` and an unprovided
+trailing `CancellationToken` are supported. The analyzer does not assume
+unspecified random-data defaults from a different framework version.
+
+MSTEST0093 reports nonpositive timeout, retry-count, and expected-duration
+values at applicable test and fixture sites. It also reports undefined retry
+backoff values and delays below -1, which cause `Task.Delay` to throw when a
+retry occurs. A delay of -1 is accepted by `Task.Delay` but waits indefinitely.
+Neither rule offers an automatic fix for the invalid configuration.
+
+## Asynchronous exception assertions
+
+MSTEST0064 reports inline async-void delegates and statically resolved async-void
+method groups passed to synchronous
+`Assert.Throws` or `Assert.ThrowsExactly`. Use an async assertion and await it
+so exceptions after an asynchronous suspension can be observed. No automatic
+fix is offered for these delegates.
+
 ## Public test classes
 
 MSTEST0091 suppresses CA1515 (Consider making public types internal) on classes

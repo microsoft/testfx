@@ -1008,4 +1008,593 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             """));
         await test.RunAsync();
     }
+
+    [TestMethod]
+    public async Task WhenEnvironmentMutationHasReadOnlyMethodLock_DiagnosticAndExclusiveFix()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public void Check()
+                {
+                    {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void Check()
+                {
+                    Environment.SetEnvironmentVariable("fixture", "value");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenConsoleMutationsHaveReadOnlyMethodLock_Diagnostics()
+    {
+        const string code = """
+            using System;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.Console, Mode = ResourceAccessMode.Read)]
+                public void Check()
+                {
+                    {|#0:Console.SetOut(TextWriter.Null)|};
+                    {|#1:Console.SetError(TextWriter.Null)|};
+                    {|#2:Console.SetIn(TextReader.Null)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(0).WithArguments("Console.SetOut", "Console"),
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(1).WithArguments("Console.SetError", "Console"),
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(2).WithArguments("Console.SetIn", "Console"));
+    }
+
+    [TestMethod]
+    public async Task WhenClassReadLockAndFixtureMethodWriteLockAreDeclared_Diagnostics()
+    {
+        // Discovery ignores locks on fixture methods, even if they would otherwise upgrade the class lock.
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [TestInitialize]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void Initialize()
+                {
+                    {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+                }
+
+                [TestMethod]
+                public void Check()
+                {
+                    {|#1:Environment.SetEnvironmentVariable("fixture", "value")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(0).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(1).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenReadAndWriteLocksShareKey_StrongestModeIsExclusive()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class ClassReadMethodWrite
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public class ClassWriteMethodRead
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+
+            [TestClass]
+            public class DuplicateMethodLocks
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void ReadThenWrite() => Environment.SetEnvironmentVariable("fixture", "value");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public void WriteThenRead() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenClassAndMethodBothHaveReadLocks_Diagnostic()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public void Check() => {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenExclusiveLocksHaveDifferentKeys_ReadLockIsNotUpgraded()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                [ResourceLock("system.Environment.Variables")]
+                public void DifferentCase() => {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                [ResourceLock(WellKnownResources.Console)]
+                public void DifferentResource() => {|#1:Environment.SetEnvironmentVariable("fixture", "value")|};
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                [ResourceLock("System.Environment.Variables ")]
+                public void ExtraWhitespace() => {|#2:Environment.SetEnvironmentVariable("fixture", "value")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(0).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(1).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(2).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenNamedReadModeUsesConstant_Diagnostic()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                private const ResourceAccessMode Shared = ResourceAccessMode.Read;
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = Shared)]
+                public void Check() => {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenDefaultExplicitOrUnknownModeIsExclusive_NoDiagnostic()
+    {
+        // ResourceLockInfo normalizes every value except Read to the exclusive mode.
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void Default() => Environment.SetEnvironmentVariable("fixture", "value");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.ReadWrite)]
+                public void Explicit() => Environment.SetEnvironmentVariable("fixture", "value");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = default)]
+                public void ExplicitDefault() => Environment.SetEnvironmentVariable("fixture", "value");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = (ResourceAccessMode)42)]
+                public void UnknownPositive() => Environment.SetEnvironmentVariable("fixture", "value");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = (ResourceAccessMode)(-1))]
+                public void UnknownNegative() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenEquivalentConstantKeyHasExclusiveLock_NoDiagnostic()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock("System.Environment." + "Variables")]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedClassLocksIncludeWrite_NoDiagnostic()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class ReadBase { }
+
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public class WriteBase { }
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public class DerivedWrite : ReadBase
+            {
+                [TestMethod]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class InheritedWrite : WriteBase
+            {
+                [TestMethod]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenReadLockIsInheritedFromBaseClass_Diagnostic()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class Base { }
+
+            [TestClass]
+            public class Tests : Base
+            {
+                [TestMethod]
+                public void Check() => {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsWrite_NoDiagnostic()
+    {
+        // TestMethodAttribute is not inherited, unlike ResourceLockAttribute.
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            public class ReadBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public virtual void Check() { }
+            }
+
+            public class WriteBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public virtual void Check() { }
+            }
+
+            [TestClass]
+            public class DerivedWrite : ReadBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public override void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+
+            [TestClass]
+            public class InheritedWrite : WriteBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public override void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideWithoutTestAttributeHasInheritedReadLock_NoDiagnostic()
+    {
+        // TestMethodAttribute is not inherited, unlike ResourceLockAttribute.
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            public class Base
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public virtual void Check() { }
+            }
+
+            [TestClass]
+            public class Tests : Base
+            {
+                public override void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsOnlyReadLock_Diagnostic()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            public class Base
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public virtual void Check() { }
+            }
+
+            [TestClass]
+            public class Tests : Base
+            {
+                [TestMethod]
+                public override void Check() => {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenSiblingMethodHasWriteLock_ReadLockedMethodStillReports()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public void Mutate() => {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void Other() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenReadLockIsCombinedWithParallelizationOptOut_NoDiagnostic()
+    {
+        const string classAndMethodOptOut = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [DoNotParallelize]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class ClassOptOut
+            {
+                [TestMethod]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+
+            [TestClass]
+            public class MethodOptOut
+            {
+                [TestMethod]
+                [DoNotParallelize]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+            """;
+
+        const string assemblyOptOut = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [assembly: DoNotParallelize]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() => Environment.SetEnvironmentVariable("fixture", "value");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(classAndMethodOptOut);
+        await VerifyCS.VerifyAnalyzerAsync(assemblyOptOut);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyFixtureHasReadLock_NoDiagnostic()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [AssemblyInitialize]
+                public static void Initialize(TestContext context) => Environment.SetEnvironmentVariable("fixture", "value");
+
+                [AssemblyCleanup]
+                public static void Cleanup() => Environment.SetEnvironmentVariable("fixture", null);
+
+                [TestMethod]
+                public void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGlobalFixtureHasReadClassLock_DiagnosticWithoutFix()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [GlobalTestInitialize]
+                public static void Initialize(TestContext context)
+                {
+                    {|#0:Environment.SetEnvironmentVariable("fixture", "value")|};
+                }
+
+                [TestMethod]
+                public void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            code);
+    }
 }

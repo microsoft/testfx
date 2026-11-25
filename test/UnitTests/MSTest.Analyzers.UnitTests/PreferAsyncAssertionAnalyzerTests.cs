@@ -3,6 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Testing;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferAsyncAssertionAnalyzer,
@@ -13,6 +14,199 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class PreferAsyncAssertionAnalyzerTests
 {
+    [TestMethod]
+    [DataRow("Throws", "async () => await Task.Yield()", DisplayName = "ThrowsAsyncLambda")]
+    [DataRow("ThrowsExactly", "async delegate { await Task.Yield(); }", DisplayName = "ThrowsExactlyAsyncDelegate")]
+    [DataRow("Throws", "(Action)(async () => await Task.Yield())", DisplayName = "ExplicitActionCast")]
+    [DataRow("ThrowsExactly", "new Action(async () => await Task.Yield())", DisplayName = "ExplicitActionCreation")]
+    public async Task AsyncVoidDelegatePassedToSynchronousAssertion_DiagnosticWithoutFix(string assertion, string action)
+    {
+        string code = $$"""
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Assert.{{assertion}}<Exception>({{action}})|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            new DiagnosticResult("MSTEST0064", DiagnosticSeverity.Info).WithLocation(0).WithMessage($"Use 'Assert.{assertion}Async' instead of passing an async void delegate to 'Assert.{assertion}'"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task AsyncAssertionAndSynchronousDelegate_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    Assert.Throws<Exception>(() => throw new Exception());
+                    await Assert.ThrowsAsync<Exception>(async () => await Task.Yield());
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    [DataRow("Throws", "AsyncHelper")]
+    [DataRow("ThrowsExactly", "new Action(AsyncHelper)")]
+    public async Task AsyncVoidMethodGroupPassedToSynchronousAssertion_DiagnosticWithoutFix(string assertion, string action)
+    {
+        string code = $$"""
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() => {|#0:Assert.{{assertion}}<Exception>({{action}})|};
+
+                private async void AsyncHelper() => await Task.Yield();
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            new DiagnosticResult("MSTEST0064", DiagnosticSeverity.Info).WithLocation(0).WithMessage($"Use 'Assert.{assertion}Async' instead of passing an async void delegate to 'Assert.{assertion}'"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task SealedOverrideAsyncVoidMethodGroup_DiagnosticWithoutFix()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base
+            {
+                protected virtual void AsyncHelper() { }
+            }
+
+            [TestClass]
+            public class Tests : Base
+            {
+                [TestMethod]
+                public void Check() => {|#0:Assert.Throws<Exception>(AsyncHelper)|};
+
+                protected sealed override async void AsyncHelper() => await Task.Yield();
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            new DiagnosticResult("MSTEST0064", DiagnosticSeverity.Info).WithLocation(0).WithMessage("Use 'Assert.ThrowsAsync' instead of passing an async void delegate to 'Assert.Throws'"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task OverrideInSealedClassAsyncVoidMethodGroup_DiagnosticWithoutFix()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base
+            {
+                public virtual void AsyncHelper() { }
+            }
+            public sealed class Helper : Base
+            {
+                public override async void AsyncHelper() => await Task.Yield();
+            }
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() => {|#0:Assert.Throws<Exception>(new Helper().AsyncHelper)|};
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            new DiagnosticResult("MSTEST0064", DiagnosticSeverity.Info).WithLocation(0).WithMessage("Use 'Assert.ThrowsAsync' instead of passing an async void delegate to 'Assert.Throws'"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task OverridableAsyncVoidMethodGroup_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() => Assert.Throws<Exception>(AsyncHelper);
+
+                protected virtual async void AsyncHelper() => await Task.Yield();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task MetadataAsyncVoidMethodGroup_DiagnosticWithoutFix()
+    {
+        MetadataReference reference = await AnalyzerContinuationTestHelpers.EmitReferenceAsync(
+            """
+            using System.Threading.Tasks;
+            public static class Helpers
+            {
+                public static async void AsyncHelper() => await Task.Yield();
+                public static void SynchronousHelper() { }
+            }
+            """,
+            "AsyncHelpers");
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    {|#0:Assert.Throws<Exception>(Helpers.AsyncHelper)|};
+                    Assert.Throws<Exception>(Helpers.SynchronousHelper);
+                }
+            }
+            """;
+        var test = new VerifyCS.Test { TestCode = code, FixedCode = code };
+        test.TestState.AdditionalReferences.Add(reference);
+        test.ExpectedDiagnostics.Add(new DiagnosticResult("MSTEST0064", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithMessage("Use 'Assert.ThrowsAsync' instead of passing an async void delegate to 'Assert.Throws'"));
+        await test.RunAsync();
+    }
+
     [TestMethod]
     [DataRow("?.Message")]
     [DataRow("[0]")]

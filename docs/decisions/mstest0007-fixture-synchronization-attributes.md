@@ -20,8 +20,8 @@ changing runtime scheduling.
   class (and assembly). It does not read them from fixture methods.
 - Both attributes are `Inherited = true` and are read with `inherit: true`. An attribute on a
   virtual helper or base method can therefore apply to an overriding `[TestMethod]`. For this
-  reason, flagging every non-test method would produce false positives, so the rule is limited to
-  fixture methods.
+  reason, flagging every non-test method would produce false positives. Even a fixture method can
+  have a test-method override, so the rule excludes overridable fixture methods as well.
 - The existing MSTEST0007 code fix adds `[TestMethod]`, which is wrong for a fixture. Moving the
   attribute to the class would change lock lifetime: a class-level `[ResourceLock]` covers every
   test in the class, and `[DoNotParallelize]` on the class serializes all tests. No automatic fix is
@@ -35,7 +35,7 @@ changing runtime scheduling.
 | Flag on all non-test methods | False positives through the inheritance path. Rejected. |
 | Code fix that moves the attribute to the class | Changes semantics and lock lifetime, against the explicit requirement. Rejected. |
 | New diagnostic ID | Extra rule surface for the same "attribute only meaningful on test methods" concept. Rejected in favor of extending MSTEST0007. |
-| **Chosen:** two new MSTEST0007 descriptors that fire only on fixture methods, with a dedicated message and a `NoAddTestMethodFix` diagnostic property that suppresses the add-`[TestMethod]` fix | Accurate, and keeps the user in control of where the lock belongs. |
+| **Chosen:** two new MSTEST0007 descriptors that fire only on non-overridable fixture methods, with a dedicated message and a `NoAddTestMethodFix` diagnostic property that suppresses the add-`[TestMethod]` fix | Avoids inherited test-method false positives, and keeps the user in control of where the lock belongs. |
 
 Existing MSTEST0007 behavior for other attributes, including fixtures still being offered the
 add-`[TestMethod]` fix for Owner and similar attributes, is unchanged. No new ID means that

@@ -310,7 +310,8 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (!isFixtureMethod || fixtureOnlyAttributes is null)
+        if (!isFixtureMethod || fixtureOnlyAttributes is null
+            || ((methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract) && !methodSymbol.IsSealed && !methodSymbol.ContainingType.IsSealed))
         {
             return;
         }
