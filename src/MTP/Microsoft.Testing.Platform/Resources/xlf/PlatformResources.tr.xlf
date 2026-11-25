@@ -1389,7 +1389,7 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
       </trans-unit>
       <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
         <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
-        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <target state="translated">'{0}' türündeki test konağı denetleyicileri yöneticisi, denetleyici veri tüketicisi kaydını desteklemiyor. Bunu desteklemek için yönetici türünde 'ITestHostControllerDataConsumerManager' uygulayın.</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">

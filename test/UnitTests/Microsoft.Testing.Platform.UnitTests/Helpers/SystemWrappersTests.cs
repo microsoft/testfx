@@ -544,6 +544,14 @@ internal static class SystemWrapperChildProbe
         SystemEnvironment environment = new();
         switch (mode)
         {
+#if NETFRAMEWORK
+            case "file-logger-starvation":
+                FileLoggerDisposalTests.RunThreadPoolStarvationProbe(Record);
+                break;
+            case "file-logger-console-failure":
+                FileLoggerDisposalTests.RunConsoleFailureProbe(Record);
+                break;
+#endif
             case "filesystem-case-fallback":
                 {
                     string root = Path.Combine(Path.GetTempPath(), "case-fallback-" + Guid.NewGuid().ToString("N"));

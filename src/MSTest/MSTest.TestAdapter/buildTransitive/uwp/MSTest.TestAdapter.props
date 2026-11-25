@@ -1,10 +1,9 @@
 <Project>
 
-  <!-- Classic UWP consumes the adapter from buildTransitive/uap10.0 instead of lib/uap10.0 so the payload
-       is referenced explicitly and deployed through the AppX content pipeline. -->
+  <!-- Classic UWP resolves the adapter from lib/uap10.0.16299. These targets only deploy it through the AppX
+       content pipeline and apply the adapter's satellite culture policy. -->
   <PropertyGroup>
-    <_MSTestAdapterPayloadRoot>$(MSBuildThisFileDirectory)</_MSTestAdapterPayloadRoot>
-    <_MSTestAdapterLocalizationRoot>$(MSBuildThisFileDirectory)_localization\</_MSTestAdapterLocalizationRoot>
+    <_MSTestAdapterLocalizationRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'lib', 'uap10.0.16299'))</_MSTestAdapterLocalizationRoot>
     <EnableMSTestV2CopyResources Condition=" '$(EnableMSTestV2CopyResources)' == '' ">true</EnableMSTestV2CopyResources>
     <IsMSTestTestAdapterReferenced>true</IsMSTestTestAdapterReferenced>
   </PropertyGroup>

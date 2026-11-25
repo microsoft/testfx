@@ -177,9 +177,17 @@
     <value>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</value>
     <comment>{Locked=&quot;--report-gh-history&quot;}</comment>
   </data>
+  <data name="HistoryWindowRunsOptionDescription" xml:space="preserve">
+    <value>Limit flaky-test context to the most recent 1-1000 run attempts within the day-based history window. By default, use all retained attempts. Requires '--report-gh-history'.</value>
+    <comment>{Locked=&quot;--report-gh-history&quot;}</comment>
+  </data>
   <data name="InvalidHistoryWindow" xml:space="preserve">
     <value>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</value>
     <comment>{0} is the invalid history window.</comment>
+  </data>
+  <data name="InvalidHistoryWindowRuns" xml:space="preserve">
+    <value>Invalid GitHub Actions test history run window '{0}'. Specify a whole number of run attempts from 1 through 1000.</value>
+    <comment>{0} is the invalid run window.</comment>
   </data>
   <data name="InvalidHistoryPath" xml:space="preserve">
     <value>The GitHub Actions test history snapshot path must be a valid, non-empty path.</value>
@@ -187,6 +195,10 @@
   <data name="HistoryWindowRequiresHistory" xml:space="preserve">
     <value>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</value>
     <comment>{Locked=&quot;--report-gh-history-window&quot;}{Locked=&quot;&apos;--report-gh-history&apos;&quot;}</comment>
+  </data>
+  <data name="HistoryWindowRunsRequiresHistory" xml:space="preserve">
+    <value>The '--report-gh-history-window-runs' option requires '--report-gh-history' to be specified.</value>
+    <comment>{Locked=&quot;--report-gh-history-window-runs&quot;}{Locked=&quot;&apos;--report-gh-history&apos;&quot;}</comment>
   </data>
   <data name="HistoryLoadFailedWarning" xml:space="preserve">
     <value>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</value>
@@ -200,9 +212,17 @@
     <value>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</value>
     <comment>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</comment>
   </data>
+  <data name="HistoryFailureContextRuns" xml:space="preserve">
+    <value>Historical context: failed {0} and flaked {1} of {2} prior run attempts within the latest {3} run attempts and {4}-day history window.</value>
+    <comment>{0} is the failure count, {1} is the flaky count, {2} is the total prior run-attempt count, {3} is the maximum recent run-attempt count, and {4} is the history window in days.</comment>
+  </data>
   <data name="HistoryFlakyContext" xml:space="preserve">
     <value>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</value>
     <comment>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</comment>
+  </data>
+  <data name="HistoryFlakyContextRuns" xml:space="preserve">
+    <value>Historical context: flaked {0} of {1} prior run attempts within the latest {2} run attempts and {3}-day history window.</value>
+    <comment>{0} is the flaky count, {1} is the total prior run-attempt count, {2} is the maximum recent run-attempt count, and {3} is the history window in days.</comment>
   </data>
   <data name="HistoryDurationContext" xml:space="preserve">
     <value>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</value>
@@ -211,6 +231,10 @@
   <data name="HistoryRegressionContext" xml:space="preserve">
     <value>Historical context: passed all {0} prior runs within the {1}-day history window.</value>
     <comment>{0} is the total prior result count, {1} is the history window in days.</comment>
+  </data>
+  <data name="HistoryRegressionContextRuns" xml:space="preserve">
+    <value>Historical context: passed all {0} prior run attempts within the latest {1} run attempts and {2}-day history window.</value>
+    <comment>{0} is the total prior run-attempt count, {1} is the maximum recent run-attempt count, and {2} is the history window in days.</comment>
   </data>
   <data name="InvalidOnOffValue" xml:space="preserve">
     <value>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
