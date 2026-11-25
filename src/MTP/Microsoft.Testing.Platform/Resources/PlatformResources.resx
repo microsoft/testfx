@@ -136,9 +136,27 @@
     <value>Invocation lifetime handler '{0}' failed after the tests ran: {1}</value>
     <comment>{0} is the handler UID. {1} is the exception message.</comment>
   </data>
+  <data name="InvocationLifetimeCoordinationFailedErrorMessage" xml:space="preserve">
+    <value>Coordinating the invocation lifetime handlers with dotnet test failed: {0}</value>
+    <comment>{0} is the exception message. {Locked="dotnet test"}</comment>
+  </data>
+  <data name="InvocationLifetimeCleanupNotRequestedErrorMessage" xml:space="preserve">
+    <value>dotnet test did not request the invocation lifetime cleanup. The handlers were cleaned up with the result of this test module.</value>
+    <comment>{Locked="dotnet test"}</comment>
+  </data>
+  <data name="InvocationLifetimeHandlerNotCoordinatedWarningMessage" xml:space="preserve">
+    <value>Invocation lifetime handler '{0}' is not coordinated by dotnet test for this invocation and runs for this test module.</value>
+    <comment>{0} is the handler UID. {Locked="dotnet test"}</comment>
+  </data>
+  <data name="InvocationLifetimeServerRequestCleanupFailedErrorMessage" xml:space="preserve">
+    <value>Invocation lifetime cleanup failed for the server request; see the server output for details.</value>
+  </data>
   <data name="InvocationLifetimeInvalidEnvironmentVariableName" xml:space="preserve">
     <value>The environment variable name '{0}' is invalid. A name cannot be blank, cannot contain '=' or a null character, and cannot start with the reserved prefix '{1}'.</value>
     <comment>{0} is the environment variable name. {1} is the reserved prefix.</comment>
+  </data>
+  <data name="InvocationLifetimeServerRequestSetupFailedErrorMessage" xml:space="preserve">
+    <value>Invocation lifetime setup failed for the server request; see the server output for details.</value>
   </data>
   <data name="InvocationLifetimeSetupFailedErrorMessage" xml:space="preserve">
     <value>Invocation lifetime handler '{0}' failed before the tests ran, so no test ran: {1}</value>

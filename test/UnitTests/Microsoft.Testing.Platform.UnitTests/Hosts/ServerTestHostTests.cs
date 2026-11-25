@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -14,6 +16,7 @@ using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -53,6 +56,443 @@ public sealed class ServerTestHostTests
         fixture.HandlerDisposal.Verify(d => d.Dispose(), Times.Once);
         Assert.IsTrue(fixture.Host.IsInitialized);
     }
+
+    [TestMethod]
+    public async Task RunAsync_RunRequestsUseFreshInvocationHandlersAndRestoreEnvironmentBeforeDiscovery()
+    {
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+        await using ServerFixture fixture = new();
+        List<string> events = [];
+        int nextHandlerId = 0;
+        InvocationLifetimeManager manager = fixture.InvocationLifetime;
+        manager.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "A", Interlocked.Increment(ref nextHandlerId), events.Add));
+        manager.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "B", Interlocked.Increment(ref nextHandlerId), events.Add));
+        fixture.Execute = context =>
+        {
+            string value = fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE") ?? "<null>";
+            events.Add(context.Request is RunTestExecutionRequest ? $"test:{value}" : $"discovery:{value}");
+            context.Complete();
+            return Task.CompletedTask;
+        };
+
+        Task<int> server = fixture.StartAsync();
+        Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            1,
+            JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true))));
+
+        ResponseMessage firstRun = Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            2,
+            JsonRpcMethods.TestingRunTests,
+            new RunRequestArgs(Guid.NewGuid(), null, null)));
+        Assert.IsInstanceOfType<RunResponseArgs>(firstRun.Result);
+        events.Add($"restored:{fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE")}");
+
+        ResponseMessage discovery = Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            3,
+            JsonRpcMethods.TestingDiscoverTests,
+            new DiscoverRequestArgs(Guid.NewGuid(), null, null)));
+        Assert.IsInstanceOfType<DiscoverResponseArgs>(discovery.Result);
+
+        ResponseMessage secondRun = Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            4,
+            JsonRpcMethods.TestingRunTests,
+            new RunRequestArgs(Guid.NewGuid(), null, null)));
+        Assert.IsInstanceOfType<RunResponseArgs>(secondRun.Result);
+        events.Add($"restored:{fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE")}");
+
+        Assert.AreSequenceEqual(
+            [
+                "starting:A:1",
+                "starting:B:2",
+                "test:B-2",
+                "completed:B:2",
+                "completed:A:1",
+                "restored:baseline",
+                "discovery:baseline",
+                "starting:A:3",
+                "starting:B:4",
+                "test:B-4",
+                "completed:B:4",
+                "completed:A:3",
+                "restored:baseline",
+            ],
+            events);
+
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+        Assert.AreEqual(0, await server.WaitAsync(Limit, TestContext.CancellationToken));
+#pragma warning restore TPEXP
+    }
+
+    [TestMethod]
+    public async Task RunAsync_RunAndDiscoveryWaitForAnActiveInvocation()
+    {
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+        await using ServerFixture fixture = new();
+        ConcurrentQueue<string> events = new();
+        TaskCompletionSource<bool> setupStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseSetup = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.ReleaseBlockedExecution = () => releaseSetup.TrySetResult(true);
+        int nextHandlerId = 0;
+        InvocationLifetimeManager manager = fixture.InvocationLifetime;
+        manager.AddInvocationLifetimeHandler(_ =>
+        {
+            int id = Interlocked.Increment(ref nextHandlerId);
+            return new RecordingServerInvocationLifetimeHandler(
+                "A",
+                id,
+                events.Enqueue,
+                setupStarted: id == 1 ? setupStarted : null,
+                releaseSetup: id == 1 ? releaseSetup : null);
+        });
+        manager.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "B", Interlocked.Increment(ref nextHandlerId), events.Enqueue));
+        fixture.Execute = context =>
+        {
+            string value = fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE") ?? "<null>";
+            events.Enqueue(context.Request is RunTestExecutionRequest ? $"test:{value}" : $"discovery:{value}");
+            context.Complete();
+            return Task.CompletedTask;
+        };
+
+        TaskCompletionSource<bool> competingRequestsReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int runRequestsReceived = 0;
+        int discoveryReceived = 0;
+        fixture.Logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Returns<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, message, _, _) =>
+            {
+                if (message == "Received testing/runTests request"
+                    && Interlocked.Increment(ref runRequestsReceived) == 2)
+                {
+                    if (Volatile.Read(ref discoveryReceived) != 0)
+                    {
+                        competingRequestsReceived.TrySetResult(true);
+                    }
+                }
+                else if (message == "Received testing/discoverTests request")
+                {
+                    Volatile.Write(ref discoveryReceived, 1);
+                    if (Volatile.Read(ref runRequestsReceived) == 2)
+                    {
+                        competingRequestsReceived.TrySetResult(true);
+                    }
+                }
+
+                return Task.CompletedTask;
+            });
+
+        Task<int> server = fixture.StartAsync();
+        Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            1,
+            JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true))));
+
+        fixture.Incoming.Write(new RequestMessage(2, JsonRpcMethods.TestingRunTests, new RunRequestArgs(Guid.NewGuid(), null, null)));
+        await setupStarted.Task.WaitAsync(Limit, TestContext.CancellationToken);
+
+        fixture.Incoming.Write(new RequestMessage(3, JsonRpcMethods.TestingDiscoverTests, new DiscoverRequestArgs(Guid.NewGuid(), null, null)));
+        fixture.Incoming.Write(new RequestMessage(4, JsonRpcMethods.TestingRunTests, new RunRequestArgs(Guid.NewGuid(), null, null)));
+        await competingRequestsReceived.Task.WaitAsync(Limit, TestContext.CancellationToken);
+
+        Assert.AreSequenceEqual(["starting:A:1"], events.ToArray());
+        releaseSetup.TrySetResult(true);
+
+        Dictionary<int, RpcMessage> responses = await ReadResponsesAsync(fixture, 2, 3, 4);
+        Assert.IsInstanceOfType<ResponseMessage>(responses[2]);
+        Assert.IsInstanceOfType<ResponseMessage>(responses[3]);
+        Assert.IsInstanceOfType<ResponseMessage>(responses[4]);
+        string[] observed = events.ToArray();
+        string[] discoveryBeforeRun =
+        [
+            "starting:A:1",
+            "starting:B:2",
+            "test:B-2",
+            "completed:B:2",
+            "completed:A:1",
+            "discovery:baseline",
+            "starting:A:3",
+            "starting:B:4",
+            "test:B-4",
+            "completed:B:4",
+            "completed:A:3",
+        ];
+        string[] runBeforeDiscovery =
+        [
+            "starting:A:1",
+            "starting:B:2",
+            "test:B-2",
+            "completed:B:2",
+            "completed:A:1",
+            "starting:A:3",
+            "starting:B:4",
+            "test:B-4",
+            "completed:B:4",
+            "completed:A:3",
+            "discovery:baseline",
+        ];
+        Assert.IsTrue(
+            observed.SequenceEqual(discoveryBeforeRun) || observed.SequenceEqual(runBeforeDiscovery),
+            string.Join(Environment.NewLine, observed));
+
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+        Assert.AreEqual(0, await server.WaitAsync(Limit, TestContext.CancellationToken));
+#pragma warning restore TPEXP
+    }
+
+    [TestMethod]
+    public async Task RunAsync_NoInvocationHandlersPreservesRequestExecution()
+    {
+        await using ServerFixture fixture = new();
+        List<string> events = [];
+        fixture.Execute = context =>
+        {
+            string value = fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE") ?? "<null>";
+            events.Add(context.Request is RunTestExecutionRequest ? "run" : $"discovery:{value}");
+            context.Complete();
+            return Task.CompletedTask;
+        };
+
+        Task<int> server = fixture.StartAsync();
+        Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            1,
+            JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true))));
+        ResponseMessage response = Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            2,
+            JsonRpcMethods.TestingRunTests,
+            new RunRequestArgs(Guid.NewGuid(), null, null)));
+
+        Assert.IsInstanceOfType<RunResponseArgs>(response.Result);
+        Assert.AreSequenceEqual(["run"], events);
+        Assert.AreEqual(1, fixture.FrameworkBuilds);
+
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+        Assert.AreEqual(0, await server.WaitAsync(Limit, TestContext.CancellationToken));
+    }
+
+    [TestMethod]
+    [DataRow("setup")]
+    [DataRow("cleanup")]
+    public async Task RunAsync_HandlerFailureReturnsRequestErrorAndServerRemainsUsable(string failurePhase)
+    {
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+        await using ServerFixture fixture = new();
+        List<string> events = [];
+        int nextHandlerId = 0;
+        InvocationLifetimeManager manager = fixture.InvocationLifetime;
+        manager.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "A", Interlocked.Increment(ref nextHandlerId), events.Add));
+        manager.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "B",
+            Interlocked.Increment(ref nextHandlerId),
+            events.Add,
+            failOnSetup: failurePhase == "setup",
+            failOnCleanup: failurePhase == "cleanup"));
+        fixture.Execute = context =>
+        {
+            events.Add($"test:{fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE")}");
+            context.Complete();
+            return Task.CompletedTask;
+        };
+
+        Task<int> server = fixture.StartAsync();
+        Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            1,
+            JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true))));
+
+        ErrorMessage failure = Assert.IsInstanceOfType<ErrorMessage>(await SendRequestAsync(
+            fixture,
+            2,
+            JsonRpcMethods.TestingRunTests,
+            new RunRequestArgs(Guid.NewGuid(), null, null)));
+        Assert.AreEqual(ErrorCodes.InternalError, failure.ErrorCode);
+        Assert.AreEqual("baseline", fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE"));
+
+        ResponseMessage recovery = Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            3,
+            JsonRpcMethods.TestingRunTests,
+            new RunRequestArgs(Guid.NewGuid(), null, null)));
+        Assert.IsInstanceOfType<RunResponseArgs>(recovery.Result);
+        string[] expected = failurePhase == "setup"
+            ? ["starting:A:1", "starting:B:2", "completed:B:2", "completed:A:1", "starting:A:3", "starting:B:4", "test:B-4", "completed:B:4", "completed:A:3"]
+            : ["starting:A:1", "starting:B:2", "test:B-2", "completed:B:2", "completed:A:1", "starting:A:3", "starting:B:4", "test:B-4", "completed:B:4", "completed:A:3"];
+        Assert.AreSequenceEqual(expected, events);
+        Assert.AreEqual("baseline", fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE"));
+
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+        Assert.AreEqual(0, await server.WaitAsync(Limit, TestContext.CancellationToken));
+#pragma warning restore TPEXP
+    }
+
+    [TestMethod]
+    public async Task RunAsync_CanceledSetupReturnsRequestErrorAndServerRemainsUsable()
+    {
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+        await using ServerFixture fixture = new();
+        List<string> events = [];
+        TaskCompletionSource<bool> setupStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int nextHandlerId = 0;
+        InvocationLifetimeManager manager = fixture.InvocationLifetime;
+        manager.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "A",
+            Interlocked.Increment(ref nextHandlerId),
+            events.Add,
+            setupStarted: setupStarted));
+        manager.AddInvocationLifetimeHandler(_ => new RecordingServerInvocationLifetimeHandler(
+            "B", Interlocked.Increment(ref nextHandlerId), events.Add));
+        fixture.Execute = context =>
+        {
+            string value = fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE") ?? "<null>";
+            events.Add(context.Request is RunTestExecutionRequest ? "run" : $"discovery:{value}");
+            context.Complete();
+            return Task.CompletedTask;
+        };
+
+        Task<int> server = fixture.StartAsync();
+        Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            1,
+            JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true))));
+
+        using var cancelSender = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        Task cancelRequest = CancelWhenSetupStartsAsync(fixture, setupStarted, 2, cancelSender.Token);
+        RpcMessage canceledResult = await SendRequestAsync(
+            fixture,
+            2,
+            JsonRpcMethods.TestingRunTests,
+            new RunRequestArgs(Guid.NewGuid(), null, null));
+        cancelSender.Cancel();
+        try
+        {
+            await cancelRequest;
+        }
+        catch (OperationCanceledException) when (cancelSender.IsCancellationRequested)
+        {
+            // If setup was never entered, the assertion below reports the missing cancellation behavior.
+        }
+
+        ErrorMessage canceled = Assert.IsInstanceOfType<ErrorMessage>(canceledResult);
+        Assert.AreEqual(ErrorCodes.RequestCanceled, canceled.ErrorCode);
+
+        ResponseMessage discovery = Assert.IsInstanceOfType<ResponseMessage>(await SendRequestAsync(
+            fixture,
+            3,
+            JsonRpcMethods.TestingDiscoverTests,
+            new DiscoverRequestArgs(Guid.NewGuid(), null, null)));
+        Assert.IsInstanceOfType<DiscoverResponseArgs>(discovery.Result);
+        Assert.AreSequenceEqual(["starting:A:1", "completed:A:1", "discovery:baseline"], events);
+        Assert.AreEqual("baseline", fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE"));
+
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+        Assert.AreEqual(0, await server.WaitAsync(Limit, TestContext.CancellationToken));
+#pragma warning restore TPEXP
+    }
+
+    private async Task<RpcMessage> SendRequestAsync(ServerFixture fixture, int id, string method, object args)
+    {
+        fixture.Incoming.Write(new RequestMessage(id, method, args));
+        while (true)
+        {
+            RpcMessage message = await fixture.Written.ReadAsync().WaitAsync(Limit, TestContext.CancellationToken);
+            if ((message is ResponseMessage { Id: var responseId } && responseId == id)
+                || (message is ErrorMessage { Id: var errorId } && errorId == id))
+            {
+                return message;
+            }
+        }
+    }
+
+    private async Task<Dictionary<int, RpcMessage>> ReadResponsesAsync(ServerFixture fixture, params int[] ids)
+    {
+        Dictionary<int, RpcMessage> responses = [];
+        while (responses.Count < ids.Length)
+        {
+            RpcMessage message = await fixture.Written.ReadAsync().WaitAsync(Limit, TestContext.CancellationToken);
+            int? id = message switch
+            {
+                ResponseMessage response => response.Id,
+                ErrorMessage error => error.Id,
+                _ => null,
+            };
+            if (id is int value && ids.Contains(value))
+            {
+                responses[value] = message;
+            }
+        }
+
+        return responses;
+    }
+
+    private static async Task CancelWhenSetupStartsAsync(
+        ServerFixture fixture,
+        TaskCompletionSource<bool> setupStarted,
+        int requestId,
+        CancellationToken cancellationToken)
+    {
+        await setupStarted.Task.WaitAsync(cancellationToken);
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.CancelRequest, new CancelRequestArgs(requestId)));
+    }
+
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+    private sealed class RecordingServerInvocationLifetimeHandler(
+        string name,
+        int id,
+        Action<string> record,
+        bool failOnSetup = false,
+        bool failOnCleanup = false,
+        TaskCompletionSource<bool>? setupStarted = null,
+        TaskCompletionSource<bool>? releaseSetup = null) : IInvocationLifetimeHandler
+    {
+        public string Uid => "ServerHandler" + name;
+
+        public string Version => "1.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public async Task OnInvocationStartingAsync(InvocationStartingContext context, CancellationToken cancellationToken)
+        {
+            record($"starting:{name}:{id}");
+            context.SetEnvironmentVariable("SERVER_HOOK_VALUE", $"{name}-{id}");
+            if (setupStarted is not null)
+            {
+                setupStarted.TrySetResult(true);
+                await (releaseSetup is null
+                    ? Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken)
+                    : releaseSetup.Task.WaitAsync(cancellationToken));
+            }
+
+            if (failOnSetup && id == 2)
+            {
+                throw new InvalidOperationException("setup failed");
+            }
+        }
+
+        public Task OnInvocationCompletedAsync(InvocationCompletedContext context, CancellationToken cancellationToken)
+        {
+            record($"completed:{name}:{id}");
+            return failOnCleanup && id == 2
+                ? throw new InvalidOperationException("cleanup failed")
+                : Task.CompletedTask;
+        }
+    }
+#pragma warning restore TPEXP
 
     [TestMethod]
     [DataRow(false)]
@@ -304,6 +744,11 @@ public sealed class ServerTestHostTests
     private sealed class ServerFixture : IAsyncDisposable
     {
         private readonly SystemAsyncMonitor _monitor = new();
+        private readonly Dictionary<string, string?> _environmentVariables = new(StringComparer.Ordinal)
+        {
+            ["SERVER_HOOK_VALUE"] = "baseline",
+        };
+
         private Task<int>? _run;
         private bool _failureObserved;
 
@@ -314,17 +759,34 @@ public sealed class ServerTestHostTests
             loggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(Logger.Object);
             Mock<IAsyncMonitorFactory> monitors = new();
             monitors.Setup(m => m.Create()).Returns(_monitor);
-            Mock<IEnvironment> environment = new();
-            environment.SetupGet(e => e.NewLine).Returns(Environment.NewLine);
+            Environment.SetupGet(e => e.NewLine).Returns(System.Environment.NewLine);
+            Environment.SetupGet(e => e.ProcessId).Returns(1234);
+            Environment.Setup(e => e.GetEnvironmentVariable(It.IsAny<string>()))
+                .Returns<string>(name => _environmentVariables.TryGetValue(name, out string? value) ? value : null);
+            Environment.Setup(e => e.GetEnvironmentVariables())
+                .Returns(() => new System.Collections.Hashtable(_environmentVariables));
+            Environment.Setup(e => e.SetEnvironmentVariable(It.IsAny<string>(), It.IsAny<string?>()))
+                .Callback<string, string?>((name, value) =>
+                {
+                    if (value is null)
+                    {
+                        _environmentVariables.Remove(name);
+                    }
+                    else
+                    {
+                        _environmentVariables[name] = value;
+                    }
+                });
             Mock<ITestApplicationCancellationTokenSource> application = new();
             application.SetupGet(a => a.CancellationToken).Returns(token);
             StopPoliciesService policies = new(application.Object) { ProcessRole = TestProcessRole.TestHost };
             Services.AddServices(
             [
-                application.Object, loggerFactory.Object, monitors.Object, environment.Object, new SystemClock(),
+                application.Object, loggerFactory.Object, monitors.Object, Environment.Object, new SystemClock(),
                 new UnhandledExceptionsPolicy(fastFail), new Mock<ICommandLineOptions>().Object, new SystemTask(), policies,
                 Capabilities, new TestCoverageResult(), new Mock<ITelemetryCollector>().Object, new Mock<ITelemetryInformation>().Object,
             ]);
+            Services.AddService(InvocationLifetime);
             Output.Setup(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
                 .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) =>
                 {
@@ -355,6 +817,10 @@ public sealed class ServerTestHostTests
         public Mock<ILogger> Logger { get; } = new();
 
         public Mock<IPlatformOutputDevice> Output { get; } = new();
+
+        public Mock<IEnvironment> Environment { get; } = new();
+
+        public InvocationLifetimeManager InvocationLifetime { get; } = new();
 
         public Mock<IMessageHandler> Handler { get; } = new();
 

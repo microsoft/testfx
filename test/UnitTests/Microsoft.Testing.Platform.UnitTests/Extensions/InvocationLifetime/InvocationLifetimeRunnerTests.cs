@@ -4,8 +4,10 @@
 using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 
 using Moq;
 
@@ -321,6 +323,149 @@ public sealed class InvocationLifetimeRunnerTests
         Assert.IsEmpty(_variables);
     }
 
+    [TestMethod]
+    public async Task Coordinated_ReportsSetupOutputs_AndRunsCleanupWithAggregateVerdictAfterModuleCompleted()
+    {
+        _variables["EXISTING"] = "original";
+        RecordingHandler handler = new("a", _calls)
+        {
+            OnSetupContext = context =>
+            {
+                context.SetEnvironmentVariable("SHARED", "first");
+                context.SetEnvironmentVariable("SHARED", "second");
+                context.SetEnvironmentVariable("EXISTING", null);
+            },
+        };
+        FakeCoordinationChannel channel = new(_calls) { CleanupRequest = new InvocationCleanupRequest((int)ExitCode.AtLeastOneTestFailed, IsCanceled: false) };
+        InvocationLifetimeRunner runner = CreateRunner([handler]);
+        runner.EnableCoordination(channel);
+
+        Assert.IsNull(await runner.RunSetupAsync(CancellationToken.None));
+        int exitCode = await runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false);
+
+        // The module keeps its own result; the handlers see the aggregate verdict of the invocation.
+        Assert.AreEqual((int)ExitCode.Success, exitCode);
+        Assert.AreSequenceEqual(
+            ["setup:a", "setupCompleted:True:", "moduleCompleted:0", "waitCleanup", "cleanup:a(2,False)", "dispose:a", "cleanupCompleted:True:"],
+            _calls);
+        Assert.AreSequenceEqual(
+            [new InvocationLifetimeOutput("SHARED", true, "second"), new InvocationLifetimeOutput("EXISTING", false, null)],
+            channel.Outputs!);
+    }
+
+    [TestMethod]
+    public async Task Coordinated_SetupFailure_IsReportedWithMessage_AndCleanupRunsLocally()
+    {
+        FakeCoordinationChannel channel = new(_calls);
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls) { SetupException = new InvalidOperationException("boom") }]);
+        runner.EnableCoordination(channel);
+
+        int? setupExitCode = await runner.RunSetupAsync(CancellationToken.None);
+        int exitCode = await runner.RunCleanupAsync(setupExitCode!.Value, isCanceled: false);
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, setupExitCode);
+        Assert.AreEqual((int)ExitCode.GenericFailure, exitCode);
+        Assert.AreEqual("setup:a", _calls[0]);
+        Assert.StartsWith("setupCompleted:False:", _calls[1]);
+        Assert.Contains("boom", _calls[1]);
+        Assert.AreSequenceEqual(["cleanup:a(1,False)", "dispose:a"], _calls.Skip(2).ToList());
+    }
+
+    [TestMethod]
+    public async Task Coordinated_SetupCompletedNotDelivered_FailsModule()
+    {
+        FakeCoordinationChannel channel = new(_calls) { SetupCompletedException = new IOException("pipe broken") };
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls)]);
+        runner.EnableCoordination(channel);
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, await runner.RunSetupAsync(CancellationToken.None));
+        Assert.AreEqual((int)ExitCode.GenericFailure, await runner.RunCleanupAsync((int)ExitCode.GenericFailure, isCanceled: false));
+        Assert.DoesNotContain("moduleCompleted:1", _calls);
+        Assert.Contains("cleanup:a(1,False)", _calls);
+        _outputDevice.Verify(
+            d => d.DisplayAsync(runner, It.Is<ErrorMessageOutputDeviceData>(m => m.Message.Contains("pipe broken")), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Coordinated_CleanupNotRequested_CleansUpLocallyAndFails()
+    {
+        FakeCoordinationChannel channel = new(_calls) { CleanupRequest = null };
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls)]);
+        runner.EnableCoordination(channel);
+
+        Assert.IsNull(await runner.RunSetupAsync(CancellationToken.None));
+        int exitCode = await runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false);
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, exitCode);
+        Assert.AreSequenceEqual(["setup:a", "setupCompleted:True:", "moduleCompleted:0", "waitCleanup", "cleanup:a(1,False)", "dispose:a"], _calls);
+        _outputDevice.Verify(
+            d => d.DisplayAsync(runner, It.IsAny<ErrorMessageOutputDeviceData>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Coordinated_CanceledInvocation_PassesCancellationToHandlers()
+    {
+        FakeCoordinationChannel channel = new(_calls) { CleanupRequest = new InvocationCleanupRequest((int)ExitCode.TestSessionAborted, IsCanceled: true) };
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls)]);
+        runner.EnableCoordination(channel);
+
+        await runner.RunSetupAsync(CancellationToken.None);
+        int exitCode = await runner.RunCleanupAsync((int)ExitCode.TestSessionAborted, isCanceled: true);
+
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, exitCode);
+        Assert.Contains("cleanup:a(3,True)", _calls);
+        Assert.AreEqual("cleanupCompleted:True:", _calls[^1]);
+    }
+
+    [TestMethod]
+    public async Task Coordinated_CleanupFailure_IsReportedAndFailsSuccessfulModule()
+    {
+        FakeCoordinationChannel channel = new(_calls) { CleanupRequest = new InvocationCleanupRequest((int)ExitCode.Success, IsCanceled: false) };
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls) { CleanupException = new InvalidOperationException("cleanup boom") }]);
+        runner.EnableCoordination(channel);
+
+        await runner.RunSetupAsync(CancellationToken.None);
+        int exitCode = await runner.RunCleanupAsync((int)ExitCode.Success, isCanceled: false);
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, exitCode);
+        Assert.StartsWith("cleanupCompleted:False:", _calls[^1]);
+        Assert.Contains("cleanup boom", _calls[^1]);
+    }
+
+    [TestMethod]
+    public async Task EnableCoordination_AfterSetupStarted_Throws()
+    {
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls)]);
+        await runner.RunSetupAsync(CancellationToken.None);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => runner.EnableCoordination(new FakeCoordinationChannel(_calls)));
+    }
+
+    [TestMethod]
+    public async Task Uncoordinated_WarnsForEachHandlerNotCoordinatedByDotnetTest()
+    {
+        InvocationLifetimeRunner runner = new(
+            [new RecordingHandler("local", _calls)], _environment.Object, _outputDevice.Object, Mock.Of<ILogger>(),
+            setOwnerMarker: false, restoreEnvironment: false, uncoordinatedHandlerUids: ["local"]);
+
+        Assert.IsNull(await runner.RunSetupAsync(CancellationToken.None));
+
+        _outputDevice.Verify(
+            d => d.DisplayAsync(runner, It.Is<WarningMessageOutputDeviceData>(m => m.Message.Contains("'local'")), It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Contains("setup:local", _calls);
+    }
+
+    [TestMethod]
+    public void HandlersHandshakeValue_IsJsonArrayOfHandlerUids()
+    {
+        InvocationLifetimeRunner runner = CreateRunner([new RecordingHandler("a", _calls), new RecordingHandler("b\"c", _calls)]);
+
+        Assert.AreEqual("""["a","b\"c"]""", runner.GetHandlersHandshakeValue());
+    }
+
     private InvocationLifetimeRunner CreateRunner(IReadOnlyList<IInvocationLifetimeHandler> handlers, bool setOwnerMarker = false, bool restoreEnvironment = false)
         => new(handlers, _environment.Object, _outputDevice.Object, Mock.Of<ILogger>(), setOwnerMarker, restoreEnvironment);
 
@@ -401,5 +546,41 @@ public sealed class InvocationLifetimeRunnerTests
 
         public Task OnInvocationCompletedAsync(InvocationCompletedContext context, CancellationToken cancellationToken)
             => Task.CompletedTask;
+    }
+
+    private sealed class FakeCoordinationChannel(List<string> calls) : IInvocationLifetimeCoordinationChannel
+    {
+        public bool IsInvocationLifetimeCoordinationAccepted => true;
+
+        public InvocationCleanupRequest? CleanupRequest { get; set; } = new((int)ExitCode.Success, IsCanceled: false);
+
+        public Exception? SetupCompletedException { get; set; }
+
+        public IReadOnlyList<InvocationLifetimeOutput>? Outputs { get; private set; }
+
+        public Task SendInvocationSetupCompletedAsync(bool succeeded, string? errorMessage, IReadOnlyList<InvocationLifetimeOutput> outputs)
+        {
+            calls.Add($"setupCompleted:{succeeded}:{errorMessage}");
+            Outputs = [.. outputs];
+            return SetupCompletedException is null ? Task.CompletedTask : Task.FromException(SetupCompletedException);
+        }
+
+        public Task SendModuleTestsCompletedAsync(int exitCode)
+        {
+            calls.Add($"moduleCompleted:{exitCode}");
+            return Task.CompletedTask;
+        }
+
+        public Task<InvocationCleanupRequest?> WaitForInvocationCleanupRequestAsync(CancellationToken cancellationToken)
+        {
+            calls.Add("waitCleanup");
+            return Task.FromResult(CleanupRequest);
+        }
+
+        public Task SendInvocationCleanupCompletedAsync(bool succeeded, string? errorMessage)
+        {
+            calls.Add($"cleanupCompleted:{succeeded}:{errorMessage}");
+            return Task.CompletedTask;
+        }
     }
 }

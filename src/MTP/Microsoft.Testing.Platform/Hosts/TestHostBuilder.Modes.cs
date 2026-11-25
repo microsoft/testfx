@@ -292,7 +292,38 @@ internal sealed partial class TestHostBuilder
         // Kept even when every handler is disabled: the owner still publishes its marker, so a handler that a child
         // process sees as enabled (for example through a variable set by an environment provider) does not run there
         // once per test host process.
-        return await ((InvocationLifetimeManager)InvocationLifetime).BuildAsync(context.ServiceProvider).ConfigureAwait(false);
+        IReadOnlyList<IInvocationLifetimeHandler> handlers = await ((InvocationLifetimeManager)InvocationLifetime).BuildAsync(context.ServiceProvider).ConfigureAwait(false);
+
+        // Read now: a test host clears the reserved variables before it adds the runner.
+        context.IsInvocationLifetimeOwnerRole = string.Equals(
+            context.SystemEnvironment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE),
+            EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE_OWNER,
+            StringComparison.Ordinal);
+
+        // dotnet test already ran the setup of these handlers once for the whole invocation, in the owner module,
+        // and exported their outputs to this module: they must not run again here.
+        if (InvocationLifetimeJson.TryParseStringArray(
+            context.SystemEnvironment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED)) is not { } coordinatedUids)
+        {
+            return handlers;
+        }
+
+        HashSet<string> coordinated = [.. coordinatedUids];
+        List<IInvocationLifetimeHandler> remainingHandlers = [];
+        foreach (IInvocationLifetimeHandler handler in handlers)
+        {
+            if (coordinated.Contains(handler.Uid))
+            {
+                await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
+            }
+            else
+            {
+                remainingHandlers.Add(handler);
+            }
+        }
+
+        context.UncoordinatedInvocationLifetimeHandlerUids = [.. remainingHandlers.Select(static handler => handler.Uid)];
+        return remainingHandlers;
     }
 
     private static void AddInvocationLifetimeRunner(
@@ -313,7 +344,9 @@ internal sealed partial class TestHostBuilder
             context.LoggerFactory.CreateLogger<InvocationLifetimeRunner>(),
             setOwnerMarker,
             restoreEnvironment: false,
-            setupTimeout: setupTimeout));
+            setupTimeout: setupTimeout,
+            isCoordinatedOwnerCandidate: context.IsInvocationLifetimeOwnerRole,
+            uncoordinatedHandlerUids: context.UncoordinatedInvocationLifetimeHandlerUids));
     }
 
     private static async Task ReleaseInvocationLifetimeHandlersAsync(IReadOnlyList<IInvocationLifetimeHandler>? handlers)
@@ -442,6 +475,8 @@ internal sealed partial class TestHostBuilder
         NamedPipeClient? testControllerConnection,
         TestHostControllerCancellationListener? testHostControllerCancellationListener)
     {
+        context.ServiceProvider.TryAddService((InvocationLifetimeManager)InvocationLifetime);
+
         IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(context.ServiceProvider);
         ServerTestHost serverTestHost = new(
             context.ServiceProvider,

@@ -13,7 +13,8 @@ namespace Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 /// by the owner never run the hooks again.
 /// </para>
 /// <para>
-/// The hooks never run for <c>--help</c>, <c>--info</c>, tools, test discovery, or server mode.
+/// The hooks never run for <c>--help</c>, <c>--info</c>, tools, test discovery, or <c>--list-tests</c>.
+/// In server mode, they run around each <c>testing/runTests</c> request with fresh handler instances.
 /// </para>
 /// <para>
 /// This API is experimental. It may change, break, or be removed at any time without notice.

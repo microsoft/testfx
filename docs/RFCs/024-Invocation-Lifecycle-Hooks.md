@@ -158,9 +158,9 @@ Rules:
    Outputs still reach children: the controller snapshots the process environment when it prepares the child process, and retry builds its child `ProcessStartInfo` during orchestration — both after setup.
 3. **Suppression marker.** An owner that **launches MTP children** (orchestrator or controller) sets `TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER=<owner pid>` in its own environment **after setup** and before launching children. An MTP process that starts with this variable set is a participant and does not run handlers. A test host owner never sets the marker. The controller PID or the internal retry pipe on the command line also identifies a participant. This covers hosts that do not inherit the owner's environment, including AUMID-activated retry attempts with no controller PID.
 4. **Leaf reset.** The test host (console or server) captures whether the marker was inherited and then removes **every** `TESTINGPLATFORM_INVOCATIONLIFETIME_*` variable from its environment (the Phase 1 marker and the Phase 2 role variables alike), so an unrelated MTP application launched **by user test code** is a new invocation with its own hooks. A retry child that is itself a controller keeps the variables and forwards them to its leaf. When both the marker and a Phase 2 owner role are present, the marker wins.
-5. **Server mode (JSON-RPC)** — *staged: not implemented in the first Phase 1 change; until then server mode never runs handlers.* The server test host serves many requests. Handlers run around each `testing/runTests` request, in the server test host, with **fresh handler instances per request**. When handlers are registered, every run **and discovery** request takes an exclusive gate, held from setup until the environment is restored, so no other request observes temporary outputs. Setup receives the request's cancellation token (canceling the `testing/runTests` request cancels its setup). After cleanup, every variable written through `SetEnvironmentVariable` is **restored** to its value before setup, so outputs never leak into the next request. Setup and cleanup failures fail that request (JSON-RPC error), not the server process. Controllers in server mode are passive and never run handlers.
+5. **Server mode (JSON-RPC).** The server test host serves many requests. Handlers run around each `testing/runTests` request, in the server test host, with **fresh handler instances per request**. When handlers are registered, every run **and discovery** request takes an exclusive gate, held from setup until the environment is restored, so no other request observes temporary outputs. Setup receives the request's cancellation token (canceling the `testing/runTests` request cancels its setup). After cleanup, every variable written through `SetEnvironmentVariable` is **restored** to its value before setup, so outputs never leak into the next request. Setup and cleanup failures fail that request (JSON-RPC error), not the server process. Controllers in server mode are passive and never run handlers.
 6. **Discovery and informative commands** never run handlers.
-7. **Disabled handlers** are disposed when the host is built and never invoked. When no handler is registered at all, the outer controller or orchestrator publishes no marker: registration is code, so every process of the application registers the same handlers. An application that registers handlers conditionally (for example from a variable that only a child process sees) is not supported.
+7. **Disabled handlers** are disposed when the console-mode owner is built or before each server run request, and are never invoked. When no handler is registered at all, the outer controller or orchestrator publishes no marker: registration is code, so every process of the application registers the same handlers. An application that registers handlers conditionally (for example from a variable that only a child process sees) is not supported.
 
 ## 7. Semantics
 
@@ -213,31 +213,43 @@ Electing the owner from handshakes ("first advertiser wins") is unsound: by the 
 
 Metadata can point to a stale binary, or to an owner whose declared handlers are disabled at run time. The SDK therefore commits to a coordinated run only after the owner **accepts** it:
 
-- the owner negotiated 1.5.0;
-- the owner's handshake advertises its *enabled* handler UIDs, and that set covers every declared item.
+- the owner negotiated 1.5.0 over the named-pipe transport and advertised its *enabled* handler UIDs in handshake property 23;
+- the SDK validates that the enabled UID set covers every declared item and acknowledges activation in its handshake reply using property 24;
+- the owner does not start setup until it receives that acknowledgment.
 
 The SDK waits for the handshake and for `InvocationSetupCompleted` within a bounded readiness timeout. If activation is rejected before setup begins (old protocol, UID mismatch), the SDK warns and falls back to Phase 1. Once setup may have started, any failure, including a timeout, fails the run without launching other modules.
 
 ### 8.2 Run sequence
 
-1. The SDK launches the owner first, with `TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE=owner`. The owner handshakes, advertising its handler UIDs (handshake property **20**, `InvocationLifetimeHandlers`) so the SDK can validate them.
-2. The owner runs setup and sends `InvocationSetupCompleted { Succeeded, ErrorMessage?, Outputs }` (new serializer id **15**). Outputs use a length-prefixed (name, has-value, value) encoding that preserves `=`, `;`, newlines, and distinguishes removal from an empty value.
+1. The SDK launches the owner first, with `TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE=owner`. The owner handshakes, advertising its enabled handler UIDs (handshake property **23**, `InvocationLifetimeHandlers`) so the SDK can validate them. The value is a compact JSON array of strings; UIDs are not restricted to a delimiter-safe character set.
+2. After validating the owner handshake, the SDK acknowledges activation with handshake property **24**, `InvocationLifetimeCoordinationAccepted=true`. The owner runs setup only when protocol 1.5.0 or later was negotiated, the transport is named pipe, and this acknowledgment is present. It then sends `InvocationSetupCompleted { Succeeded, ErrorMessage?, Outputs }` (serializer id **16**). Each output encodes `Name`, `HasValue`, and `Value` when present; `HasValue=false` removes the variable, distinct from setting it to an empty string. The encoding preserves `=`, `;`, and newlines. Output values are never logged.
 3. On failure, the SDK does not launch other modules; the run fails (`GenericFailure`). On success, the SDK launches **every** other module (whether or not it registers handlers, including older MTP versions) with the outputs merged into its launch environment, plus `TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED=<owner's enabled handler UIDs>`. A module skips only the handlers whose UIDs are in that set. It still runs any other handlers itself (per module, with a warning), so a handler registered in code without an MSBuild item is never silently dropped. Outputs never travel through handshake properties and are never traced.
-4. The owner runs its own tests and then sends `ModuleTestsCompleted { ExitCode }` (id **16**). The SDK treats this as **module execution complete**: it advances the owner's worker slot and its sequential group (multi-TFM), while keeping the owner's process and pipe tracked separately until exit. Under retry, the orchestrator sends it after the last attempt.
-5. When every other module completed, the SDK sends `RunInvocationCleanup { AggregateExitCode, IsCanceled }` on the reverse control channel (new control kind, next free value after `CloseChannel`), the owner runs cleanup with that aggregate pre-cleanup verdict, sends `InvocationCleanupCompleted { Succeeded, ErrorMessage? }` (id **17**), and exits.
+4. The owner runs its own tests and then sends `ModuleTestsCompleted { ExitCode }` (serializer id **17**). The SDK treats this as **module execution complete**: it advances the owner's worker slot and its sequential group (multi-TFM), while keeping the owner's process and pipe tracked separately until exit. Under retry, the orchestrator sends it after the last attempt.
+5. When every other module completed, the SDK sends `RunInvocationCleanup { AggregateExitCode, IsCanceled }` on the reverse control channel (control kind **3**, after `CloseChannel`). The owner runs cleanup with that aggregate pre-cleanup verdict, sends `InvocationCleanupCompleted { Succeeded, ErrorMessage? }` (serializer id **18**), and exits.
 6. The SDK folds a cleanup failure into the final verdict: `GenericFailure` only if the run would otherwise succeed.
 
 ### 8.3 Cancellation and failures
 
-- On cancellation, the SDK stops launching modules and cancels running modules. For the owner, it drains the owner's **test execution**, not its process: it waits for `ModuleTestsCompleted`, or for a setup-stopped `InvocationSetupCompleted` when canceled during setup. Then it waits for the other modules to terminate, sends `RunInvocationCleanup` with `IsCanceled = true`, and starts a separate exit deadline for the owner. The owner's control listener stays active after test cancellation so the cleanup signal can still arrive.
+- On cancellation, the SDK stops launching modules and cancels running modules. For the owner, it drains the owner's **test execution**, not its process: it waits for `ModuleTestsCompleted`, or for a setup-stopped `InvocationSetupCompleted` when canceled during setup. Then it waits for the other modules to terminate, sends `RunInvocationCleanup` with `IsCanceled = true`, and starts a separate exit deadline for the owner. The owner's control listener stays active after test cancellation so the cleanup signal can still arrive; the SDK delivers cancellation at most once per coordinated control connection.
 - If the exit deadline expires, the SDK kills the owner process tree and reports a cleanup-timeout failure (`GenericFailure` unless the run already failed). The owner may skip cleanup in that case, as with any hard termination (§3).
 - If the owner process dies, the SDK fails the run, stops launching, and cancels and drains other modules. It never re-elects an owner, because setup may already have had side effects.
-- If the SDK goes away (pipe dropped), the owner runs cleanup immediately, as best effort, and reports a failure; siblings may still be running.
+- If the SDK goes away (pipe dropped), the owner runs cleanup immediately, as best effort, and reports a failure; siblings may still be running. Because the invocation's aggregate result is unknown, the handlers receive the owner's failure verdict (`GenericFailure` when the owner's own tests passed), never a success.
 - Phase 2 requires the named-pipe transport with the 1.4.0 control channel. Otherwise the SDK uses Phase 1 behavior.
 
 ### 8.4 Wire reservations
 
-Handshake property 20 and serializer ids 15–17 are reserved in [004-protocol-dotnet-test-pipe.md](../mstest-runner-protocol/004-protocol-dotnet-test-pipe.md) when Phase 2 is implemented. Lifecycle messages are only sent after 1.5.0 was negotiated. Absence of both `TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE` (set only on the owner) and `TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED` (set on every other module) means Phase 1 behavior. Leaf reset (§6) clears all of these variables, so nested applications never inherit a role.
+Wire IDs were allocated after checking the current protocol sources in both repositories. Handshake property 20 is already `CoverageSummaryVersion`, properties 21 and 22 are already `TargetFramework` and `TestInProgressSupported`, and serializer id 15 is already `CoverageSummaryMessages`; these IDs must not be reused.
+
+| Wire item | Allocation and direction |
+| --- | --- |
+| Handshake property 23, `InvocationLifetimeHandlers` | Owner MTP process to SDK; compact JSON array of enabled handler UIDs. |
+| Handshake property 24, `InvocationLifetimeCoordinationAccepted` | SDK to owner MTP process; `true` only after protocol/transport and UID coverage validation. |
+| Serializer id 16, `InvocationSetupCompleted` | Owner to SDK; `ExecutionId`, `InstanceId`, `Succeeded`, optional `ErrorMessage`, and `Outputs`. |
+| Serializer id 17, `ModuleTestsCompleted` | Owner to SDK; `ExecutionId`, `InstanceId`, and module `ExitCode`. |
+| Serializer id 18, `InvocationCleanupCompleted` | Owner to SDK; `ExecutionId`, `InstanceId`, `Succeeded`, and optional `ErrorMessage`. |
+| `ServerControlKinds` value 3, `RunInvocationCleanup` | SDK to owner on the existing reverse control channel; `AggregateExitCode` and `IsCanceled` supplement the existing `Kind` field. |
+
+The three lifecycle messages use request/reply with `VoidResponse`; outputs are length-prefixed name/value data, preserve `=`, `;`, and newlines, and distinguish removing a variable from setting it to an empty value. Lifecycle messages and activation acknowledgments are used only when protocol 1.5.0 or later is negotiated and named-pipe control is available. The SDK advertises 1.4.0 to use the already-defined control channel, and 1.5.0 for lifecycle coordination. Absence of both `TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE` (set only on the owner) and `TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED` (set on every other module) means Phase 1 behavior. The coordinated UID environment value is a compact JSON array of strings. Leaf reset (§6) clears all of these variables, so nested applications never inherit a role.
 
 ### 8.5 Cost
 
@@ -276,3 +288,50 @@ Outputs are environment variables in the user's own process tree and the user's 
 1. A configurable cleanup timeout (`testconfig.json`).
 2. Whether `InvocationStartingContext` should expose the invocation scope (standalone, server request, coordinated `dotnet test`) once Phase 2 exists.
 3. Whether `--list-tests` should ever run hooks for frameworks whose discovery needs the resource. Current answer: no.
+
+## 14. Implementation research and delivery record
+
+### 2026-11-25 — Contract and wire allocation review
+
+The merged Phase 1 implementation provides per-application process-tree hooks, but the original #11500 contract still requires per-request server-mode hooks and one owner across a multi-module `dotnet test` run. RFC sections 6 and 8 remain the source of the lifecycle, fallback, cancellation, and aggregation contract.
+
+Source inspection confirmed that server-mode requests execute in `ServerTestHost.ExecuteRequestAsync`, that `testing/runTests` and `testing/discoverTests` can be in flight concurrently, and that `BuildInvocationLifetimeHandlersIfOwnerAsync` currently excludes JSON-RPC mode. The server-mode request hook must therefore create fresh handler instances per run request, serialize run and discovery while handlers are registered, and restore every environment variable written through `InvocationStartingContext` before releasing that gate.
+
+The existing dotnet-test named-pipe control channel uses handshake property 12, serializer ids 13 and 14, and control kinds 1 (`CancelSession`) and 2 (`CloseChannel`). Current protocol sources also allocate handshake properties 20–22 and serializer id 15, so Phase 2 uses new IDs 23–24 and 16–18 respectively. The owner handshake acknowledgment in property 24 prevents setup side effects before the SDK has verified the enabled UID set; rejection before that acknowledgment retains Phase 1 per-module behavior. UIDs are encoded as JSON arrays because `IExtension.Uid` does not constrain delimiter characters.
+
+The SDK already has the 1.4 control-channel implementation, but advertises through 1.3.0. The Phase 2 SDK change must advertise 1.4.0 and 1.5.0 and preserve the existing 1.4 cancellation behavior for uncoordinated runs.
+
+### 2026-11-25 — Producer implementation and composed validation
+
+The TestFx producer implements the server-mode request hooks and the Phase 2 owner/participant roles described in §6 and §8. The consuming dotnet/sdk change (branch `dev/amauryleve/sdk-invocation-lifetime-hooks`) advertises 1.0.0–1.5.0, selects the owner before launch, replies with property 24 only after verifying the declared UID set, and delivers `RunInvocationCleanup` on the owner's control pipe.
+
+Decisions made during implementation:
+
+- When the coordination pipe is lost after setup, the owner still runs cleanup locally. Because the aggregate result is unknown, a module that passed is reported to the handlers as `GenericFailure` (a failing module keeps its own exit code), the owner's cancellation state is preserved, and the owner exits with a failure.
+- Discovery (`--list-tests`) never activates Phase 2 in the SDK, matching §7 and the Phase 1 exclusion.
+- Property 23 is accepted from the outermost owner process regardless of host type (console, controller, or orchestrator); inner test hosts never advertise it.
+
+Regression sensitivity: unit-level mutations that ignored `TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED` or suppressed property 23 initially survived all unit tests. The acceptance tests `CoordinatedModule_SkipsTheHandlersAlreadyRunByTheOwnerAndKeepsTheirOutputs` and `DotnetTestOwner_AdvertisesItsHandlersAndRunsThemLocallyWhenCoordinationIsNotAccepted` were added to the packed-consumer suite to cover both contracts. With those mutations reapplied to a repacked producer, each new test failed at its intended assertion: handler A ran in the coordinated module, and handshake property 23 was missing. With the sources restored and repacked, the full `InvocationLifetimeHandlerTests` class passed 27/27.
+
+Composed validation used the packed producer and the SDK build containing the fixes for owner terminal-slot release and the dedicated cleanup control pipe. A three-module solution (owner plus two siblings) passed the default, `--max-parallel-test-modules 1`, and `--retry-failed-tests 2` runs, with the first attempt of either the owner or a sibling failing. In each run every handler's setup and cleanup ran exactly once in the owner, every module observed the setup outputs, and cleanup received aggregate exit code 0 without cancellation. Earlier composed runs covered setup failure, failing modules, discovery, fallbacks, owner selection, and cancellation.
+### Alternatives and decisions
+
+| Choice | Decision and reason |
+| --- | --- |
+| Keep Phase 1 behavior only | Rejected as the final outcome: it remains compatible but still runs hooks once per module and never around a server-mode request, so it does not fulfill #11500. |
+| Start owner setup as soon as the owner process launches | Rejected: the SDK has not yet verified protocol support or the runtime-enabled handler set, so a later fallback could duplicate side effects. Wait for the SDK's explicit handshake acknowledgment before setup. |
+| Encode handler UIDs as semicolon-delimited text | Rejected: `IExtension.Uid` has no delimiter restriction. Use JSON arrays in the handshake property and participant environment variable. |
+| Reuse one handler instance across server requests | Rejected: the process serves multiple requests, and state would leak across invocations. Build fresh handlers per request and serialize run/discovery while their temporary environment state is active. |
+| Reuse the existing 1.4 reverse control channel for cleanup | Selected: it already exists in both protocol implementations and avoids a second transport. Advertise 1.4.0 alongside 1.5.0; preserve 1.4 behavior when lifecycle coordination is not accepted. |
+
+### Validation and consuming-surface matrix
+
+| Requirement / risk | Automated E2E evidence | Rendered check / gap |
+| --- | --- | --- |
+| One server-mode run request owns its setup and cleanup | Planned: unit tests for fresh handler instances, output visibility, cleanup ordering, and exactly-once behavior across repeated requests; a packed server-mode consumer verifies output visibility during each request and restoration before the next. | No visual layout change; inspect request results and the server log/error channel. |
+| Server request concurrency cannot leak temporary environment state | Planned: block setup and prove discovery and a second run wait; cover success, setup failure, cleanup failure, and cancellation, and assert the gate releases only after environment restoration. | No visual layout change. |
+| One `dotnet test` owner spans all modules/TFMs | Planned: real packed SDK invocation with a module ordered before the selected owner and `--max-parallel-test-modules 1`; assert setup precedes every module, outputs reach participants, cleanup follows the last completion, and aggregate exit/artifacts match each module. | Terminal output is non-layout behavior; inspect activation/fallback warnings and final parent exit. |
+| Compatibility and activation fallback | Planned: exercise no metadata, old protocol/no acknowledgment, UID mismatch, HTTP transport, setup failure, and stale/disabled owner metadata; verify only pre-setup rejection falls back and no rejected setup runs. | No visual layout change. |
+| Failure and cancellation lifecycle | Planned: exercise owner setup failure, owner crash, nonzero sibling exit, cancellation during setup and execution, cleanup failure, and owner exit timeout; verify no premature cleanup or owner re-election. | No visual layout change. |
+
+One delivery owner must retain responsibility across the TestFx/SDK dependency flow, shipping-package validation, downstream rollout, release-branch servicing/backports, and removal of any temporary coordination flags. The SDK feature must not be enabled downstream until the aligned shipping layout passes the composed tests above.

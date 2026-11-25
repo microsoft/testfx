@@ -122,6 +122,14 @@ internal static class HandshakeMessagePropertyNames
     // Sent by the SDK in its handshake reply when it can receive TestInProgressMessages.
     // Some protocol 1.0 peers do not recognize that message, so absence is not support.
     internal const byte TestInProgressSupported = 22;
+
+    // Protocol 1.5.0. Sent by the invocation-lifetime owner process (TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE=owner)
+    // with a compact JSON string array of its enabled invocation-lifetime handler UIDs.
+    internal const byte InvocationLifetimeHandlers = 23;
+
+    // Protocol 1.5.0. Sent by the SDK in its handshake reply with "true" only when it accepted this process as the
+    // coordinated invocation-lifetime owner. Absence means Phase 1 (per-application) hook semantics.
+    internal const byte InvocationLifetimeCoordinationAccepted = 24;
 }
 
 [Embedded]
@@ -135,6 +143,11 @@ internal static class ServerControlKinds
     // Closes a parked control request without canceling the test session. The test-host controller uses this
     // when its child has already completed normally and the auxiliary control channel can shut down.
     internal const byte CloseChannel = 2;
+
+    // Protocol 1.5.0. Sent to the accepted invocation-lifetime owner after every module completed. Carries the
+    // aggregate exit code and cancellation state; the owner runs invocation cleanup and replies with
+    // InvocationCleanupCompleted on the data pipe.
+    internal const byte RunInvocationCleanup = 3;
 }
 
 [Embedded]
@@ -220,5 +233,9 @@ internal static class ProtocolConstants
     // --timeout, ...). The feature is gated on the presence of the handshake property (a capability), not on this
     // version string, so an older SDK that never advertises the pipe leaves the feature disabled. The version is
     // still bumped so the negotiated-version state advances in lockstep.
-    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0";
+    // 1.5.0 adds coordinated invocation-lifetime hooks across all modules of a 'dotnet test' invocation: handshake
+    // properties InvocationLifetimeHandlers/InvocationLifetimeCoordinationAccepted, messages InvocationSetupCompleted,
+    // ModuleTestsCompleted and InvocationCleanupCompleted, and ServerControlKinds.RunInvocationCleanup. Coordination
+    // additionally requires the server-control pipe and the SDK's explicit acceptance.
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0";
 }

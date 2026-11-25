@@ -198,6 +198,7 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
 
         IsCoverageSummarySupported = false;
         _isTestInProgressSupported = false;
+        IsInvocationLifetimeCoordinationAccepted = false;
         HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
@@ -231,6 +232,13 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
                 && response.Properties.TryGetValue(HandshakeMessagePropertyNames.TestInProgressSupported, out string? progressSupported)
                 && bool.TryParse(progressSupported, out bool supportsProgress)
                 && supportsProgress;
+            IsInvocationLifetimeCoordinationAccepted = IsInvocationLifetimeCoordinationAcknowledged(
+                isCompatible,
+                versionParsed,
+                negotiatedVersion,
+                IsServerControlChannelSupported,
+                properties.ContainsKey(HandshakeMessagePropertyNames.InvocationLifetimeHandlers),
+                response.Properties);
             return isCompatible;
         }
 

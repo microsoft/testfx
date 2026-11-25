@@ -54,6 +54,10 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 {
                     [HandshakeMessagePropertyNames.OrchestratorFeature] = testHostOrchestrator.Uid,
                 };
+                if (invocationLifetimeRunner is { IsCoordinatedOwnerCandidate: true })
+                {
+                    additionalHandshakeProperties[HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = invocationLifetimeRunner.GetHandlersHandshakeValue();
+                }
 
                 bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(
                     HandshakeMessageHostTypes.TestHostOrchestrator, additionalHandshakeProperties).ConfigureAwait(false);
@@ -76,6 +80,12 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                         applicationCancellationToken.Cancel();
                         return Task.CompletedTask;
                     }).ConfigureAwait(false);
+                }
+
+                if (invocationLifetimeRunner is { IsCoordinatedOwnerCandidate: true }
+                    && pushOnlyProtocol is IInvocationLifetimeCoordinationChannel { IsInvocationLifetimeCoordinationAccepted: true } coordinationChannel)
+                {
+                    invocationLifetimeRunner.EnableCoordination(coordinationChannel);
                 }
             }
 

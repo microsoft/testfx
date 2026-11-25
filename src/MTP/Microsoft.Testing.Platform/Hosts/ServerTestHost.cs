@@ -4,6 +4,7 @@
 using System.Net.Sockets;
 
 using Microsoft.Testing.Internal.Framework;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -29,6 +30,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly TestFrameworkManager _testFrameworkManager;
     private readonly TestHostManager _testSessionManager;
+    private readonly InvocationLifetimeManager _invocationLifetimeManager;
+    private readonly SemaphoreSlim _invocationLifetimeRequestGate = new(1, 1);
     private readonly IAsyncMonitor _messageMonitor;
     private readonly IEnvironment _environment;
     private readonly ILogger<ServerTestHost> _logger;
@@ -72,6 +75,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         _messageHandlerFactory = messageHandlerFactory;
         _testFrameworkManager = testFrameworkManager;
         _testSessionManager = testSessionManager;
+        _invocationLifetimeManager = serviceProvider.GetService<InvocationLifetimeManager>() ?? new InvocationLifetimeManager();
         _clientToServerRequests = new();
         _serverToClientRequests = new();
 
@@ -193,6 +197,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     public void Dispose()
     {
+        _invocationLifetimeRequestGate.Dispose();
+
         // Note: The lifetime of the _reader/_writer should be currently handled by the RunAsync()
         // We could consider creating a stateful engine that has the lifetime == server connection UP.
         if (!ServiceProvider.GetUnhandledExceptionsPolicy().FastFailOnFailure)

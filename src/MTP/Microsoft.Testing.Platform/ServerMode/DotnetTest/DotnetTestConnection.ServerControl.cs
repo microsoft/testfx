@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform;
 
@@ -42,7 +44,12 @@ internal sealed partial class DotnetTestConnection
             return Task.CompletedTask;
         }
 
-        _serverControlListenerCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.CancellationToken);
+        // An accepted invocation-lifetime owner must keep listening after the test session was canceled, because
+        // dotnet test delivers RunInvocationCleanup on this channel once every module completed. OnExitAsync and
+        // Dispose cancel the listener explicitly, so it does not need to be linked to the application token then.
+        _serverControlListenerCts = IsInvocationLifetimeCoordinationAccepted
+            ? new CancellationTokenSource()
+            : CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.CancellationToken);
 
         // exitProcessOnConnectionLoss: false - a dropped control pipe must not kill the test host; the listener
         // turns it into a cooperative cancel instead.
@@ -76,12 +83,21 @@ internal sealed partial class DotnetTestConnection
             // Best-effort: failing to establish the control channel degrades to "no server-initiated cancel"
             // rather than affecting the test run.
             await TryLogAsync(LogLevel.Debug, $"Failed to connect to the server control pipe '{_serverControlPipeName}'; the server-initiated cancel feature will stay disabled for this run: {ex}").ConfigureAwait(false);
+            _invocationCleanupRequest.TrySetResult(null);
             return;
         }
 
         await TryLogAsync(LogLevel.Debug, $"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
 
-        await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            // Once the listener stopped, the invocation cleanup request can no longer arrive.
+            _invocationCleanupRequest.TrySetResult(null);
+        }
     }
 
     [UnsupportedOSPlatform("browser")]
@@ -98,6 +114,19 @@ internal sealed partial class DotnetTestConnection
                 if (message.Kind == ServerControlKinds.CancelSession)
                 {
                     await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+                    if (!IsInvocationLifetimeCoordinationAccepted)
+                    {
+                        return;
+                    }
+
+                    // The accepted owner keeps parking: dotnet test still has to send RunInvocationCleanup.
+                    continue;
+                }
+
+                if (message.Kind == ServerControlKinds.RunInvocationCleanup && IsInvocationLifetimeCoordinationAccepted)
+                {
+                    // A missing aggregate exit code is treated as a failure rather than silently as success.
+                    _invocationCleanupRequest.TrySetResult(new InvocationCleanupRequest(message.AggregateExitCode ?? (int)ExitCode.GenericFailure, message.IsCanceled ?? false));
                     return;
                 }
 

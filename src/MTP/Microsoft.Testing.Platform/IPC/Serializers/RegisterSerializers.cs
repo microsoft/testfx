@@ -25,6 +25,9 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * WaitForServerControlRequestSerializer: 13
  * ServerControlMessageSerializer: 14
  * CoverageSummaryMessagesSerializer: 15
+ * InvocationSetupCompletedSerializer: 16
+ * ModuleTestsCompletedSerializer: 17
+ * InvocationCleanupCompletedSerializer: 18
 */
 
 [Embedded]
@@ -47,5 +50,8 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new WaitForServerControlRequestSerializer(), typeof(WaitForServerControlRequest));
         namedPipeBase.RegisterSerializer(new ServerControlMessageSerializer(), typeof(ServerControlMessage));
         namedPipeBase.RegisterSerializer(new CoverageSummaryMessagesSerializer(), typeof(CoverageSummaryMessages));
+        namedPipeBase.RegisterSerializer(new InvocationSetupCompletedSerializer(), typeof(InvocationSetupCompleted));
+        namedPipeBase.RegisterSerializer(new ModuleTestsCompletedSerializer(), typeof(ModuleTestsCompleted));
+        namedPipeBase.RegisterSerializer(new InvocationCleanupCompletedSerializer(), typeof(InvocationCleanupCompleted));
     }
 }

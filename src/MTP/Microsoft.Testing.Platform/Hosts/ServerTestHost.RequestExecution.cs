@@ -2,12 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -69,6 +72,97 @@ internal sealed partial class ServerTestHost
     }
 
     private async Task<ResponseArgsBase> ExecuteRequestAsync(
+        RequestArgsBase args,
+        string method,
+        RpcInvocationState rpcInvocationState,
+        CancellationToken cancellationToken)
+    {
+        using var requestCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+            rpcInvocationState.CancellationToken,
+            cancellationToken);
+        CancellationToken requestCancellationToken = requestCancellationTokenSource.Token;
+        bool serializeRequests = _invocationLifetimeManager.HasHandlers;
+        if (serializeRequests)
+        {
+            await _invocationLifetimeRequestGate.WaitAsync(requestCancellationToken).ConfigureAwait(false);
+        }
+
+        try
+        {
+            requestCancellationToken.ThrowIfCancellationRequested();
+
+            InvocationLifetimeRunner? invocationLifetimeRunner = null;
+            if (method == JsonRpcMethods.TestingRunTests && serializeRequests)
+            {
+                IReadOnlyList<IInvocationLifetimeHandler> handlers = await _invocationLifetimeManager.BuildAsync(ServiceProvider).ConfigureAwait(false);
+                invocationLifetimeRunner = new(
+                    handlers,
+                    _environment,
+                    ServiceProvider.GetOutputDevice(),
+                    ServiceProvider.GetLoggerFactory().CreateLogger<InvocationLifetimeRunner>(),
+                    setOwnerMarker: false,
+                    restoreEnvironment: true);
+
+                int? setupExitCode = await invocationLifetimeRunner.RunSetupAsync(requestCancellationToken).ConfigureAwait(false);
+                if (setupExitCode is int exitCode)
+                {
+                    await invocationLifetimeRunner.RunCleanupAsync(exitCode, requestCancellationToken.IsCancellationRequested).ConfigureAwait(false);
+                    if (exitCode == (int)ExitCode.TestSessionAborted)
+                    {
+                        throw new OperationCanceledException(requestCancellationToken);
+                    }
+
+                    throw new JsonRpcException(ErrorCodes.InternalError, PlatformResources.InvocationLifetimeServerRequestSetupFailedErrorMessage);
+                }
+            }
+
+            ResponseArgsBase response;
+            try
+            {
+                response = await ExecuteRequestCoreAsync(args, method, rpcInvocationState, cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                if (invocationLifetimeRunner is not null)
+                {
+                    int exitCode = requestCancellationToken.IsCancellationRequested
+                        ? (int)ExitCode.TestSessionAborted
+                        : (int)ExitCode.GenericFailure;
+                    await invocationLifetimeRunner.RunCleanupAsync(exitCode, requestCancellationToken.IsCancellationRequested).ConfigureAwait(false);
+                }
+
+                throw;
+            }
+
+            if (invocationLifetimeRunner is not null)
+            {
+                int initialExitCode = requestCancellationToken.IsCancellationRequested
+                    ? (int)ExitCode.TestSessionAborted
+                    : (int)ExitCode.Success;
+                int exitCode = await invocationLifetimeRunner.RunCleanupAsync(initialExitCode, requestCancellationToken.IsCancellationRequested).ConfigureAwait(false);
+                if (requestCancellationToken.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException(requestCancellationToken);
+                }
+
+                if (exitCode != (int)ExitCode.Success)
+                {
+                    throw new JsonRpcException(ErrorCodes.InternalError, PlatformResources.InvocationLifetimeServerRequestCleanupFailedErrorMessage);
+                }
+            }
+
+            return response;
+        }
+        finally
+        {
+            if (serializeRequests)
+            {
+                _invocationLifetimeRequestGate.Release();
+            }
+        }
+    }
+
+    private async Task<ResponseArgsBase> ExecuteRequestCoreAsync(
         RequestArgsBase args,
         string method,
         RpcInvocationState rpcInvocationState,

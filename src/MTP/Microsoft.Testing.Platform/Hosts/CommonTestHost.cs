@@ -97,6 +97,24 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
                     SupportsArtifactPostProcessing(hostType)
                         ? ArtifactPostProcessingHandshakeProperties.Create(ServiceProvider.GetServicesInternal<IArtifactPostProcessor>())
                         : null;
+                InvocationLifetimeRunner? coordinatedRunner = ServiceProvider.GetService<InvocationLifetimeRunner>() is { IsCoordinatedOwnerCandidate: true } runner
+                    ? runner
+                    : null;
+                if (coordinatedRunner is not null)
+                {
+                    Dictionary<byte, string> properties = [];
+                    if (additionalHandshakeProperties is not null)
+                    {
+                        foreach (KeyValuePair<byte, string> property in additionalHandshakeProperties)
+                        {
+                            properties[property.Key] = property.Value;
+                        }
+                    }
+
+                    properties[HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = coordinatedRunner.GetHandlersHandshakeValue();
+                    additionalHandshakeProperties = properties;
+                }
+
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType, additionalHandshakeProperties).ConfigureAwait(false);
 
                 if (isValidProtocol && PushOnlyProtocol.IsServerControlChannelSupported)
@@ -104,6 +122,13 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
                     // Start listening for server-initiated signals (e.g. session cancellation) before running tests
                     // so a signal that arrives mid-run is observed. React by stopping gracefully where possible.
                     await PushOnlyProtocol.StartServerControlChannelAsync(RequestGracefulSessionStopAsync).ConfigureAwait(false);
+                }
+
+                if (isValidProtocol
+                    && coordinatedRunner is not null
+                    && PushOnlyProtocol is IInvocationLifetimeCoordinationChannel { IsInvocationLifetimeCoordinationAccepted: true } coordinationChannel)
+                {
+                    coordinatedRunner.EnableCoordination(coordinationChannel);
                 }
 
                 exitCode = isValidProtocol

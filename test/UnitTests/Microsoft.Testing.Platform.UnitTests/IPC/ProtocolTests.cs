@@ -234,6 +234,84 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    public void ServerControlMessageSerializeDeserialize_RunInvocationCleanupRoundTripsAggregateResult()
+    {
+        ServerControlMessage actual = RoundTrip(
+            new ServerControlMessageSerializer(),
+            new ServerControlMessage(ServerControlKinds.RunInvocationCleanup, aggregateExitCode: 2, isCanceled: true));
+
+        Assert.AreEqual(ServerControlKinds.RunInvocationCleanup, actual.Kind);
+        Assert.AreEqual(2, actual.AggregateExitCode);
+        Assert.IsTrue(actual.IsCanceled);
+    }
+
+    [TestMethod]
+    public void ServerControlMessageSerializeDeserialize_CancelSessionOmitsAggregateResult()
+    {
+        ServerControlMessage actual = RoundTrip(new ServerControlMessageSerializer(), new ServerControlMessage(ServerControlKinds.CancelSession));
+
+        Assert.IsNull(actual.AggregateExitCode);
+        Assert.IsNull(actual.IsCanceled);
+    }
+
+    [TestMethod]
+    public void InvocationSetupCompletedSerializeDeserialize_PreservesOutputsAndRemovals()
+    {
+        InvocationSetupCompleted actual = RoundTrip(
+            new InvocationSetupCompletedSerializer(),
+            new InvocationSetupCompleted(
+                "execution",
+                "instance",
+                Succeeded: true,
+                ErrorMessage: null,
+                [new InvocationLifetimeOutput("SET", true, "value"), new InvocationLifetimeOutput("EMPTY", true, string.Empty), new InvocationLifetimeOutput("REMOVED", false, null)]));
+
+        Assert.AreEqual("execution", actual.ExecutionId);
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.IsTrue(actual.Succeeded);
+        Assert.IsNull(actual.ErrorMessage);
+        Assert.AreSequenceEqual(
+            [new InvocationLifetimeOutput("SET", true, "value"), new InvocationLifetimeOutput("EMPTY", true, string.Empty), new InvocationLifetimeOutput("REMOVED", false, null)],
+            actual.Outputs);
+    }
+
+    [TestMethod]
+    public void InvocationSetupCompletedSerializeDeserialize_FailureWithoutOutputs()
+    {
+        InvocationSetupCompleted actual = RoundTrip(
+            new InvocationSetupCompletedSerializer(),
+            new InvocationSetupCompleted(null, null, Succeeded: false, "setup failed", []));
+
+        Assert.IsNull(actual.ExecutionId);
+        Assert.IsFalse(actual.Succeeded);
+        Assert.AreEqual("setup failed", actual.ErrorMessage);
+        Assert.IsEmpty(actual.Outputs);
+    }
+
+    [TestMethod]
+    public void InvocationLifetimeOutput_ToStringDoesNotExposeValue()
+        => Assert.DoesNotContain("secret", new InvocationLifetimeOutput("TOKEN", true, "secret").ToString());
+
+    [TestMethod]
+    public void ModuleTestsCompletedSerializeDeserialize()
+    {
+        ModuleTestsCompleted actual = RoundTrip(new ModuleTestsCompletedSerializer(), new ModuleTestsCompleted("execution", "instance", 2));
+
+        Assert.AreEqual(new ModuleTestsCompleted("execution", "instance", 2), actual);
+    }
+
+    [TestMethod]
+    public void InvocationCleanupCompletedSerializeDeserialize()
+    {
+        Assert.AreEqual(
+            new InvocationCleanupCompleted("execution", "instance", false, "cleanup failed"),
+            RoundTrip(new InvocationCleanupCompletedSerializer(), new InvocationCleanupCompleted("execution", "instance", false, "cleanup failed")));
+        Assert.AreEqual(
+            new InvocationCleanupCompleted(null, null, true, null),
+            RoundTrip(new InvocationCleanupCompletedSerializer(), new InvocationCleanupCompleted(null, null, true, null)));
+    }
+
+    [TestMethod]
     public void WaitForServerControlRequestSerializeDeserialize()
     {
         object serializer = new WaitForServerControlRequestSerializer();
@@ -468,6 +546,8 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.RequiredPostProcessorKinds, nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds) },
             { HandshakeMessagePropertyNames.RequiredPostProcessingSupported, nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported) },
             { HandshakeMessagePropertyNames.CoverageSummaryVersion, nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion) },
+            { HandshakeMessagePropertyNames.InvocationLifetimeHandlers, nameof(HandshakeMessagePropertyNames.InvocationLifetimeHandlers) },
+            { HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted, nameof(HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -491,6 +571,8 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion), properties[20]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.InvocationLifetimeHandlers), properties[23]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted), properties[24]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
@@ -688,6 +770,9 @@ public sealed class ProtocolTests
             [WaitForServerControlRequestFieldsId.MessagesSerializerId] = nameof(WaitForServerControlRequestFieldsId),
             [ServerControlMessageFieldsId.MessagesSerializerId] = nameof(ServerControlMessageFieldsId),
             [CoverageSummaryMessagesFieldsId.MessagesSerializerId] = nameof(CoverageSummaryMessagesFieldsId),
+            [InvocationSetupCompletedFieldsId.MessagesSerializerId] = nameof(InvocationSetupCompletedFieldsId),
+            [ModuleTestsCompletedFieldsId.MessagesSerializerId] = nameof(ModuleTestsCompletedFieldsId),
+            [InvocationCleanupCompletedFieldsId.MessagesSerializerId] = nameof(InvocationCleanupCompletedFieldsId),
         };
 
         Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
@@ -707,6 +792,9 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(WaitForServerControlRequestFieldsId), serializerIds[13]);
         Assert.AreEqual(nameof(ServerControlMessageFieldsId), serializerIds[14]);
         Assert.AreEqual(nameof(CoverageSummaryMessagesFieldsId), serializerIds[15]);
+        Assert.AreEqual(nameof(InvocationSetupCompletedFieldsId), serializerIds[16]);
+        Assert.AreEqual(nameof(ModuleTestsCompletedFieldsId), serializerIds[17]);
+        Assert.AreEqual(nameof(InvocationCleanupCompletedFieldsId), serializerIds[18]);
     }
 
     // The SessionEventTypes byte values flow over IPC to dotnet test in the dotnet/sdk repository.
@@ -762,7 +850,7 @@ public sealed class ProtocolTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions, ProtocolConstants.CoverageSummaryVersion];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
         Assert.AreEqual("1", versions[1]);
     }
 }

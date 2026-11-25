@@ -48,7 +48,7 @@ public sealed class DotnetTestPipeCoverageSummaryTests
         Assert.IsNotNull(result.SentHandshakeReply);
         Assert.AreEqual("1", result.ReceivedHandshake[20]);
         Assert.AreEqual("1", result.SentHandshakeReply[20]);
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", result.ReceivedHandshake[4]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", result.ReceivedHandshake[4]);
         Assert.AreEqual(baseVersion, result.NegotiatedProtocolVersion);
         Assert.AreEqual(executionId, result.ReceivedHandshake[7]);
         Assert.IsFalse(result.SentHandshakeReply.ContainsKey(12), "Coverage must not opt into the server-control pipe.");
