@@ -7172,6 +7172,104 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenRangeValueUsesIntegralPromotion_SuggestsIsInRange()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    byte number = 5;
+                    char letter = 'm';
+                    {|#0:Assert.IsTrue(1 <= number && number <= 10)|};
+                    {|#1:Assert.IsTrue('a' <= letter && letter <= 'z')|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    byte number = 5;
+                    char letter = 'm';
+                    Assert.IsInRange(1, 10, number);
+                    Assert.IsInRange('a', 'z', letter);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsInRange", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsInRange", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenRangeConditionHasUserDefinedConversion_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public readonly struct Truth
+            {
+                private readonly bool value;
+                private Truth(bool value) => this.value = value;
+                public static explicit operator Truth(bool value) => new(value);
+                public static implicit operator bool?(Truth value) => !value.value;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    Assert.IsTrue((Truth)(1 <= x && x <= 10));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenRangeAssertionUsesInterpolatedStringHandler_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int x = 5;
+                    Assert.IsTrue(1 <= x && x <= 10, $"{Throw()}");
+                }
+
+                private static string Throw() => throw new System.InvalidOperationException();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueWithAllIsTypePredicate_SuggestsAreAllOfType()
     {
         string code = """
@@ -7224,7 +7322,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAllPredicateIsNotAPlainTypeCheckOfTheElement_KeepsContainsOnlyDiagnostic()
     {
         string code = """
-            using System.Collections.Generic;
             using System.Linq;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7234,7 +7331,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    List<object> items = new() { "a", "b" };
+                    object[] items = { "a", "b" };
                     object other = "c";
                     {|#0:Assert.IsTrue(items.All(i => i is not string))|};
                     {|#1:Assert.IsTrue(items.All(i => i is string s && s.Length > 0))|};

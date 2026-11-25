@@ -4,6 +4,8 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Operations;
 
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
+
 namespace MSTest.Analyzers;
 
 public sealed partial class UseProperAssertMethodsAnalyzer
@@ -107,6 +109,10 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
         if (condition is not IBinaryOperation { OperatorKind: BinaryOperatorKind.ConditionalAnd } conditionalAnd ||
             !CanRewriteNewAssertion(assertion) ||
+            assertion.Arguments.Any(argument => !argument.IsImplicit && argument.Parameter?.Ordinal == 1 &&
+                argument.Parameter.Type.SpecialType != SpecialType.System_String) ||
+            !TryGetArgumentForParameterOrdinal(assertion, 0, out IArgumentOperation? conditionArgument) ||
+            !ReferenceEquals(conditionArgument.Value.WalkDownBuiltInConversion(), condition) ||
             !TryGetInclusiveComparison(conditionalAnd.LeftOperand, objectTypeSymbol, out IOperation? firstSmaller, out IOperation? firstBigger) ||
             !TryGetInclusiveComparison(conditionalAnd.RightOperand, objectTypeSymbol, out IOperation? secondSmaller, out IOperation? secondBigger))
         {
@@ -177,7 +183,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         }
 
         static bool AreSameStableValue(IOperation first, IOperation second)
-            => (first, second) switch
+            => (WalkDownImplicitBuiltInConversions(first), WalkDownImplicitBuiltInConversions(second)) switch
             {
                 (ILocalReferenceOperation firstLocal, ILocalReferenceOperation secondLocal) => SymbolEqualityComparer.Default.Equals(firstLocal.Local, secondLocal.Local),
                 (IParameterReferenceOperation firstParameter, IParameterReferenceOperation secondParameter) => SymbolEqualityComparer.Default.Equals(firstParameter.Parameter, secondParameter.Parameter),
