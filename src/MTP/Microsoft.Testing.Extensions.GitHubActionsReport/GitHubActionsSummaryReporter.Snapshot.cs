@@ -185,14 +185,12 @@ internal sealed partial class GitHubActionsSummaryReporter
                 historyTests = selected;
             }
 
-            foreach (CiRunSummaryHistoryTest test in historyTests)
+            foreach (CiRunSummaryHistoryTest test in historyTests
+                .Where(static test => test.Outcome != GitHubActionsHistoryOutcome.Passed))
             {
-                if (test.Outcome != GitHubActionsHistoryOutcome.Passed)
-                {
-                    test.HistoricalPassCount = 0;
-                    test.HistoricalFailCount = 0;
-                    test.HistoryWindowInDays = 0;
-                }
+                test.HistoricalPassCount = 0;
+                test.HistoricalFailCount = 0;
+                test.HistoryWindowInDays = 0;
             }
         }
 

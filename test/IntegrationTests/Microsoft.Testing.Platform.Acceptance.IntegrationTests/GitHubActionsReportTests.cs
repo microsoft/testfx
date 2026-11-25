@@ -307,7 +307,9 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
     [TestMethod]
     public async Task WhenPassingTestPreviouslyFailed_SummaryUsesHistoryAndRunAttemptWindow(string tfm)
     {
-        string historyPath = Path.Combine(TestContext.TestRunDirectory!, $"gh-mixed-history-{Guid.NewGuid():N}.json");
+        string historyPath = Path.Combine(
+            TestContext.TestRunDirectory!,
+            Path.GetFileName($"gh-mixed-history-{Guid.NewGuid():N}.json"));
         static Dictionary<string, string?> RunEnvironment(string runId) => new()
         {
             ["GITHUB_RUN_ID"] = runId,

@@ -274,9 +274,10 @@ internal static partial class CiRunSummaryAggregation
         {
             foreach (CiRunSummaryModule module in modules)
             {
-                foreach (CiRunSummaryHistoryTest test in module.HistoryTests)
+                foreach (CiRunSummaryHistoryTest test in module.HistoryTests
+                    .Where(static test => test.Outcome == "passed" && test.HistoricalFailCount > 0))
                 {
-                    if (test.Outcome == "passed" && test.HistoricalFailCount > 0 && prioritized.Count < MaxHistoryTests)
+                    if (prioritized.Count < MaxHistoryTests)
                     {
                         prioritized.Add(test);
                     }
@@ -351,12 +352,10 @@ internal static partial class CiRunSummaryAggregation
         ];
         foreach (CiRunSummaryModule module in modules)
         {
-            foreach (CiRunSummaryHistoryTest test in module.HistoryTests)
+            foreach (CiRunSummaryHistoryTest test in module.HistoryTests
+                .Where(test => selectedIdentities.Contains((test.TestId, test.FullyQualifiedName, test.DisplayName))))
             {
-                if (selectedIdentities.Contains((test.TestId, test.FullyQualifiedName, test.DisplayName)))
-                {
-                    prioritized.Add(test);
-                }
+                prioritized.Add(test);
             }
         }
 

@@ -141,7 +141,7 @@ public sealed class GitHubActionsDotnetTestTests : AcceptanceTestBase<NopAssetFi
     public async Task DotnetTest_HistoryRemainsAssociatedWithItsModuleAndDataRow()
     {
         using TestAsset asset = await GenerateConsumerAsync(multipleModules: true);
-        string historyPath = Path.Combine(asset.TargetAssetPath, "history.json");
+        string historyPath = Path.Join(asset.TargetAssetPath, "history.json");
         Dictionary<string, string?> environment = CreateEnvironment(asset.TargetAssetPath, "history-pass");
         environment["RUNNER_OS"] = "TestOs";
         environment["GITHUB_RUN_ID"] = "run-1";
@@ -154,7 +154,7 @@ public sealed class GitHubActionsDotnetTestTests : AcceptanceTestBase<NopAssetFi
         first.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         environment["GITHUB_RUN_ID"] = "run-2";
-        environment["GITHUB_STEP_SUMMARY"] = Path.Combine(asset.TargetAssetPath, "second-summary.md");
+        environment["GITHUB_STEP_SUMMARY"] = Path.Join(asset.TargetAssetPath, "second-summary.md");
         environment["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = Guid.NewGuid().ToString("N");
         environment[$"GH_TEST_MODE_{AssetName}"] = "history-pass";
         DotnetMuxerResult second = await RunDotnetTestAsync(asset, environment, "solution", arguments);

@@ -753,7 +753,9 @@ public sealed partial class GitHubActionsSummaryReporterTests
     [TestMethod]
     public async Task SummaryPostProcessor_PreviousFailureInLaterModuleSurvivesHistoryLimit()
     {
-        string directory = Path.Combine(Path.GetTempPath(), $"github-history-bound-{Guid.NewGuid():N}");
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            Path.GetFileName($"github-history-bound-{Guid.NewGuid():N}"));
         Directory.CreateDirectory(directory);
         try
         {
@@ -814,7 +816,9 @@ public sealed partial class GitHubActionsSummaryReporterTests
     [TestMethod]
     public async Task SummaryPostProcessor_RetryHistoryLimitPreservesRecoveryAndPreviousFailures()
     {
-        string directory = Path.Combine(Path.GetTempPath(), $"github-history-retry-bound-{Guid.NewGuid():N}");
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            Path.GetFileName($"github-history-retry-bound-{Guid.NewGuid():N}"));
         Directory.CreateDirectory(directory);
         try
         {
