@@ -6939,7 +6939,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertIsTrueWithInclusiveRangeCheck_SuggestsIsInRange()
+    public async Task WhenAssertIsTrueWithInclusiveRangeCheckAndOrderedConstantBounds_SuggestsIsInRange()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -6948,12 +6948,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                public void MyTestMethod(int min, int max)
+                public void MyTestMethod()
                 {
                     int x = 5;
-                    {|#0:Assert.IsTrue(min <= x && x <= max)|};
+                    {|#0:Assert.IsTrue(1 <= x && x <= 10)|};
                     {|#1:Assert.IsTrue(x >= 1 && x <= 10, "message")|};
-                    {|#2:Assert.IsTrue(max >= x && min <= x)|};
+                    {|#2:Assert.IsTrue(10 >= x && 1 <= x)|};
                 }
             }
             """;
@@ -6965,12 +6965,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                public void MyTestMethod(int min, int max)
+                public void MyTestMethod()
                 {
                     int x = 5;
-                    Assert.IsInRange(min, max, x);
+                    Assert.IsInRange(1, 10, x);
                     Assert.IsInRange(1, 10, x, "message");
-                    Assert.IsInRange(min, max, x);
+                    Assert.IsInRange(1, 10, x);
                 }
             }
             """;
@@ -6995,7 +6995,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                public void MyTestMethod(int y)
+                public void MyTestMethod(int y, int min, int max)
                 {
                     int x = 5;
                     double d = 1.5;
@@ -7005,6 +7005,8 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     Assert.IsTrue(1 <= x && y <= 10);
                     Assert.IsTrue(0.5 <= d && d <= 2.5);
                     Assert.IsFalse(1 <= x && x <= 10);
+                    Assert.IsTrue(min <= x && x <= max);
+                    Assert.IsTrue(max >= x && min <= x);
                 }
 
                 private static int GetMin() => 1;

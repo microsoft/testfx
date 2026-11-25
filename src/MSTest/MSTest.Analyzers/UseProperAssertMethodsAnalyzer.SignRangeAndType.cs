@@ -88,8 +88,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     }
 
     /// <summary>
-    /// Recognizes inclusive range checks such as <c>lo &lt;= x &amp;&amp; x &lt;= hi</c> (in any operand order)
-    /// that can use <c>Assert.IsInRange</c>.
+    /// Recognizes inclusive range checks with ordered constant bounds, such as
+    /// <c>lo &lt;= x &amp;&amp; x &lt;= hi</c> (in any operand order), that can use <c>Assert.IsInRange</c>.
     /// </summary>
     private static bool TryRecognizeRangeCheck(
         IInvocationOperation assertion,
@@ -143,8 +143,9 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         }
 
         // IsInRange throws when max < min, while the original condition simply evaluates to false.
-        if (min.ConstantValue is { HasValue: true, Value: IComparable minConstant } &&
-            max.ConstantValue is { HasValue: true, Value: { } maxConstant } &&
+        // Rewrite only when constant bounds prove that exception cannot be introduced.
+        if (min.ConstantValue is not { HasValue: true, Value: IComparable minConstant } ||
+            max.ConstantValue is not { HasValue: true, Value: { } maxConstant } ||
             minConstant.CompareTo(maxConstant) > 0)
         {
             return false;
