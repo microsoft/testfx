@@ -192,6 +192,36 @@ source using the unit-test command shape above. On `net10.0` and `net11.0`,
 153 tests passed per target; on `net472`, 151 passed. Each run exited 0 with
 no failures or skips. This supersedes the earlier suite counts for these cases.
 
+### 2026-11-25: virtual test method review
+
+Changing the accessibility of a non-public virtual test method independently
+of a derived override can cause CS0507, including for overrides in assemblies
+unavailable to the fixer. Updating known overrides would not protect external
+callers, so the minimal correction is to withhold the accessibility
+fix for virtual methods. Nonvirtual accessibility fixes remain available.
+
+The regression `DerivedNonPublicVirtualTest_WithOverride_DoesNotOfferFix`
+executed against the pre-fix fixer from `3153df5d89f344c8bc4230963c5332a9745dba8f`
+in the isolated comparison checkout, with the new test retained. It failed
+1/1 with test-host exit 2: the fixer changed `protected virtual` to
+`public virtual` despite the protected override. The corrected workspace passed
+29/29 with exit 0, including that case and
+`DerivedNonPublicGenericTest_FixPreservesInferableTypeParameter`. Both runs
+used the repository SDK, Debug/net10.0, separate outputs and package caches:
+
+```powershell
+# $out is the task-owned virtual-method-review directory for red, and its
+# green subdirectory for green. The red checkout uses its isolated
+# analyzer-counterfactual-packages as NUGET_PACKAGES.
+.\.dotnet\dotnet.exe test --project .\test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj --framework net10.0 --configuration Debug --no-restore "-bl:$out\red-{}.binlog" --filter 'FullyQualifiedName~DerivedNonPublicVirtualTest_WithOverride_DoesNotOfferFix' --report-trx --report-trx-filename red.trx --results-directory $out --minimum-expected-tests 1 --no-ansi --no-progress
+.\.dotnet\dotnet.exe test --project .\test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj --framework net10.0 --configuration Debug --no-restore "-bl:$out\test-{}.binlog" --filter 'FullyQualifiedName~TestMethodShouldBeValidAnalyzerTests' --report-trx --report-trx-filename suite.trx --results-directory $out --minimum-expected-tests 1 --no-ansi --no-progress
+```
+
+The corrected fixer and regression-test file SHA-256 values were respectively
+`418840EA1B20733055235DFE21EE92C9CDB67D23DC2DAD0A8FC68DF0C15290A9`
+and `E1DA7CD15DA29EFFCB7660D1D640A8BD677179C5694203CC39D7F903A20C839C`.
+The comparison files were restored and hash-verified after the red run.
+
 ## Alternatives and decision
 
 Leaving the existing rules unchanged misses configurations that discovery

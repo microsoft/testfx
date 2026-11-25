@@ -65,7 +65,7 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        if (method.IsStatic || method.IsAbstract || method.IsOverride || (method.IsAsync && method.ReturnsVoid))
+        if (method.IsStatic || method.IsAbstract || method.IsVirtual || method.IsOverride || (method.IsAsync && method.ReturnsVoid))
         {
             return;
         }

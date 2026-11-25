@@ -21,8 +21,8 @@ derived from `TestClassAttribute` or `TestMethodAttribute`. MSTEST0002 also
 reports concrete open generic test classes, including classes nested in open
 generic types. Abstract generic base classes and closed derived classes remain
 valid. No automatic fix removes generic parameters or changes static, abstract,
-override, async-void, or other invalid return signatures; those edits can break
-callers or inherited contracts.
+virtual, override, async-void, or other invalid return signatures; those edits
+can break callers or inherited contracts.
 
 MSTEST0007 reports `ResourceLock` and `DoNotParallelize` on non-overridable
 fixture methods because discovery ignores those declarations. Overridable

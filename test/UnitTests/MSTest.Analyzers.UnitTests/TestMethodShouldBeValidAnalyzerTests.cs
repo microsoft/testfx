@@ -112,6 +112,27 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task DerivedNonPublicVirtualTest_WithOverride_DoesNotOfferFix()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomTestMethodAttribute : TestMethodAttribute { }
+            [TestClass]
+            public class BaseTests
+            {
+                [CustomTestMethod]
+                protected virtual void {|#0:Check|}() { }
+            }
+            public class DerivedTests : BaseTests
+            {
+                protected override void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("Check"), code);
+    }
+
+    [TestMethod]
     public async Task UninferableGenericTest_ReferencedTypeParameterDoesNotOfferFix()
     {
         string code = """
