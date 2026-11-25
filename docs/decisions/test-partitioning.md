@@ -84,6 +84,26 @@ an all-empty group and does not suppress `MinimumExpectedTestsPolicyViolation`.
 
 #### Group-isolation regression evidence
 
+The minimum-expected-tests regression now assigns both modules the same
+nonempty shard group, so the empty-shard exception is actually eligible. On
+`908d2c02e7eb3e2fd26c39400649d45cd620f604` with this test-only change, the
+Release net10.0 test below passed (one executed, exit 0). An isolated
+comparison based on `b71177e5e5e02ef80b0aea30f8c95311f064293a` retained the
+group-isolation implementation and identical test change, but deliberately
+removed the `ZeroTests` exit-code condition from `IsEmptyShard`. The same test
+executed and failed (one failed, exit 2): its expected `### ❌ Empty` section
+was instead rendered `### ✅ Empty`. This is a targeted mutation, not a run of
+the pristine current parent. Both test runs used method-level parallelization
+with 32 workers.
+
+```powershell
+.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj -f net10.0 -c Release --no-restore -v:q -bl:artifacts\log\shard-minimum-review-green.binlog
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Release\net10.0\Microsoft.Testing.Extensions.UnitTests.dll --filter 'FullyQualifiedName~BuildAggregateMarkdown_EmptyPartitionDoesNotHideMinimumExpectedTestsFailure' --ansi off --progress off --show-test-results all
+```
+
+The comparison used the same commands and selector in its separate worktree,
+with `shard-minimum-review-mutation.binlog` as the build log.
+
 The source under test was the uncommitted review fix based on
 `b71177e5e5e02ef80b0aea30f8c95311f064293a`. The focused Release net10.0
 selection below executed nine cases: nine passed, none failed or skipped,

@@ -2064,8 +2064,10 @@ public sealed partial class GitHubActionsSummaryReporterTests
         emptyPartition.PassedTests = 0;
         emptyPartition.TestDurationTicks = 0;
         emptyPartition.SlowestTests = [];
+        emptyPartition.ShardGroupId = "group-a";
 
         GitHubCiRunSummaryModule passingPartition = CreateAggregateModule("Passing", null, "Passing.Run");
+        passingPartition.ShardGroupId = "group-a";
         var aggregate = new GitHubCiRunSummaryAggregate(
             [emptyPartition, passingPartition],
             new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
