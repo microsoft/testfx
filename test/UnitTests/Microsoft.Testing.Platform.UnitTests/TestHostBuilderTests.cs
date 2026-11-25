@@ -31,6 +31,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class TestHostBuilderTests
 {
     [TestMethod]
+    [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task BuildAsync_WhenTimeoutArgumentIsInvalid_ReturnsInvalidCommandLineExitCode()
     {
         string[] args = ["--timeout", "5", "--no-banner"];
