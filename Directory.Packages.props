@@ -18,7 +18,7 @@
          _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
          the two drift apart. -->
     <AspireHostingTestingVersion>13.6.5</AspireHostingTestingVersion>
-    <DotNetRuntimePackagesVersion>10.0.15</DotNetRuntimePackagesVersion>
+    <DotNetRuntimePackagesVersion>11.0.0</DotNetRuntimePackagesVersion>
     <DotNetExtensionsPackagesVersion>10.11.0</DotNetExtensionsPackagesVersion>
     <!-- MSBuild 18.10+ requires .NET 11; keep the latest version that supports our .NET 10 targets. -->
     <MicrosoftBuildVersion>18.9.6</MicrosoftBuildVersion>
