@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Telemetry;
@@ -516,7 +517,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.IsGreaterThanOrEqualTo(0, measurements["test.host.process.cpu.time"]);
         Assert.IsGreaterThan(0, measurements["test.host.process.memory.working_set"]);
         Assert.IsGreaterThanOrEqualTo(0, measurements["test.host.process.memory.private"]);
-        if (!OperatingSystem.IsMacOS())
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             Assert.IsGreaterThan(0, measurements["test.host.process.memory.private"]);
         }
