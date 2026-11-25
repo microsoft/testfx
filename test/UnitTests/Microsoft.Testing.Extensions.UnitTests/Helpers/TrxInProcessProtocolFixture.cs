@@ -34,11 +34,6 @@ internal sealed class TrxInProcessProtocolFixture : IAsyncDisposable
     private readonly TestHostControllersManager _controllers = new();
     private readonly ServiceProvider _controllerServices;
     private readonly TrxReportGenerator _generator;
-#if NET9_0_OR_GREATER
-    private readonly Lock _logSync = new();
-#else
-    private readonly object _logSync = new();
-#endif
     private bool _generatorDisposed;
 
     public TrxInProcessProtocolFixture(CancellationToken cancellationToken)
@@ -57,13 +52,6 @@ internal sealed class TrxInProcessProtocolFixture : IAsyncDisposable
         Memory.EnvironmentValues["UserName"] = "zoë";
         Memory.EnvironmentValues["TESTINGPLATFORM_TRX_TESTRUN_ID"] = "a41e114b-2a25-4c12-9395-5def20458c6c";
         Memory.Environment.SetupGet(value => value.NewLine).Returns("\n");
-        Memory.Logger.Setup(value => value.Log(
-            It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception>(), It.IsAny<Func<string, Exception?, string>>()))
-            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, message, error, _) => RecordLog(level, message, error));
-        Memory.Logger.Setup(value => value.LogAsync(
-            It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception>(), It.IsAny<Func<string, Exception?, string>>()))
-            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, message, error, _) => RecordLog(level, message, error))
-            .Returns(Task.CompletedTask);
         Memory.FileSystem.Setup(value => value.DeleteFile(It.IsAny<string>()))
             .Callback<string>(path =>
             {
@@ -256,14 +244,6 @@ internal sealed class TrxInProcessProtocolFixture : IAsyncDisposable
             // Inspect virtual file bytes only after it has returned.
             _generator.Dispose();
             _generatorDisposed = true;
-        }
-    }
-
-    private void RecordLog(LogLevel level, string message, Exception? error)
-    {
-        lock (_logSync)
-        {
-            Memory.Logs.Add((level, message, error));
         }
     }
 

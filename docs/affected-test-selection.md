@@ -687,6 +687,18 @@ deleted. `pwsh -NoLogo -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfT
 condition. The actual Azure DevOps upload and the remaining module collections require a hosted run and are not
 validated by these local tests.
 
+## CI fixes for build 1698498 (2026-11-24)
+
+In [build 1698498](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1698498), the previously
+unmeasured `MSTestAdapter.PlatformServices.UnitTests` `net10.0` map also exceeded 128 MiB. The following
+[build 1698822](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1698822), with collector
+`18.14.0-preview.26574.4`, failed uploading the same module with HTTP 413. Windows collection therefore excludes
+that exact module/TFM too. When the selected baseline has no shard, affected-test selection is expected to run the
+whole module. Cache seeding or the provider can still select an older baseline containing a shard until a newer
+eligible collection is available. The `net11.0` module remains enabled because neither run established that its
+map is oversized. The new exclusion and fallback have not been validated together with the current collector in
+a hosted run.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact

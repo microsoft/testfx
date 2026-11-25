@@ -37,11 +37,11 @@ function Get-CollectionModuleConcurrency {
     }
 }
 
-# The pinned collector refuses to persist a map larger than its fixed 128-MiB limit and fails that module.
+# Oversized maps fail collection or exceed Azure DevOps artifact upload limits.
 # These specific module/TFM maps exceeded the limit in CI. Without a shard, PR selection
 # conservatively runs all of their tests. See docs/affected-test-selection.md.
 $script:CollectionMapSizeExclusions = @(
-    [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Frameworks = @("net462", "net48", "net10.0-windows10.0.18362.0") }
+    [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Frameworks = @("net462", "net48", "net10.0", "net10.0-windows10.0.18362.0") }
 )
 
 function Get-MappableCollectionModule {
@@ -52,7 +52,7 @@ function Get-MappableCollectionModule {
             $_.Project -eq $module.Project -and $_.Frameworks -contains $module.Framework
         }).Count -gt 0
         if ($excluded) {
-            Write-Host "Skipping map collection for '$($module.RelativePath)': its map exceeds the collector's 128-MiB limit, so selection runs all of its tests."
+            Write-Host "Skipping map collection for '$($module.RelativePath)': its map exceeds supported size limits; selection runs all of its tests when no shard is available."
             continue
         }
 
