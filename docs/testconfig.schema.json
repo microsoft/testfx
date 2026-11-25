@@ -252,6 +252,10 @@
               "type": "boolean",
               "description": "When true, deployment is enabled. Defaults to true."
             },
+            "createDirectoriesWithoutDeploymentItems": {
+              "type": "boolean",
+              "description": "When true, per-run deployment and results directories are created when no deployment items are used. Defaults to true."
+            },
             "deployTestSourceDependencies": {
               "type": "boolean",
               "description": "When true, dependencies of the test source are deployed. Defaults to true."

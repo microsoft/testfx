@@ -43,6 +43,7 @@ static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppMod
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsDiscoveryCache.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsTelemetry.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.CreateDeploymentDirectoriesWithoutDeploymentItems.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.Cleanup() -> void

@@ -73,6 +73,7 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
         string fileName = Guid.NewGuid().ToString("N");
         string testResultsPath = Path.Combine(Path.GetTempPath(), $"mstest-trx-{Guid.NewGuid():N}");
         string sourcePathsRecord = Path.Combine(AssetFixture.TargetAssetPath, $"{Guid.NewGuid():N}.txt");
+        string[] sourcePaths = [];
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
 
         try
@@ -85,15 +86,12 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputDoesNotContain("The attachment will be skipped.");
 
-            string[] sourcePaths = File.ReadAllLines(sourcePathsRecord);
+            sourcePaths = File.ReadAllLines(sourcePathsRecord);
             Assert.HasCount(2, sourcePaths);
-            if (TargetFrameworks.NetFramework.Contains(tfm))
+            foreach (string sourcePath in sourcePaths)
             {
-                foreach (string sourcePath in sourcePaths)
-                {
-                    Assert.StartsWith(Path.GetFullPath(testResultsPath), Path.GetFullPath(sourcePath));
-                    Assert.IsFalse(File.Exists(sourcePath), $"MSTest deployment cleanup should remove the original result file '{sourcePath}'.");
-                }
+                AssertPathIsWithinDirectory(testResultsPath, sourcePath);
+                Assert.IsFalse(File.Exists(sourcePath), $"MSTest deployment cleanup should remove the original result file '{sourcePath}'.");
             }
 
             string trxFile = Assert.ContainsSingle(Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories));
@@ -125,10 +123,53 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
         finally
         {
             File.Delete(sourcePathsRecord);
+            foreach (string sourcePath in sourcePaths)
+            {
+                if (File.Exists(sourcePath))
+                {
+                    File.Delete(sourcePath);
+                }
+            }
+
             if (Directory.Exists(testResultsPath))
             {
                 Directory.Delete(testResultsPath, recursive: true);
             }
+        }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TrxReport_TestContextDirectories_DefaultAndCompatibilitySetting(string tfm)
+    {
+        string defaultResultsRoot = Path.Combine(Path.GetTempPath(), $"mstest-context-{Guid.NewGuid():N}");
+        string[] defaultPaths = await ExecuteDirectoryRecordingTest(
+            tfm,
+            useCompatibilitySetting: false,
+            resultsDirectory: defaultResultsRoot);
+        AssertRunDirectoryLayout(defaultPaths, defaultResultsRoot);
+
+        string compatibilityResultsRoot = Path.Combine(Path.GetTempPath(), $"mstest-context-{Guid.NewGuid():N}");
+        string[] compatibilityPaths = await ExecuteDirectoryRecordingTest(
+            tfm,
+            useCompatibilitySetting: true,
+            resultsDirectory: compatibilityResultsRoot);
+        if (TargetFrameworks.NetFramework.Contains(tfm))
+        {
+            AssertRunDirectoryLayout(compatibilityPaths, compatibilityResultsRoot);
+        }
+        else
+        {
+            Assert.HasCount(9, compatibilityPaths);
+            string assemblyDirectory = compatibilityPaths[5];
+            for (int i = 0; i < 5; i++)
+            {
+                AssertPathsEqual(assemblyDirectory, compatibilityPaths[i]);
+            }
+
+            Assert.AreEqual(bool.TrueString, compatibilityPaths[6]);
+            Assert.AreEqual(bool.TrueString, compatibilityPaths[7]);
+            Assert.AreEqual(bool.TrueString, compatibilityPaths[8]);
         }
     }
 
@@ -245,16 +286,98 @@ public class UnitTest1
     }
 
     [TestMethod]
+    public void RecordTestContextDirectories()
+    {
+        string recordPath = Environment.GetEnvironmentVariable("MSTEST_TEST_CONTEXT_DIRECTORIES_RECORD")
+            ?? throw new InvalidOperationException("MSTEST_TEST_CONTEXT_DIRECTORIES_RECORD is not set.");
+        File.WriteAllLines(recordPath,
+        [
+            TestContext.TestRunDirectory!,
+            TestContext.DeploymentDirectory!,
+            TestContext.ResultsDirectory!,
+            TestContext.TestRunResultsDirectory!,
+            TestContext.TestResultsDirectory!,
+            Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location)!,
+            Directory.Exists(TestContext.TestRunDirectory!).ToString(),
+            Directory.Exists(TestContext.ResultsDirectory!).ToString(),
+            Directory.Exists(TestContext.TestRunResultsDirectory!).ToString(),
+        ]);
+    }
+
+    [TestMethod]
     public void MissingResultFile()
     {
         string missingAttachment = Path.Combine(TestContext.TestResultsDirectory!, "missing-result-file.txt");
         TestContext.AddResultFile(missingAttachment);
     }
 }
+
+#file NoDeploymentDirectoriesCompatibility.runsettings
+<RunSettings>
+  <MSTest>
+    <CreateDeploymentDirectoriesWithoutDeploymentItems>false</CreateDeploymentDirectoriesWithoutDeploymentItems>
+  </MSTest>
+</RunSettings>
 """;
     }
 
     public TestContext TestContext { get; set; } = null!;
+
+    private async Task<string[]> ExecuteDirectoryRecordingTest(string tfm, bool useCompatibilitySetting, string resultsDirectory)
+    {
+        string recordPath = Path.Combine(AssetFixture.TargetAssetPath, $"{Guid.NewGuid():N}.txt");
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
+        string settingsArgument = useCompatibilitySetting
+            ? $"--settings \"{Path.Combine(AssetFixture.TargetAssetPath, "NoDeploymentDirectoriesCompatibility.runsettings")}\""
+            : string.Empty;
+
+        try
+        {
+            TestHostResult result = await testHost.ExecuteAsync(
+                $"--filter \"FullyQualifiedName~RecordTestContextDirectories\" {settingsArgument} --results-directory \"{resultsDirectory}\"",
+                new() { ["MSTEST_TEST_CONTEXT_DIRECTORIES_RECORD"] = recordPath },
+                cancellationToken: TestContext.CancellationToken);
+
+            result.AssertExitCodeIs(ExitCode.Success);
+            return File.ReadAllLines(recordPath);
+        }
+        finally
+        {
+            File.Delete(recordPath);
+            if (Directory.Exists(resultsDirectory))
+            {
+                Directory.Delete(resultsDirectory, recursive: true);
+            }
+        }
+    }
+
+    private static void AssertRunDirectoryLayout(string[] paths, string expectedResultsRoot)
+    {
+        Assert.HasCount(9, paths);
+        AssertPathIsWithinDirectory(expectedResultsRoot, paths[0]);
+        AssertPathsEqual(Path.Combine(paths[0], "In"), paths[2]);
+        AssertPathsEqual(paths[2], paths[4]);
+        AssertPathsEqual(Path.Combine(paths[2], Environment.MachineName), paths[3]);
+
+        AssertPathsEqual(paths[5], paths[1]);
+
+        Assert.AreEqual(bool.TrueString, paths[6]);
+        Assert.AreEqual(bool.TrueString, paths[7]);
+        Assert.AreEqual(bool.TrueString, paths[8]);
+    }
+
+    private static void AssertPathIsWithinDirectory(string directory, string path)
+    {
+        string relativePath = Path.GetRelativePath(Path.GetFullPath(directory), Path.GetFullPath(path));
+        Assert.IsFalse(Path.IsPathRooted(relativePath));
+        Assert.IsFalse(
+            relativePath.Equals("..", StringComparison.Ordinal)
+            || relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal),
+            $"Expected '{path}' to be within '{directory}'.");
+    }
+
+    private static void AssertPathsEqual(string expected, string actual) =>
+        Assert.AreEqual(Path.GetFullPath(expected), Path.GetFullPath(actual));
 }
 
 [TestClass]

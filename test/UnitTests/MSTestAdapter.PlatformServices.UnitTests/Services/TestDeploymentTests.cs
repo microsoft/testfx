@@ -221,27 +221,73 @@ public class TestDeploymentTests : TestContainer
     {
         UnitTestElement testCase = CreateTestElement("path/to/asm.dll");
         testCase.DeploymentItems = null;
+        TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
+
+        const string runSettingsXml = "<DeploymentEnabled>True</DeploymentEnabled>";
+        using StringReader stringReader = new(runSettingsXml);
+        using var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        MSTestSettingsProvider mstestSettingsProvider = new();
+        mstestSettingsProvider.Load(reader);
+
+        try
+        {
+            // Deployment should not happen.
+            testDeployment.Deploy(
+                new List<UnitTestElement> { testCase },
+                new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null),
+                new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
+
+            // Deployment is not performed, but run directories are created by default.
+            testDeployment.GetDeploymentDirectory().Should().NotBeNull();
+        }
+        finally
+        {
+            TestDeployment.Reset();
+            MSTestSettingsProvider.Reset();
+        }
+    }
+
+    public void DeployShouldNotCreateDirectoriesWhenConfiguredOffForNoDeploymentItems()
+    {
+        UnitTestElement testCase = CreateTestElement("path/to/asm.dll");
+        testCase.DeploymentItems = null;
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
         string runSettingsXml =
-            "<DeploymentEnabled>True</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            "<CreateDeploymentDirectoriesWithoutDeploymentItems>False</CreateDeploymentDirectoriesWithoutDeploymentItems>";
+        using StringReader stringReader = new(runSettingsXml);
+        using var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
 
-        // Deployment should not happen
-        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(null, null), new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
+        string testResultsDirectory = Path.Combine(Path.GetTempPath(), $"MSTest-{Guid.NewGuid():N}");
+        try
+        {
+            // Deployment should not happen.
+            testDeployment.Deploy(
+                new List<UnitTestElement> { testCase },
+                new DeploymentContext(testResultsDirectory, null),
+                new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
 
-        // Deployment directories should get created on .NET Framework for compat, but not on .NET Core
 #if NETFRAMEWORK
-        testDeployment.GetDeploymentDirectory().Should().NotBeNull();
+            // .NET Framework keeps creating run directories regardless of the opt-out.
+            testDeployment.GetDeploymentDirectory().Should().NotBeNull();
 #else
-        testDeployment.GetDeploymentDirectory().Should().BeNull();
+            testDeployment.GetDeploymentDirectory().Should().BeNull();
 #endif
+        }
+        finally
+        {
+            TestDeployment.Reset();
+            MSTestSettingsProvider.Reset();
+            if (Directory.Exists(testResultsDirectory))
+            {
+                Directory.Delete(testResultsDirectory, recursive: true);
+            }
+        }
     }
 
     public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()

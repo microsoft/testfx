@@ -136,9 +136,14 @@ internal sealed class TestDeployment : ITestDeployment
             return false;
         }
 #else
-        // On .NET Core, avoid creating empty deployment folders when no deployment items are used.
         if (!hasDeploymentItems)
         {
+            if (canDeploy && _adapterSettings.CreateDeploymentDirectoriesWithoutDeploymentItems)
+            {
+                string? firstTestSourceWithoutDeploymentItems = testElements.FirstOrDefault()?.TestMethod.AssemblyName;
+                RunDirectories = _deploymentUtility.CreateDeploymentDirectories(deploymentContext, firstTestSourceWithoutDeploymentItems);
+            }
+
             return false;
         }
 

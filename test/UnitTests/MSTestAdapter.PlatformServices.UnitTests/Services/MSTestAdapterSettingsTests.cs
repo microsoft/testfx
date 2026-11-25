@@ -259,6 +259,35 @@ public class MSTestAdapterSettingsTests : TestContainer
         adapterSettings.DeploymentEnabled.Should().BeFalse();
     }
 
+    public void CreateDeploymentDirectoriesWithoutDeploymentItemsIsEnabledByDefault()
+    {
+        string runSettingsXml =
+            """
+            <MSTestV2>
+            </MSTestV2>
+            """;
+        StringReader stringReader = new(runSettingsXml);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
+        reader.Read();
+        var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+        adapterSettings.CreateDeploymentDirectoriesWithoutDeploymentItems.Should().BeTrue();
+    }
+
+    public void CreateDeploymentDirectoriesWithoutDeploymentItemsShouldBeConsumedFromRunSettings()
+    {
+        string runSettingsXml =
+            """
+            <MSTestV2>
+              <CreateDeploymentDirectoriesWithoutDeploymentItems>False</CreateDeploymentDirectoriesWithoutDeploymentItems>
+            </MSTestV2>
+            """;
+        StringReader stringReader = new(runSettingsXml);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
+        reader.Read();
+        var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+        adapterSettings.CreateDeploymentDirectoriesWithoutDeploymentItems.Should().BeFalse();
+    }
+
     #endregion
 
     #region DeployTestSourceDependencies tests
@@ -316,6 +345,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         var configDictionary = new Dictionary<string, string>
         {
             { "mstest:deployment:enabled", "true" },
+            { "mstest:deployment:createDirectoriesWithoutDeploymentItems", "false" },
             { "mstest:deployment:deployTestSourceDependencies", "true" },
             { "mstest:deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", "false" },
             { "mstest:assemblyResolution:0:path", "C:\\project\\dependencies" },
@@ -334,6 +364,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         // Assert
         settings.DeploymentEnabled.Should().BeTrue();
+        settings.CreateDeploymentDirectoriesWithoutDeploymentItems.Should().BeFalse();
         settings.DeployTestSourceDependencies.Should().BeTrue();
         settings.DeleteDeploymentDirectoryAfterTestRunIsComplete.Should().BeFalse();
     }

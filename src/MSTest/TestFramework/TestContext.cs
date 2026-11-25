@@ -98,6 +98,11 @@ public abstract class TestContext
     ///     \Out                                 // DeploymentDirectory
     /// </code>
     /// <para>
+    /// On modern .NET, this directory is created when deployment is enabled even if the run has no deployment items.
+    /// Set <c>mstest:deployment:createDirectoriesWithoutDeploymentItems</c> to <see langword="false"/> to restore
+    /// the v4 behavior for runs without deployment items.
+    /// </para>
+    /// <para>
     /// UWP and WinUI test hosts do not support deployment directories. All test-run directory
     /// properties return <see langword="null"/> in those hosts, even if a same-named property is present in <see cref="Properties"/>.
     /// </para>
