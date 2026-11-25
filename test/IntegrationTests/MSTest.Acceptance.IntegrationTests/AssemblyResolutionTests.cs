@@ -47,6 +47,43 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
         testHostResult.AssertOutputDoesNotContain("System.IO.FileNotFoundException: Could not load file or assembly 'MSTest.Extensibility.Samples");
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DependencyCopiedByAssemblyInitializeCanStillBeResolved(bool preload)
+    {
+        string directory = TestContext.TestTempDirectory!;
+        string settings = Path.Combine(directory, "late-dependency.runsettings");
+        string filename = TestAssetFixture.ProjectName + ".dll";
+        string destination = Path.Combine(directory, filename);
+        new XDocument(
+            new XElement(
+                "RunSettings",
+                new XElement(
+                    "MSTest",
+                    new XElement("DiscoverReferencedAssemblyFixtureProviders", false),
+                    new XElement("PreloadReferencedAssemblies", preload),
+                    new XElement("AssemblyResolution", new XElement("Directory", new XAttribute("path", directory)))),
+                new XElement(
+                    "TestRunParameters",
+                    new XElement("Parameter", new XAttribute("name", "DependencySource"), new XAttribute("value", Path.Combine(AssetFixture.MainDllFolder.Path, filename))),
+                    new XElement("Parameter", new XAttribute("name", "DependencyDestination"), new XAttribute("value", destination)))))
+            .Save(settings);
+
+        TestHostResult result = await AssetFixture.TestHost.ExecuteAsync(
+            $"--settings \"{settings}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.IsTrue(File.Exists(destination), "AssemblyInitialize must have supplied the dependency before the test ran.");
+        if (preload)
+        {
+            result.AssertOutputContains("1 could not be loaded.");
+        }
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
     public sealed class TestAssetFixture : ITestAssetFixture
     {
         public const string ProjectName = "AssemblyResolution.Main";
@@ -133,6 +170,15 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
                 [TestClass]
                 public class UnitTest1
                 {
+                    [AssemblyInitialize]
+                    public static void Initialize(TestContext context)
+                    {
+                        if (context.Properties.TryGetValue("DependencySource", out object? source))
+                        {
+                            File.Copy((string)source!, (string)context.Properties["DependencyDestination"]!);
+                        }
+                    }
+
                     [TestMethod]
                     public void TestMethod1()
                     {

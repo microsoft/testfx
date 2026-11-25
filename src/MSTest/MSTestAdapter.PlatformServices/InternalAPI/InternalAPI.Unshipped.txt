@@ -2,6 +2,7 @@
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.DiscoverReferencedAssemblyFixtureProviders.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PreloadReferencedAssemblies.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AssemblyPreloader
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AssemblyPreloader.IsPreloading.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AssemblyPreloader.IsSupported.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AssemblyPreloader.Preload(System.Reflection.Assembly! testAssembly) -> (int Loaded, int Failed)
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AssemblyPreloader.Preload(System.Reflection.Assembly! testAssembly, System.Func<System.Reflection.Assembly!, System.Reflection.AssemblyName![]!>! getReferences, System.Func<System.Reflection.Assembly!, System.Reflection.AssemblyName!, System.Reflection.Assembly?>! tryLoad, System.Func<bool>! isCanceled) -> (int Loaded, int Failed)

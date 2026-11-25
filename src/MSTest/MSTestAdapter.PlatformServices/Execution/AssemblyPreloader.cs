@@ -19,6 +19,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </remarks>
 internal static class AssemblyPreloader
 {
+    // Resolution callbacks run synchronously on the loading thread. Concurrent ordinary binds must
+    // keep their normal cache behavior, even when another test source is being preloaded.
+    [field: ThreadStatic]
+    internal static bool IsPreloading { get; private set; }
+
     /// <summary>
     /// Gets a value indicating whether the current runtime can walk the assembly reference graph.
     /// Runtimes that cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WASM AOT) and UWP
@@ -39,7 +44,18 @@ internal static class AssemblyPreloader
     /// <param name="testAssembly">The root assembly whose references are walked.</param>
     /// <returns>The number of distinct assemblies loaded and the number of references that could not be loaded.</returns>
     internal static (int Loaded, int Failed) Preload(Assembly testAssembly)
-        => Preload(testAssembly, GetReferencedAssemblies, TryLoadReferencedAssembly, IsRunCanceled);
+    {
+        bool wasPreloading = IsPreloading;
+        try
+        {
+            IsPreloading = true;
+            return Preload(testAssembly, GetReferencedAssemblies, TryLoadReferencedAssembly, IsRunCanceled);
+        }
+        finally
+        {
+            IsPreloading = wasPreloading;
+        }
+    }
 
     /// <summary>
     /// Breadth-first walk over the reference graph with injectable reference enumeration, loading and

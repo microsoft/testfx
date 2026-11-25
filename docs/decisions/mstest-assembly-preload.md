@@ -74,6 +74,22 @@ checkout, so it resolves that checkout's packages. Use separate results director
 .\artifacts\bin\MSTest.Acceptance.IntegrationTests\Debug\net12.0\MSTest.Acceptance.IntegrationTests.exe --filter "FullyQualifiedName~AssemblyPreloadTests" --ansi off --results-directory $results --report-trx --report-trx-filename run.trx
 ```
 
+### Dependencies supplied after preload
+
+The adapter's resolver normally remembers a failed bind. Its null cache entry also prevents recursion
+while the resolver tries `Assembly.Load` by name. Keep that guard during the load, but discard the
+miss if it came from the synchronous preload walk on this thread. Successful binds and ordinary
+negative caching stay unchanged.
+
+`AssemblyResolutionTests.DependencyCopiedByAssemblyInitializeCanStillBeResolved` runs a packed
+`net11.0` MTP consumer with fixture-provider discovery disabled. Its configured search directory
+starts empty; `[AssemblyInitialize]` copies the dependency there, and the test then calls into it.
+Against the adapter from `cbb371dca7a6fea9402f91548b2231a54ff0d7e0`, the default control passed,
+but the opt-in row failed with `FileNotFoundException` for `AssemblyResolution.Main` despite the
+copy succeeding (outer exit 2). With the repacked correction both rows passed, including the opt-in
+check that the initial preload missed the dependency. All 17 selected Windows acceptance cases
+and six `AssemblyResolverResolutionMutationTests` passed (exit 0).
+
 ## Limits
 
 The graph does not cover reflection-only or filename-based plugin loads. Discovery, a profiler, or
