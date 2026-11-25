@@ -115,6 +115,7 @@ public sealed class TerminalOutputDeviceTests
               failed: {failures}
               succeeded: {passed}
               skipped: {skipped}
+
             """.Replace("\r\n", "\n"),
             output.Replace("\r\n", "\n"));
         if (failures > 0)
