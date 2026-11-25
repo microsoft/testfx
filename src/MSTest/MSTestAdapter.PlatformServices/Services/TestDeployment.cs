@@ -22,6 +22,7 @@ internal sealed class TestDeployment : ITestDeployment
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly DeploymentUtility _deploymentUtility;
     private readonly FileUtility _fileUtility;
+    private static bool s_deploymentDirectoriesCreatedWithoutDeploymentItems;
     private MSTestAdapterSettings? _adapterSettings;
 
     #endregion
@@ -114,6 +115,7 @@ internal sealed class TestDeployment : ITestDeployment
         // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
         // even if test host is kept alive.
         RunDirectories = null;
+        s_deploymentDirectoriesCreatedWithoutDeploymentItems = false;
 
         _adapterSettings = MSTestSettingsProvider.Settings;
         bool canDeploy = CanDeploy();
@@ -142,6 +144,7 @@ internal sealed class TestDeployment : ITestDeployment
             {
                 string? firstTestSourceWithoutDeploymentItems = testElements.FirstOrDefault()?.TestMethod.AssemblyName;
                 RunDirectories = _deploymentUtility.CreateDeploymentDirectories(deploymentContext, firstTestSourceWithoutDeploymentItems);
+                s_deploymentDirectoriesCreatedWithoutDeploymentItems = true;
             }
 
             return false;
@@ -189,7 +192,9 @@ internal sealed class TestDeployment : ITestDeployment
         }
 
         properties[TestContext.TestRunDirectoryLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
-        properties[TestContext.DeploymentDirectoryLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
+        properties[TestContext.DeploymentDirectoryLabel] = s_deploymentDirectoriesCreatedWithoutDeploymentItems && !StringEx.IsNullOrEmpty(source)
+            ? Path.GetDirectoryName(source)!
+            : RunDirectories?.OutDirectory ?? applicationBaseDirectory;
         properties[TestContext.ResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
         properties[TestContext.TestRunResultsDirectoryLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
         properties[TestContext.TestResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
@@ -199,7 +204,11 @@ internal sealed class TestDeployment : ITestDeployment
     /// <summary>
     /// Reset the static variable to default values. Used only for testing purposes.
     /// </summary>
-    internal static void Reset() => RunDirectories = null;
+    internal static void Reset()
+    {
+        RunDirectories = null;
+        s_deploymentDirectoriesCreatedWithoutDeploymentItems = false;
+    }
 
     /// <summary>
     /// Returns whether deployment can happen or not.

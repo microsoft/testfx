@@ -330,6 +330,62 @@ public class TestDeploymentTests : TestContainer
 
     #region GetDeploymentInformation tests
 
+#if !NETFRAMEWORK
+    public void GetDeploymentInformationWithoutDeploymentItemsUsesEachSourceDirectory()
+    {
+        string firstDirectory = Path.Combine(Path.GetTempPath(), "first-source");
+        string secondDirectory = Path.Combine(Path.GetTempPath(), "second-source");
+        string firstSource = Path.Combine(firstDirectory, "first.dll");
+        string secondSource = Path.Combine(secondDirectory, "second.dll");
+        UnitTestElement firstTest = CreateTestElement(firstSource);
+        UnitTestElement secondTest = CreateTestElement(secondSource);
+        TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
+
+        try
+        {
+            testDeployment.Deploy(
+                [firstTest, secondTest],
+                new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null),
+                new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
+
+            IDictionary<string, object> firstProperties = TestDeployment.GetDeploymentInformation(firstSource);
+            IDictionary<string, object> secondProperties = TestDeployment.GetDeploymentInformation(secondSource);
+            firstProperties[TestContext.DeploymentDirectoryLabel].Should().Be(firstDirectory);
+            secondProperties[TestContext.DeploymentDirectoryLabel].Should().Be(secondDirectory);
+            firstProperties[TestContext.TestResultsDirectoryLabel].Should().Be(testRunDirectories.InDirectory);
+            secondProperties[TestContext.TestResultsDirectoryLabel].Should().Be(testRunDirectories.InDirectory);
+        }
+        finally
+        {
+            TestDeployment.Reset();
+            MSTestSettingsProvider.Reset();
+        }
+    }
+
+    public void GetDeploymentInformationAfterDeploymentItemsUsesDeploymentDirectory()
+    {
+        string firstSource = Path.Combine(Path.GetTempPath(), "first-source", "first.dll");
+        string secondSource = Path.Combine(Path.GetTempPath(), "second-source", "second.dll");
+        TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
+        var deploymentContext = new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null);
+        IAdapterMessageLogger logger = new Mock<IAdapterMessageLogger>().Object;
+
+        try
+        {
+            testDeployment.Deploy([CreateTestElement(firstSource)], deploymentContext, logger).Should().BeFalse();
+            testDeployment.Deploy([GetTestCase(firstSource)], deploymentContext, logger).Should().BeTrue();
+
+            IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(secondSource);
+            properties[TestContext.DeploymentDirectoryLabel].Should().Be(Path.GetDirectoryName(firstSource));
+        }
+        finally
+        {
+            TestDeployment.Reset();
+            MSTestSettingsProvider.Reset();
+        }
+    }
+#endif
+
     public void GetDeploymentInformationShouldReturnAppBaseDirectoryIfRunDirectoryIsNull()
     {
         TestDeployment.Reset();
