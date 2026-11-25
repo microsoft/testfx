@@ -36,8 +36,13 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
     /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         Diagnostic diagnostic = context.Diagnostics[0];
+        if (diagnostic.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey))
+        {
+            return;
+        }
+
+        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);

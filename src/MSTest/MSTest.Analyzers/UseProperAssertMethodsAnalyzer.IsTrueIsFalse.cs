@@ -136,6 +136,23 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             return;
         }
 
+        // Check for 'collection.All(x => x is T)' that can use AreAllOfType<T>
+        if (isTrueInvocation &&
+            TryRecognizeAllOfTypeCheck(assertion, conditionArgument, enumerableTypeSymbol, assertTypeSymbol, out SyntaxNode? allOfTypeCollectionExpr, out SyntaxNode? allOfTypeCheckExpr))
+        {
+            const string properAssertMethod = "AreAllOfType";
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeSimpleWithTypeArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), allOfTypeCollectionExpr.GetLocation(), allOfTypeCheckExpr.GetLocation()],
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                "IsTrue"));
+            return;
+        }
+
         // Check for LINQ predicate patterns that suggest Contains/DoesNotContain
         LinqPredicateCheckStatus linqStatus = RecognizeLinqPredicateCheck(
             conditionArgument,
@@ -295,8 +312,40 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             }
         }
 
+        // Check for inclusive range patterns: lo <= x && x <= hi
+        if (isTrueInvocation &&
+            TryRecognizeRangeCheck(context.Compilation, assertion, conditionArgument, objectTypeSymbol, assertTypeSymbol, out SyntaxNode? rangeMinExpr, out SyntaxNode? rangeMaxExpr, out SyntaxNode? rangeValueExpr))
+        {
+            const string properAssertMethod = "IsInRange";
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddTwoArguments);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), rangeMinExpr.GetLocation(), rangeMaxExpr.GetLocation(), rangeValueExpr.GetLocation()],
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                "IsTrue"));
+            return;
+        }
+
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
         ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, objectTypeSymbol, iComparableOfTSymbol, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
+        if (comparisonStatus != ComparisonCheckStatus.Unknown &&
+            TryRecognizeSignCheck(assertion, conditionArgument, comparisonStatus, isTrueInvocation, assertTypeSymbol, out string? signAssertMethod, out SyntaxNode? signValueExpr))
+        {
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, signAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeSimple);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), signValueExpr.GetLocation()],
+                properties: properties.ToImmutable(),
+                signAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
         if (comparisonStatus != ComparisonCheckStatus.Unknown)
         {
             string properAssertMethod = (isTrueInvocation, comparisonStatus) switch

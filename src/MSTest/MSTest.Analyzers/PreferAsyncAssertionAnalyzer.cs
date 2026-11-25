@@ -24,7 +24,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
     internal const string GetResultMethodName = "GetResult";
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferAsyncAssertionTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferAsyncAssertionDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferAsyncAssertionDescription_WithAsyncVoid), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferAsyncAssertionMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
@@ -36,9 +36,12 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor AsyncVoidRule = Rule.WithMessage(
+        new(nameof(Resources.PreferAsyncAssertionMessageFormat_AsyncVoid), Resources.ResourceManager, typeof(Resources)));
+
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = [Rule];
+        = [Rule, AsyncVoidRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -55,13 +58,14 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
+            INamedTypeSymbol? asyncStateMachineAttribute = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemRuntimeCompilerServicesAsyncStateMachineAttribute);
             context.RegisterOperationAction(
-                context => AnalyzeInvocation(context, assertSymbol, testMethodAttributeSymbol, taskSymbol),
+                context => AnalyzeInvocation(context, assertSymbol, testMethodAttributeSymbol, taskSymbol, asyncStateMachineAttribute),
                 OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol taskSymbol)
+    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol taskSymbol, INamedTypeSymbol? asyncStateMachineAttribute)
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
@@ -70,9 +74,35 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
             targetMethod.Name is not ("Throws" or "ThrowsExactly") ||
             context.ContainingSymbol is not IMethodSymbol containingMethod ||
             !containingMethod.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testMethodAttributeSymbol)) ||
-            IsUnsupportedVoidTestMethod(containingMethod) ||
+            !TryGetActionArgument(operation, out IArgumentOperation? actionArgument))
+        {
+            return;
+        }
+
+        IOperation action = actionArgument.Value.WalkDownConversion();
+        if (action is IDelegateCreationOperation delegateCreation)
+        {
+            action = delegateCreation.Target.WalkDownConversion();
+        }
+
+        if (action is IAnonymousFunctionOperation { Symbol: { IsAsync: true, ReturnsVoid: true } }
+            || (action is IMethodReferenceOperation { Method.ReturnsVoid: true } methodReference
+                && (methodReference.Method.IsSealed || methodReference.Method.ContainingType.IsSealed || (!methodReference.Method.IsVirtual && !methodReference.Method.IsOverride))
+                && (methodReference.Method.IsAsync
+                    || (methodReference.Method.DeclaringSyntaxReferences.IsEmpty
+                        && asyncStateMachineAttribute is not null
+                        && methodReference.Method.GetAttributes().Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, asyncStateMachineAttribute))))))
+        {
+            context.ReportDiagnostic(operation.CreateDiagnostic(
+                AsyncVoidRule,
+                DiagnosticDescriptorHelper.CannotFixProperties,
+                targetMethod.Name + "Async",
+                targetMethod.Name));
+            return;
+        }
+
+        if (IsUnsupportedVoidTestMethod(containingMethod) ||
             IsInsideUnsupportedAwaitContext(operation) ||
-            !TryGetActionArgument(operation, out IArgumentOperation? actionArgument) ||
             !TryGetBlockedTaskOperationFromArgument(actionArgument.Value, out IOperation? asyncOperation))
         {
             return;

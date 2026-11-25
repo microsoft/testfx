@@ -30,6 +30,7 @@ internal static class TrimAndAotAssertions
         "DeploymentUtilityBase.cs",
         "ReflectionOperations.cs",
         "AssemblyResolver.cs",
+        "AssemblyPreloader.cs",
         "DataSerializationHelper.cs",
         "ManagedNameHelper.cs",
         "ManagedNameHelper.Escaping.cs",

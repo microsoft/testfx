@@ -353,6 +353,16 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">В сборку загружена старая версия пакета MSTestV2. При обнаружении тестов могут быть обнаружены не все тесты данных, если они зависят от файла ".runsettings".</target>
         <note>{Locked="MSTestV2"}{Locked=".runsettings"}</note>
       </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesNotSupported">
+        <source>'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</source>
+        <target state="new">'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</target>
+        <note>{Locked="PreloadReferencedAssemblies"}</note>
+      </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesSummary">
+        <source>Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</source>
+        <target state="new">Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</target>
+        <note>{0} is the number of assemblies that were loaded. {1} is the number of referenced assemblies that could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
         <target state="translated">Заданы RandomizeTestOrder и OrderTestsByNameInClass. OrderTestsByNameInClass будет проигнорирован.</target>

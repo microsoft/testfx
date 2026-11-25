@@ -8,6 +8,7 @@ using System.Security;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
@@ -187,6 +188,42 @@ internal sealed partial class UnitTestRunner
 #pragma warning disable CA1822 // Mark members as static
     public void Cancel()
         => PlatformServiceProvider.Instance.TestRunCancellationToken?.Cancel();
+
+    /// <summary>
+    /// Loads the assemblies referenced by <paramref name="source"/> in the domain that runs the tests.
+    /// This is best-effort: a failure here never fails the run.
+    /// </summary>
+    /// <param name="source">The test assembly path.</param>
+    /// <param name="messageLogger">Logger used to report the outcome back to the host.</param>
+    public void PreloadAssemblies(string source, IAdapterMessageLogger messageLogger)
+    {
+        if (!AssemblyPreloader.IsSupported)
+        {
+            messageLogger.SendMessage(MessageLevel.Warning, Resource.PreloadReferencedAssembliesNotSupported);
+            return;
+        }
+
+        int loaded;
+        int failed;
+        try
+        {
+            Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source);
+            (loaded, failed) = AssemblyPreloader.Preload(testAssembly);
+        }
+        catch (Exception ex)
+        {
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("UnitTestRunner: Preloading referenced assemblies of {0} failed. {1}", source, ex);
+            }
+
+            return;
+        }
+
+        messageLogger.SendMessage(
+            MessageLevel.Informational,
+            string.Format(CultureInfo.CurrentCulture, Resource.PreloadReferencedAssembliesSummary, loaded, failed));
+    }
 #pragma warning restore CA1822 // Mark members as static
 
 #if NETFRAMEWORK

@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text.Json;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -261,6 +265,224 @@ public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
             $"run --project \"{testAsset.TargetAssetPath}\" --no-build",
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, runResult.ExitCode, runResult.StandardOutput + runResult.StandardError);
+    }
+
+    [TestMethod]
+    public async Task PackagedAnalyzerOpportunities_ReportInvalidCasesAndAcceptValidCases()
+    {
+        string code = """
+            #file AnalyzerOpportunities.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFrameworks$</TargetFramework>
+                <RunAnalyzers>true</RunAnalyzers>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="MSTest.Analyzers" Version="$MSTestVersion$" />
+                <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+              </ItemGroup>
+            </Project>
+
+            #file .editorconfig
+            root = true
+            [*.cs]
+            dotnet_diagnostic.MSTEST0002.severity = warning
+            dotnet_diagnostic.MSTEST0003.severity = warning
+            dotnet_diagnostic.MSTEST0007.severity = warning
+            dotnet_diagnostic.MSTEST0064.severity = warning
+            dotnet_diagnostic.MSTEST0074.severity = warning
+            dotnet_diagnostic.MSTEST0075.severity = warning
+            dotnet_diagnostic.MSTEST0092.severity = warning
+            dotnet_diagnostic.MSTEST0093.severity = warning
+
+            #file Discovery.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            public sealed class CustomTestClassAttribute : TestClassAttribute { }
+            public sealed class CustomTestMethodAttribute : TestMethodAttribute { }
+            [CustomTestClass]
+            internal class Invisible
+            {
+                [TestMethod] public void HiddenCheck() { }
+            }
+            [TestClass]
+            public class Generic<T>
+            {
+                [TestMethod] public void Check() { }
+            }
+            [TestClass]
+            public class InvalidMethod
+            {
+                [CustomTestMethod] public static void Check() { }
+            }
+
+            #file Fixtures.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class FixtureTests
+            {
+                [TestInitialize, ResourceLock("db"), DoNotParallelize]
+                public void Setup() { }
+                [TestMethod] public void Check() { }
+            }
+
+            #file Locking.cs
+            using System;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class LockingTests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public void Check()
+                {
+                    Environment.SetEnvironmentVariable("analyzer-compile-only", "value");
+                    Directory.SetCurrentDirectory(".");
+                }
+            }
+
+            #file AsyncAssertion.cs
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class AsyncAssertionTests
+            {
+                [TestMethod]
+                public void Check() => Assert.Throws<Exception>(async () => await Task.Yield());
+            }
+
+            #file BadData.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+            [TestClass]
+            public class InvalidDataTests
+            {
+                [TestMethod, CombinatorialData]
+                public void Check(string value) { }
+            }
+
+            #file BadAttributes.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class InvalidAttributeTests
+            {
+                [TestMethod, Timeout(0)]
+                public void Check() { }
+            }
+
+            #file ValidCases.cs
+            using System;
+            using System.IO;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+            [TestClass]
+            public class ValidTests
+            {
+                [TestMethod, CombinatorialData, Timeout(1), Retry(1), ExpectedDuration(1)]
+                public void Data(bool value, CancellationToken token) { }
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void Locked()
+                {
+                    Environment.SetEnvironmentVariable("analyzer-compile-only", "value");
+                    Directory.SetCurrentDirectory(".");
+                }
+
+                [TestMethod]
+                public async Task Async()
+                {
+                    await Assert.ThrowsAsync<Exception>(async () => await Task.Yield());
+                }
+            }
+            """
+            .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(PackagedAnalyzerOpportunities_ReportInvalidCasesAndAcceptValidCases), code);
+        string isolatedPackages = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages");
+        var environmentVariables = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["NUGET_PACKAGES"] = isolatedPackages,
+            ["DOTNET_CLI_UI_LANGUAGE"] = "en-US",
+            ["PreferredUILang"] = "en-US",
+            ["VSLang"] = "1033",
+        };
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, "build.binlog");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -bl:\"{binlogPath}\"",
+            environmentVariables: environmentVariables,
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        string output = result.StandardOutput + result.StandardError;
+        TestContext.WriteLine(output);
+        Assert.AreEqual(0, result.ExitCode, output);
+        Assert.DoesNotContain("AD0001", output);
+
+        (string Rule, string File, string Message)[] expected =
+        [
+            ("MSTEST0002", "Discovery.cs", "Invisible"),
+            ("MSTEST0002", "Discovery.cs", "open generic type"),
+            ("MSTEST0003", "Discovery.cs", "'HiddenCheck' signature"),
+            ("MSTEST0003", "Discovery.cs", "'Check' signature"),
+            ("MSTEST0007", "Fixtures.cs", "[ResourceLock] has no effect"),
+            ("MSTEST0007", "Fixtures.cs", "[DoNotParallelize] has no effect"),
+            ("MSTEST0064", "AsyncAssertion.cs", "async void delegate"),
+            ("MSTEST0074", "Locking.cs", "Environment.SetEnvironmentVariable"),
+            ("MSTEST0075", "Locking.cs", "Directory.SetCurrentDirectory"),
+            ("MSTEST0092", "BadData.cs", "Cannot infer combinatorial values"),
+            ("MSTEST0093", "BadAttributes.cs", "requires a positive"),
+        ];
+        string[] diagnostics = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => expected.Any(item => line.Contains($"warning {item.Rule}:", StringComparison.Ordinal)))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        Assert.HasCount(expected.Length, diagnostics, output);
+        foreach ((string rule, string file, string message) in expected)
+        {
+            Assert.HasCount(1, diagnostics.Where(line =>
+                line.Contains($"warning {rule}:", StringComparison.Ordinal)
+                && line.Contains(file, StringComparison.Ordinal)
+                && line.Contains(message, StringComparison.Ordinal)).ToArray(), output);
+        }
+
+        Assert.DoesNotContain("ValidCases.cs", string.Join(Environment.NewLine, diagnostics));
+
+        using var assets = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(testAsset.TargetAssetPath, "obj", "project.assets.json")));
+        JsonElement libraries = assets.RootElement.GetProperty("libraries");
+        Assert.IsTrue(assets.RootElement.GetProperty("packageFolders").EnumerateObject().Any(folder =>
+            string.Equals(Path.TrimEndingDirectorySeparator(folder.Name), Path.TrimEndingDirectorySeparator(isolatedPackages), StringComparison.OrdinalIgnoreCase)));
+        foreach (string packageId in new[] { "MSTest.Analyzers", "MSTest.TestFramework" })
+        {
+            Assert.IsTrue(libraries.EnumerateObject().Any(library =>
+                string.Equals(library.Name, $"{packageId}/{MSTestVersion}", StringComparison.OrdinalIgnoreCase)));
+            string lowerId = packageId.ToLowerInvariant();
+            string shipping = Path.Combine(Constants.ArtifactsPackagesShipping, $"{packageId}.{MSTestVersion}.nupkg");
+            string restored = Path.Combine(isolatedPackages, lowerId, MSTestVersion.ToLowerInvariant(), $"{lowerId}.{MSTestVersion.ToLowerInvariant()}.nupkg");
+            string shippingHash = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(shipping)));
+            string restoredHash = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(restored)));
+            Assert.AreEqual(shippingHash, restoredHash, $"The consumer must restore the current shipping {packageId} package.");
+            TestContext.WriteLine($"{packageId}: {restored}; SHA256: {restoredHash}");
+        }
+
+        string analyzerPath = Path.Combine(isolatedPackages, "mstest.analyzers", MSTestVersion.ToLowerInvariant(), "analyzers", "dotnet", "cs", "MSTest.Analyzers.dll");
+        Assert.IsTrue(File.Exists(analyzerPath), analyzerPath);
+        using ZipArchive package = ZipFile.OpenRead(Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.Analyzers.{MSTestVersion}.nupkg"));
+        ZipArchiveEntry? analyzerEntry = package.GetEntry("analyzers/dotnet/cs/MSTest.Analyzers.dll");
+        Assert.IsNotNull(analyzerEntry);
+        using Stream analyzerStream = analyzerEntry.Open();
+        string packagedAnalyzerHash = Convert.ToHexString(SHA256.HashData(analyzerStream));
+        string restoredAnalyzerHash = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(analyzerPath)));
+        Assert.AreEqual(packagedAnalyzerHash, restoredAnalyzerHash, "The compiler must receive the current packaged analyzer binary.");
+        TestContext.WriteLine($"Packaged analyzer: {analyzerPath}; SHA256: {restoredAnalyzerHash}; build log: {binlogPath}");
     }
 
     [TestMethod]

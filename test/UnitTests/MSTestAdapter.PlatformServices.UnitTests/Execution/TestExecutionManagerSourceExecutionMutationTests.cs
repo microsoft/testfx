@@ -339,6 +339,54 @@ public sealed class TestExecutionManagerSourceExecutionMutationTests : TestConta
         ForceCleanupFixture.CleanupCount.Should().Be(1);
     }
 
+    public async Task RunTests_PreloadEnabled_PreloadsReferencedAssembliesBeforeTheFirstTestStarts()
+    {
+        bool preloadedWhenFirstTestStarted = false;
+        _recorder.OnStart = _ =>
+        {
+            preloadedWhenFirstTestStarted = _messageLogger.Messages.Any(IsPreloadSummary);
+            return Task.CompletedTask;
+        };
+
+        await RunAsync(CreateManager(), [CreateElement(typeof(FixtureA), "A", CreateSourcePath("preload-enabled"), "A")], CreatePreloadRunSettings("true"), new TestRunCancellationToken());
+
+        preloadedWhenFirstTestStarted.Should().BeTrue();
+        _messageLogger.Messages.Count(IsPreloadSummary).Should().Be(1);
+        _recorder.Events.Should().Equal("start:A", "result:A:Passed");
+    }
+
+    public async Task RunTests_PreloadNotConfigured_DoesNotPreloadReferencedAssemblies()
+    {
+        await RunAsync(CreateManager(), [CreateElement(typeof(FixtureA), "A", CreateSourcePath("preload-default"), "A")], CreateSequentialRunSettings(), new TestRunCancellationToken());
+
+        _messageLogger.Messages.Count(IsPreloadSummary).Should().Be(0);
+        _recorder.Events.Should().Equal("start:A", "result:A:Passed");
+    }
+
+    public async Task RunTests_PreloadExplicitlyDisabled_DoesNotPreloadReferencedAssemblies()
+    {
+        await RunAsync(CreateManager(), [CreateElement(typeof(FixtureA), "A", CreateSourcePath("preload-disabled"), "A")], CreatePreloadRunSettings("false"), new TestRunCancellationToken());
+
+        _messageLogger.Messages.Count(IsPreloadSummary).Should().Be(0);
+        _recorder.Events.Should().Equal("start:A", "result:A:Passed");
+    }
+
+    private static bool IsPreloadSummary((MessageLevel Level, string Message) entry)
+        => entry.Level == MessageLevel.Informational
+            && entry.Message.StartsWith(Resource.PreloadReferencedAssembliesSummary.Substring(0, Resource.PreloadReferencedAssembliesSummary.IndexOf("{0}", StringComparison.Ordinal)), StringComparison.Ordinal);
+
+    private static string CreatePreloadRunSettings(string value)
+        => $$"""
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <PreloadReferencedAssemblies>{{value}}</PreloadReferencedAssemblies>
+              </MSTest>
+            </RunSettings>
+            """;
+
     private static string CreateSequentialRunSettings()
         => """
             <RunSettings>

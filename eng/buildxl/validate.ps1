@@ -8,10 +8,12 @@ param(
     [switch] $NoJournal,
     [ValidateSet('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
         'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored',
+        'BuildXLDoesNotWriteTestPackageLayout', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
     [string[]] $Case = @('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
         'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored',
+        'BuildXLDoesNotWriteTestPackageLayout', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
     [string] $BuildScript = (Join-Path (Split-Path $PSScriptRoot -Parent) 'buildxl.ps1')
 )
 
@@ -50,15 +52,15 @@ function Invoke-Build([string] $Name, [string[]] $BuildArguments = @(), [switch]
     return [pscustomobject]@{ Name = $Name; ExitCode = $code; Output = (Get-Content -LiteralPath $log -Raw); Started = $started }
 }
 
-function Read-FreshStats($Run) {
+function Read-FreshStats($Run, [string] $Path = $statsPath) {
     Assert-Equal 0 $Run.ExitCode
-    if ((Get-Item -LiteralPath $statsPath).LastWriteTimeUtc -lt $Run.Started) {
+    if ((Get-Item -LiteralPath $Path).LastWriteTimeUtc -lt $Run.Started) {
         throw "BuildXL did not produce fresh counters for $($Run.Name)."
     }
 
-    Copy-Item -LiteralPath $statsPath -Destination (Join-Path $evidence "$($Run.Name).stats")
+    Copy-Item -LiteralPath $Path -Destination (Join-Path $evidence "$($Run.Name).stats")
     $stats = @{}
-    foreach ($line in Get-Content -LiteralPath $statsPath) {
+    foreach ($line in Get-Content -LiteralPath $Path) {
         if ($line -cmatch '^(TotalProcessPips|ProcessPipCacheHits|ProcessPipCacheMisses)=(\d+)$') {
             $stats[$Matches[1]] = [long] $Matches[2]
         }
@@ -450,6 +452,28 @@ using System.Reflection;
 
             Pop-Location
         }
+    }
+    Test-Case 'BuildXLDoesNotWriteTestPackageLayout' {
+        $outputId = "validation-layout-$([Guid]::NewGuid().ToString('N'))"
+        $project = 'src\MTP\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj'
+        $run = Invoke-Build 'test-package-layout' @('-Project', $project, '-TargetFramework', 'net10.0', '-OutputId', $outputId)
+        $output = Join-Path $repo "artifacts\buildxl-runs\$outputId"
+        $stats = Read-FreshStats $run (Join-Path $output 'logs\BuildXL.stats')
+        if ($stats.TotalProcessPips -lt 1) {
+            throw 'The BuildXL project graph did not execute any process pips.'
+        }
+
+        Assert-Equal 0 $stats.ProcessPipCacheHits
+        Assert-Equal $stats.TotalProcessPips $stats.ProcessPipCacheMisses
+        $assembly = Join-Path $output 'bin\Microsoft.Testing.Platform.MSBuild\Debug\net10.0\Microsoft.Testing.Platform.MSBuild.dll'
+        Assert-Equal $true (Test-Path -LiteralPath $assembly -PathType Leaf)
+
+        $buildLog = Join-Path $output 'logs\BuildXL.log'
+        if (-not (Test-Path -LiteralPath $buildLog -PathType Leaf)) {
+            throw "Expected BuildXL log at $buildLog."
+        }
+
+        Assert-Equal $false (Get-Content -LiteralPath $buildLog -Raw).Contains('nugetPackageFolder')
     }
     Test-Case 'UnchangedBuildUsesCache' {
         $stats = Read-FreshStats (Invoke-Build 'warm-build')

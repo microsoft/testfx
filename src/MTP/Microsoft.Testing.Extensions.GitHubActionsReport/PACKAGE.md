@@ -190,6 +190,10 @@ The extension intentionally reads and writes only a local snapshot. The workflow
 
 The following steps restore the newest default-branch snapshot, run tests, and publish the updated snapshot only from the default branch. The cumulative snapshot makes a separate artifact lookup for each historical run unnecessary. Set `--report-gh-history-window-runs <count>` to limit context to the latest run attempts for each test while retaining the day window as an age bound. A GitHub Actions rerun attempt is counted separately.
 
+When a test passes but previously failed within the configured history window, the `test-results` job-summary section lists it with its prior passed and failed attempt counts. Skipped attempts are excluded from those counts. This historical context does not change the test result or the retry-recovered flaky count; a fixed test can also have previous failures. No history is available before snapshots were first retained. Existing schema-1 snapshots, including those written by version 2.5.3, can be reused.
+
+In an aggregated multi-module run, older reporters do not provide the passing-test history details needed for this section. Upgrade each module's reporter to MTP 3 to include its passing tests with previous failures.
+
 ```yaml
 permissions:
   actions: read

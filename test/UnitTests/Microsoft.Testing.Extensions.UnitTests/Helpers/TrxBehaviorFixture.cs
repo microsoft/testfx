@@ -22,6 +22,12 @@ namespace Microsoft.Testing.Extensions.UnitTests.Helpers;
 internal sealed class TrxBehaviorFixture : IDisposable
 {
     public static readonly DateTimeOffset Start = new(2026, 10, 30, 11, 12, 13, TimeSpan.Zero);
+#if NET9_0_OR_GREATER
+    private readonly Lock _logSync = new();
+#else
+    private readonly object _logSync = new();
+#endif
+    private readonly List<(LogLevel Level, string Message, Exception? Error)> _logs = [];
     private TrxReportGenerator? _generator;
 
     public TrxBehaviorFixture()
@@ -48,10 +54,10 @@ internal sealed class TrxBehaviorFixture : IDisposable
         Logger.Setup(value => value.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
         Logger.Setup(value => value.Log(
             It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception>(), It.IsAny<Func<string, Exception?, string>>()))
-            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, message, error, _) => Logs.Add((level, message, error)));
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, message, error, _) => RecordLog(level, message, error));
         Logger.Setup(value => value.LogAsync(
             It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception>(), It.IsAny<Func<string, Exception?, string>>()))
-            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, message, error, _) => Logs.Add((level, message, error)))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, message, error, _) => RecordLog(level, message, error))
             .Returns(Task.CompletedTask);
         FileSystem.Setup(value => value.ExistDirectory(It.IsAny<string>())).Returns(true);
         FileSystem.Setup(value => value.CreateDirectory(It.IsAny<string>())).Returns<string>(path => path);
@@ -151,7 +157,16 @@ internal sealed class TrxBehaviorFixture : IDisposable
 
     public List<string> Events { get; } = [];
 
-    public List<(LogLevel Level, string Message, Exception? Error)> Logs { get; } = [];
+    public IReadOnlyList<(LogLevel Level, string Message, Exception? Error)> Logs
+    {
+        get
+        {
+            lock (_logSync)
+            {
+                return _logs.ToArray();
+            }
+        }
+    }
 
     public List<(IDataProducer Producer, IData Data)> Publications { get; } = [];
 
@@ -205,6 +220,14 @@ internal sealed class TrxBehaviorFixture : IDisposable
         foreach (VirtualFile file in Files.Values)
         {
             file.Dispose();
+        }
+    }
+
+    private void RecordLog(LogLevel level, string message, Exception? error)
+    {
+        lock (_logSync)
+        {
+            _logs.Add((level, message, error));
         }
     }
 

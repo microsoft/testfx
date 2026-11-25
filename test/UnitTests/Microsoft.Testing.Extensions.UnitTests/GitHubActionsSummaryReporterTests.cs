@@ -49,8 +49,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
         await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
 
         string markdown = File.ReadAllText(fixture.SummaryPath);
-        Assert.Contains("Tests.WithHistory", markdown);
-        Assert.Contains("boom Historical context: failed 3 and flaked 1 of 10 prior runs within the 30-day history window.", markdown);
+        string details = FailureDetailsFor(markdown, "Tests.WithHistory");
+        Assert.Contains("boom Historical context: failed 3 and flaked 1 of 10 prior runs within the 30-day history window.", details);
         Assert.AreEqual("failed", Assert.ContainsSingle(Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes)).HistoryTests).Outcome);
     }
 
@@ -66,8 +66,164 @@ public sealed partial class GitHubActionsSummaryReporterTests
         await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
 
         string markdown = File.ReadAllText(fixture.SummaryPath);
-        Assert.Contains("Tests.WithHistory", markdown);
-        Assert.Contains("boom Historical context: failed 1 and flaked 1 of 3 prior run attempts within the latest 5 run attempts and 30-day history window.", markdown);
+        string details = FailureDetailsFor(markdown, "Tests.WithHistory");
+        Assert.Contains("boom Historical context: failed 1 and flaked 1 of 3 prior run attempts within the latest 5 run attempts and 30-day history window.", details);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_PassingTestReportsPreviousFailuresWithoutInventingRetryFlakiness()
+    {
+        using SummaryExecutionFixture fixture = new();
+        fixture.History.StatsByName["Tests.PreviouslyFailed"] = new GitHubActionsHistoryStats(passCount: 2, failCount: 1);
+        fixture.History.StatsByName["Tests.AlwaysPassed"] = new GitHubActionsHistoryStats(passCount: 3, failCount: 0);
+        fixture.History.StatsByName["Tests.Skipped"] = new GitHubActionsHistoryStats(passCount: 0, failCount: 4);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        foreach ((string name, TestNodeStateProperty state) in new (string, TestNodeStateProperty)[]
+        {
+            ("Tests.PreviouslyFailed", PassedTestNodeStateProperty.CachedInstance),
+            ("Tests.AlwaysPassed", PassedTestNodeStateProperty.CachedInstance),
+            ("Tests.NoHistory", PassedTestNodeStateProperty.CachedInstance),
+            ("Tests.Skipped", SkippedTestNodeStateProperty.CachedInstance),
+        })
+        {
+            await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), CreateRetryUpdate(state, 1, false, name), TestContext.CancellationToken);
+        }
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        string markdown = File.ReadAllText(fixture.SummaryPath).Replace("\r\n", "\n").TrimEnd();
+        Assert.EndsWith(
+            """
+            ### Passing tests with previous failures (1)
+
+            - `Tests.PreviouslyFailed` — prior attempts: 2 passed, 1 failed
+            """.Replace("\r\n", "\n"),
+            markdown);
+        Assert.DoesNotContain("Tests.AlwaysPassed", markdown);
+        Assert.DoesNotContain("Tests.NoHistory", markdown);
+        Assert.DoesNotContain("Tests.Skipped", markdown);
+        Assert.DoesNotContain("Flaky tests (", markdown);
+
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        Assert.AreEqual(4, module.TotalTests);
+        Assert.AreEqual(3, module.PassedTests);
+        Assert.AreEqual(0, module.FailedTests);
+        Assert.AreEqual(1, module.SkippedTests);
+        Assert.IsEmpty(module.FlakyTests);
+        GitHubCiRunSummaryHistoryTest history = Assert.ContainsSingle(module.HistoryTests.Where(test => test.FullyQualifiedName == "Tests.PreviouslyFailed"));
+        Assert.AreEqual("passed", history.Outcome);
+        Assert.IsFalse(history.IsFlaky);
+        Assert.AreEqual(2, history.HistoricalPassCount);
+        Assert.AreEqual(1, history.HistoricalFailCount);
+        Assert.AreEqual(30, history.HistoryWindowInDays);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_PreviousFailureBeyondHistorySampleLimitIsReported()
+    {
+        using SummaryExecutionFixture fixture = new();
+        fixture.History.StatsByName["Tests.ZPreviouslyFailed"] = new GitHubActionsHistoryStats(passCount: 2, failCount: 1);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        IDataProducer producer = Mock.Of<IDataProducer>();
+        for (int index = 0; index < 10_000; index++)
+        {
+            string name = $"Tests.A{index:D5}";
+            await fixture.Reporter.ConsumeAsync(
+                producer,
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, 1, false, name, name),
+                TestContext.CancellationToken);
+        }
+
+        await fixture.Reporter.ConsumeAsync(
+            producer,
+            CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, 1, false, "Tests.ZPreviouslyFailed", "previously-failed"),
+            TestContext.CancellationToken);
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        string markdown = File.ReadAllText(fixture.SummaryPath);
+        Assert.Contains("| 10001 | 10001 | 0 | 0 | 0 |", markdown);
+        Assert.Contains("- `Tests.ZPreviouslyFailed` — prior attempts: 2 passed, 1 failed", markdown);
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        Assert.HasCount(10_000, module.HistoryTests);
+        Assert.Contains(test => test.TestId == "previously-failed", module.HistoryTests);
+        Assert.IsEmpty(fixture.Warnings);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_LongHistoricalLabelDoesNotDropSummary()
+    {
+        using SummaryExecutionFixture fixture = new();
+        string name = "Tests.Z" + string.Concat(Enumerable.Repeat("\U0001F600", 300_000));
+        fixture.History.StatsByName[name] = new GitHubActionsHistoryStats(passCount: 2, failCount: 1);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, 1, false, name),
+            TestContext.CancellationToken);
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        string markdown = File.ReadAllText(fixture.SummaryPath);
+        Assert.Contains("| 1 | 1 | 0 | 0 | 0 |", markdown);
+        Assert.Contains("### Passing tests with previous failures (1)", markdown);
+        Assert.Contains("…", markdown);
+        Assert.Contains("` — prior attempts: 2 passed, 1 failed", markdown);
+        Assert.DoesNotContain(name, markdown);
+        Assert.DoesNotContain("\uFFFD", markdown);
+        Assert.IsLessThanOrEqualTo(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, new FileInfo(fixture.SummaryPath).Length);
+        Assert.IsEmpty(fixture.Warnings);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_LongHistoricalLabelInSlowTestsKeepsSummaryAndIdentityEnds()
+    {
+        using SummaryExecutionFixture fixture = new();
+        string name = "Tests.Z" + string.Concat(Enumerable.Repeat("\U0001F600", 300_000)) + "Tail";
+        fixture.History.StatsByName[name] = new GitHubActionsHistoryStats(passCount: 2, failCount: 1);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        DateTimeOffset start = DateTimeOffset.UtcNow;
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new TestNodeUpdateMessage(
+                fixture.Session.Object.SessionUid,
+                new TestNode
+                {
+                    Uid = "long-name",
+                    DisplayName = name,
+                    Properties = new PropertyBag(
+                        PassedTestNodeStateProperty.CachedInstance,
+                        new TimingProperty(new TimingInfo(start, start.AddSeconds(1), TimeSpan.FromSeconds(1)))),
+                }),
+            TestContext.CancellationToken);
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        string markdown = File.ReadAllText(fixture.SummaryPath);
+        Assert.Contains("| 1 | 1 | 0 | 0 | 0 |", markdown);
+        Assert.Contains("### Passing tests with previous failures (1)", markdown);
+        Assert.Contains("### ⏱ Slowest tests", markdown);
+        Assert.Contains("Tail` — prior attempts: 2 passed, 1 failed", markdown);
+        Assert.Contains("Tail` — 1.00s", markdown);
+        Assert.Contains("…", markdown);
+        Assert.DoesNotContain(name, markdown);
+        Assert.DoesNotContain("\uFFFD", markdown);
+        Assert.IsLessThanOrEqualTo(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, new FileInfo(fixture.SummaryPath).Length);
+        Assert.IsEmpty(fixture.Warnings);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_DisabledHistoryDoesNotReportPreviousFailures()
+    {
+        using SummaryExecutionFixture fixture = new(historyEnabled: false);
+        fixture.History.Stats = new GitHubActionsHistoryStats(passCount: 0, failCount: 1);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, 1, false, "Tests.NoHistory"),
+            TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        Assert.DoesNotContain("Passing tests with previous failures", File.ReadAllText(fixture.SummaryPath));
+        Assert.IsEmpty(Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes)).HistoryTests);
     }
 
     [TestMethod]
@@ -701,6 +857,266 @@ public sealed partial class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public async Task SummaryPostProcessor_PreviousFailureInLaterModuleSurvivesHistoryLimit()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            Path.GetFileName($"github-history-bound-{Guid.NewGuid():N}"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule first = CreateRetryModule("first", attempt: 1, passed: 10_000, failed: 0);
+            first.AssemblyName = "First";
+            first.ModulePath = "First.dll";
+            first.ExecutionId = "first";
+            first.HistoryTests =
+            [
+                .. Enumerable.Range(0, 10_000).Select(index =>
+                    CreateHistoryTest($"first-{index}", $"Tests.First{index:D5}", "passed")),
+            ];
+            GitHubCiRunSummaryModule second = CreateRetryModule("second", attempt: 1, passed: 1, failed: 0);
+            second.AssemblyName = "Second";
+            second.ModulePath = "Second.dll";
+            second.ExecutionId = "second";
+            second.HistoryTests = [CreateHistoryTest("previously-failed", "Tests.PreviouslyFailed", "passed")];
+            second.HistoryTests[0].HistoricalPassCount = 2;
+            second.HistoryTests[0].HistoricalFailCount = 1;
+            second.HistoryTests[0].HistoryWindowInDays = 30;
+            string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, first);
+            string secondPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, second);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            var history = new CapturingHistoryService(isEnabled: true);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]), environment.Object, new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(), static () => false, history);
+
+            await processor.ProcessAsync(
+                [
+                    new InputArtifact(firstPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "first"),
+                    new InputArtifact(secondPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "second"),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                TestContext.CancellationToken);
+
+            string markdown = File.ReadAllText(stepSummaryPath);
+            int secondStart = markdown.IndexOf("<summary>Second (", StringComparison.Ordinal);
+            Assert.IsGreaterThanOrEqualTo(0, secondStart);
+            Assert.Contains(
+                "- `Tests.PreviouslyFailed` — prior attempts: 2 passed, 1 failed",
+                markdown.Substring(secondStart));
+            IReadOnlyList<GitHubCiRunSummaryModule> modules = Assert.ContainsSingle(history.Writes);
+            Assert.AreEqual(10_000, modules.Sum(module => module.HistoryTests.Length));
+            Assert.Contains(test => test.TestId == "previously-failed", modules.Single(module => module.AssemblyName == "Second").HistoryTests);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task SummaryPostProcessor_RetryHistoryLimitPreservesRecoveryAndPreviousFailures()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            Path.GetFileName($"github-history-retry-bound-{Guid.NewGuid():N}"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule first = CreateRetryModule("first", attempt: 1, passed: 9_999, failed: 1);
+            first.HistoryTests =
+            [
+                .. Enumerable.Range(0, 9_999).Select(index =>
+                    CreateHistoryTest($"first-{index}", $"Tests.First{index:D5}", "passed")),
+                CreateHistoryTest("previously-failed", "Tests.PreviouslyFailed", "failed"),
+            ];
+            GitHubCiRunSummaryModule retry = CreateRetryModule("retry", attempt: 2, passed: 1, failed: 0);
+            retry.HistoryTests = [CreateHistoryTest("previously-failed", "Tests.PreviouslyFailed", "passed")];
+            retry.HistoryTests[0].HistoricalPassCount = 2;
+            retry.HistoryTests[0].HistoricalFailCount = 1;
+            retry.HistoryTests[0].HistoryWindowInDays = 30;
+            string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, first);
+            string retryPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, retry);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            var history = new CapturingHistoryService(isEnabled: true);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]), environment.Object, new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(), static () => false, history);
+            var context = new ArtifactPostProcessingContext(
+                ArtifactPostProcessingTruncationReason.None,
+                ArtifactPostProcessingMode.RetryAttempts,
+                new ArtifactPostProcessingRunSummary(
+                    totalTests: 10_000, passedTests: 10_000, failedTests: 0, skippedTests: 0,
+                    duration: TimeSpan.FromSeconds(1), exitCode: 0, testModuleCount: 1));
+
+            await processor.ProcessAsync(
+                [
+                    new InputArtifact(firstPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1"),
+                    new InputArtifact(retryPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "2"),
+                ],
+                directory,
+                context,
+                TestContext.CancellationToken);
+
+            GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(history.Writes));
+            GitHubCiRunSummaryHistoryTest recovered = Assert.ContainsSingle(
+                module.HistoryTests.Where(test => test.TestId == "previously-failed"));
+            Assert.AreEqual("passed", recovered.Outcome);
+            Assert.IsTrue(recovered.IsFlaky);
+            Assert.AreEqual(2, recovered.HistoricalPassCount);
+            Assert.AreEqual(1, recovered.HistoricalFailCount);
+            Assert.IsLessThanOrEqualTo(10_000, module.HistoryTests.Length);
+            Assert.Contains(
+                "- `Tests.PreviouslyFailed` — prior attempts: 2 passed, 1 failed",
+                File.ReadAllText(stepSummaryPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task SummaryPostProcessor_RetryHistoryPriorityPreservesOtherRecoveredOutcomes()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-history-retry-priority-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule first = CreateRetryModule("first", attempt: 1, passed: 9_998, failed: 1);
+            first.HistoryTests =
+            [
+                .. Enumerable.Range(0, 9_998).Select(index =>
+                    CreateHistoryTest($"first-{index}", $"Tests.First{index:D5}", "passed")),
+                CreateHistoryTest("recovered", "Tests.Recovered", "failed"),
+            ];
+            GitHubCiRunSummaryModule retry = CreateRetryModule("retry", attempt: 2, passed: 2, failed: 0);
+            retry.HistoryTests =
+            [
+                CreateHistoryTest("recovered", "Tests.Recovered", "passed"),
+                CreateHistoryTest("previously-failed", "Tests.PreviouslyFailed", "passed"),
+            ];
+            retry.HistoryTests[1].HistoricalFailCount = 1;
+            retry.HistoryTests[1].HistoryWindowInDays = 30;
+            string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, first);
+            string retryPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, retry);
+            var history = new CapturingHistoryService(isEnabled: true);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]), Mock.Of<IEnvironment>(), new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(), static () => false, history);
+            var context = new ArtifactPostProcessingContext(
+                ArtifactPostProcessingTruncationReason.None,
+                ArtifactPostProcessingMode.RetryAttempts,
+                new ArtifactPostProcessingRunSummary(
+                    totalTests: 10_000, passedTests: 10_000, failedTests: 0, skippedTests: 0,
+                    duration: TimeSpan.FromSeconds(1), exitCode: 0, testModuleCount: 1));
+
+            await processor.ProcessAsync(
+                [
+                    new InputArtifact(firstPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1"),
+                    new InputArtifact(retryPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "2"),
+                ],
+                directory,
+                context,
+                TestContext.CancellationToken);
+
+            GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(history.Writes));
+            Assert.Contains(test => test.TestId == "previously-failed" && test.HistoricalFailCount == 1, module.HistoryTests);
+            GitHubCiRunSummaryHistoryTest recovered = Assert.ContainsSingle(
+                module.HistoryTests.Where(test => test.TestId == "recovered"));
+            Assert.AreEqual("passed", recovered.Outcome);
+            Assert.IsTrue(recovered.IsFlaky);
+            Assert.IsLessThanOrEqualTo(10_000, module.HistoryTests.Length);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task SummaryPostProcessor_RetryHistoryLimitDoesNotRetainPartialHistoricalIdentity(bool hasPreviousFailure)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-history-retry-overflow-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule first = CreateRetryModule("first", attempt: 1, passed: 1, failed: 4_999);
+            first.HistoryTests =
+            [
+                .. Enumerable.Range(0, 4_999).Select(index =>
+                    CreateHistoryTest($"id-{index:D5}", $"Tests.Case{index:D5}", "failed")),
+                CreateHistoryTest("overflow", "Tests.ZOverflow", "passed"),
+            ];
+            first.HistoryTests[^1].HistoricalFailCount = hasPreviousFailure ? 1 : 0;
+            GitHubCiRunSummaryModule second = CreateRetryModule("second", attempt: 2, passed: 5_000, failed: 0);
+            second.HistoryTests =
+            [
+                .. Enumerable.Range(0, 4_999).Select(index =>
+                {
+                    GitHubCiRunSummaryHistoryTest test = CreateHistoryTest($"id-{index:D5}", $"Tests.Case{index:D5}", "passed");
+                    test.HistoricalFailCount = 1;
+                    return test;
+                }),
+                CreateHistoryTest("overflow", "Tests.ZOverflow", "passed"),
+            ];
+            second.HistoryTests[^1].HistoricalFailCount = hasPreviousFailure ? 1 : 0;
+            GitHubCiRunSummaryModule third = CreateRetryModule("third", attempt: 3, passed: 0, failed: 1);
+            third.HistoryTests = [CreateHistoryTest("overflow", "Tests.ZOverflow", "failed")];
+            string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, first);
+            string secondPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, second);
+            string thirdPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, third);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            var history = new CapturingHistoryService(isEnabled: true);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]), environment.Object, new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(), static () => false, history);
+            var context = new ArtifactPostProcessingContext(
+                ArtifactPostProcessingTruncationReason.None,
+                ArtifactPostProcessingMode.RetryAttempts,
+                new ArtifactPostProcessingRunSummary(
+                    totalTests: 5_000, passedTests: 4_999, failedTests: 1, skippedTests: 0,
+                    duration: TimeSpan.FromSeconds(1), exitCode: 2, testModuleCount: 1));
+
+            await processor.ProcessAsync(
+                [
+                    new InputArtifact(firstPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1"),
+                    new InputArtifact(secondPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "2"),
+                    new InputArtifact(thirdPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "3"),
+                ],
+                directory,
+                context,
+                TestContext.CancellationToken);
+
+            GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(history.Writes));
+            Assert.DoesNotContain(test => test.TestId == "overflow", module.HistoryTests);
+            Assert.Contains("### Passing tests with previous failures (4999)", File.ReadAllText(stepSummaryPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task SummaryPostProcessor_ForRetryAttempts_ReturnsChainableFragmentAndWritesSummary()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-summary-retry-{Guid.NewGuid():N}");
@@ -726,6 +1142,9 @@ public sealed partial class GitHubActionsSummaryReporterTests
             retry.ShardGroupId = "group-a";
             retry.FlakyTests = [flakyTest];
             retry.HistoryTests = [CreateHistoryTest("flaky", "Tests.Flaky", "passed")];
+            retry.HistoryTests[0].HistoricalPassCount = 2;
+            retry.HistoryTests[0].HistoricalFailCount = 1;
+            retry.HistoryTests[0].HistoryWindowInDays = 30;
             retry.TestDurationTicks = TimeSpan.FromMilliseconds(200).Ticks;
             string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
                 directory,
@@ -782,6 +1201,9 @@ public sealed partial class GitHubActionsSummaryReporterTests
             GitHubCiRunSummaryHistoryTest flakyHistory =
                 aggregate.Modules.Single().HistoryTests.Single(test => test.FullyQualifiedName == "Tests.Flaky");
             Assert.IsTrue(flakyHistory.IsFlaky);
+            Assert.AreEqual(2, flakyHistory.HistoricalPassCount);
+            Assert.AreEqual(1, flakyHistory.HistoricalFailCount);
+            Assert.AreEqual(30, flakyHistory.HistoryWindowInDays);
             GitHubCiRunSummaryHistoryTest stableHistory =
                 aggregate.Modules.Single().HistoryTests.Single(test => test.FullyQualifiedName == "Tests.Stable");
             Assert.AreEqual("passed", stableHistory.Outcome);
@@ -790,6 +1212,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
             string summary = File.ReadAllText(stepSummaryPath);
             Assert.Contains("| 3 | 3 | 0 | 0 | 1 |", summary, summary);
             Assert.Contains("### ⚠️ Flaky tests (1)", summary, summary);
+            Assert.Contains("- `Tests.Flaky` — prior attempts: 2 passed, 1 failed", summary, summary);
         }
         finally
         {
@@ -2541,6 +2964,106 @@ public sealed partial class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_PreviousFailuresRemainAssociatedWithTheirModuleAndDataRow()
+    {
+        GitHubCiRunSummaryModule first = CreateRetryModule("first", attempt: 1, passed: 2, failed: 0);
+        first.AssemblyName = "First";
+        first.HistoryTests =
+        [
+            CreateHistoryTest("row-1", "Tests.Case", "passed"),
+            CreateHistoryTest("row-2", "Tests.Case", "passed"),
+            CreateHistoryTest("skipped", "Tests.Skipped", "skipped"),
+        ];
+        first.HistoryTests[0].DisplayName = "Case (1)";
+        first.HistoryTests[0].HistoricalPassCount = 2;
+        first.HistoryTests[0].HistoricalFailCount = 1;
+        first.HistoryTests[1].DisplayName = "Case (2)";
+        first.HistoryTests[1].HistoricalPassCount = 5;
+        first.HistoryTests[2].HistoricalFailCount = 4;
+
+        GitHubCiRunSummaryModule second = CreateRetryModule("second", attempt: 1, passed: 1, failed: 0);
+        second.AssemblyName = "Second";
+        second.HistoryTests = [CreateHistoryTest("row-1", "Tests.Case", "passed")];
+        second.HistoryTests[0].DisplayName = "Case (1)";
+        second.HistoryTests[0].HistoricalPassCount = 0;
+        second.HistoryTests[0].HistoricalFailCount = 3;
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(CreateAggregate([first, second])).Markdown.Replace("\r\n", "\n");
+        int firstStart = markdown.IndexOf("<summary>First (", StringComparison.Ordinal);
+        int secondStart = markdown.IndexOf("<summary>Second (", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, firstStart);
+        Assert.IsGreaterThan(firstStart, secondStart);
+        string firstSection = markdown.Substring(firstStart, secondStart - firstStart);
+        string secondSection = markdown.Substring(secondStart);
+        Assert.Contains(
+            """
+            #### Passing tests with previous failures (1)
+
+            - `Tests.Case (1)` — prior attempts: 2 passed, 1 failed
+            """.Replace("\r\n", "\n"),
+            firstSection);
+        Assert.DoesNotContain("Tests.Case (2)", firstSection);
+        Assert.DoesNotContain("Tests.Skipped", firstSection);
+        Assert.Contains(
+            """
+            #### Passing tests with previous failures (1)
+
+            - `Tests.Case (1)` — prior attempts: 0 passed, 3 failed
+            """.Replace("\r\n", "\n"),
+            secondSection);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_PreviousFailuresAreBoundedAndHonorSectionSelection()
+    {
+        GitHubCiRunSummaryModule module = CreateRetryModule("session", attempt: 1, passed: 21, failed: 0);
+        module.HistoryTests =
+        [
+            .. Enumerable.Range(1, 21).Select(index =>
+            {
+                GitHubCiRunSummaryHistoryTest test = CreateHistoryTest($"id-{index}", $"Tests.Case{index:D2}", "passed");
+                test.HistoricalFailCount = 1;
+                return test;
+            }),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(CreateAggregate([module])).Markdown;
+        Assert.Contains("#### Passing tests with previous failures (21)", markdown);
+        Assert.AreSequenceEqual(
+            Enumerable.Range(1, 20).Select(index => $"- `Tests.Case{index:D2}` — prior attempts: 0 passed, 1 failed"),
+            markdown.Replace("\r\n", "\n").Split('\n').Where(line => line.StartsWith("- `Tests.Case", StringComparison.Ordinal)));
+        Assert.Contains("- … and 1 more", markdown);
+
+        module.GitHubActionsStepSummarySections = ["coverage"];
+        string coverageOnly = GitHubActionsSummaryReporter.BuildAggregateMarkdown(CreateAggregate([module])).Markdown;
+        Assert.DoesNotContain("Passing tests with previous failures", coverageOnly);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_LongHistoricalNamesDifferingInTheMiddleRemainDistinct()
+    {
+        string prefix = "Tests.Case" + new string('a', 270);
+        string suffix = new('z', 270);
+        GitHubCiRunSummaryModule module = CreateRetryModule("session", attempt: 1, passed: 2, failed: 0);
+        module.HistoryTests =
+        [
+            CreateHistoryTest("first", prefix + "1" + suffix, "passed"),
+            CreateHistoryTest("second", prefix + "2" + suffix, "passed"),
+        ];
+        module.HistoryTests[0].HistoricalFailCount = 1;
+        module.HistoryTests[1].HistoricalFailCount = 1;
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(CreateAggregate([module])).Markdown;
+        string[] entries =
+        [
+            .. markdown.Split('\n')
+                .Where(static line => line.StartsWith("- `Tests.Case", StringComparison.Ordinal)),
+        ];
+        Assert.HasCount(2, entries);
+        Assert.AreNotEqual(entries[0], entries[1]);
+    }
+
+    [TestMethod]
     public void BuildAggregateMarkdown_RendersFailureDetailsFromFragment()
     {
         var module = new GitHubCiRunSummaryModule
@@ -3793,16 +4316,28 @@ public sealed partial class GitHubActionsSummaryReporterTests
         return fileSystem;
     }
 
+    private static string FailureDetailsFor(string markdown, string name)
+    {
+        string summary = $"<summary><code>{name}</code>";
+        int start = markdown.IndexOf(summary, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, start);
+        Assert.AreEqual(start, markdown.LastIndexOf(summary, StringComparison.Ordinal));
+        int end = markdown.IndexOf("</details>", start, StringComparison.Ordinal);
+        Assert.IsGreaterThan(start, end);
+        return markdown.Substring(start, end - start);
+    }
+
     private static TestNodeUpdateMessage CreateRetryUpdate(
         TestNodeStateProperty state,
         int attempt,
         bool isSuperseded,
-        string displayName = "Tests.Flaky")
+        string displayName = "Tests.Flaky",
+        string uid = "flaky")
         => new(
             new SessionUid("session"),
             new TestNode
             {
-                Uid = "flaky",
+                Uid = uid,
                 DisplayName = displayName,
                 Properties = new PropertyBag(
                     state,
@@ -3961,6 +4496,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
     {
         public GitHubActionsHistoryStats? Stats { get; set; }
 
+        public Dictionary<string, GitHubActionsHistoryStats> StatsByName { get; } = [];
+
         public Exception? WriteError { get; set; }
 
         public List<IReadOnlyList<GitHubCiRunSummaryModule>> Writes { get; } = [];
@@ -3979,6 +4516,11 @@ public sealed partial class GitHubActionsSummaryReporterTests
             string displayName,
             out GitHubActionsHistoryStats stats)
         {
+            if (StatsByName.TryGetValue(fullyQualifiedName, out stats))
+            {
+                return true;
+            }
+
             stats = Stats.GetValueOrDefault();
             return Stats.HasValue;
         }

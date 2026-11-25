@@ -45,6 +45,8 @@ internal sealed partial class GitHubActionsSummaryReporter
             : null;
         Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), int>? historyIndices =
             _historyService.IsEnabled ? [] : null;
+        Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), CiRunSummaryHistoryTest>? previousFailures =
+            _historyService.IsEnabled ? [] : null;
         int expanded = 0;
         foreach ((string Uid, string Key, TestRecord Record) entry in entries)
         {
@@ -90,7 +92,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             }
 
             snapshot.Add(record);
-            if (historyTests is not null && historyIndices is not null)
+            if (historyTests is not null && historyIndices is not null && previousFailures is not null)
             {
                 var historyTest = new CiRunSummaryHistoryTest
                 {
@@ -111,6 +113,26 @@ internal sealed partial class GitHubActionsSummaryReporter
                     historyTest.TestId,
                     historyTest.FullyQualifiedName,
                     historyTest.DisplayName);
+                if (_historyService.TryGetStats(
+                        historyTest.TestId,
+                        historyTest.FullyQualifiedName,
+                        historyTest.DisplayName,
+                        out GitHubActionsHistoryStats stats)
+                    && stats.FailCount > 0)
+                {
+                    historyTest.HistoricalPassCount = stats.PassCount;
+                    historyTest.HistoricalFailCount = stats.FailCount;
+                    historyTest.HistoryWindowInDays = _historyService.HistoryWindowInDays;
+                    if (previousFailures.TryGetValue(identity, out CiRunSummaryHistoryTest? existing))
+                    {
+                        previousFailures[identity] = MergeHistoryTest(existing, historyTest);
+                    }
+                    else if (previousFailures.Count < GitHubActionsHistoryStore.MaxTotalSamples)
+                    {
+                        previousFailures.Add(identity, historyTest);
+                    }
+                }
+
                 if (historyIndices.TryGetValue(identity, out int existingIndex))
                 {
                     historyTests[existingIndex] = MergeHistoryTest(historyTests[existingIndex], historyTest);
@@ -120,6 +142,55 @@ internal sealed partial class GitHubActionsSummaryReporter
                     historyIndices.Add(identity, historyTests.Count);
                     historyTests.Add(historyTest);
                 }
+            }
+        }
+
+        if (historyTests is not null && historyIndices is not null && previousFailures is not null)
+        {
+            if (previousFailures.Keys.Any(identity => !historyIndices.ContainsKey(identity)))
+            {
+                var selected = new List<CiRunSummaryHistoryTest>(GitHubActionsHistoryStore.MaxTotalSamples);
+                HashSet<(string TestId, string FullyQualifiedName, string DisplayName)> selectedIdentities = [];
+                foreach (CiRunSummaryHistoryTest test in previousFailures.Values
+                    .OrderBy(static test => test.Outcome == GitHubActionsHistoryOutcome.Passed ? 0 : 1)
+                    .ThenBy(static test => test.FullyQualifiedName, StringComparer.Ordinal)
+                    .ThenBy(static test => test.DisplayName, StringComparer.Ordinal)
+                    .ThenBy(static test => test.TestId, StringComparer.Ordinal))
+                {
+                    if (selected.Count == GitHubActionsHistoryStore.MaxTotalSamples)
+                    {
+                        break;
+                    }
+
+                    selected.Add(test);
+                    selectedIdentities.Add((test.TestId, test.FullyQualifiedName, test.DisplayName));
+                }
+
+                foreach (CiRunSummaryHistoryTest test in historyTests)
+                {
+                    if (selected.Count == GitHubActionsHistoryStore.MaxTotalSamples)
+                    {
+                        break;
+                    }
+
+                    if (selectedIdentities.Add((test.TestId, test.FullyQualifiedName, test.DisplayName)))
+                    {
+                        selected.Add(test);
+                    }
+                }
+
+                selected.Sort(static (left, right) => CompareForRendering(
+                    left.TestId, left.FullyQualifiedName, left.DisplayName,
+                    right.TestId, right.FullyQualifiedName, right.DisplayName));
+                historyTests = selected;
+            }
+
+            foreach (CiRunSummaryHistoryTest test in historyTests
+                .Where(static test => test.Outcome != GitHubActionsHistoryOutcome.Passed))
+            {
+                test.HistoricalPassCount = 0;
+                test.HistoricalFailCount = 0;
+                test.HistoryWindowInDays = 0;
             }
         }
 
@@ -143,6 +214,9 @@ internal sealed partial class GitHubActionsSummaryReporter
                             : GitHubActionsHistoryOutcome.Skipped,
             DurationTicks = Math.Max(existing.DurationTicks, current.DurationTicks),
             IsFlaky = existing.IsFlaky || current.IsFlaky,
+            HistoricalPassCount = Math.Max(existing.HistoricalPassCount, current.HistoricalPassCount),
+            HistoricalFailCount = Math.Max(existing.HistoricalFailCount, current.HistoricalFailCount),
+            HistoryWindowInDays = Math.Max(existing.HistoryWindowInDays, current.HistoryWindowInDays),
         };
 
     private CiRunSummaryModule CreateModule(

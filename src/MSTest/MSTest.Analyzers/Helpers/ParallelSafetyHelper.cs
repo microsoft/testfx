@@ -286,9 +286,9 @@ internal static class ParallelSafetyHelper
 
     /// <summary>
     /// Returns <see langword="true"/> when the test <paramref name="method"/> or any of its (possibly base)
-    /// containing types already declares a <c>[ResourceLock]</c> whose resource key equals
-    /// <paramref name="resourceKey"/> (ordinal, case-sensitive - matching the runtime's conflict rule). Such
-    /// a mutation is coordinated and must not be flagged by the "undeclared mutation" rules.
+    /// containing types already declares an exclusive <c>[ResourceLock]</c> whose resource key equals
+    /// <paramref name="resourceKey"/> (ordinal, case-sensitive - matching the runtime's conflict rule). A
+    /// matching read-only lock does not coordinate a mutation.
     /// A method-level <c>[ResourceLock]</c> is read by discovery only from an actual test method - on a fixture
     /// method it has no runtime effect - so <paramref name="testMethodAttributeSymbol"/> restricts the
     /// method-level check to real test methods; a fixture is covered only by a class-level lock.
@@ -421,9 +421,12 @@ internal static class ParallelSafetyHelper
                 continue;
             }
 
+            // Read is the only mode that grants shared access; discovery normalizes all other values to
+            // ReadWrite. Keep looking after a read lock because another declaration may upgrade the same key.
             if (attribute.ConstructorArguments.Length > 0
                 && attribute.ConstructorArguments[0].Value is string declaredKey
-                && string.Equals(declaredKey, resourceKey, StringComparison.Ordinal))
+                && string.Equals(declaredKey, resourceKey, StringComparison.Ordinal)
+                && !attribute.NamedArguments.Any(static argument => argument.Key == "Mode" && argument.Value.Value is 1))
             {
                 return true;
             }

@@ -8,7 +8,9 @@ using System.Data.Common;
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
@@ -781,6 +783,38 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
         _testContextImplementation.Dispose();
     }
+
+#if !NETFRAMEWORK
+    public void TestTempDirectoryShouldUseResultsDirectoryWhenDeploymentDirectoryIsUnavailable()
+    {
+        TestDeployment.Reset();
+        MSTestSettingsProvider.Reset();
+        using TempDirectoryScope resultsDirectory = new();
+
+        try
+        {
+            UnitTestElement testCase = new(new TestMethod("M", "C", typeof(TestContextImplementationTests).Assembly.Location, displayName: null));
+            new TestDeployment().Deploy(
+                [testCase],
+                new DeploymentContext(resultsDirectory.Path, null),
+                new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
+
+            TestDeployment.DeploymentDirectoriesCreatedWithoutDeploymentItems.Should().BeTrue();
+
+            _properties[TestContext.TestResultsDirectoryLabel] = resultsDirectory.Path;
+            _testContextImplementation = CreateTestContextImplementation();
+            string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+            Path.GetDirectoryName(tempDirectory).Should().Be(resultsDirectory.Path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        }
+        finally
+        {
+            _testContextImplementation?.Dispose();
+            TestDeployment.Reset();
+            MSTestSettingsProvider.Reset();
+        }
+    }
+#endif
 
     public void TestTempDirectoryShouldSanitizeAndBoundLongNameWithInvalidCharacters()
     {

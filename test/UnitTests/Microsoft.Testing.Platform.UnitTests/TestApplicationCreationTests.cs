@@ -66,12 +66,15 @@ public sealed class TestApplicationCreationTests
         Assert.AreEqual(0, child.ExitCode, child.Error);
         string[] records = ReadRecords(child.Output);
         Assert.Contains("failure-type:System.InvalidOperationException", records);
-        Assert.Contains(
-            "invalid.testingplatformextensions.json",
-            Assert.ContainsSingle(records.Where(record => record.StartsWith("failure-message:", StringComparison.Ordinal))));
+        string failureMessage = Assert.ContainsSingle(records.Where(record => record.StartsWith("failure-message:", StringComparison.Ordinal)));
+        Assert.Contains("'extensions' property must be a JSON array.", failureMessage);
+        string logRecord = Assert.ContainsSingle(records.Where(record => record.StartsWith("log:Reading extension manifest '", StringComparison.Ordinal)));
         Assert.EndsWith(
             "invalid.testingplatformextensions.json'.",
-            Assert.ContainsSingle(records.Where(record => record.StartsWith("log:Reading extension manifest '", StringComparison.Ordinal))));
+            logRecord);
+        const string logPrefix = "log:Reading extension manifest '";
+        string manifestPath = logRecord.Substring(logPrefix.Length, logRecord.Length - logPrefix.Length - 2);
+        Assert.Contains(manifestPath, failureMessage);
         Assert.Contains("log-released:True", records);
     }
 

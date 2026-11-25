@@ -353,6 +353,16 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">이전 버전 MSTestV2 패키지가 어셈블리에 로드되어 테스트 검색이 '.runsettings' 파일에 종속된 경우 모든 데이터 테스트를 검색하지 못할 수 있습니다.</target>
         <note>{Locked="MSTestV2"}{Locked=".runsettings"}</note>
       </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesNotSupported">
+        <source>'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</source>
+        <target state="new">'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</target>
+        <note>{Locked="PreloadReferencedAssemblies"}</note>
+      </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesSummary">
+        <source>Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</source>
+        <target state="new">Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</target>
+        <note>{0} is the number of assemblies that were loaded. {1} is the number of referenced assemblies that could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
         <target state="translated">'RandomizeTestOrder'와 'OrderTestsByNameInClass'가 모두 설정되어 있습니다. 'OrderTestsByNameInClass'는 무시됩니다.</target>

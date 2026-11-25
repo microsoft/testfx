@@ -39,6 +39,11 @@ public sealed class UseAttributeOnTestMethodFixer : CodeFixProvider
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         Diagnostic diagnostic = context.Diagnostics[0];
+        if (diagnostic.Properties.ContainsKey(UseAttributeOnTestMethodAnalyzer.NoAddTestMethodFixKey))
+        {
+            return;
+        }
+
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
