@@ -45,9 +45,20 @@ public sealed class TestHostBuilderTests
             _ => new TestFrameworkCapabilities(),
             (_, _) => Mock.Of<ITestFramework>());
 
-        using ITestApplication application = await builder.BuildAsync();
+        // The real host writes to the console; on Azure Pipelines it would surface the expected
+        // invalid-option message as a pipeline error annotation, so opt out of log issues here.
+        string? originalAzdoOutput = Environment.GetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT");
+        try
+        {
+            Environment.SetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT", "off");
+            using ITestApplication application = await builder.BuildAsync();
 
-        Assert.AreEqual((int)ExitCode.InvalidCommandLine, await application.RunAsync());
+            Assert.AreEqual((int)ExitCode.InvalidCommandLine, await application.RunAsync());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT", originalAzdoOutput);
+        }
     }
 
     [TestMethod]
