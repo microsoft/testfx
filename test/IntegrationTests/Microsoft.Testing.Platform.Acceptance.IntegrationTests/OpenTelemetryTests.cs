@@ -456,7 +456,8 @@ internal static class Program
             MetricSnapshot workingSet = metrics["test.host.process.memory.working_set"];
             if (cpu.Unit != "s" || cpu.Points.Single().Value < 0
                 || logicalCount.Unit != "{cpu}" || logicalCount.Points.Single().Value != Environment.ProcessorCount
-                || privateMemory.Unit != "By" || privateMemory.Points.Single().Value <= 0
+                || privateMemory.Unit != "By" || privateMemory.Points.Single().Value < 0
+                || (!OperatingSystem.IsMacOS() && privateMemory.Points.Single().Value == 0)
                 || workingSet.Unit != "By" || workingSet.Points.Single().Value <= 0)
             {
                 throw new InvalidOperationException("The exported test host process measurements did not match their units or expected values.");

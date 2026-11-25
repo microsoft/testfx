@@ -458,9 +458,16 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     public void ProcessMetrics_AreOptInAndObserveTheCurrentProcess(bool enabled)
     {
         using var service = new OpenTelemetryPlatformService(enabled);
-        var meter = (Meter)typeof(OpenTelemetryPlatformService)
-            .GetField("_meter", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .GetValue(service)!;
+        FieldInfo? meterField = typeof(OpenTelemetryPlatformService).GetField("_meter", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(meterField, "The service meter is required to isolate instrumentation from concurrent test instances.");
+        var meter = (Meter)meterField!.GetValue(service)!;
+        string[] names =
+        [
+            "test.host.process.cpu.logical_count",
+            "test.host.process.cpu.time",
+            "test.host.process.memory.private",
+            "test.host.process.memory.working_set",
+        ];
         Dictionary<string, Instrument> instruments = [];
         Dictionary<string, double> measurements = [];
         Dictionary<string, KeyValuePair<string, object?>[]> measurementTags = [];
@@ -495,15 +502,8 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             return;
         }
 
-        string[] names =
-        [
-            "test.host.process.cpu.logical_count",
-            "test.host.process.cpu.time",
-            "test.host.process.memory.private",
-            "test.host.process.memory.working_set",
-        ];
-        Assert.IsTrue(names.SequenceEqual(instruments.Keys.OrderBy(name => name, StringComparer.Ordinal)));
-        Assert.IsTrue(names.SequenceEqual(measurements.Keys.OrderBy(name => name, StringComparer.Ordinal)));
+        Assert.AreSequenceEqual(names, instruments.Keys.OrderBy(name => name, StringComparer.Ordinal).ToArray());
+        Assert.AreSequenceEqual(names, measurements.Keys.OrderBy(name => name, StringComparer.Ordinal).ToArray());
         Assert.IsInstanceOfType<ObservableCounter<double>>(instruments["test.host.process.cpu.time"]);
         Assert.IsInstanceOfType<ObservableGauge<long>>(instruments["test.host.process.memory.working_set"]);
         Assert.IsInstanceOfType<ObservableGauge<long>>(instruments["test.host.process.memory.private"]);
@@ -515,7 +515,12 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.AreEqual(Environment.ProcessorCount, measurements["test.host.process.cpu.logical_count"]);
         Assert.IsGreaterThanOrEqualTo(0, measurements["test.host.process.cpu.time"]);
         Assert.IsGreaterThan(0, measurements["test.host.process.memory.working_set"]);
-        Assert.IsGreaterThan(0, measurements["test.host.process.memory.private"]);
+        Assert.IsGreaterThanOrEqualTo(0, measurements["test.host.process.memory.private"]);
+        if (!OperatingSystem.IsMacOS())
+        {
+            Assert.IsGreaterThan(0, measurements["test.host.process.memory.private"]);
+        }
+
         using var currentProcess = Process.GetCurrentProcess();
         string? instanceId = null;
         foreach (string name in names)
@@ -524,7 +529,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             Assert.HasCount(2, tags);
             Assert.AreEqual(currentProcess.Id, tags["process.pid"]);
             string id = Assert.IsInstanceOfType<string>(tags["test.host.process.instance_id"]);
-            Assert.IsTrue(Guid.TryParseExact(id, "N", out _));
+            Assert.IsTrue(Guid.TryParseExact(id, "N", out _), $"Expected process instance ID '{id}' to be a GUID in N format.");
             instanceId ??= id;
             Assert.AreEqual(instanceId, id);
         }

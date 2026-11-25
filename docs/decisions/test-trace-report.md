@@ -371,6 +371,50 @@ retain their existing assembly-level exclusion. Acceptance uses separate child
 processes and explicit child environment overrides. CI execution, the full
 classic-UWP pack, and a tree-wide/CI-reporting consumer remain unverified.
 
+#### Review follow-up (2026-11-25)
+
+The opt-in environment setting now uses the shared `OpenTelemetryEnvironmentVariables`
+constant and an injected getter helper. Unit cases cover exact `"1"`, `"0"`, unset,
+and non-matching values. The process-metrics tests use collection assertions that
+show differing instrument names; meter reflection remains necessary to isolate
+the instance under test from concurrently created meters with the same name.
+`Process.PrivateMemorySize64` can report zero on macOS with .NET 10/11, so tests
+require nonnegative values everywhere and a positive value only off macOS. The
+remaining unit/type/unit/identity assertions are unchanged.
+
+On Windows x64, the Release `net10.0` unit project build succeeded with
+`.\eng\build.ps1 -restore -build -c Release -msbuildEngine dotnet -warnAsError $false
+-projects test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj
+/p:TargetFrameworks=net10.0 /p:RestoreEnablePackagePruning=false /m:4`. The focused
+host selection
+`--filter 'FullyQualifiedName~OpenTelemetryPlatformServiceTests|FullyQualifiedName~OpenTelemetryProviderExtensionsTests'`
+passed **85 tests, zero failed/skipped**. This includes
+`IsProcessMetricsEnabled_UsesExactOneValue`,
+`IsProcessMetricsEnabled_WhenUnset_ReturnsFalse`, and
+`ProcessMetrics_AreOptInAndObserveTheCurrentProcess`.
+
+The updated `net12.0` acceptance project build also succeeded. The packed consumer
+selection `--filter 'FullyQualifiedName~OpenTelemetryTests'` passed **9 tests,
+zero failed/skipped**, including all three values in
+`ProcessMetrics_ExportOnlyWhenExplicitlyEnabled`. The rebuilt extension package
+was created with the repository-pinned `.dotnet\dotnet.exe pack
+src\MTP\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj
+-c Release --no-build --no-restore -o artifacts\packages\Release\Shipping` command
+after a successful all-target extension build. Its SHA-256 was
+`39F82AB0F5CD8CA91B4DE7E1AA324F3D730A3F30D048694CEFD39071FEBCEC27`; the loaded
+`net11.0` extension DLL hash was
+`092FC7AD4AC22596EBD226540751906E9E30B557C4FDBB722A14A1971DA9858F`, matching
+the package payload. The loaded platform DLL likewise matched its `3.0.0-dev`
+package payload (`B30CC5E6B52D75619AA4816A455AB343BA2931C0D6096E52DB7062CDBA8CFD8A`).
+
+The acceptance fixture requires the MSTest package filenames for version
+discovery. Since those local artifacts had been removed and the classic UWP
+tooling is unavailable, three MSTest prerequisites were packed with
+`-p:UwpMinimum=` solely for fixture setup; their package shape was not validated
+and they are not shipping-compatibility evidence. The direct extension `dotnet
+pack` above bypassed the repository-wide package-shape audit. A standard full
+Windows pack and macOS runtime execution therefore remain validation gaps.
+
 ## Alternatives and decision
 
 | Approach | Decision |

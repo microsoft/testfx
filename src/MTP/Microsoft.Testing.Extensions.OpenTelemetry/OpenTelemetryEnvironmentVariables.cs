@@ -17,6 +17,7 @@ internal static class OpenTelemetryEnvironmentVariables
     internal const string TracesExporter = "OTEL_TRACES_EXPORTER";
     internal const string MetricsExporter = "OTEL_METRICS_EXPORTER";
     internal const string SdkDisabled = "OTEL_SDK_DISABLED";
+    internal const string ProcessMetrics = "TESTINGPLATFORM_OTEL_PROCESS_METRICS";
 
     internal static bool IsNullOrWhiteSpace([NotNullWhen(false)] string? value)
     {

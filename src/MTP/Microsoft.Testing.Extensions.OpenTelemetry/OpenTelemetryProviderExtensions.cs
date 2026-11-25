@@ -37,7 +37,7 @@ public static class OpenTelemetryProviderExtensions
 
         ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryService(
             _ => new OpenTelemetryPlatformService(
-                string.Equals(Environment.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_PROCESS_METRICS"), "1", StringComparison.Ordinal)));
+                IsProcessMetricsEnabled(Environment.GetEnvironmentVariable)));
     }
 
     /// <summary>
@@ -270,6 +270,9 @@ public static class OpenTelemetryProviderExtensions
 
         return new EnvironmentConfiguration(configureTracingProvider, configureMetricsProvider, useOtlpTracing, useOtlpMetrics);
     }
+
+    internal static bool IsProcessMetricsEnabled(Func<string, string?> getEnvironmentVariable)
+        => string.Equals(getEnvironmentVariable(OpenTelemetryEnvironmentVariables.ProcessMetrics), "1", StringComparison.Ordinal);
 
     private static bool UseOtlpExporter(Func<string, string?> getEnvironmentVariable, string environmentVariableName)
     {
