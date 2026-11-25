@@ -74,7 +74,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeSimpleWithTypeArgument:
-                createChangedDocument = ct => FixAssertMethodForSimpleWithTypeArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], root, simpleNameSyntax, properAssertMethodName, ct);
+                createChangedDocument = ct => FixAssertMethodForSimpleWithTypeArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations.Count > 2 ? diagnostic.AdditionalLocations[2] : null, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeAddArgument:
                 createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, simpleNameSyntax, properAssertMethodName, ct);
@@ -138,13 +138,18 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         return editor.GetChangedDocument();
     }
 
-    private static async Task<Document> FixAssertMethodForSimpleWithTypeArgumentModeAsync(Document document, Location conditionLocation, Location valueLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForSimpleWithTypeArgumentModeAsync(Document document, Location conditionLocation, Location valueLocation, Location? typeCheckLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         SyntaxNode conditionExpression = root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true);
+
+        // When the type check is nested in the condition (e.g. 'collection.All(x => x is T)'), it is reported as a separate location.
+        SyntaxNode typeCheckExpression = typeCheckLocation is null
+            ? conditionExpression
+            : root.FindNode(typeCheckLocation.SourceSpan, getInnermostNodeForTie: true);
         if (conditionExpression.FirstAncestorOrSelf<ArgumentSyntax>() is not { } conditionNode ||
             conditionNode.Parent is not ArgumentListSyntax argumentList ||
             root.FindNode(valueLocation.SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax valueExpression ||
-            GetCheckedType(conditionExpression) is not { } checkedType)
+            GetCheckedType(typeCheckExpression) is not { } checkedType)
         {
             return document;
         }
@@ -167,7 +172,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             if (conditionNode.NameColon is not null)
             {
                 valueArgument = valueArgument.WithNameColon(
-                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("value"))
+                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(properAssertMethodName == "AreAllOfType" ? "collection" : "value"))
                         .WithTriviaFrom(conditionNode.NameColon));
             }
 
