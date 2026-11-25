@@ -87,6 +87,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         SummaryBudget? budget = null)
         => BuildMarkdownCore(
             records,
+            [],
             assemblyName,
             targetFrameworkMoniker,
             exitCode,
@@ -104,7 +105,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         GitHubActionsStepSummarySections sections,
         bool includeFailureDetails,
         SummaryBudget? budget = null)
-        => BuildMarkdownCore(records, assemblyName, targetFrameworkMoniker, exitCode, coverage, sections, includeFailureDetails, budget ?? SummaryBudget.ForProject(0));
+        => BuildMarkdownCore(records, [], assemblyName, targetFrameworkMoniker, exitCode, coverage, sections, includeFailureDetails, budget ?? SummaryBudget.ForProject(0));
 
     private static string BuildMarkdown(
         IReadOnlyList<TestRecord> records,
@@ -113,5 +114,5 @@ internal sealed partial class GitHubActionsSummaryReporter
         int exitCode,
         CiCoverageSummaryData coverage,
         GitHubActionsStepSummarySections sections)
-        => BuildMarkdownCore(records, assemblyName, targetFrameworkMoniker, exitCode, coverage, sections, includeFailureDetails: true, SummaryBudget.ForProject(0));
+        => BuildMarkdownCore(records, [], assemblyName, targetFrameworkMoniker, exitCode, coverage, sections, includeFailureDetails: true, SummaryBudget.ForProject(0));
 }

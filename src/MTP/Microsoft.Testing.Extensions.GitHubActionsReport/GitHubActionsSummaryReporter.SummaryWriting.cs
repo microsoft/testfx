@@ -108,7 +108,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             // report where every project degrades gracefully into one where the first get everything and the rest
             // get nothing.
             var writer = new StepSummaryWriter(_fileSystem, path!, _logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
-            if (!await TryAppendRenderedSummaryAsync(writer, snapshot.Records, assemblyName, exitCode, coverage, testSessionContext).ConfigureAwait(false))
+            if (!await TryAppendRenderedSummaryAsync(writer, snapshot, assemblyName, exitCode, coverage, testSessionContext).ConfigureAwait(false))
             {
                 await ReportSectionDroppedAsync(writer, testSessionContext).ConfigureAwait(false);
             }
@@ -146,7 +146,7 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// </returns>
     private async Task<bool> TryAppendRenderedSummaryAsync(
         StepSummaryWriter writer,
-        IReadOnlyList<TestRecord> snapshot,
+        SummarySnapshot snapshot,
         string assemblyName,
         int exitCode,
         CiCoverageSummaryData coverage,
@@ -160,8 +160,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                     var budget = SummaryBudget.ForProject(currentLength);
                     bool condense = budget.Stage is SummaryStage.Condensed or SummaryStage.Unlisted;
                     string markdown = condense
-                        ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
-                        : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage, _sections, _includeFailureDetails, budget);
+                        ? BuildMinimalMarkdown(snapshot.Records, assemblyName, _targetFrameworkMoniker.Value, exitCode)
+                        : BuildMarkdownCore(snapshot.Records, snapshot.HistoryTests, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage, _sections, _includeFailureDetails, budget);
 
                     // The note is only warranted once whole project sections start disappearing. Dropping the
                     // expanded diagnostics leaves every project and every failing test still named, which is a
