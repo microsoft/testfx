@@ -35,7 +35,9 @@ public static class OpenTelemetryProviderExtensions
     {
         _ = builder ?? throw new ArgumentNullException(nameof(builder));
 
-        ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryService(_ => new OpenTelemetryPlatformService());
+        ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryService(
+            _ => new OpenTelemetryPlatformService(
+                string.Equals(Environment.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_PROCESS_METRICS"), "1", StringComparison.Ordinal)));
     }
 
     /// <summary>

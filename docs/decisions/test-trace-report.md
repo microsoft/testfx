@@ -65,6 +65,312 @@ test-case span duration with CPU or reported per-result duration.
   is needed before constructing cross-build cohorts. No exporter change is
   included in this report-first work.
 
+### 2026-11-25: CPU, memory and scheduling experiment
+
+The follow-up request is to run experiments and assess whether machine-aware
+scheduling belongs in MSTest or MTP. This is measurement and design research,
+not authorization to change shipping scheduling defaults or introduce an API.
+
+- CI snapshot: build `1699244`, source
+  `a3bab4d2a755bcf1e9ccb602e5c404d2fc2d9960`. Its traces contain concurrency
+  and logical-processor counts, not CPU utilization or memory measurements.
+  Concurrent test spans alone cannot establish under- or oversubscription.
+- Local experiment source: `394a1beb7ea17d8f51d1eed6c35a9c612f9f95d4`.
+  The shared Windows machine has 32 logical processors and about 128 GiB RAM;
+  it is not the four-core CI agent. Restrict only task-owned test processes
+  to four logical processors; do not change machine-wide settings or touch
+  other users' processes. Affinity is not exclusive CPU allocation.
+- Existing controls: MSTest `Workers=0` resolves to
+  `Environment.ProcessorCount`; runsettings override assembly worker counts.
+  `TestExecutionManager.ParallelExecution.cs` drains a queue using a fixed
+  worker pool. `ResourceLockAttribute` coordinates named conflicts inside one
+  process, not CPU shares, memory reservations or other test modules.
+  `dotnet test` controls module concurrency separately from framework workers.
+- Planned pilot: build the real MTP unit-test executable with the pinned SDK,
+  run one warmup, then two mirrored rounds of 1/2/4/8 MSTest workers. Keep
+  test selection, binary, runtime, CPU affinity and reporting constant.
+  Capture parent exit, exact result identities/counts, wall time, process-tree
+  CPU seconds, sampled private/working-set memory and whole-machine load.
+  Flag short-lived children missed between samples and shared-machine noise.
+  Do not extrapolate one unit module to acceptance tests that launch builds.
+- Proposed ownership, not an implemented contract: the invocation orchestrator
+  must own any cross-module CPU/memory budget; MSTest must own test/chunk
+  admission and safety constraints. A local adaptive worker pool alone cannot
+  coordinate independently launched modules. Begin with opt-in measurement
+  and recommendations, not automatic default changes. A later scheduling
+  protocol would need explicit unsupported/legacy fallback, cancellation,
+  resource release after crashes, fairness and user-override semantics, plus
+  aligned SDK/MTP/framework package-consuming end-to-end evidence.
+
+Pilot setup and unsuccessful approaches:
+
+- The initial PowerShell invocation used `-p:` for an MSBuild property, which
+  binds ambiguously to the wrapper's parameters; `/p:` is required here.
+- Restricting every project to `net10.0` exposed `NU1510` package-pruning
+  diagnostics for the JUnit/CTRF reporters. `WarningsNotAsErrors=NU1510`
+  did not fix the restore phase. The successful experiment-only build used
+  `RestoreEnablePackagePruning=false`; no project or dependency was changed.
+- The first sampler/launcher did not launch tests correctly: Windows command
+  argument escaping was wrong, and polling performance-counter process rows
+  was too slow to account reliably for short-lived children. Discard these
+  preflights; zero CPU/memory in their output is invalid, not a measured zero.
+- The replacement uses a task-owned Windows job object. A gated launcher is
+  assigned before starting the test executable. The job enforces affinity
+  `0xF` for descendants and accounts CPU time and peak private committed
+  memory even for children that exit between samples. Closing the job
+  terminates only its owned descendants. Working sets are sampled separately
+  and can miss brief peaks or double-count shared pages. A process-exit race
+  while reading affinity was fixed before accepting the preflight.
+- The first accepted preflight executed 4,907 tests successfully, with two
+  skipped, exit 0. Its parallelization banner confirmed four method-level
+  workers. All sampled process affinities were `0xF`. Expected invalid-CLI
+  output from nested unit-test probes is not an outer test-host failure.
+- The first comparison stopped after its one-worker run despite identical
+  counts and successful exits: one data-row display label embeds the current
+  timestamp. Inspection found the same stable test ID and outcome. Compare
+  stable row ID plus fully qualified method plus outcome, not the volatile
+  display text; retain the raw TRX labels. The corrected grid restarts with
+  the same workload and reporting, not a weakened test selection.
+
+The pilot combines locally built MTP `3.0.0-dev` with the existing referenced
+MSTest framework/adapter `5.0.0-preview.26574.9`, informational source
+`eb362e89adf5d3e66e4d8aa22a707b0879f5d66e`, on .NET `10.0.15` using SDK
+`12.0.100-alpha.1.26570.125`. It does not measure a new scheduler, a packed
+acceptance runner, or a proposed SDK/MTP/framework integration.
+
+Scheduling alternatives remain proposals, not implemented product behavior:
+
+| Approach | Assessment |
+| --- | --- |
+| Keep explicit worker/module limits | Existing, deterministic and immediately usable; cannot automatically share spare capacity or predict memory requirements. |
+| Add opt-in resource measurements and configuration recommendations | Preferred first product increment: explain actual CPU, memory, queue/lock waits and child-process cost without changing execution semantics. |
+| Adapt only MSTest's local worker pool | Insufficient as a global solution: multiple modules can each independently consume the machine budget. CPU utilization also cannot distinguish I/O waits, contention and a genuine sequential tail on its own. |
+| Cooperating invocation-wide budget with framework admission | Promising later design: the SDK/IDE/other orchestrator owns the budget; MTP transports compatible capabilities/leases; MSTest admits ready chunks while retaining its safety constraints. Requires a cross-component protocol and composed-product validation. |
+
+Any later requirements metadata should distinguish unspecified from an explicit
+request, treat memory estimates as estimates rather than a hard isolation
+guarantee, and account for child builds. Admission must preserve resource locks,
+dependency ordering, cancellation, crash recovery and fairness. Unsupported
+frameworks or legacy launchers need an explicit conservative fixed-limit
+fallback; user-provided limits must remain authoritative. Do not prescribe a
+new public attribute, handshake or default until those contracts and evidence
+are established.
+
+The optimization objective is successful-run throughput within CPU/memory and
+correctness constraints, not 100% CPU usage. Equal division of core count by
+module count is a baseline to measure, not a generally optimal worker count:
+I/O-heavy work, shared locks, sequential tails and nested builds have different
+demands. A profiler should explain queue/lock waits and the ready-work supply,
+not assume every low-CPU interval can be repaired by adding workers.
+
+#### Executed pilot and results
+
+Successful build command (exit 0, zero warnings/errors):
+
+```powershell
+.\eng\build.ps1 -restore -build -c Release -msbuildEngine dotnet `
+    -warnAsError $false `
+    -projects test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj `
+    /p:TargetFrameworks=net10.0 /p:RestoreEnablePackagePruning=false /m:4
+```
+
+The retained `measure-job-scheduling.ps1` helper launches
+`artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\net10.0\Microsoft.Testing.Platform.UnitTests.exe`
+directly, with `DOTNET_ROOT` pointing at this worktree's `.dotnet` directory.
+Each run receives:
+
+```text
+--settings "<trial>\workers.runsettings" --report-trx --report-trx-filename results.trx --results-directory "<trial>" --timeout 5m
+```
+
+The generated runsettings specifies
+`RunSettings/MSTest/Parallelize/Workers` and `Scope=MethodLevel`.
+Full expanded commands, hashes, raw TRX, output and resource samples are retained
+in the session artifacts, not published externally. The helper does not build
+during timed runs. The job includes the launcher, controller, test host and all
+descendants, not unrelated machine processes.
+
+One four-worker warmup was excluded. The measured order was
+`1, 2, 4, 8, 8, 4, 2, 1`; two observations per setting:
+
+| Workers | Wall seconds, median (range) | Mean per-run test-tree CPU / four CPUs | Peak private committed memory, MiB (range) |
+| --- | --- | --- | --- |
+| 1 | 99.01 (95.13-102.89) | 14.23% | 204-267 |
+| 2 | 55.10 (49.04-61.16) | 25.29% | 302-316 |
+| 4 | 29.07 (28.97-29.17) | 45.06% | 232-291 |
+| 8 | 31.91 (30.53-33.29) | 43.57% | 371-414 |
+
+These are successful outer runs: **Passed: 4907, Failed: 0, Skipped: 2**,
+exit 0 in all nine trials including warmup. The same 4,909 unique stable row
+IDs, fully qualified methods and associated outcomes were independently
+reconciled across runs. Banners confirm the requested method-level worker
+counts, and every sampled process affinity is `0xF`. The two skipped tests
+are the unauthorized-identity and AppContainer named-pipe connection cases;
+they are not executed evidence for those behaviors.
+
+Measured observations: parallelism substantially reduces this module's wall
+time relative to one worker. Eight workers did not improve the observed median
+over four, and both eight-worker runs used more peak private committed memory
+than either measured four-worker run.
+
+Limits on inference: whole-machine CPU varied from about 53% to 85% during
+measured runs (about 90% in the excluded warmup). The machine is shared;
+the four selected logical processors are not reserved. The sampler process
+also accumulated 191.69 CPU seconds across monitoring and result processing,
+outside the job budget. No uninstrumented control quantifies its timing
+overhead. Consequently, 45% test-tree CPU is consumption, not proof that the
+remaining 55% was available. This is not evidence that eight workers are
+intrinsically slower, nor a CI saturation or memory-pressure diagnosis.
+Private committed memory is not GC heap size or physical resident memory.
+Module concurrency stayed at one; acceptance workloads and the interaction
+between module and test parallelism were not measured.
+
+Decision: retain scheduling defaults. The most useful first built-in capability
+is opt-in MTP resource profiling with explicit child-process accounting,
+effective CPU limits, memory semantics and queue/lock-wait context, followed by
+recommendations rather than silent adaptation. A global budget, if justified,
+must be owned by the invocation orchestrator and cooperatively consumed by
+MSTest rather than independently reinvented in each module.
+
+The next experiment is the real acceptance workload on dedicated CI agents:
+vary module concurrency and per-module workers together, with the same packed
+inputs, repeated/reversed order, resource collection and result-identity checks.
+Do not enable downstream adaptation or change defaults based on this local pilot.
+
+Retained session artifacts: `measure-job-scheduling.ps1`,
+`summarize-scheduling.ps1`, `scheduling-provenance.json` and
+`scheduling-worker-grid/` (all nine trials, `results.json`, `comparison.json`
+and `measurement.json`). Binary SHA-256 identities:
+
+| Binary | SHA-256 |
+| --- | --- |
+| MTP unit-test assembly | `2614CF3FC166D8A11B4CC41017E0DD72F79F8A7FC0867BA5B60562809932A065` |
+| MTP under test | `74FCE49DDB3D9362D37B930E8367E095E04BDB49FA9C6D81B0EE46BAFD8F31B7` |
+| Referenced MSTest adapter | `B3C39D6D11F92220C1EF74E3D088893D8DE3EF375B1E853D533FA3490C0A3F2A` |
+
+No shipping code or tests changed, no new scheduling feature was implemented,
+and no evidence was published to GitHub. Behavioral red/green comparisons and
+rendered-product demonstrations are inapplicable to this measurement-only
+follow-up; shipping compatibility and adaptive-scheduling integration remain
+unvalidated proposals, not completed feature work.
+
+### 2026-11-25: opt-in process resource metrics, first increment
+
+The user requested implementation and a PR for iteration. The first increment
+will instrument the MTP test-host process through its existing OpenTelemetry
+extension. This is deliberately not automatic scheduling: one process cannot
+observe or coordinate all independently launched modules. It is also not a
+replacement for the previous Windows job-object pilot: process measurements
+exclude children, machine-wide pressure and cross-module aggregation.
+
+Contract: when `TESTINGPLATFORM_OTEL_PROCESS_METRICS=1` is set and the
+application activates MTP diagnostics, register observable test-host CPU
+time, working-set and private-memory metrics on the existing MTP meter, together
+with the process-available logical CPU count. They are collected only by a
+subscribed metrics provider/listener and exported only through the application's configured exporter. Unset means no
+new instruments, preserving existing consumers. The values describe the
+current process, not its process tree; CPU time is cumulative and must be
+differenced over elapsed time. Memory readings are instantaneous, not peak
+or machine-available memory. No new public .NET API, CLI option, custom
+exporter, background sampling thread, or scheduler change is planned.
+
+The existing OpenTelemetry extension owns its meter and lifetime; the
+application or MTP owns the provider and exporter as before. No new
+handshake is introduced. Older consumers and those that do not opt in retain
+the current behavior. A later tree-wide or invocation-wide profiler needs a
+separately specified orchestrator/SDK protocol, child ownership, sampling,
+shutdown and unsupported-platform behavior and real composed-product proof.
+
+The application-owned resource helpers do not necessarily add `process.pid` to
+the provider resource. Giving every point a process ID and a unique diagnostics
+instance ID prevents independently launched hosts with otherwise identical
+resources, or a later host reusing the same PID, from becoming one metric
+series. These identifiers increase cardinality once per host instance; they do
+not aggregate children or create an invocation-wide identity.
+
+| Requirement | Planned evidence | Surface |
+| --- | --- | --- |
+| Opt in and export the process metrics | Focused listener tests and packed OpenTelemetry consumer exercising the actual metrics provider. | Existing OpenTelemetry metric stream, no UI/layout change. |
+| Disabled/default compatibility | Listener asserts no extra instruments without opt-in. | Existing provider behavior, including application-owned provider. |
+| Correct scope and meaning | Assert metric names, types, units and independent basic bounds; document process-only semantics and exclusions. | Exported metric points and package readme. |
+
+Expected package consumer: `Microsoft.Testing.Extensions.OpenTelemetry` and
+the matching `Microsoft.Testing.Platform` package from this worktree's Release
+shipping feed. The team owning this increment remains responsible for any
+subsequent cross-package rollout and release-branch servicing decision; this
+PR does not enable a downstream scheduler or claim tree-wide measurements.
+
+#### Implementation and validation evidence
+
+The implementation adds four observable instruments on the existing meter;
+only an enabled listener samples them, and process handles are disposed after
+each read. The meter remains available for the existing provider shutdown/flush
+order. A process ID and a unique diagnostics-instance ID distinguish simultaneous
+hosts and PID reuse. This does not add an exporter to TestFx's existing CI
+trace JSONL: those reports still cannot answer the original CPU/memory question
+until a metrics collection and reporting path is separately implemented.
+
+The following Windows x64 checks used SDK `12.0.100-alpha.1.26570.125`, base
+`394a1beb7ea17d8f51d1eed6c35a9c612f9f95d4` plus this change, and Release
+outputs. The new instruments compiled for `netstandard2.0`, `net10.0`, and
+`net11.0`. Linux and macOS measurement semantics have not been executed.
+
+- A full `.\build.cmd -pack -c Release -msbuildEngine dotnet -binaryLog /m:4`
+  failed: classic UWP projects require desktop MSBuild, which is not installed
+  on this machine. Repeating with `/p:UwpMinimum=` built packages but failed
+  the package-shape audit because the classic UWP assets were absent. Those
+  incomplete MSTest packages were used only to satisfy the acceptance
+  fixture's version discovery and source-generation build; they are not
+  evidence of shipping MSTest package compatibility.
+- The affected platform and OpenTelemetry projects were independently packed
+  successfully, without that UWP override, with `.\build.cmd -pack -c Release
+  -msbuildEngine dotnet '-warnAsError:$false' -binaryLog -projects <project>
+  /m:4`. The two projects were
+  `src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj` and
+  `src\MTP\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj`.
+  The resulting `3.0.0-dev` package SHA-256 values were respectively
+  `D2D34CEEF3A35022F544B9F5B7CEC7E41879AB08B5D5E47BE6BD60F153CC1AC3` and
+  `E665CACA1DA0A17694CE72DA08D4BAE95F640188C20634ABDC8B7031E633D495`.
+  The generated consumer's assets file selected their `net11.0` runtime assets
+  from an isolated acceptance package cache; SHA-256 hashes of the extracted
+  package DLLs exactly matched the binaries loaded by the consumer.
+- The `net10.0` unit host, with method-level parallelism and 32 workers, ran
+  `--filter 'FullyQualifiedName~OpenTelemetryPlatformServiceTests|FullyQualifiedName~OpenTelemetryProviderExtensionsTests'`
+  with **80 passed, zero failed/skipped**. The identical tests in an isolated
+  comparison retained the constructor/API but disabled registration: the
+  `ProcessMetrics_AreOptInAndObserveTheCurrentProcess (True)` case failed on
+  the missing instrument names, with 79 passed, one failed, zero skipped.
+  This is a behavior-removal test, not a pristine-base comparison.
+- The `net12.0` acceptance host ran `--filter 'FullyQualifiedName~OpenTelemetryTests'`
+  with **9 passed, zero failed/skipped**. Its generated application-owned OTel
+  consumer used the `net11.0` shipping DLLs, explicitly tested unset, `0`, and
+  `1`, and independently asserted instrument names, values, units and process
+  identity. Its child deliberately publishes one passing and one failing test
+  and returns exit 2; the outer acceptance process returns 0. With the identical
+  acceptance tests and independently repacked behavior-removal variant, 8 passed
+  and `ProcessMetrics_ExportOnlyWhenExplicitlyEnabled ("1",True)` failed: the
+  child reported `Unexpected exported instruments` with all four process
+  instruments absent. The disabled variant's package SHA-256 was
+  `E1E7DD908E140810006CC845E6DE8256C58009B22BE0A955F5C9D23A2FAE0223`;
+  its loaded extension DLL matched the package's `net11.0` DLL hash
+  `59F922C060CDBD606A78560BC249E7F2C5E9B3256579DAA7AC3D538D1A71C79A`.
+  Unchanged fixture prerequisites were copied from the original build; the two
+  changed-boundary packages were built and packed independently in the
+  comparison. This is a behavior-removal check, not a pristine-base comparison.
+- A direct run of that generated host with
+  `TESTINGPLATFORM_OTEL_PROCESS_METRICS=1`, `MTP_OTEL_EXECUTION_MODE=fallback`,
+  and `OTEL_SDK_DISABLED=false` produced `logical_count=32 {cpu}`,
+  `cpu.time=2.171875 s`, `memory.private=19513344 By`, and
+  `memory.working_set=54554624 By`; its expected exit was 2. These are one
+  process's instantaneous readings, not a CPU-rate or machine-saturation
+  conclusion. Text is more useful than media for this nonvisual metric stream.
+
+The existing assembly-wide parallel configuration remains unchanged. The unit
+listener filters by its own meter instance, while the real SDK/provider tests
+retain their existing assembly-level exclusion. Acceptance uses separate child
+processes and explicit child environment overrides. CI execution, the full
+classic-UWP pack, and a tree-wide/CI-reporting consumer remain unverified.
+
 ## Alternatives and decision
 
 | Approach | Decision |

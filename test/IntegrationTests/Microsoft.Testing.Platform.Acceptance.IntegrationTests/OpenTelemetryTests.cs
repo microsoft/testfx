@@ -22,6 +22,7 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
                 ["TRACEPARENT"] = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 ["TRACESTATE"] = "vendor=environment",
                 ["TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES"] = legacySetting,
+                ["TESTINGPLATFORM_OTEL_PROCESS_METRICS"] = null,
                 ["TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT"] = "1",
                 ["TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "8192",
                 ["OTEL_SDK_DISABLED"] = "false",
@@ -56,6 +57,7 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
                 ["TRACEPARENT"] = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 ["TRACESTATE"] = "vendor=environment",
                 ["TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES"] = legacySetting,
+                ["TESTINGPLATFORM_OTEL_PROCESS_METRICS"] = null,
                 ["TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT"] = "1",
                 ["TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "8192",
                 ["OTEL_SDK_DISABLED"] = "false",
@@ -73,6 +75,31 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
         result.AssertOutputContains("[APP-OWNED-CANONICAL-MULTI-RESULT] one-span");
         result.AssertOutputContains("[APP-OWNED-CANONICAL-LINKS] none");
         result.AssertOutputContains("[APP-OWNED-CANONICAL-API] all-run-overloads");
+    }
+
+    [TestMethod]
+    [DataRow(null, false)]
+    [DataRow("0", false)]
+    [DataRow("1", true)]
+    public async Task ProcessMetrics_ExportOnlyWhenExplicitlyEnabled(string? setting, bool enabled)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MTP_OTEL_EXECUTION_MODE"] = "fallback",
+                ["TESTINGPLATFORM_OTEL_PROCESS_METRICS"] = setting,
+                ["TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT"] = "1",
+                ["TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "8192",
+                ["OTEL_SDK_DISABLED"] = "false",
+                ["OTEL_TRACES_SAMPLER"] = "always_on",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        WriteBinaryProvenance(result);
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContains($"[APP-OWNED-PROCESS-METRICS] {(enabled ? "enabled" : "disabled")}");
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-OUTPUT] pass=1 fail=1; duration=1.25s,0.75s; legacy=none");
     }
 
     private static void WriteBinaryProvenance(TestHostResult result)
@@ -191,6 +218,9 @@ internal static class Program
         string platformBinary = typeof(ITestApplication).Assembly.Location;
         Console.WriteLine($"[APP-OWNED-MTP-BINARY] {platformBinary}");
         Console.WriteLine($"[APP-OWNED-MTP-SHA256] {Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(platformBinary)))}");
+        string extensionBinary = typeof(OpenTelemetryProviderExtensions).Assembly.Location;
+        Console.WriteLine($"[APP-OWNED-MTP-OTEL-BINARY] {extensionBinary}");
+        Console.WriteLine($"[APP-OWNED-MTP-OTEL-SHA256] {Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(extensionBinary)))}");
 
         Activity applicationRootActivity = activityExporter.Single(
             activity => activity.Source.Name == ApplicationActivitySourceName
@@ -403,11 +433,54 @@ internal static class Program
         }
 
         Dictionary<string, MetricSnapshot> metrics = metricExporter.Snapshot();
+        bool processMetricsEnabled = Environment.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_PROCESS_METRICS") == "1";
+        string[] processInstruments =
+        [
+            "test.host.process.cpu.logical_count",
+            "test.host.process.cpu.time",
+            "test.host.process.memory.private",
+            "test.host.process.memory.working_set",
+        ];
         string[] expectedInstruments = ["test.case.active", "test.case.duration", "test.case.result.count", "test.run.duration"];
-        if (!metrics.Keys.Order(StringComparer.Ordinal).SequenceEqual(expectedInstruments, StringComparer.Ordinal))
+        IEnumerable<string> expected = processMetricsEnabled ? expectedInstruments.Concat(processInstruments) : expectedInstruments;
+        if (!metrics.Keys.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal), StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Unexpected exported instruments: {string.Join(", ", metrics.Keys.Order())}.");
         }
+
+        if (processMetricsEnabled)
+        {
+            MetricSnapshot cpu = metrics["test.host.process.cpu.time"];
+            MetricSnapshot logicalCount = metrics["test.host.process.cpu.logical_count"];
+            MetricSnapshot privateMemory = metrics["test.host.process.memory.private"];
+            MetricSnapshot workingSet = metrics["test.host.process.memory.working_set"];
+            if (cpu.Unit != "s" || cpu.Points.Single().Value < 0
+                || logicalCount.Unit != "{cpu}" || logicalCount.Points.Single().Value != Environment.ProcessorCount
+                || privateMemory.Unit != "By" || privateMemory.Points.Single().Value <= 0
+                || workingSet.Unit != "By" || workingSet.Points.Single().Value <= 0)
+            {
+                throw new InvalidOperationException("The exported test host process measurements did not match their units or expected values.");
+            }
+
+            using Process currentProcess = Process.GetCurrentProcess();
+            string? instanceId = null;
+            foreach (string name in processInstruments)
+            {
+                Dictionary<string, object?> tags = metrics[name].Points.Single().Tags;
+                if (tags.Count != 2 || !tags.TryGetValue("process.pid", out object? pid) || Convert.ToInt32(pid) != currentProcess.Id
+                    || !tags.TryGetValue("test.host.process.instance_id", out object? id)
+                    || id is not string processInstanceId || !Guid.TryParseExact(processInstanceId, "N", out _)
+                    || (instanceId is not null && instanceId != processInstanceId))
+                {
+                    throw new InvalidOperationException($"Metric '{name}' did not carry the test host process identity.");
+                }
+
+                instanceId = processInstanceId;
+                Console.WriteLine($"[APP-OWNED-PROCESS-METRIC] {name}={metrics[name].Points.Single().Value} {metrics[name].Unit}");
+            }
+        }
+
+        Console.WriteLine($"[APP-OWNED-PROCESS-METRICS] {(processMetricsEnabled ? "enabled" : "disabled")}");
 
         if (metrics["test.case.duration"].Unit != "s"
             || metrics["test.run.duration"].Unit != "s"
@@ -592,7 +665,9 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
             foreach (Metric metric in batch)
             {
                 List<MetricPointSnapshot> points = [];
-                if (metric.Name is "test.case.duration" or "test.run.duration" or "test.case.result.count" or "test.case.active")
+                if (metric.Name is "test.case.duration" or "test.run.duration" or "test.case.result.count" or "test.case.active"
+                    or "test.host.process.cpu.time" or "test.host.process.cpu.logical_count"
+                    or "test.host.process.memory.private" or "test.host.process.memory.working_set")
                 {
                     foreach (MetricPoint point in metric.GetMetricPoints())
                     {
@@ -603,10 +678,15 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
                         }
 
                         bool histogram = metric.Name is "test.case.duration" or "test.run.duration";
-                        points.Add(new(
-                            tags,
-                            histogram ? point.GetHistogramSum() : point.GetSumLong(),
-                            histogram ? point.GetHistogramCount() : 0));
+                        double value = metric.Name switch
+                        {
+                            "test.case.duration" or "test.run.duration" => point.GetHistogramSum(),
+                            "test.host.process.cpu.time" => point.GetSumDouble(),
+                            "test.host.process.cpu.logical_count" or "test.host.process.memory.private"
+                                or "test.host.process.memory.working_set" => point.GetGaugeLastValueLong(),
+                            _ => point.GetSumLong(),
+                        };
+                        points.Add(new(tags, value, histogram ? point.GetHistogramCount() : 0));
                     }
                 }
 
