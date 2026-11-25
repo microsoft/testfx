@@ -26,6 +26,28 @@ public sealed class TrxInProcessProtocolBehaviorTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public async Task FixtureLogs_CanBeEnumeratedWhileMoreLogsAreRecorded()
+    {
+        var fixture = new TrxInProcessProtocolFixture(TestContext.CancellationToken);
+        try
+        {
+            fixture.Memory.Logger.Object.Log(LogLevel.Information, "first", null, static (message, _) => message);
+            using IEnumerator<(LogLevel Level, string Message, Exception? Error)> logs = fixture.Memory.Logs.GetEnumerator();
+            Assert.IsTrue(logs.MoveNext());
+            Assert.AreEqual("first", logs.Current.Message);
+
+            await fixture.Memory.Logger.Object.LogAsync(LogLevel.Information, "second", null, static (message, _) => message);
+
+            Assert.IsFalse(logs.MoveNext());
+            Assert.AreSequenceEqual(new[] { "first", "second" }, fixture.Memory.Logs.Select(log => log.Message));
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
     public async Task RegisteredLifecycle_CompletedUnicodeReportPublishesExactArtifactAndSweepsOrphan()
     {
         var fixture = new TrxInProcessProtocolFixture(TestContext.CancellationToken);
