@@ -33,11 +33,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    [DataRow(false, DisplayName = "Partition count SDK modules both pass")]
-    [DataRow(true, DisplayName = "Partition count SDK modules preserve one failure")]
-    public async Task PartitionCount_NativeDotnetTest_MultipleModulesPreserveResults(bool fail)
+    [DataRow(false, DisplayName = "Shard count SDK modules both pass")]
+    [DataRow(true, DisplayName = "Shard count SDK modules preserve one failure")]
+    public async Task ShardCount_NativeDotnetTest_MultipleModulesPreserveResults(bool fail)
     {
-        using var run = new TempDirectory("partition-count-modules");
+        using var run = new TempDirectory("shard-count-modules");
         string solution = Path.Combine(run.Path, "Partitions.slnx");
         File.WriteAllText(solution, $"""
             <Solution>
@@ -54,15 +54,15 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         environment[ProbeVariable] = null;
         environment[SentinelVariable] = fail ? sentinel : null;
         string arguments = $"test --solution \"{solution}\" -c Release --no-build --max-parallel-test-modules 2"
-            + $" --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
+            + $" --shard-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
             failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
-        RecordChildRun(Independent, MetadataMode.Reflection, "partition-count-modules", arguments, run,
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-modules", arguments, run,
             result.ExitCode, result.StandardOutput, result.StandardError);
         Assert.AreEqual(fail ? 2 : 0, result.ExitCode, result.StandardOutput + result.StandardError);
         Assert.AreEqual(fail, File.Exists(sentinel));
-        string[] modules = Directory.GetDirectories(Path.Combine(run.Path, "Partitions"));
+        string[] modules = Directory.GetDirectories(Path.Combine(run.Path, "Shards"));
         Assert.HasCount(2, modules);
         List<string> observedModules = [];
         foreach (string module in modules)
@@ -83,26 +83,26 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    [DataRow("DOTNET_WATCH", DisplayName = "Partition count rejects dotnet watch")]
-    [DataRow("TESTINGPLATFORM_HOTRELOAD_ENABLED", DisplayName = "Partition count rejects hot reload")]
-    public async Task PartitionCount_HotReload_FailsBeforeExecution(string variable)
+    [DataRow("DOTNET_WATCH", DisplayName = "Shard count rejects dotnet watch")]
+    [DataRow("TESTINGPLATFORM_HOTRELOAD_ENABLED", DisplayName = "Shard count rejects hot reload")]
+    public async Task ShardCount_HotReload_FailsBeforeExecution(string variable)
     {
-        using var run = new TempDirectory("partition-count-hot-reload");
+        using var run = new TempDirectory("shard-count-hot-reload");
         Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, run);
         environment[variable] = "1";
         TestHostResult result = await AssetFixture.Host(Independent).ExecuteAsync(
-            "--partition-count 2", environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+            "--shard-count 2", environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         result.AssertOutputContains("requires .NET 10 or later and local process execution");
         Assert.IsFalse(File.Exists(ProbePath(run)));
     }
 
     [TestMethod]
-    public async Task PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports()
+    public async Task ShardCount_ExecutesEveryIdentityOnceInIsolatedReports()
     {
         DiscoveredNode[] discovered = await DiscoverAsync(Independent, string.Empty);
-        using var run = new TempDirectory("partition-count");
-        TestHostResult result = await RunFanOutAsync(Independent, "--partition-count 4", run);
+        using var run = new TempDirectory("shard-count");
+        TestHostResult result = await RunFanOutAsync(Independent, "--shard-count 4", run);
         result.AssertExitCodeIs(ExitCode.Success);
         string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
         Assert.HasCount(4, reports);
@@ -120,19 +120,19 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_ConfiguredOptionDoesNotRecurseIntoChildren()
+    public async Task ShardCount_ConfiguredOptionDoesNotRecurseIntoChildren()
     {
-        using var configuration = new TempDirectory("partition-count-config");
+        using var configuration = new TempDirectory("shard-count-config");
         string configurationFile = Path.Combine(configuration.Path, "partition.testconfig.json");
         await TempDirectory.WriteFileAsync(configuration.Path, Path.GetFileName(configurationFile), """
             {
               "commandLineOptions": {
-                "partition-count": [ "2" ]
+                "shard-count": [ "2" ]
               }
             }
             """);
 
-        using var run = new TempDirectory("partition-count-configured");
+        using var run = new TempDirectory("shard-count-configured");
         TestHostResult result = await RunFanOutAsync(
             Independent, $"--config-file \"{configurationFile}\"", run);
 
@@ -143,7 +143,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_FilterAndEmptySelections_PreserveAggregatePolicy()
+    public async Task ShardCount_FilterAndEmptySelections_PreserveAggregatePolicy()
     {
         foreach ((string filter, ExitCode exit, string[] expected) in new[]
         {
@@ -151,8 +151,8 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             ("Name=NotAnExistingMethod", ExitCode.ZeroTests, Array.Empty<string>()),
         })
         {
-            using var run = new TempDirectory("partition-count-filter");
-            TestHostResult result = await RunFanOutAsync(Independent, $"--partition-count 4 --filter {filter}", run);
+            using var run = new TempDirectory("shard-count-filter");
+            TestHostResult result = await RunFanOutAsync(Independent, $"--shard-count 4 --filter {filter}", run);
             result.AssertExitCodeIs(exit);
             string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
             Assert.HasCount(4, reports);
@@ -161,18 +161,18 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_FailureAndRetry_StayInsideDependencyPartition()
+    public async Task ShardCount_FailureAndRetry_StayInsideDependencyPartition()
     {
         foreach (bool retry in new[] { false, true })
         {
-            using var run = new TempDirectory("partition-count-retry");
+            using var run = new TempDirectory("shard-count-retry");
             string sentinel = Path.Combine(run.Path, "retry-sentinel.txt");
             TestHostResult result = await RunFanOutAsync(
-                Dependencies, "--partition-count 4" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
+                Dependencies, "--shard-count 4" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
                 new Dictionary<string, string?> { [SentinelVariable] = sentinel });
             result.AssertExitCodeIs(retry ? ExitCode.Success : ExitCode.AtLeastOneTestFailed);
             Assert.IsTrue(File.Exists(sentinel), "The deliberate failure must execute.");
-            string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Partitions")));
+            string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Shards")));
             string activePartition = Path.Combine(partitionRoot, "4");
             ReportResult[] first = ReadResults(retry
                 ? Assert.ContainsSingle(Directory.GetFiles(Path.Combine(activePartition, "Retries"), "run.trx", SearchOption.AllDirectories))
@@ -191,16 +191,16 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_Discovery_DoesNotFanOut()
-        => AssertDiscovery(await DiscoverAsync(Independent, "--partition-count 4"), Baseline);
+    public async Task ShardCount_Discovery_DoesNotFanOut()
+        => AssertDiscovery(await DiscoverAsync(Independent, "--shard-count 4"), Baseline);
 
     [TestMethod]
-    public async Task PartitionCount_LongResponseFile_PreservesSelection()
+    public async Task ShardCount_LongResponseFile_PreservesSelection()
     {
-        using var run = new TempDirectory("partition-count-response");
+        using var run = new TempDirectory("shard-count-response");
         string responseFile = Path.Combine(run.Path, "original.rsp");
         File.WriteAllText(responseFile, $"""
-            --partition-count 4
+            --shard-count 4
             --filter FullyQualifiedName=Acme.CartTests.Keep|Name={new string('z', 35_000)}
             """);
         TestHostResult result = await RunFanOutAsync(Independent, $"@\"{responseFile}\"", run);
@@ -211,10 +211,10 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_MixedCaseOptions_ExecuteAllPartitions()
+    public async Task ShardCount_MixedCaseOptions_ExecuteAllPartitions()
     {
-        using var run = new TempDirectory("partition-count-case");
-        TestHostResult result = await RunFanOutAsync(Independent, "--PARTITION-COUNT 2", run);
+        using var run = new TempDirectory("shard-count-case");
+        TestHostResult result = await RunFanOutAsync(Independent, "--SHARD-COUNT 2", run);
         result.AssertExitCodeIs(ExitCode.Success);
         string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
         Assert.HasCount(2, reports);
@@ -222,11 +222,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_LeadingHyphensInParameter_AreForwarded()
+    public async Task ShardCount_LeadingHyphensInParameter_AreForwarded()
     {
-        using var run = new TempDirectory("partition-count-hyphens");
+        using var run = new TempDirectory("shard-count-hyphens");
         TestHostResult result = await RunFanOutAsync(
-            Independent, "--test-parameter ---ansi=off --partition-count 2", run,
+            Independent, "--test-parameter ---ansi=off --shard-count 2", run,
             new Dictionary<string, string?> { ["PARTITION_TEST_HYPHENS"] = "1" });
         result.AssertExitCodeIs(ExitCode.Success);
         string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
@@ -237,12 +237,12 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     [TestMethod]
     [DataRow(false, DisplayName = "Partition middleware wraps standalone distribution once")]
     [DataRow(true, DisplayName = "Partition middleware wraps distribution and retry once")]
-    public async Task PartitionCount_UnconditionalMiddleware_WrapsOnlyTheOuterProcess(bool retry)
+    public async Task ShardCount_UnconditionalMiddleware_WrapsOnlyTheOuterProcess(bool retry)
     {
-        using var run = new TempDirectory("partition-count-middleware");
+        using var run = new TempDirectory("shard-count-middleware");
         string marker = Path.Combine(run.Path, "middleware.txt");
         TestHostResult result = await RunFanOutAsync(
-            Cancellation, "--partition-count 2" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
+            Cancellation, "--shard-count 2" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
             new Dictionary<string, string?> { ["PARTITION_TEST_MIDDLEWARE"] = marker });
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.AreSequenceEqual(new[] { "middleware" }, File.ReadAllLines(marker));
@@ -252,11 +252,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    public async Task PartitionCount_ResponseFileAndMultilineArgument_PreserveParameter()
+    public async Task ShardCount_ResponseFileAndMultilineArgument_PreserveParameter()
     {
-        using var run = new TempDirectory("partition-count-multiline");
+        using var run = new TempDirectory("shard-count-multiline");
         string responseFile = Path.Combine(run.Path, "original.rsp");
-        File.WriteAllText(responseFile, $"--partition-count 2\n--filter FullyQualifiedName~Acme|Name={new string('z', 35_000)}");
+        File.WriteAllText(responseFile, $"--shard-count 2\n--filter FullyQualifiedName~Acme|Name={new string('z', 35_000)}");
         TestHostResult result = await RunFanOutAsync(
             Independent, $"@\"{responseFile}\" --test-parameter \"Multiline=first\nsecond\"", run,
             new Dictionary<string, string?> { ["PARTITION_TEST_MULTILINE"] = "1" });
@@ -269,12 +269,12 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     [TestMethod]
     [DataRow(false, DisplayName = "Temporary response files are removed after success")]
     [DataRow(true, DisplayName = "Temporary response files are removed after child failure")]
-    public async Task PartitionCount_ResponseFiles_ArePrivateAndRemoved(bool failChild)
+    public async Task ShardCount_ResponseFiles_ArePrivateAndRemoved(bool failChild)
     {
-        using var run = new TempDirectory("partition-count-private-response");
-        using var input = new TempDirectory("partition-count-input-response");
+        using var run = new TempDirectory("shard-count-private-response");
+        using var input = new TempDirectory("shard-count-input-response");
         string original = Path.Combine(input.Path, "original.rsp");
-        File.WriteAllText(original, "--partition-count 1");
+        File.WriteAllText(original, "--shard-count 1");
         string temp = Path.Combine(run.Path, "temp");
         string captures = Path.Combine(run.Path, "captures");
         Directory.CreateDirectory(temp);
@@ -300,17 +300,17 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             Assert.IsFalse(File.Exists(path), $"Response file was not removed: {path}");
         }
 
-        Assert.IsEmpty(Directory.GetFiles(Path.Combine(run.Path, "Partitions"), "*.rsp", SearchOption.AllDirectories));
+        Assert.IsEmpty(Directory.GetFiles(Path.Combine(run.Path, "Shards"), "*.rsp", SearchOption.AllDirectories));
     }
 
     [TestMethod]
-    public async Task PartitionCount_NativeDotnetTest_PreservesChildStartupDiagnostic()
+    public async Task ShardCount_NativeDotnetTest_PreservesChildStartupDiagnostic()
     {
-        using var run = new TempDirectory("partition-count-sdk-diagnostic");
+        using var run = new TempDirectory("shard-count-sdk-diagnostic");
         Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation, forDotnetCli: true);
         environment["PARTITION_TEST_CHILD_DIAGNOSTIC"] = "1";
         string arguments = $"test --project \"{AssetFixture.ProjectPath(Cancellation)}\" -c Release --no-build"
-            + $" --partition-count 1 --results-directory \"{run.Path}\" --ansi off --progress off";
+            + $" --shard-count 1 --results-directory \"{run.Path}\" --ansi off --progress off";
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             arguments, workingDirectory: AssetFixture.AssetPath(Cancellation), environmentVariables: environment,
             failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
@@ -321,32 +321,32 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     [TestMethod]
     [DataRow(true, DisplayName = "Enabled custom launcher is rejected")]
     [DataRow(false, DisplayName = "Disabled custom launcher permits fan out")]
-    public async Task PartitionCount_CustomLauncher_RejectsOnlyEnabledLauncher(bool enabled)
+    public async Task ShardCount_CustomLauncher_RejectsOnlyEnabledLauncher(bool enabled)
     {
-        using var run = new TempDirectory("partition-count-launcher");
+        using var run = new TempDirectory("shard-count-launcher");
         Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation);
         environment["PARTITION_TEST_CUSTOM_LAUNCHER"] = enabled ? "enabled" : "disabled";
         environment[ProbeVariable] = null;
         TestHostResult result = await AssetFixture.Host(Cancellation).ExecuteAsync(
-            $"--partition-count 2 --results-directory \"{run.Path}\"",
+            $"--shard-count 2 --results-directory \"{run.Path}\"",
             environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(enabled ? ExitCode.InvalidCommandLine : ExitCode.Success);
         if (enabled)
         {
             result.AssertOutputContains("requires .NET 10 or later and local process execution");
-            Assert.IsFalse(Directory.Exists(Path.Combine(run.Path, "Partitions")));
+            Assert.IsFalse(Directory.Exists(Path.Combine(run.Path, "Shards")));
         }
     }
 
     [TestMethod]
     [DataRow(true, DisplayName = "Cancellation stops inherited pipe readers")]
     [DataRow(false, DisplayName = "Inherited pipe readers time out without cancellation")]
-    public async Task PartitionCount_ChildExitWithInheritedPipes_StopsReaders(bool cancel)
+    public async Task ShardCount_ChildExitWithInheritedPipes_StopsReaders(bool cancel)
     {
-        using var run = new TempDirectory("partition-count-orphan");
+        using var run = new TempDirectory("shard-count-orphan");
         ProcessStartInfo start = new(
             AssetFixture.Host(Cancellation).FullName,
-            $"--partition-count 1 --filter FullyQualifiedName=Acme.CheckoutTests.Keep --results-directory \"{run.Path}\" --ansi off --progress off")
+            $"--shard-count 1 --filter FullyQualifiedName=Acme.CheckoutTests.Keep --results-directory \"{run.Path}\" --ansi off --progress off")
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -393,7 +393,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 Assert.AreNotEqual((int)ExitCode.Success, parent.ExitCode);
                 grandchild.Kill(entireProcessTree: true);
                 await grandchild.WaitForExitAsync(deadline.Token);
-                Assert.Contains("Timed out while draining partition output.", await stdout + await stderr);
+                Assert.Contains("Timed out while draining shard output.", await stdout + await stderr);
             }
         }
         finally
@@ -421,9 +421,9 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     [TestMethod]
     [DataRow(false, DisplayName = "Cancellation joins uncooperative children")]
     [DataRow(true, DisplayName = "Cancellation removes temporary response files")]
-    public async Task PartitionCount_Cancellation_JoinsUncooperativeChildren(bool useResponseFile)
+    public async Task ShardCount_Cancellation_JoinsUncooperativeChildren(bool useResponseFile)
     {
-        using var run = new TempDirectory("partition-count-cancel");
+        using var run = new TempDirectory("shard-count-cancel");
         string original = Path.Combine(run.Path, "original.rsp");
         string captures = Path.Combine(run.Path, "captures");
         string temp = Path.Combine(run.Path, "temp");
@@ -432,7 +432,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         File.WriteAllText(original, "--filter FullyQualifiedName~Acme");
         ProcessStartInfo start = new(
             AssetFixture.Host(Cancellation).FullName,
-            $"--partition-count 2 {(useResponseFile ? $"@\"{original}\"" : string.Empty)} --results-directory \"{run.Path}\" --ansi off --progress off")
+            $"--shard-count 2 {(useResponseFile ? $"@\"{original}\"" : string.Empty)} --results-directory \"{run.Path}\" --ansi off --progress off")
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -508,13 +508,13 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    [DataRow(false, DisplayName = "Partition count native SDK without retry")]
-    [DataRow(true, DisplayName = "Partition count native SDK with per-partition retry")]
-    public async Task PartitionCount_NativeDotnetTest_ExecutesAllPartitions(bool retry)
+    [DataRow(false, DisplayName = "Shard count native SDK without retry")]
+    [DataRow(true, DisplayName = "Shard count native SDK with per-shard retry")]
+    public async Task ShardCount_NativeDotnetTest_ExecutesAllPartitions(bool retry)
     {
-        using var run = new TempDirectory("partition-count-sdk");
+        using var run = new TempDirectory("shard-count-sdk");
         string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build -p:SkipUapTargetFramework=true"
-            + $" --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
+            + $" --shard-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
         if (retry)
         {
             arguments += " --retry-failed-tests 1";
@@ -526,10 +526,10 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
             failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
-        RecordChildRun(Independent, MetadataMode.Reflection, "partition-count-sdk", arguments, run,
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-sdk", arguments, run,
             result.ExitCode, result.StandardOutput, result.StandardError);
         Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
-        string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Partitions")));
+        string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Shards")));
         List<ReportResult> logicalResults = [];
         foreach (string partition in Directory.GetDirectories(partitionRoot))
         {
@@ -551,22 +551,22 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    [DataRow("--partition-count", DisplayName = "Partition count rejects missing count")]
-    [DataRow("--partition-count 2 extra", DisplayName = "Partition count rejects extra count")]
-    [DataRow("--partition-count 0", DisplayName = "Partition count rejects zero")]
-    [DataRow("--partition-count=-1", DisplayName = "Partition count rejects negative")]
-    [DataRow("--partition-count 2147483648", DisplayName = "Partition count rejects overflow")]
-    [DataRow("--partition-count 1/2", DisplayName = "Partition count rejects fraction")]
-    [DataRow("--partition-count 2 --partition 1/2", DisplayName = "Partition count rejects manual partition")]
-    [DataRow("--partition-count 2 --server jsonrpc", DisplayName = "Partition count rejects JSON RPC server")]
-    public async Task PartitionCount_InvalidOptions_FailBeforeExecution(string arguments)
+    [DataRow("--shard-count", DisplayName = "Shard count rejects missing count")]
+    [DataRow("--shard-count 2 extra", DisplayName = "Shard count rejects extra count")]
+    [DataRow("--shard-count 0", DisplayName = "Shard count rejects zero")]
+    [DataRow("--shard-count=-1", DisplayName = "Shard count rejects negative")]
+    [DataRow("--shard-count 2147483648", DisplayName = "Shard count rejects overflow")]
+    [DataRow("--shard-count 1/2", DisplayName = "Shard count rejects fraction")]
+    [DataRow("--shard-count 2 --partition 1/2", DisplayName = "Shard count rejects manual partition")]
+    [DataRow("--shard-count 2 --server jsonrpc", DisplayName = "Shard count rejects JSON RPC server")]
+    public async Task ShardCount_InvalidOptions_FailBeforeExecution(string arguments)
     {
-        using var run = new TempDirectory("partition-count-invalid");
+        using var run = new TempDirectory("shard-count-invalid");
         TestHostResult result = await AssetFixture.Host(Independent).ExecuteAsync(
             arguments, environmentVariables: AssetFixture.EnvironmentFor(Independent, run),
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        result.AssertOutputContains("--partition-count");
+        result.AssertOutputContains("--shard-count");
         Assert.IsFalse(File.Exists(ProbePath(run)));
     }
 
@@ -588,7 +588,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         TestHostResult result = await AssetFixture.Host(asset).ExecuteAsync(
             $"{arguments} --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\"",
             environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
-        RecordChildRun(asset, MetadataMode.Reflection, "partition-count", arguments, run,
+        RecordChildRun(asset, MetadataMode.Reflection, "shard-count", arguments, run,
             result.ExitCode, result.StandardOutput, result.StandardError);
         return result;
     }
@@ -1528,7 +1528,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                     }
 
                     var builder = await TestApplication.CreateBuilderAsync(args);
-                    if (args.Contains("--partition-count") && Environment.GetEnvironmentVariable("PARTITION_TEST_HANG") is not null)
+                    if (args.Contains("--shard-count") && Environment.GetEnvironmentVariable("PARTITION_TEST_HANG") is not null)
                     {
                         builder.TestHostOrchestrator.AddTestHostExecutionOrchestratorMiddleware(services => new CancelOnMarker(services));
                     }

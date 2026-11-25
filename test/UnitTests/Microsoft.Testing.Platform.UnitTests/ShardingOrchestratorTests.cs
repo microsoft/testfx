@@ -18,15 +18,15 @@ namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "These pure helpers do not launch processes or access platform-specific APIs.")]
-public sealed class PartitioningOrchestratorTests
+public sealed class ShardingOrchestratorTests
 {
     [TestMethod]
     public void RemoveOwnedArguments_PreservesExecutableFiltersAndInnerOrchestratorOptions()
     {
-        string[] actual = PartitioningOrchestrator.RemoveOwnedArguments(
+        string[] actual = ShardingOrchestrator.RemoveOwnedArguments(
         [
             "exec", @"C:\path with spaces\Tests.dll", "--filter", "TestCategory=Fast",
-            "--partition-count", "4", "--results-directory=old results", "-progress:off", "--ansi", "on",
+            "--shard-count", "4", "--results-directory=old results", "-progress:off", "--ansi", "on",
             "--retry-failed-tests", "2", "--test-parameter", "value=with spaces",
         ]);
 
@@ -39,9 +39,9 @@ public sealed class PartitioningOrchestratorTests
     public void RemoveOwnedArguments_RemovesEverySupportedSpellingAndRepeatedOccurrence()
         => Assert.AreSequenceEqual(
             new[] { "Tests.exe", "--filter-uid", "uid" },
-            PartitioningOrchestrator.RemoveOwnedArguments(
+            ShardingOrchestrator.RemoveOwnedArguments(
             [
-                "Tests.exe", "-partition-count:4", "--partition-count=4", "-results-directory", "one",
+                "Tests.exe", "-shard-count:4", "--shard-count=4", "-results-directory", "one",
                 "--results-directory:two", "--progress=on", "-ansi:off", "--filter-uid", "uid",
             ]));
 
@@ -49,9 +49,9 @@ public sealed class PartitioningOrchestratorTests
     public void RemoveOwnedArguments_RemovesMixedCaseOptions()
         => Assert.AreSequenceEqual(
             new[] { "Tests.exe", "--filter-uid", "uid" },
-            PartitioningOrchestrator.RemoveOwnedArguments(
+            ShardingOrchestrator.RemoveOwnedArguments(
             [
-                "Tests.exe", "--PARTITION-COUNT", "4", "--Results-Directory=old",
+                "Tests.exe", "--SHARD-COUNT", "4", "--Results-Directory=old",
                 "-PROGRESS:on", "--AnSi", "on", "--filter-uid", "uid",
             ]));
 
@@ -59,9 +59,9 @@ public sealed class PartitioningOrchestratorTests
     public void RemoveOwnedArguments_PreservesArgumentsWithThreeOrMoreLeadingHyphens()
         => Assert.AreSequenceEqual(
             new[] { "Tests.exe", "--test-parameter", "---ansi=off", "--filter", "----results-directory:value" },
-            PartitioningOrchestrator.RemoveOwnedArguments(
+            ShardingOrchestrator.RemoveOwnedArguments(
             [
-                "Tests.exe", "--partition-count", "2", "--test-parameter", "---ansi=off",
+                "Tests.exe", "--shard-count", "2", "--test-parameter", "---ansi=off",
                 "--filter", "----results-directory:value",
             ]));
 
@@ -78,17 +78,17 @@ public sealed class PartitioningOrchestratorTests
     [DataRow(5, 4, 4)]
     public void AggregateExitCode_EmptySuccessFailureAndCrashRemainDistinct(int current, int next, int expected)
     {
-        Assert.AreEqual(expected, PartitioningOrchestrator.AggregateExitCode(current, next));
-        Assert.AreEqual(expected, PartitioningOrchestrator.AggregateExitCode(next, current));
+        Assert.AreEqual(expected, ShardingOrchestrator.AggregateExitCode(current, next));
+        Assert.AreEqual(expected, ShardingOrchestrator.AggregateExitCode(next, current));
     }
 
     [TestMethod]
     public void IsSupportedBy_RequiresFrameworkToDeclareSupportedPartitioningCapability()
     {
-        Assert.IsFalse(PartitioningCommandLineOptionsProvider.IsSupportedBy(null));
-        Assert.IsFalse(PartitioningCommandLineOptionsProvider.IsSupportedBy(new TestFrameworkCapabilities()));
-        Assert.IsFalse(PartitioningCommandLineOptionsProvider.IsSupportedBy(new TestFrameworkCapabilities(new PartitioningCapability(isSupported: false))));
-        Assert.IsTrue(PartitioningCommandLineOptionsProvider.IsSupportedBy(new TestFrameworkCapabilities(new PartitioningCapability(isSupported: true))));
+        Assert.IsFalse(ShardingCommandLineOptionsProvider.IsSupportedBy(null));
+        Assert.IsFalse(ShardingCommandLineOptionsProvider.IsSupportedBy(new TestFrameworkCapabilities()));
+        Assert.IsFalse(ShardingCommandLineOptionsProvider.IsSupportedBy(new TestFrameworkCapabilities(new PartitioningCapability(isSupported: false))));
+        Assert.IsTrue(ShardingCommandLineOptionsProvider.IsSupportedBy(new TestFrameworkCapabilities(new PartitioningCapability(isSupported: true))));
     }
 
     [TestMethod]
@@ -98,7 +98,7 @@ public sealed class PartitioningOrchestratorTests
         other.SetupGet(x => x.Uid).Returns("Other");
         Mock<ICommandLineOptionsProvider> system = new();
         system.SetupGet(x => x.Uid).Returns("System");
-        PartitioningCommandLineOptionsProvider partitioning = new();
+        ShardingCommandLineOptionsProvider partitioning = new();
         CommandLineHandler handler = new(
             CommandLineParser.Parse([], new SystemEnvironment()),
             [partitioning, other.Object],
@@ -115,9 +115,9 @@ public sealed class PartitioningOrchestratorTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task PartitionCountOption_IsRejectedWhenFrameworkDoesNotSupportPartitioning(bool declareUnsupportedCapability)
+    public async Task ShardCountOption_IsRejectedWhenFrameworkDoesNotSupportPartitioning(bool declareUnsupportedCapability)
     {
-        string[] args = ["--partition-count", "2", "--no-banner"];
+        string[] args = ["--shard-count", "2", "--no-banner"];
         TestApplicationBuilder builder = new(
             new ApplicationLoggingState(LogLevel.None, CommandLineParser.Parse(args, new SystemEnvironment())),
             DateTimeOffset.UtcNow,
@@ -134,18 +134,18 @@ public sealed class PartitioningOrchestratorTests
     }
 
     [TestMethod]
-    public async Task ConfiguredPartitionCount_ExplicitSelectorBypassesDistributionOnlyRestrictions()
+    public async Task ConfiguredShardCount_ExplicitSelectorBypassesDistributionOnlyRestrictions()
     {
         string[] args = ["--partition", "1/2", "--server", "jsonrpc"];
         Mock<IConfiguration> configuration = new();
-        configuration.Setup(c => c["commandLineOptions:partition-count:0"]).Returns("2");
+        configuration.Setup(c => c["commandLineOptions:shard-count:0"]).Returns("2");
         configuration.Setup(c => c["commandLineOptions:partition:0"]).Returns("1/2");
         configuration.Setup(c => c["commandLineOptions:server:0"]).Returns("jsonrpc");
         CommandLineHandler handler = new(
             CommandLineParser.Parse(args, new SystemEnvironment()),
             [], [], Mock.Of<ITestApplicationModuleInfo>(), Mock.Of<IRuntimeFeature>(), configuration.Object);
 
-        ValidationResult result = await new PartitioningCommandLineOptionsProvider().ValidateCommandLineOptionsAsync(handler);
+        ValidationResult result = await new ShardingCommandLineOptionsProvider().ValidateCommandLineOptionsAsync(handler);
 
         Assert.IsTrue(result.IsValid, result.ErrorMessage);
     }

@@ -669,10 +669,10 @@
         <target state="translated">无效的命令行参数:</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidPartitionCountOptionArgument">
-        <source>The '--partition-count' option requires a positive decimal Int32 value.</source>
-        <target state="new">The '--partition-count' option requires a positive decimal Int32 value.</target>
-        <note>{Locked="--partition-count"}{Locked="Int32"}</note>
+      <trans-unit id="InvalidShardCountOptionArgument">
+        <source>The '--shard-count' option requires a positive decimal Int32 value.</source>
+        <target state="new">The '--shard-count' option requires a positive decimal Int32 value.</target>
+        <note>{Locked="--shard-count"}{Locked="Int32"}</note>
       </trans-unit>
       <trans-unit id="InvocationLifetimeCleanupFailedErrorMessage">
         <source>Invocation lifetime handler '{0}' failed after the tests ran: {1}</source>
@@ -808,21 +808,6 @@
         <source>Only one test host launcher can be registered.</source>
         <target state="translated">只能注册一个测试主机启动器。</target>
         <note />
-      </trans-unit>
-      <trans-unit id="PartitionCountAndPartitionAreExclusive">
-        <source>The '--partition-count' and '--partition' options cannot be used together.</source>
-        <target state="new">The '--partition-count' and '--partition' options cannot be used together.</target>
-        <note>{Locked="--partition-count"}{Locked="--partition"}</note>
-      </trans-unit>
-      <trans-unit id="PartitionCountOptionDescription">
-        <source>Run all partitions in separate local processes, keeping test classes and dependencies together.</source>
-        <target state="new">Run all partitions in separate local processes, keeping test classes and dependencies together.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PartitionCountUnsupportedMode">
-        <source>The '--partition-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</source>
-        <target state="new">The '--partition-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</target>
-        <note>{Locked="--partition-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
@@ -1231,6 +1216,21 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">不应通过服务提供商注册类型为“ITestFramework”的实例，而应通过“ITestApplicationBuilder.RegisterTestFramework”进行注册</target>
         <note>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
+      </trans-unit>
+      <trans-unit id="ShardCountAndPartitionAreExclusive">
+        <source>The '--shard-count' and '--partition' options cannot be used together.</source>
+        <target state="new">The '--shard-count' and '--partition' options cannot be used together.</target>
+        <note>{Locked="--shard-count"}{Locked="--partition"}</note>
+      </trans-unit>
+      <trans-unit id="ShardCountOptionDescription">
+        <source>Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</source>
+        <target state="new">Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ShardCountUnsupportedMode">
+        <source>The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</source>
+        <target state="new">The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</target>
+        <note>{Locked="--shard-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>

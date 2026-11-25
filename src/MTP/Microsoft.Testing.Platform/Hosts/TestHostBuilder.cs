@@ -63,7 +63,7 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     {
         CommandLineManager manager = new(runtimeFeature, testApplicationModuleInfo);
         manager.AddProvider(() => new ArtifactPostProcessingDispatcherToolCommandLine());
-        manager.AddProvider(() => new PartitioningCommandLineOptionsProvider());
+        manager.AddProvider(() => new ShardingCommandLineOptionsProvider());
         return manager;
     }
 
@@ -74,8 +74,8 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
         {
             manager.AddTestHostOrchestrator(serviceProvider =>
                 !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi() && !OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS()
-                    ? new PartitioningOrchestrator(serviceProvider)
-                    : throw new PlatformNotSupportedException(PlatformResources.PartitionCountUnsupportedMode));
+                    ? new ShardingOrchestrator(serviceProvider)
+                    : throw new PlatformNotSupportedException(PlatformResources.ShardCountUnsupportedMode));
         }
 
         return manager;

@@ -9,12 +9,12 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
-internal sealed class PartitioningCommandLineOptionsProvider()
+internal sealed class ShardingCommandLineOptionsProvider()
     : CommandLineOptionsProviderBase(
-        PartitioningExtension.Instance,
-        [new CommandLineOption(PartitionCountOptionName, PlatformResources.PartitionCountOptionDescription, ArgumentArity.ExactlyOne, isHidden: false)])
+        ShardingExtension.Instance,
+        [new CommandLineOption(ShardCountOptionName, PlatformResources.ShardCountOptionDescription, ArgumentArity.ExactlyOne, isHidden: false)])
 {
-    internal const string PartitionCountOptionName = "partition-count";
+    internal const string ShardCountOptionName = "shard-count";
     internal const string PartitionOptionName = "partition";
 
     private static bool IsProcessTreeTerminationSupported
@@ -30,29 +30,29 @@ internal sealed class PartitioningCommandLineOptionsProvider()
         => capabilities?.GetCapability<ITestPartitioningCapability>()?.IsSupported == true;
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-        => commandOption.Name != PartitionCountOptionName
+        => commandOption.Name != ShardCountOptionName
             || (arguments is [string value]
                 && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int count) && count > 0)
                     ? ValidationResult.ValidTask
-                    : ValidationResult.InvalidTask(PlatformResources.InvalidPartitionCountOptionArgument);
+                    : ValidationResult.InvalidTask(PlatformResources.InvalidShardCountOptionArgument);
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => !commandLineOptions.IsOptionSet(PartitionCountOptionName)
+        => !commandLineOptions.IsOptionSet(ShardCountOptionName)
             || IsPartitionedChildInvocation(commandLineOptions)
             ? ValidationResult.ValidTask
             : commandLineOptions.IsOptionSet(PartitionOptionName)
-            ? ValidationResult.InvalidTask(PlatformResources.PartitionCountAndPartitionAreExclusive)
+            ? ValidationResult.InvalidTask(PlatformResources.ShardCountAndPartitionAreExclusive)
             : !IsProcessTreeTerminationSupported
             || OperatingSystem.IsBrowser() || OperatingSystem.IsWasi() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
             || (commandLineOptions.TryGetOptionArgumentList("server", out string[]? serverArguments)
                 && !(serverArguments is [string protocol] && protocol.Equals("dotnettestcli", StringComparison.OrdinalIgnoreCase)))
-            ? ValidationResult.InvalidTask(PlatformResources.PartitionCountUnsupportedMode)
+            ? ValidationResult.InvalidTask(PlatformResources.ShardCountUnsupportedMode)
             : ValidationResult.ValidTask;
 
-    // A child receives --partition on the CLI but may inherit --partition-count from testconfig.json
+    // A child receives --partition on the CLI but may inherit --shard-count from testconfig.json
     // or another configuration source. Only that explicit child selector may override the setting.
     private static bool IsPartitionedChildInvocation(ICommandLineOptions commandLineOptions)
         => commandLineOptions is CommandLineHandler commandLineHandler
-            && !commandLineHandler.ParseResult.IsOptionSet(PartitionCountOptionName)
+            && !commandLineHandler.ParseResult.IsOptionSet(ShardCountOptionName)
             && commandLineHandler.ParseResult.IsOptionSet(PartitionOptionName);
 }

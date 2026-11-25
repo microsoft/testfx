@@ -5,14 +5,14 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 /// <summary>
 /// A capability declaring that the test framework can run a single partition of its tests.
-/// This is used to support '--partition-count'.
+/// This is used to support '--shard-count'.
 /// </summary>
 /// <remarks>
-/// When <see cref="IsSupported"/> is <see langword="true"/>, the platform exposes '--partition-count &lt;count&gt;'
+/// When <see cref="IsSupported"/> is <see langword="true"/>, the platform exposes '--shard-count &lt;count&gt;'
 /// and runs each partition in a separate test host process started with '--partition &lt;index&gt;/&lt;count&gt;',
 /// where 'index' is one-based and ranges from 1 through 'count'. The test framework must register and honor the '--partition' option so that
 /// every test runs in exactly one partition. Test frameworks that do not provide this capability, or that report
-/// <see cref="IsSupported"/> as <see langword="false"/>, do not expose '--partition-count'.
+/// <see cref="IsSupported"/> as <see langword="false"/>, do not expose '--shard-count'.
 /// <para>
 /// This API is experimental. It may change, break, or be removed at any time without notice.
 /// </para>

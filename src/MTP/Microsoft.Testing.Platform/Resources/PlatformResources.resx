@@ -1267,19 +1267,19 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
   <data name="IncompleteInformationalResponse" xml:space="preserve">
     <value>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</value>
   </data>
-  <data name="PartitionCountOptionDescription" xml:space="preserve">
-    <value>Run all partitions in separate local processes, keeping test classes and dependencies together.</value>
+  <data name="ShardCountOptionDescription" xml:space="preserve">
+    <value>Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</value>
   </data>
-  <data name="InvalidPartitionCountOptionArgument" xml:space="preserve">
-    <value>The '--partition-count' option requires a positive decimal Int32 value.</value>
-    <comment>{Locked="--partition-count"}{Locked="Int32"}</comment>
+  <data name="InvalidShardCountOptionArgument" xml:space="preserve">
+    <value>The '--shard-count' option requires a positive decimal Int32 value.</value>
+    <comment>{Locked="--shard-count"}{Locked="Int32"}</comment>
   </data>
-  <data name="PartitionCountAndPartitionAreExclusive" xml:space="preserve">
-    <value>The '--partition-count' and '--partition' options cannot be used together.</value>
-    <comment>{Locked="--partition-count"}{Locked="--partition"}</comment>
+  <data name="ShardCountAndPartitionAreExclusive" xml:space="preserve">
+    <value>The '--shard-count' and '--partition' options cannot be used together.</value>
+    <comment>{Locked="--shard-count"}{Locked="--partition"}</comment>
   </data>
-  <data name="PartitionCountUnsupportedMode" xml:space="preserve">
-    <value>The '--partition-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</value>
-    <comment>{Locked="--partition-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</comment>
+  <data name="ShardCountUnsupportedMode" xml:space="preserve">
+    <value>The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</value>
+    <comment>{Locked="--shard-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</comment>
   </data>
 </root>

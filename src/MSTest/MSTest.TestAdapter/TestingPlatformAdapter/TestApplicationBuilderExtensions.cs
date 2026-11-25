@@ -25,7 +25,7 @@ public static class TestApplicationBuilderExtensions
     {
         public bool IsTrxEnabled { get; private set; }
 
-        // MSTest honors --partition <index>/<count> in each child test host, so the platform can expose --partition-count.
+        // MSTest honors --partition <index>/<count> in each child test host, so the platform can expose --shard-count.
         bool ITestPartitioningCapability.IsSupported => true;
 
         bool ITrxReportCapability.IsSupported { get; } = true;

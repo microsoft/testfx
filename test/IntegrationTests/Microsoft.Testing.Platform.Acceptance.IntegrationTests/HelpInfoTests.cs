@@ -104,7 +104,7 @@ Extension options:
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
-        testHostResult.AssertOutputDoesNotContain("--partition-count");
+        testHostResult.AssertOutputDoesNotContain("--shard-count");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -368,7 +368,7 @@ Registered tools:
 """;
 
         testHostResult.AssertOutputMatchesRegexLines(regexMatchPattern);
-        testHostResult.AssertOutputDoesNotContain("--partition-count");
+        testHostResult.AssertOutputDoesNotContain("--shard-count");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

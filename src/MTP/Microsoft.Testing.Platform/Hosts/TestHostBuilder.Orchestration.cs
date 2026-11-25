@@ -44,7 +44,7 @@ internal sealed partial class TestHostBuilder
         bool requiresAuthorization = testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
             static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer);
         bool requiresLauncherCheck = testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
-            static orchestrator => orchestrator is PartitioningOrchestrator);
+            static orchestrator => orchestrator is ShardingOrchestrator);
         if (requiresAuthorization || requiresLauncherCheck)
         {
             ITestHostLauncher? testHostLauncher =

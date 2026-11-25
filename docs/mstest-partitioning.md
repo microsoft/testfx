@@ -39,21 +39,24 @@ dotnet test --project .\MyTests\MyTests.csproj --partition 3/4
 dotnet test --project .\MyTests\MyTests.csproj --partition 4/4
 ```
 
-## Run all partitions from one invocation
+## Shard one invocation across local processes
 
-Native MSTest applications can instead opt in to MTP local process distribution:
+Native MSTest applications can instead let Microsoft.Testing.Platform shard the
+run: the platform starts one child process per shard and each child runs one
+MSTest partition. The framework owns partitioning (`--partition`); the platform
+owns sharding (`--shard-count`).
 
 ```powershell
-dotnet test --project .\MyTests\MyTests.csproj --partition-count 4
-.\MyTests.exe --partition-count 4
+dotnet test --project .\MyTests\MyTests.csproj --shard-count 4
+.\MyTests.exe --shard-count 4
 ```
 
-For each test module, `--partition-count N` runs every partition once, in at
-most N local child processes concurrently, bounded by the logical CPU count.
+For each test module, `--shard-count N` runs N shards, each running partition
+`i/N` exactly once, in at most N local child processes concurrently, bounded by the logical CPU count.
 The SDK's module parallelism independently controls how many modules can
 distribute work at once. Do not combine it with `--partition index/count`.
 Absence of either option keeps ordinary execution.
-If `--partition-count` is configured in `testconfig.json`, an explicit
+If `--shard-count` is configured in `testconfig.json`, an explicit
 `--partition index/count` selector takes precedence for that invocation. Passing
 both options explicitly on the command line remains invalid.
 Discovery (`--list-tests`) lists the unpartitioned selection without launching
@@ -67,14 +70,14 @@ exit code `8`. Other child failures fail the invocation. Explicit minimum-test
 policies apply to each child, not the combined count.
 
 Reports are kept separately in
-`<results-directory>\Partitions\<unique-run-id>\<partition-index>`.
+`<results-directory>\Shards\<unique-run-id>\<shard-index>`.
 They are not merged across partitions. Retry retains its own attempt directories
 inside each partition. Direct console output is non-ANSI and line-prefixed with
-partition identity. The native SDK can label additional processes as attempts;
+shard identity (for example `[shard 2/4]`). The native SDK can label additional processes as attempts;
 that does not itself mean Retry was enabled. Cancellation terminates active
 children and stops scheduling.
 
-The distributor is provided by Microsoft.Testing.Platform, but `--partition-count`
+The distributor is provided by Microsoft.Testing.Platform, but `--shard-count`
 is shown and accepted only when the test framework declares
 `ITestPartitioningCapability` with `IsSupported` set to `true`. MSTest declares
 it; other frameworks do not show the option until they explicitly opt in, and

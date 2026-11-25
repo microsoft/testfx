@@ -1,23 +1,23 @@
 #nullable enable
 Microsoft.Testing.Platform.DotnetTestConnection.SendDisplayMessageAsync(Microsoft.Testing.Platform.IPC.Models.DisplayMessage! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.PartitioningCommandLineOptionsProvider() -> void
-const Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.PartitionCountOptionName = "partition-count" -> string!
-const Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.PartitionOptionName = "partition" -> string!
-override Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
-override Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
-static Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningCommandLineOptionsProvider.IsSupportedBy(Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities? capabilities) -> bool
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.PartitioningOrchestrator(System.IServiceProvider! serviceProvider) -> void
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.Description.get -> string!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.DisplayName.get -> string!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.OrchestrateTestHostExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.Stage.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.Uid.get -> string!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.Version.get -> string!
-static Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.AggregateExitCode(int current, int next) -> int
-static Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningOrchestrator.RemoveOwnedArguments(string![]! arguments) -> string![]!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ShardingCommandLineOptionsProvider() -> void
+const Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ShardCountOptionName = "shard-count" -> string!
+const Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.PartitionOptionName = "partition" -> string!
+override Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.IsSupportedBy(Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities? capabilities) -> bool
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.ShardingOrchestrator(System.IServiceProvider! serviceProvider) -> void
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Description.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.DisplayName.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.OrchestrateTestHostExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Stage.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Uid.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Version.get -> string!
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.AggregateExitCode(int current, int next) -> int
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.RemoveOwnedArguments(string![]! arguments) -> string![]!
 Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.get -> string?
 Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.set -> void
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManager.BuildAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider, string? orchestratorChain) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration!>!
@@ -225,10 +225,10 @@ Microsoft.Testing.Platform.Hosts.CommonHost.RunInvocationSetupAsync(Microsoft.Te
 Microsoft.Testing.Platform.Hosts.ITestHostBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!
 Microsoft.Testing.Platform.Hosts.TestHostBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!
 Microsoft.Testing.Platform.CommandLine.CommandLineHandler.RemoveExtensionsCommandLineOptionsProviders(System.Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!, bool>! predicate) -> void
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension.Description.get -> string!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension.DisplayName.get -> string!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension.Uid.get -> string!
-Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension.Version.get -> string!
-static Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension.Instance.get -> Microsoft.Testing.Platform.TestHostOrchestrator.PartitioningExtension!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Description.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.DisplayName.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Uid.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Version.get -> string!
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Instance.get -> Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension!

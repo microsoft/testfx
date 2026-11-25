@@ -9,11 +9,33 @@ Local implementation and validation do not imply a published release.
 
 ## Follow-up: MTP-owned local fan-out
 
+### Naming decision: framework partitions, platform shards (2026-11-25)
+
+The distribution option was renamed from `--partition-count` to `--shard-count`
+before release. Terminology now separates ownership: a test framework
+*partitions* tests (`--partition index/count`, `ITestPartitioningCapability`),
+while the platform *shards* one invocation into child processes, each running
+one partition. Alternatives considered included `--partitions`,
+`--parallel-partitions`, `--fan-out`, `--process-count` and `--shard-count`;
+the user chose `--shard-count` because it names the platform's role and follows
+the existing MTP `--<noun>-<qualifier>` option style (`--maximum-failed-tests`,
+`--minimum-expected-tests`, `--results-directory`). Platform-owned names follow
+the rename: `ShardingOrchestrator`, `ShardingExtension` (Uid `TestSharding`),
+`ShardingCommandLineOptionsProvider`, the `Shards/<run-id>/<index>` results
+directory and the `[shard i/n]` console prefix. The framework-owned selector,
+capability and their wire contract (`--partition i/n`) are unchanged.
+
+Evidence sections dated before this decision ran under the previous names
+(`--partition-count`, `PartitionCount_*` tests, `PartitioningOrchestrator*`,
+`Partitions/` directory). Their commands and names below were mechanically
+updated to the current names; their recorded outcomes were not re-executed
+unless a later section says so.
+
 ### Contract and decision (2026-11-24)
 
 The renewed requirement is to split one invocation into child invocations now
 that MTP supports composable orchestrators. Preserve `--partition i/n` as the
-manual CI selector and add opt-in `--partition-count N` for local distribution.
+manual CI selector and add opt-in `--shard-count N` for local distribution.
 MTP owns argument forwarding, child scheduling, cancellation, results-directory
 isolation and exit aggregation; MSTest still owns class/dependency assignment.
 Initially only native MSTest registered the MTP distribution implementation;
@@ -28,8 +50,8 @@ Distribution runs outside Retry, so each partition independently retries its
 own failed tests. Existing filters and policies apply in every child. Explicit
 minimum-test limits are per child, not an aggregate minimum.
 
-`--partition-count` and `--partition` are mutually exclusive when both are
-explicitly supplied on the command line. If `--partition-count` is inherited
+`--shard-count` and `--partition` are mutually exclusive when both are
+explicitly supplied on the command line. If `--shard-count` is inherited
 from configuration, an explicit `--partition` selector takes precedence; this
 also prevents fan-out children from recursively distributing. Discovery does not
 fan out and lists the ordinary unpartitioned selection. Distribution requires
@@ -42,10 +64,10 @@ orchestrator options. Preserve response-file backing where arguments can
 round-trip through the existing parser; keep literal quotes and line breaks inline.
 Segments preserve argument order even when other arguments exceed OS limits. Remove
 the fan-out option to prevent recursion; replace results-directory and terminal
-progress options. Each invocation gets a unique `Partitions/<run-id>/<index>`
+progress options. Each invocation gets a unique `Shards/<run-id>/<index>`
 directory. Explicit absolute report filenames/external output paths are not
 rewritten; use relative report names to obtain isolation. Child console lines
-are serialized, prefixed with partition identity,
+are serialized, prefixed with shard identity,
 and use non-ANSI, noninteractive output. The orchestrator owns and joins all
 children and output readers before returning. Output draining honors application
 cancellation and fails after 30 seconds if a descendant retains an inherited pipe.
@@ -148,7 +170,7 @@ Client writes no longer synchronously wait for a Windows pipe drain: their
 reply already establishes that the peer consumed the request. Server writes
 retain their prior drain behavior.
 
-- Before the fixes, `ConfiguredPartitionCount_ExplicitSelectorBypassesDistributionOnlyRestrictions`
+- Before the fixes, `ConfiguredShardCount_ExplicitSelectorBypassesDistributionOnlyRestrictions`
   executed and failed its validity assertion (1/1 failed); the caller-cancellation
   row of `DisplayAsync_StalledDisplayAcknowledgementHonorsCancellation` failed
   its stop assertion (1 failed, 1 passed). The earlier pipe-reuse test failed
@@ -156,12 +178,12 @@ retain their prior drain behavior.
   shape additionally attempts a late reply; paired sensitivity for that final
   shape and for the undrained-write case remains unverified.
 - `.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -f <tfm> -c Debug -v:q`
-  followed by `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -f <tfm> -c Debug --no-build -- --filter 'FullyQualifiedName~PartitioningOrchestratorTests|FullyQualifiedName~DotnetTestPassthroughOutputDeviceTests|FullyQualifiedName~DotnetTestConnectionTests|FullyQualifiedName~IPCTests' --ansi off --progress off`
+  followed by `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -f <tfm> -c Debug --no-build -- --filter 'FullyQualifiedName~ShardingOrchestratorTests|FullyQualifiedName~DotnetTestPassthroughOutputDeviceTests|FullyQualifiedName~DotnetTestConnectionTests|FullyQualifiedName~IPCTests' --ansi off --progress off`
   exited 0 on net10.0 (146 passed) and net462 (142 passed), with no failures,
   skips or build warnings. After adding the late-reply attempt, the three pipe
   cancellation tests were rebuilt and rerun on net10.0: 3 passed.
 - `.\build.cmd -pack -c Release -bl` exited 0 with no warnings. The
-  `PartitionCount_` packed acceptance selection, run using the net12.0 Release
+  `ShardCount_` packed acceptance selection, run using the net12.0 Release
   host and `--report-trx`, exited 0: 34 executed and passed, none skipped.
   It includes native SDK happy paths, two modules, configured count,
   cancellation and an inherited-pipe timeout. The native run used the repository
@@ -185,13 +207,13 @@ consumers. `.\build.cmd -pack -c Debug -bl` exited 0; the shipping
 `Microsoft.Testing.Platform.3.0.0-dev.nupkg` SHA-256 was
 `203271BF24BE3DCEA3ECED1A43CC0206713C49409120A50A5591C5747566E584`.
 
-- `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitioningOrchestratorTests' --ansi off --progress off`:
+- `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~ShardingOrchestratorTests' --ansi off --progress off`:
   18 passed.
-- `.\.dotnet\dotnet.exe run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitionCount_' --ansi off --progress off`:
-  34 passed, including `PartitionCount_LeadingHyphensInParameter_AreForwarded`,
-  both `PartitionCount_UnconditionalMiddleware_WrapsOnlyTheOuterProcess` rows,
-  `PartitionCount_NativeDotnetTest_PreservesChildStartupDiagnostic`, and both
-  `PartitionCount_ResponseFiles_ArePrivateAndRemoved` rows.
+- `.\.dotnet\dotnet.exe run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 -c Debug --no-build -- --filter 'FullyQualifiedName~ShardCount_' --ansi off --progress off`:
+  34 passed, including `ShardCount_LeadingHyphensInParameter_AreForwarded`,
+  both `ShardCount_UnconditionalMiddleware_WrapsOnlyTheOuterProcess` rows,
+  `ShardCount_NativeDotnetTest_PreservesChildStartupDiagnostic`, and both
+  `ShardCount_ResponseFiles_ArePrivateAndRemoved` rows.
 - Before the production fixes, these new argument, standalone middleware, SDK
   diagnostics and response-file location checks failed at their behavioral
   assertions. The response-file fixture was corrected after an initial run
@@ -230,10 +252,10 @@ hash was not captured either.
 
 After packing the fixes, the focused commands below exited 0:
 
-- `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitioningOrchestratorTests' --ansi off --progress off`:
+- `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~ShardingOrchestratorTests' --ansi off --progress off`:
   17 passed, including mixed-case removal (the single-case pre-fix unit run
   failed with nine arguments instead of three).
-- `.\.dotnet\dotnet.exe run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 -c Debug --no-build -- --filter 'FullyQualifiedName~PartitionCount_' --ansi off --progress off`:
+- `.\.dotnet\dotnet.exe run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 -c Debug --no-build -- --filter 'FullyQualifiedName~ShardCount_' --ansi off --progress off`:
   27 passed, including enabled/disabled launchers, mixed-case and long/multiline
   arguments, cancellation and uncancelled output timeout, native SDK and
   multi-module cases. An earlier run required manually stopping its owned
@@ -275,10 +297,10 @@ $env:DOTNET_ROOT = Join-Path (Get-Location) '.dotnet'
 $env:DOTNET_CLI_CONTEXT_VERBOSE = '1'
 $env:Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup = '0'
 $results = Join-Path (Get-Location) 'artifacts\TestResults\Release\partition-green-final'
-& .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~PartitionCount' --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
+& .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~ShardCount' --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
 
 $results = Join-Path (Get-Location) 'artifacts\TestResults\Release\partition-baseline-help'
-$filter = '(FullyQualifiedName~PartitionTests&FullyQualifiedName!~PartitionCount)|FullyQualifiedName~HelpInfoTests'
+$filter = '(FullyQualifiedName~PartitionTests&FullyQualifiedName!~ShardCount)|FullyQualifiedName~HelpInfoTests'
 & .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter $filter --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
 ```
 
@@ -289,12 +311,12 @@ six help/info cases on net11.0, net10.0 and net462.
 
 | Requirement | Executed named evidence and distinguishing outcome |
 | --- | --- |
-| One invocation, exact disjoint identities and isolated final outputs | `PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports`: four reports, exact five-test union, golden partition placement, matching discovery UIDs, no shared root report. |
-| Filter and zero-result policy | `PartitionCount_FilterAndEmptySelections_PreserveAggregatePolicy`: one selected result succeeds despite empty children; all-empty returns `8`. `PartitionCount_Discovery_DoesNotFanOut` retains ordinary discovery. |
-| Dependency affinity and Retry composition | `PartitionCount_FailureAndRetry_StayInsideDependencyPartition`: exact four initial outcomes, failing `Buy` remains partition 4, final retry narrows to the same UID. `PartitionCount_NativeDotnetTest_ExecutesAllPartitions` covers normal and ordered retries in two nonempty partitions. |
-| CLI, unsupported modes and long arguments | Eight `PartitionCount_InvalidOptions_FailBeforeExecution` rows, two `PartitionCount_HotReload_FailsBeforeExecution` rows, and `PartitionCount_LongResponseFile_PreservesSelection`; exact expected exits and selected results, no body execution for rejected modes. |
-| Cancellation and cleanup | `PartitionCount_Cancellation_JoinsUncooperativeChildren`: readiness markers precede cancellation; original process handles confirm root exit `3` and termination of every active child/grandchild. |
-| Multiple SDK modules | Both `PartitionCount_NativeDotnetTest_MultipleModulesPreserveResults` rows: two independent result roots, four reports per module, exact nine name/outcome associations, parent `0` or `2` according to the one deliberately failing module. |
+| One invocation, exact disjoint identities and isolated final outputs | `ShardCount_ExecutesEveryIdentityOnceInIsolatedReports`: four reports, exact five-test union, golden partition placement, matching discovery UIDs, no shared root report. |
+| Filter and zero-result policy | `ShardCount_FilterAndEmptySelections_PreserveAggregatePolicy`: one selected result succeeds despite empty children; all-empty returns `8`. `ShardCount_Discovery_DoesNotFanOut` retains ordinary discovery. |
+| Dependency affinity and Retry composition | `ShardCount_FailureAndRetry_StayInsideDependencyPartition`: exact four initial outcomes, failing `Buy` remains partition 4, final retry narrows to the same UID. `ShardCount_NativeDotnetTest_ExecutesAllPartitions` covers normal and ordered retries in two nonempty partitions. |
+| CLI, unsupported modes and long arguments | Eight `ShardCount_InvalidOptions_FailBeforeExecution` rows, two `ShardCount_HotReload_FailsBeforeExecution` rows, and `ShardCount_LongResponseFile_PreservesSelection`; exact expected exits and selected results, no body execution for rejected modes. |
+| Cancellation and cleanup | `ShardCount_Cancellation_JoinsUncooperativeChildren`: readiness markers precede cancellation; original process handles confirm root exit `3` and termination of every active child/grandchild. |
+| Multiple SDK modules | Both `ShardCount_NativeDotnetTest_MultipleModulesPreserveResults` rows: two independent result roots, four reports per module, exact nine name/outcome associations, parent `0` or `2` according to the one deliberately failing module. |
 | Defaults and existing manual selection | The 28 unchanged selector cases include `Partition_AbsentAndOneOfOne_PreserveExactBaselineIdentitiesAndOutcomes`; help/info expectations include the new registered option. |
 
 Pure helper tests passed **12 on each of net10.0, net11.0 and net462**:
@@ -302,7 +324,7 @@ Pure helper tests passed **12 on each of net10.0, net11.0 and net462**:
 ```powershell
 $env:DOTNET_ROOT = Join-Path (Get-Location) '.dotnet'
 foreach ($tfm in @('net10.0', 'net11.0', 'net462')) {
-    $arguments = @('--filter', 'FullyQualifiedName~PartitioningOrchestratorTests', '--report-trx', '--report-trx-filename', 'unit.trx', '--results-directory', "artifacts\TestResults\Release\partition-unit-final-$tfm", '--ansi', 'off', '--progress', 'off')
+    $arguments = @('--filter', 'FullyQualifiedName~ShardingOrchestratorTests', '--report-trx', '--report-trx-filename', 'unit.trx', '--results-directory', "artifacts\TestResults\Release\partition-unit-final-$tfm", '--ansi', 'off', '--progress', 'off')
     if ($tfm -eq 'net462') {
         & "artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\$tfm\Microsoft.Testing.Platform.UnitTests.exe" @arguments
     } else {
@@ -336,14 +358,14 @@ mutation, not a pristine-baseline execution.
 
 | Contract / case | Without distribution behavior | Correct implementation | Evidence / gap |
 | --- | --- | --- | --- |
-| Exact-once fan-out / `PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports` | Executed: detected. Selected/executed 1, failed 1, skipped 0, outer exit `2`; expected four reports, actual one. | Same case passed in the 20-case green gate and again after the red run: selected/executed/passed 1, failed/skipped 0, exit `0`. | Repacked variants, separate effective caches, matching loaded binaries; unchanged assertions and identical outer harness. |
+| Exact-once fan-out / `ShardCount_ExecutesEveryIdentityOnceInIsolatedReports` | Executed: detected. Selected/executed 1, failed 1, skipped 0, outer exit `2`; expected four reports, actual one. | Same case passed in the 20-case green gate and again after the red run: selected/executed/passed 1, failed/skipped 0, exit `0`. | Repacked variants, separate effective caches, matching loaded binaries; unchanged assertions and identical outer harness. |
 | Forwarding, exit policy, Retry, cancellation, SDK aggregation | No individual compiling mutation executed for each contract. | Named cases above execute and pass. | Green consumer evidence; paired sensitivity for these additional contracts remains unverified. |
 
 The red command, run from the isolated comparison after repacking its core, was:
 
 ```powershell
 $results = Join-Path (Get-Location) 'artifacts\TestResults\Release\partition-red-final'
-& .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~PartitionCount_ExecutesEveryIdentityOnceInIsolatedReports' --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
+& .\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~ShardCount_ExecutesEveryIdentityOnceInIsolatedReports' --report-trx --report-trx-filename acceptance.trx --results-directory $results --ansi off --progress off > "$results\execution.log" 2>&1
 ```
 
 The post-red green command used that same selector and command from the primary
@@ -379,8 +401,8 @@ pattern was not accepted:
 
 ```powershell
 # In the isolated directory selecting SDK 10.0.404:
-& $env:DOTNET_HOST_PATH test --root-directory $bin --test-modules Acme.Tests.exe --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory $results --ansi off --progress off
-& $env:DOTNET_HOST_PATH test --root-directory $modules --test-modules '**/Acme.Tests.exe' --max-parallel-test-modules 2 --partition-count 4 --report-trx --report-trx-filename run.trx --results-directory $results --ansi off --progress off
+& $env:DOTNET_HOST_PATH test --root-directory $bin --test-modules Acme.Tests.exe --shard-count 4 --report-trx --report-trx-filename run.trx --results-directory $results --ansi off --progress off
+& $env:DOTNET_HOST_PATH test --root-directory $modules --test-modules '**/Acme.Tests.exe' --max-parallel-test-modules 2 --shard-count 4 --report-trx --report-trx-filename run.trx --results-directory $results --ansi off --progress off
 ```
 
 The second command also executed both two-module states: parent `0` with nine
@@ -405,14 +427,14 @@ No hosted report/IDE UI mapping is changed; TRX remains partition-separated.
 ### Framework capability gate (2026-11-24)
 
 Requirement (user-directed): the platform must know whether the active framework
-supports partitioning and must not show `--partition-count` for xUnit or other
+supports partitioning and must not show `--shard-count` for xUnit or other
 frameworks until they explicitly add support. MSTest opts in.
 
 Decision: add experimental public `ITestPartitioningCapability : ITestFrameworkCapability`
 with `bool IsSupported`. Absent or `false` means unsupported, so frameworks that
 predate the capability keep their current option set. MTP now registers the
-`--partition-count` provider (extension Uid `TestPartitioning`) and the
-`PartitioningOrchestrator` itself; MSTest no longer calls an internal
+`--shard-count` provider (extension Uid `TestSharding`) and the
+`ShardingOrchestrator` itself; MSTest no longer calls an internal
 registration hook and only declares the capability. After framework
 capabilities are created, and before options are validated or rendered in
 `--help`/`--info`/the SDK handshake, MTP removes the provider when the capability
@@ -431,27 +453,27 @@ presence alone, follows existing capability shape and lets a framework decide
 at run time.
 
 Evidence on this working tree (base `09c901458d491e05a8a2c9adc89ee6ddfea834cc`,
-uncommitted): `PartitioningOrchestratorTests` covers absent/false/true capability
+uncommitted): `ShardingOrchestratorTests` covers absent/false/true capability
 evaluation, provider removal, and a real `TestApplicationBuilder` run passing
-`--partition-count 2` with no capability and with `IsSupported = false`.
+`--shard-count 2` with no capability and with `IsSupported = false`.
 Behavior-removal comparison: with the filtering condition replaced by `false &&`,
 the same 16 selected tests ran; the two end-to-end cases failed at
 `Assert.AreEqual(5, RunAsync())` with actual `8` (the option was accepted and an
 empty ordinary run executed). With filtering restored, 16/16 passed. The MTP
-`HelpInfoTests` now explicitly assert that `--partition-count` is absent from
+`HelpInfoTests` now explicitly assert that `--shard-count` is absent from
 both no-extension Help and Info output. The MTP
 `HelpInfoTests|HelpInfoAllExtensionsTests` selection passed 31/31 after those
 assertions were added. The MSTest `--info` expectation asserts a separate
-`TestPartitioning` extension block.
+`TestSharding` extension block.
 
 Packed composed-product run on the same tree: `.\build.cmd -pack -c Debug`
 (exit 0, 0 warnings), then
 `dotnet run --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests -f net12.0 --no-build -- --filter "FullyQualifiedName~MSTest.Acceptance.IntegrationTests.HelpInfoTests|FullyQualifiedName~MSTest.Acceptance.IntegrationTests.PartitionTests"`
 passed 54/54 (exit 0), and the MTP acceptance `HelpInfoTests|HelpInfoAllExtensionsTests`
 selection passed 31/31 (exit 0). After the config-inheritance fix, the renamed
-`PartitionCount_ConfiguredOptionDoesNotRecurseIntoChildren` regression ran
+`ShardCount_ConfiguredOptionDoesNotRecurseIntoChildren` regression ran
 inside `PartitionTests`; the full partition acceptance selection passed 49/49.
-It first reproduced the failure with inherited `partition-count` in the
+It first reproduced the failure with inherited `shard-count` in the
 children, then passed with the fix. The config regression run confirms the
 configured count does not re-trigger fan-out when children receive
 `--partition <index>/<count>`.
@@ -488,7 +510,7 @@ dotnet test --project .\Tests\Tests.csproj --partition 4/4
 
 Each invocation runs only its numbered selection. **The option does not start
 additional processes.** CI or an external launcher controls concurrency.
-There is no `--partition-count`, worker limit, new orchestrator, SDK protocol,
+There is no `--shard-count`, worker limit, new orchestrator, SDK protocol,
 public grouping API, receipt/catalog format, or cross-job report aggregator.
 
 ### Input and compatibility

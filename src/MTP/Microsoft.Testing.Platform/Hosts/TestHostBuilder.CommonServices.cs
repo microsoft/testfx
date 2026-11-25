@@ -245,10 +245,10 @@ internal sealed partial class TestHostBuilder
 
         serviceProvider.AddService(context.TestFrameworkCapabilities);
 
-        if (!PartitioningCommandLineOptionsProvider.IsSupportedBy(context.TestFrameworkCapabilities))
+        if (!ShardingCommandLineOptionsProvider.IsSupportedBy(context.TestFrameworkCapabilities))
         {
             context.CommandLineHandler.RemoveExtensionsCommandLineOptionsProviders(
-                provider => provider.Uid == PartitioningExtension.Instance.Uid);
+                provider => provider.Uid == ShardingExtension.Instance.Uid);
         }
 
         IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptions;

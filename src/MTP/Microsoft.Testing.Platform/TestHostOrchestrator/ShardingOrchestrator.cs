@@ -24,24 +24,24 @@ namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 [UnsupportedOSPlatform("wasi")]
 [UnsupportedOSPlatform("ios")]
 [UnsupportedOSPlatform("tvos")]
-internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
+internal sealed class ShardingOrchestrator(IServiceProvider serviceProvider)
     : IComposableTestHostExecutionOrchestrator, IOutputDeviceDataProducer
 {
-    public string Uid => nameof(PartitioningOrchestrator);
+    public string Uid => nameof(ShardingOrchestrator);
 
-    public string Version => PartitioningExtension.Instance.Version;
+    public string Version => ShardingExtension.Instance.Version;
 
-    public string DisplayName => PartitioningExtension.Instance.DisplayName;
+    public string DisplayName => ShardingExtension.Instance.DisplayName;
 
-    public string Description => PlatformResources.PartitionCountOptionDescription;
+    public string Description => PlatformResources.ShardCountOptionDescription;
 
     public TestHostExecutionOrchestratorStage Stage => TestHostExecutionOrchestratorStage.Distribution;
 
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
-            PartitioningCommandLineOptionsProvider.IsSupportedBy(serviceProvider.GetService<ITestFrameworkCapabilities>())
-            && serviceProvider.GetCommandLineOptions().IsOptionSet(PartitioningCommandLineOptionsProvider.PartitionCountOptionName)
-            && !serviceProvider.GetCommandLineOptions().IsOptionSet(PartitioningCommandLineOptionsProvider.PartitionOptionName));
+            ShardingCommandLineOptionsProvider.IsSupportedBy(serviceProvider.GetService<ITestFrameworkCapabilities>())
+            && serviceProvider.GetCommandLineOptions().IsOptionSet(ShardingCommandLineOptionsProvider.ShardCountOptionName)
+            && !serviceProvider.GetCommandLineOptions().IsOptionSet(ShardingCommandLineOptionsProvider.PartitionOptionName));
 
     [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Processor count bounds the local process worker pool.")]
     public async Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
@@ -52,15 +52,15 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1")
         {
             await serviceProvider.GetOutputDevice().DisplayAsync(
-                this, new ErrorMessageOutputDeviceData(PlatformResources.PartitionCountUnsupportedMode), cancellationToken).ConfigureAwait(false);
+                this, new ErrorMessageOutputDeviceData(PlatformResources.ShardCountUnsupportedMode), cancellationToken).ConfigureAwait(false);
             return (int)ExitCode.InvalidCommandLine;
         }
 
-        serviceProvider.GetCommandLineOptions().TryGetOptionArgumentList(PartitioningCommandLineOptionsProvider.PartitionCountOptionName, out string[]? values);
+        serviceProvider.GetCommandLineOptions().TryGetOptionArgumentList(ShardingCommandLineOptionsProvider.ShardCountOptionName, out string[]? values);
         int count = int.Parse(values![0], CultureInfo.InvariantCulture);
         ExecutableInfo executable = serviceProvider.GetTestApplicationModuleInfo().GetCurrentExecutableInfo();
         string[] forwardedArguments = RemoveOwnedArguments([.. executable.ExpandedArguments]);
-        string root = Path.Combine(serviceProvider.GetConfiguration().GetTestResultDirectory(), "Partitions", Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(serviceProvider.GetConfiguration().GetTestResultDirectory(), "Shards", Guid.NewGuid().ToString("N"));
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         using var outputGate = new SemaphoreSlim(1);
         int nextPartition = 0;
@@ -147,7 +147,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             string name = separator < 0 ? option : option.Substring(0, separator);
             if (argument.StartsWith("-", StringComparison.Ordinal)
                 && !argument.StartsWith("---", StringComparison.Ordinal)
-                && (name.Equals(PartitioningCommandLineOptionsProvider.PartitionCountOptionName, StringComparison.OrdinalIgnoreCase)
+                && (name.Equals(ShardingCommandLineOptionsProvider.ShardCountOptionName, StringComparison.OrdinalIgnoreCase)
                     || name.Equals("results-directory", StringComparison.OrdinalIgnoreCase)
                     || name.Equals("progress", StringComparison.OrdinalIgnoreCase)
                     || name.Equals("ansi", StringComparison.OrdinalIgnoreCase)))
@@ -267,7 +267,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
                     }
                     catch (InvalidOperationException ex) when (child.HasExited)
                     {
-                        await serviceProvider.GetLoggerFactory().CreateLogger<PartitioningOrchestrator>().LogDebugAsync($"Partition exited during termination: {ex}").ConfigureAwait(false);
+                        await serviceProvider.GetLoggerFactory().CreateLogger<ShardingOrchestrator>().LogDebugAsync($"Shard exited during termination: {ex}").ConfigureAwait(false);
                     }
 
                     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -293,7 +293,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
 #if NET8_0_OR_GREATER
         if (readerStop.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
-            throw new TimeoutException("Timed out while draining partition output.");
+            throw new TimeoutException("Timed out while draining shard output.");
         }
 #endif
         return child.ExitCode;
@@ -311,7 +311,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
                     await outputGate.WaitAsync(readerStop.Token).ConfigureAwait(false);
                     try
                     {
-                        string text = $"[partition {partition.ToString(CultureInfo.InvariantCulture)}/{count.ToString(CultureInfo.InvariantCulture)}] {line}";
+                        string text = $"[shard {partition.ToString(CultureInfo.InvariantCulture)}/{count.ToString(CultureInfo.InvariantCulture)}] {line}";
                         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
                         if (outputDevice is ProxyOutputDevice { OriginalOutputDevice: DotnetTestPassthroughOutputDevice }
                             && serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsDisplayMessageForwardingSupported: false })
@@ -356,7 +356,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
         public (string Path, FileStream Stream) Create()
         {
 #if NETCOREAPP
-            string path = Path.Combine(Path.GetTempPath(), $"mtp-partition-{Guid.NewGuid():N}.rsp");
+            string path = Path.Combine(Path.GetTempPath(), $"mtp-shard-{Guid.NewGuid():N}.rsp");
             FileStream stream;
             if (OperatingSystem.IsWindows())
             {
@@ -383,7 +383,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
             return (path, stream);
 #else
             _ = _paths;
-            throw new PlatformNotSupportedException("Partitioning requires a supported .NET runtime.");
+            throw new PlatformNotSupportedException("Sharding requires a supported .NET runtime.");
 #endif
         }
 
@@ -404,7 +404,7 @@ internal sealed class PartitioningOrchestrator(IServiceProvider serviceProvider)
 
             if (failures is not null)
             {
-                throw new AggregateException("Unable to remove temporary partition response files.", failures);
+                throw new AggregateException("Unable to remove temporary shard response files.", failures);
             }
         }
     }

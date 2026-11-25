@@ -6,21 +6,21 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
-internal sealed class PartitioningExtension : IExtension
+internal sealed class ShardingExtension : IExtension
 {
-    public static PartitioningExtension Instance { get; } = new();
+    public static ShardingExtension Instance { get; } = new();
 
-    private PartitioningExtension()
+    private ShardingExtension()
     {
     }
 
-    public string Uid => "TestPartitioning";
+    public string Uid => "TestSharding";
 
     public string Version => PlatformVersion.Version;
 
-    public string DisplayName => "Test partitioning";
+    public string DisplayName => "Test sharding";
 
-    public string Description => PlatformResources.PartitionCountOptionDescription;
+    public string Description => PlatformResources.ShardCountOptionDescription;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 }
