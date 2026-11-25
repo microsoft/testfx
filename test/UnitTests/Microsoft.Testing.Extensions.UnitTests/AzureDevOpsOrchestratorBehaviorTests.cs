@@ -17,6 +17,28 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class AzureDevOpsOrchestratorBehaviorTests
 {
     [TestMethod]
+    public async Task AfterRun_RemovesOnlyOwnedPartitionMaps()
+    {
+        using var fixture = new CiReporterFixture();
+        fixture.EnableAzureDevOps();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = fixture.Orchestrator();
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        string map = fixture.Variables[AzureDevOpsConstants.ResultMapPathEnvironmentVariableName]!.Substring(4);
+        string first = map + ".partition-1-2";
+        string second = map + ".partition-2-2";
+        string unrelated = Path.Combine(fixture.Root, "another-map.partition-1-2");
+        fixture.PutText(first, "first");
+        fixture.PutText(second, "second");
+        fixture.PutText(unrelated, "unrelated");
+
+        await lifetime.AfterRunAsync(0, CancellationToken.None);
+
+        Assert.IsFalse(fixture.Files.ContainsKey(first));
+        Assert.IsFalse(fixture.Files.ContainsKey(second));
+        Assert.IsTrue(fixture.Files.ContainsKey(unrelated));
+    }
+
+    [TestMethod]
     [DataRow(false, DisplayName = "Orchestrator_MissingConfiguration")]
     [DataRow(true, DisplayName = "Orchestrator_AncestorOwnsRun")]
     public async Task BeforeRun_InheritedOrInvalidConfigurationDoesNotCreateRun(bool inherited)

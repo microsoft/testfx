@@ -9,6 +9,58 @@ Local implementation and validation do not imply a published release.
 
 ## Follow-up: MTP-owned local fan-out
 
+### Shard reporting review (2026-11-25)
+
+The Azure DevOps live publisher's result-id handoff was designed for sequential
+Retry attempts. Shards instead run concurrent, independent Retry sequences.
+Each publisher currently opens a private snapshot and replaces the same map;
+an interleaving can discard another shard's result IDs and make its retry
+publish duplicates. The run ID must remain shared, but each partition needs a
+separate result map whose path stays stable across its attempts and is removed
+when the owning orchestration finishes. The chosen approach derives a bounded
+filename suffix from the forwarded numeric `--partition` selector in the
+publisher and cleans only maps belonging to the owner's unique handoff path.
+This keeps the coordination protocol inside the Azure DevOps extension rather
+than teaching the platform about a particular reporter. Unpartitioned and
+unrecognized selectors retain the existing map path. Before this change, the
+new `PartitionedAttempts_InterleavedShardsUpdateTheirOwnPublishedResults`
+unit test executed and failed: a retry created result 103 instead of updating
+result 101 (one test executed, exit 2). With the change, the Azure publisher
+and orchestrator behavior selection passed 49 tests, including the same
+interleaving and owned-file cleanup cases:
+
+```powershell
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Release\net10.0\Microsoft.Testing.Extensions.UnitTests.dll --filter 'FullyQualifiedName~AzureDevOpsOrchestratorBehaviorTests|FullyQualifiedName~AzureDevOpsPublisherBehaviorTests' --ansi off --progress off
+```
+
+In the dirty source state based on `b6881fecf1074638c26dfa8b5d524ac30ab430c0`,
+`.\build.cmd -pack -c Release -bl` exited 0. The packed consumer ran on
+Windows x64, net10.0, using Microsoft.Testing.Platform, AzureDevOpsReport, and
+Retry `3.0.0-dev`, plus MSTest.TestAdapter and MSTest.TestFramework `5.0.0-dev`.
+The generated host binaries matched the SHA-256 of their respective net10.0
+shipping-package payloads. The parent invocation returned success; two
+different shards published `FirstTests.Flaky` (failed then passed) and
+`ThirdTests.Passing` (passed). The loopback service observed one completed
+run, two original result IDs, and a retry updating the original flaky result
+with both attempt outcomes. Both initial maps were saved before the retry and
+the owner's coordination files were gone at completion.
+
+The outer net12.0 acceptance host executed the following selection: three
+tests passed, including the shard/Retry case and the existing reflection and
+source-generation DataRow cases:
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release --no-build --filter 'FullyQualifiedName~AzureDevOpsLivePublishingTests.ShardsWithRetry|FullyQualifiedName~AzureDevOpsLivePublishingTests.DataDrivenRows' -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=<results-directory> --show-test-results all
+```
+
+The packaged acceptance case has not been run against the pre-fix product;
+its regression sensitivity is therefore not established independently of the
+unit red/green result. The Azure DevOps Tests tab, Unix, servicing branches,
+and externally hosted CI remain unverified. A separate observed issue remains
+open: the GitHub Actions reporter can mark empty shards as failed while the
+aggregate invocation succeeds. Suppressing every zero-test exit would also
+hide all-empty and minimum-test-policy failures.
+
 ### Naming decision: framework partitions, platform shards (2026-11-25)
 
 The distribution option was renamed from `--partition-count` to `--shard-count`

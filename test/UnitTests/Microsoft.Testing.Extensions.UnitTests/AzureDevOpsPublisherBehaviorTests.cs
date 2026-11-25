@@ -19,6 +19,54 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class AzureDevOpsPublisherBehaviorTests
 {
     [TestMethod]
+    public async Task PartitionedAttempts_InterleavedShardsUpdateTheirOwnPublishedResults()
+    {
+        using var fixture = new CiReporterFixture();
+        fixture.EnableAzureDevOps();
+        Inherit(fixture, withMap: true);
+        int nextId = 100;
+        List<AzureDevOpsTestCaseResult> updates = [];
+        fixture.Client.Setup(value => value.PublishTestResultsWithSubResultsAsync(
+                It.IsAny<AzureDevOpsPublishConfiguration>(), 77, It.IsAny<IReadOnlyList<AzureDevOpsTestCaseResult>>(), It.IsAny<CancellationToken>()))
+            .Returns<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken>((_, _, results, _) =>
+                Task.FromResult<IReadOnlyList<AzureDevOpsPublishedTestResult>?>(
+                    [.. results.Select(_ => new AzureDevOpsPublishedTestResult(++nextId, new Dictionary<int, int>()))]));
+        fixture.Client.Setup(value => value.UpdateTestResultsWithSubResultsAsync(
+                It.IsAny<AzureDevOpsPublishConfiguration>(), 77, It.IsAny<IReadOnlyList<AzureDevOpsTestCaseResult>>(), It.IsAny<CancellationToken>()))
+            .Returns<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken>((_, _, results, _) =>
+            {
+                updates.AddRange(results);
+                return Task.FromResult<IReadOnlyList<AzureDevOpsPublishedTestResult>?>(
+                [
+                    .. results.Select(result => new AzureDevOpsPublishedTestResult(
+                        result.Id!.Value, (result.SubResults ?? []).ToDictionary(attempt => attempt.SequenceId, attempt => 1000 + attempt.SequenceId))),
+                ]);
+            });
+
+        fixture.Options["partition"] = ["1/2"];
+        using AzureDevOpsTestResultsPublisher firstShard = fixture.Publisher();
+        await firstShard.OnTestSessionStartingAsync(new CiReporterFixture.Session());
+        fixture.Options["partition"] = ["2/2"];
+        using AzureDevOpsTestResultsPublisher secondShard = fixture.Publisher();
+        await secondShard.OnTestSessionStartingAsync(new CiReporterFixture.Session());
+        await firstShard.ConsumeAsync(null!, CiReporterFixture.Update("Tests.First", new FailedTestNodeStateProperty()), CancellationToken.None);
+        await firstShard.OnTestSessionFinishingAsync(new CiReporterFixture.Session());
+        await secondShard.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Second", new PassedTestNodeStateProperty()), CancellationToken.None);
+        await secondShard.OnTestSessionFinishingAsync(new CiReporterFixture.Session());
+
+        fixture.Options["partition"] = ["1/2"];
+        using AzureDevOpsTestResultsPublisher retry = fixture.Publisher();
+        await retry.OnTestSessionStartingAsync(new CiReporterFixture.Session());
+        await retry.ConsumeAsync(null!, CiReporterFixture.Update("Tests.First", new PassedTestNodeStateProperty()), CancellationToken.None);
+        await retry.OnTestSessionFinishingAsync(new CiReporterFixture.Session());
+
+        Assert.AreEqual(102, nextId, "A retry must update the original result, not create a duplicate.");
+        AzureDevOpsTestCaseResult recovered = Assert.ContainsSingle(updates.Where(result => result.AutomatedTestName == "Tests.First" && result.Outcome == "Passed"));
+        Assert.AreEqual(101, recovered.Id);
+        Assert.HasCount(2, recovered.SubResults!);
+    }
+
+    [TestMethod]
     [DataRow(false, DisplayName = "Publisher_MissingConfiguration")]
     [DataRow(true, DisplayName = "Publisher_MissingConfigurationAndBrokenDiagnostics")]
     public async Task Start_ConfigurationAndDiagnosticFailuresLeavePublisherInert(bool diagnosticsFail)

@@ -56,7 +56,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             ["AZDO_RENDEZVOUS"] = directory.Path,
         };
         TestHostResult result = await host.ExecuteAsync(
-            $"--publish-azdo-test-results --results-directory \"{directory.Path}\"",
+            $"--publish-azdo-test-results --filter \"FullyQualifiedName~AzureDevOpsDataRows\" --results-directory \"{directory.Path}\"",
             environment,
             cancellationToken: TestContext.CancellationToken);
 
@@ -87,6 +87,105 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                     ? "MTP.CanonicalTestName/1:46"
                     : "MTP.CanonicalTestName/1:48";
             Assert.AreEqual(expectedComment, comment);
+        }
+    }
+
+    [TestMethod]
+    public async Task ShardsWithRetry_UpdateTheOriginalAzureDevOpsResult()
+    {
+        using TempDirectory directory = new();
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        cancellation.CancelAfter(TimeSpan.FromMinutes(3));
+        CancellationToken token = cancellation.Token;
+        await using AzureDevOpsService service = new();
+        service.AllowFirstCompletion.SetResult(true);
+        var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, DataDrivenTargetFramework);
+        TestContext.WriteLine($"Packaged shard consumer: {host.DirectoryName}");
+        Dictionary<string, string?> environment = new()
+        {
+            ["TF_BUILD"] = "true",
+            ["SYSTEM_COLLECTIONURI"] = service.CollectionUri,
+            ["SYSTEM_TEAMPROJECT"] = "project",
+            ["SYSTEM_ACCESSTOKEN"] = "local-test-token",
+            ["BUILD_BUILDID"] = "123",
+            ["TESTINGPLATFORM_AZUREDEVOPS_TESTRUNID"] = null,
+            ["TESTINGPLATFORM_AZUREDEVOPS_RESULTMAP"] = null,
+            ["AZDO_DATA_ROWS"] = "true",
+            ["AZDO_NATIVE_RENDEZVOUS"] = "false",
+            ["AZDO_MODULE"] = "Shards",
+            ["AZDO_RENDEZVOUS"] = directory.Path,
+        };
+        Task<TestHostResult> execution = host.ExecuteAsync(
+            $"--publish-azdo-test-results --shard-count 2 --retry-failed-tests 1 --retry-failed-tests-delay 30s --filter \"FullyQualifiedName~AzureDevOpsShards\" --results-directory \"{directory.Path}\"",
+            environment,
+            cancellationToken: token);
+
+        try
+        {
+            await WaitForMapAsync(directory.Path, "AzureDevOpsShards.FirstTests", token);
+            File.WriteAllText(Path.Combine(directory.Path, "shard.release"), string.Empty);
+            await WaitForMapAsync(directory.Path, "AzureDevOpsShards.ThirdTests", token);
+            Assert.IsFalse(File.Exists(Path.Combine(directory.Path, "shard.retry")), "Both initial maps must be saved before the retry starts.");
+
+            TestHostResult result = await execution;
+            result.AssertExitCodeIs(ExitCode.Success);
+            Assert.AreSequenceEqual(
+                new[] { "AzureDevOpsShards.FirstTests.Flaky", "AzureDevOpsShards.ThirdTests.Passing" },
+                service.TestIdentities.Select(identity => identity.AutomatedTestName).OrderBy(name => name, StringComparer.Ordinal));
+            Assert.AreSequenceEqual(
+                new[] { ("AzureDevOpsShards.FirstTests.Flaky", "Failed"), ("AzureDevOpsShards.ThirdTests.Passing", "Passed") },
+                service.PublishedOutcomes.OrderBy(result => result.Name, StringComparer.Ordinal));
+            Assert.AreEqual(1, service.CreatedRunCount);
+            Assert.AreEqual(1, service.CompletedRunCount);
+            Assert.AreEqual(0, service.RejectedResultCount);
+            (string Name, string Outcome, string[] Attempts) retry = service.RetriedResults.Single();
+            Assert.AreEqual("AzureDevOpsShards.FirstTests.Flaky", retry.Name);
+            Assert.AreEqual("Passed", retry.Outcome);
+            Assert.AreSequenceEqual(new[] { "Failed", "Passed" }, retry.Attempts);
+            Assert.IsEmpty(Directory.GetFiles(directory.Path, "azdo-results.*", SearchOption.TopDirectoryOnly));
+        }
+        finally
+        {
+            File.WriteAllText(Path.Combine(directory.Path, "shard.release"), string.Empty);
+            if (!execution.IsCompleted)
+            {
+                // The retry delay is 30 seconds; allow both attempts to stop before disposing the listener.
+                if (await Task.WhenAny(execution, Task.Delay(TimeSpan.FromMinutes(1), CancellationToken.None)) != execution)
+                {
+                    TestContext.WriteLine("The child did not exit within the cleanup limit; canceling it.");
+                    await cancellation.CancelAsync();
+                }
+            }
+
+            await execution;
+        }
+    }
+
+    private static async Task WaitForMapAsync(string directory, string testName, CancellationToken token)
+    {
+        while (true)
+        {
+            foreach (string path in Directory.GetFiles(directory, "azdo-results.*", SearchOption.TopDirectoryOnly))
+            {
+                if (!path.EndsWith(".tmp", StringComparison.Ordinal))
+                {
+                    try
+                    {
+                        await using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                        using StreamReader reader = new(stream);
+                        if ((await reader.ReadToEndAsync(token)).Contains(testName, StringComparison.Ordinal))
+                        {
+                            return;
+                        }
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        // A retry can invalidate a map between enumeration and reading.
+                    }
+                }
+            }
+
+            await Task.Delay(50, token);
         }
     }
 
@@ -289,6 +388,8 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         private readonly ConcurrentBag<(string AutomatedTestName, string TestCaseTitle)> _testIdentities = [];
         private readonly ConcurrentDictionary<(int RunId, int ResultId), string> _namesByResult = new();
         private readonly ConcurrentDictionary<string, string> _canonicalMetadata = new();
+        private readonly ConcurrentBag<(string Name, string Outcome)> _publishedOutcomes = [];
+        private readonly ConcurrentBag<(string Name, string Outcome, string[] Attempts)> _retriedResults = [];
         private readonly ConcurrentBag<(string FileName, long Size)> _attachments = [];
         private readonly Task _acceptLoop;
         private int _nextRunId;
@@ -315,6 +416,10 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         public IEnumerable<(string AutomatedTestName, string TestCaseTitle)> TestIdentities => _testIdentities;
 
         public IEnumerable<KeyValuePair<string, string>> CanonicalMetadata => _canonicalMetadata;
+
+        public IEnumerable<(string Name, string Outcome)> PublishedOutcomes => _publishedOutcomes;
+
+        public IEnumerable<(string Name, string Outcome, string[] Attempts)> RetriedResults => _retriedResults;
 
         public int CompletedRunCount => _states.Count(state => state.Value == "Completed");
 
@@ -439,6 +544,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                     string automatedTestName = result.GetProperty("automatedTestName").GetString()!;
                     _testNames.Add(testCaseTitle);
                     _testIdentities.Add((automatedTestName, testCaseTitle));
+                    _publishedOutcomes.Add((automatedTestName, result.GetProperty("outcome").GetString()!));
                     int id = Interlocked.Increment(ref _nextResultId);
                     _namesByResult[(runId, id)] = automatedTestName;
                     return new { id, automatedTestName };
@@ -449,7 +555,8 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
 
             if (segments.Length == 6 && segments[5] == "results" && method == "PATCH")
             {
-                var results = body.EnumerateArray().Select(result =>
+                List<object> results = [];
+                foreach (JsonElement result in body.EnumerateArray())
                 {
                     int id = result.GetProperty("id").GetInt32();
                     string automatedTestName = _namesByResult[(runId, id)];
@@ -458,15 +565,30 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                         Assert.AreEqual(automatedTestName, publishedName.GetString());
                     }
 
-                    if (result.TryGetProperty("subResults", out JsonElement subResults))
+                    if (result.TryGetProperty("subResults", out JsonElement subResults) && subResults.ValueKind == JsonValueKind.Array)
                     {
-                        Assert.AreEqual(JsonValueKind.Null, subResults.ValueKind, "Metadata must not manufacture retry attempts.");
+                        _retriedResults.Add((
+                            automatedTestName,
+                            result.GetProperty("outcome").GetString()!,
+                            [.. subResults.EnumerateArray().Select(subResult => subResult.GetProperty("outcome").GetString()!)]));
+                        results.Add(new
+                        {
+                            id,
+                            automatedTestName,
+                            subResults = subResults.EnumerateArray().Select(subResult => new
+                            {
+                                id = 1000 + subResult.GetProperty("sequenceId").GetInt32(),
+                                sequenceId = subResult.GetProperty("sequenceId").GetInt32(),
+                            }).ToArray(),
+                        });
+                        continue;
                     }
 
                     _canonicalMetadata[automatedTestName] = result.GetProperty("comment").GetString()!;
-                    return new { id, automatedTestName };
-                }).ToArray();
-                return (200, JsonSerializer.Serialize(new { count = results.Length, value = results }));
+                    results.Add(new { id, automatedTestName });
+                }
+
+                return (200, JsonSerializer.Serialize(new { count = results.Count, value = results }));
             }
 
             if (segments.Length == 6 && segments[5] == "attachments" && method == "POST")
@@ -493,6 +615,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
@@ -510,13 +633,17 @@ using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 bool nativeRendezvous = Environment.GetEnvironmentVariable("AZDO_NATIVE_RENDEZVOUS") == "true";
+bool dataRows = Environment.GetEnvironmentVariable("AZDO_DATA_ROWS") == "true";
 string module = nativeRendezvous
     ? new DirectoryInfo(AppContext.BaseDirectory).Name
     : Environment.GetEnvironmentVariable("AZDO_MODULE")!;
 string rendezvous = Environment.GetEnvironmentVariable("AZDO_RENDEZVOUS")!;
-File.WriteAllText(Path.Combine(rendezvous, $"{module}.started"), string.Empty);
+if (!dataRows)
+{
+    File.WriteAllText(Path.Combine(rendezvous, $"{module}.started"), string.Empty);
+}
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-if (Environment.GetEnvironmentVariable("AZDO_DATA_ROWS") == "true")
+if (dataRows)
 {
     builder.AddMSTest(() => [typeof(AzureDevOpsDataRows.AuthenticationTests).Assembly]);
 }
@@ -525,6 +652,7 @@ else
     builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new Framework(module, rendezvous, nativeRendezvous));
 }
 builder.AddAzureDevOpsProvider();
+builder.AddRetryProvider();
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
@@ -613,6 +741,50 @@ public sealed class AuthenticationTests
     [TestMethod]
     public void Ordinary()
     {
+    }
+}
+
+#file ShardTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace AzureDevOpsShards;
+
+[TestClass]
+public sealed class FirstTests
+{
+    [TestMethod]
+    public async Task Flaky()
+    {
+        string directory = Environment.GetEnvironmentVariable("AZDO_RENDEZVOUS")!;
+        string first = Path.Combine(directory, "shard.first");
+        if (File.Exists(first))
+        {
+            File.WriteAllText(Path.Combine(directory, "shard.retry"), string.Empty);
+            return;
+        }
+
+        File.WriteAllText(first, string.Empty);
+        while (!File.Exists(Path.Combine(directory, "shard.third")))
+        {
+            await Task.Delay(50);
+        }
+
+        Assert.Fail("First attempt fails intentionally.");
+    }
+}
+
+[TestClass]
+public sealed class ThirdTests
+{
+    [TestMethod]
+    public async Task Passing()
+    {
+        string directory = Environment.GetEnvironmentVariable("AZDO_RENDEZVOUS")!;
+        File.WriteAllText(Path.Combine(directory, "shard.third"), string.Empty);
+        while (!File.Exists(Path.Combine(directory, "shard.release")))
+        {
+            await Task.Delay(50);
+        }
     }
 }
 """;

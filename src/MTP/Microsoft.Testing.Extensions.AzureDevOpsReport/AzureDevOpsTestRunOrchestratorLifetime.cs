@@ -232,6 +232,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         if (resultMapPath is not null)
         {
             TryDeleteFile(resultMapPath);
+            TryDeletePartitionMaps(resultMapPath);
         }
 
         // Azure DevOps uses "Aborted" for cancellation and session-level infrastructure failures.
@@ -283,6 +284,27 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
+        }
+    }
+
+    private void TryDeletePartitionMaps(string resultMapPath)
+    {
+        try
+        {
+            string directory = Path.GetDirectoryName(resultMapPath)!;
+            if (!_fileSystem.ExistDirectory(directory))
+            {
+                return;
+            }
+
+            foreach (string path in _fileSystem.GetFiles(directory, Path.GetFileName(resultMapPath) + ".partition-*", SearchOption.TopDirectoryOnly))
+            {
+                TryDeleteFile(path);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {resultMapPath}: {ex.Message}");
         }
     }
 
