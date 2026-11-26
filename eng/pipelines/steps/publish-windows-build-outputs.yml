@@ -1,0 +1,40 @@
+parameters:
+- name: official
+  type: boolean
+  default: false
+
+steps:
+- pwsh: ./eng/test-windows-build-outputs.ps1
+  displayName: Validate Windows output transport
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
+- task: PowerShell@2
+  name: ExportWindowsBuildOutputs
+  displayName: Export reusable Windows Release outputs
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+  inputs:
+    targetType: inline
+    pwsh: true
+    script: |
+      $ErrorActionPreference = 'Stop'
+      ./eng/windows-build-outputs.ps1 -Action Export `
+        -Configuration '$(_BuildConfig)' `
+        -SourceVersion '$(Build.SourceVersion)' `
+        -ArchivePath '$(Build.ArtifactStagingDirectory)/WindowsBuildOutputs/windows-build-outputs.zip'
+      Write-Host "##vso[task.setvariable variable=ArtifactName;isOutput=true]WindowsBuildOutputs_$(_BuildConfig)_Attempt$(System.JobAttempt)"
+
+- ${{ if eq(parameters.official, true) }}:
+  - task: 1ES.PublishBuildArtifacts@1
+    displayName: Publish reusable Windows Release outputs
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/WindowsBuildOutputs/windows-build-outputs.zip'
+      ArtifactName: '$(ExportWindowsBuildOutputs.ArtifactName)'
+
+- ${{ else }}:
+  - task: PublishBuildArtifacts@1
+    displayName: Publish reusable Windows Release outputs
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/WindowsBuildOutputs/windows-build-outputs.zip'
+      ArtifactName: '$(ExportWindowsBuildOutputs.ArtifactName)'

@@ -6,6 +6,9 @@ parameters:
 - name: CollectCTS
   type: boolean
   default: false
+- name: UseWindowsBuildOutputs
+  type: boolean
+  default: false
 
 steps:
 - template: /eng/pipelines/steps/install-windows-prereqs.yml
@@ -34,6 +37,9 @@ steps:
   displayName: Build
 
 - ${{ if eq(parameters.SkipTests, False) }}:
+
+  - ${{ if eq(parameters.UseWindowsBuildOutputs, true) }}:
+    - template: /eng/pipelines/steps/publish-windows-build-outputs.yml
 
   - ${{ if eq(parameters.CollectCTS, true) }}:
     - template: /eng/pipelines/steps/test-cts-comparison.yml
