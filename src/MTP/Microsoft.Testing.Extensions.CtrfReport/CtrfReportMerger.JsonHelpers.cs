@@ -127,11 +127,14 @@ internal static partial class CtrfReportMerger
     /// </summary>
     private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports, CtrfMergeMode mode, string? formatVersion)
     {
-        // The 0.3.0 projection preserves new retry fields, even without schema promotion.
+        // The released 0.3.0 projection preserves more fields than the draft projection.
         // Keep the existing discriminators for older formats.
-        string formatDiscriminator = formatVersion is not null
-            ? $"microsoft.testingplatform.lineage.v1.specVersion{formatVersion}"
-            : "microsoft.testingplatform.lineage.v1";
+        string formatDiscriminator = formatVersion switch
+        {
+            "0.3.0" => "microsoft.testingplatform.lineage.v1.specVersion0.3.0.release",
+            not null => $"microsoft.testingplatform.lineage.v1.specVersion{formatVersion}",
+            _ => "microsoft.testingplatform.lineage.v1",
+        };
         return CreateDeterministicId([formatDiscriminator, .. acceptedReports], (ulong)mode).ToString("D");
     }
 

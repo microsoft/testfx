@@ -44,7 +44,7 @@ internal static partial class CtrfReportMerger
     /// than a sum across attempts. Attempts an input already recorded in its own <c>retryAttempts[]</c> (in-process
     /// retries within a single attempt process) are flattened into the same history so no execution is lost.
     /// </remarks>
-    private static JsonArray CollapseRetryAttempts(IReadOnlyList<IReadOnlyList<JsonObject>> reports)
+    private static JsonArray CollapseRetryAttempts(IReadOnlyList<IReadOnlyList<JsonObject>> reports, bool supportsRetryThreadId)
     {
         var ambiguousIdentities = new HashSet<string>(StringComparer.Ordinal);
         var ambiguousLifecycles = new HashSet<(string TestIdentity, string ExecutionId)>();
@@ -136,7 +136,7 @@ internal static partial class CtrfReportMerger
         var collapsed = new JsonArray();
         foreach ((JsonObject final, List<JsonObject> priors) in slots)
         {
-            collapsed.Add(BuildCollapsedTest(final, priors));
+            collapsed.Add(BuildCollapsedTest(final, priors, supportsRetryThreadId));
         }
 
         return collapsed;
@@ -219,7 +219,7 @@ internal static partial class CtrfReportMerger
         return identity.ToString();
     }
 
-    private static JsonNode BuildCollapsedTest(JsonObject final, List<JsonObject> priors)
+    private static JsonNode BuildCollapsedTest(JsonObject final, List<JsonObject> priors, bool supportsRetryThreadId)
     {
         var collapsed = (JsonObject)final.DeepClone();
 
@@ -235,13 +235,13 @@ internal static partial class CtrfReportMerger
         var history = new JsonArray();
         foreach (JsonObject prior in priors)
         {
-            AppendAttempts(history, prior);
+            AppendAttempts(history, prior, supportsRetryThreadId);
         }
 
         // In-process retries observed by the final attempt precede its own outcome in the history.
         if (collapsed["retryAttempts"] is JsonArray finalAttempts)
         {
-            AppendNestedAttempts(history, finalAttempts);
+            AppendNestedAttempts(history, finalAttempts, supportsRetryThreadId);
         }
 
         bool anyFailed = false;
@@ -277,14 +277,14 @@ internal static partial class CtrfReportMerger
     /// Appends the executions a non-final attempt row represents — the attempts it already nested, then its own
     /// outcome — to the retry history being built.
     /// </summary>
-    private static void AppendAttempts(JsonArray history, JsonObject test)
+    private static void AppendAttempts(JsonArray history, JsonObject test, bool supportsRetryThreadId)
     {
         if (test["retryAttempts"] is JsonArray nested)
         {
-            AppendNestedAttempts(history, nested);
+            AppendNestedAttempts(history, nested, supportsRetryThreadId);
         }
 
-        history.Add(ToRetryAttempt(test));
+        history.Add(ToRetryAttempt(test, supportsRetryThreadId));
     }
 
     /// <summary>
@@ -293,13 +293,13 @@ internal static partial class CtrfReportMerger
     /// wrong-typed status or a disallowed field into the merged history. Entries that are not objects are skipped:
     /// they could not describe an execution.
     /// </summary>
-    private static void AppendNestedAttempts(JsonArray history, JsonArray nested)
+    private static void AppendNestedAttempts(JsonArray history, JsonArray nested, bool supportsRetryThreadId)
     {
         foreach (JsonNode? attempt in nested)
         {
             if (attempt is JsonObject attemptObject)
             {
-                history.Add(ToRetryAttempt(attemptObject));
+                history.Add(ToRetryAttempt(attemptObject, supportsRetryThreadId));
             }
         }
     }
@@ -309,7 +309,7 @@ internal static partial class CtrfReportMerger
     /// fields than a test: everything else (name, suite, tags, labels, ...) either belongs to the collapsed test
     /// object or, like <c>rawStatus</c>, moves under <c>extra</c>, the only permitted extension point.
     /// </summary>
-    private static JsonNode ToRetryAttempt(JsonObject test)
+    private static JsonNode ToRetryAttempt(JsonObject test, bool supportsRetryThreadId)
     {
         // 'attempt' is assigned by the caller, once the position of this execution in the history is known.
         var attempt = new JsonObject
@@ -327,6 +327,11 @@ internal static partial class CtrfReportMerger
         if (attemptId is { Length: > 0 })
         {
             attempt["attemptId"] = attemptId;
+        }
+
+        if (supportsRetryThreadId && ReadString(test, "threadId") is string threadId)
+        {
+            attempt["threadId"] = threadId;
         }
 
         foreach (string field in RetryAttemptFields)

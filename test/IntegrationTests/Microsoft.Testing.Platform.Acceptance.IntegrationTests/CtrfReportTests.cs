@@ -420,7 +420,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
                 : test.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!).ToArray());
         JsonElement[] currentTests = [.. mergedTests.Skip(currentFirst ? 0 : 4).Take(4)];
         JsonElement[] earlierTests = [.. mergedTests.Skip(currentFirst ? 4 : 0).Take(4)];
-        Assert.IsTrue(earlierTests.All(test => !test.TryGetProperty("assertionFailures", out _)));
+        Assert.ContainsOnly(test => !test.TryGetProperty("assertionFailures", out _), earlierTests);
         JsonElement failure = currentTests.Single(test => test.GetProperty("name").GetString() == "FailingTest");
         Assert.IsTrue(failure.TryGetProperty("assertionFailures", out JsonElement failures), "Merging must retain the current report's comparison.");
         JsonElement comparison = Assert.ContainsSingle(failures.EnumerateArray());
@@ -431,6 +431,85 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         JsonElement partial = Assert.ContainsSingle(partialFailures.EnumerateArray());
         Assert.IsFalse(partial.TryGetProperty("expected", out _));
         Assert.AreEqual(string.Empty, partial.GetProperty("actual").GetString());
+    }
+
+    [TestMethod]
+    public async Task Ctrf_MergingReleasedVersion_PreservesRunErrorsAndAttemptThreads()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, TargetFrameworks.NetCurrent);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultDirectory);
+        File.WriteAllText(Path.Combine(resultDirectory, "attempt-1.ctrf.json"), """
+            {
+              "reportFormat": "CTRF",
+              "specVersion": "0.3.0",
+              "reportId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+              "results": {
+                "tool": { "name": "ForeignProducer" },
+                "summary": { "tests": 1, "passed": 0, "failed": 1, "pending": 0, "skipped": 0, "other": 0, "start": 1, "stop": 2 },
+                "tests": [{
+                  "name": "Case", "testId": "case", "executionId": "execution",
+                  "attemptId": "22222222-2222-4222-8222-222222222222",
+                  "status": "failed", "duration": 1, "threadId": "first-worker", "retries": 1,
+                  "retryAttempts": [{
+                    "attempt": 1, "attemptId": "11111111-1111-4111-8111-111111111111",
+                    "status": "failed", "threadId": "nested-worker"
+                  }]
+                }],
+                "errors": [{ "message": "setup" }, { "message": "duplicate" }]
+              }
+            }
+            """);
+        File.WriteAllText(Path.Combine(resultDirectory, "attempt-2.ctrf.json"), """
+            {
+              "reportFormat": "CTRF",
+              "specVersion": "0.3.0",
+              "reportId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+              "results": {
+                "tool": { "name": "ForeignProducer" },
+                "summary": { "tests": 1, "passed": 1, "failed": 0, "pending": 0, "skipped": 0, "other": 0, "start": 3, "stop": 4 },
+                "tests": [{
+                  "name": "Case", "testId": "case", "executionId": "execution",
+                  "attemptId": "33333333-3333-4333-8333-333333333333",
+                  "status": "passed", "duration": 1, "threadId": "final-worker"
+                }],
+                "errors": [{ "message": "duplicate" }, { "trace": "cleanup", "extra": { "stage": "teardown" } }]
+              }
+            }
+            """);
+
+        string mergedPath = Path.Combine(resultDirectory, "merged.ctrf.json");
+        TestHostResult mergeResult = await testHost.ExecuteAsync(
+            $"--merge-ctrf \"{resultDirectory}\" \"{mergedPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+        mergeResult.AssertExitCodeIs(ExitCode.Success);
+        mergeResult.AssertOutputContains($"MERGER_LOCATION={Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Extensions.CtrfReport.dll")}");
+
+        using var report = JsonDocument.Parse(File.ReadAllText(mergedPath));
+        Assert.AreEqual("0.3.0", report.RootElement.GetProperty("specVersion").GetString());
+        JsonElement results = report.RootElement.GetProperty("results");
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("passed").GetInt32());
+        JsonElement test = Assert.ContainsSingle(results.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("Case", test.GetProperty("name").GetString());
+        Assert.AreEqual("passed", test.GetProperty("status").GetString());
+        Assert.AreEqual("final-worker", test.GetProperty("threadId").GetString());
+        Assert.AreEqual("33333333-3333-4333-8333-333333333333", test.GetProperty("attemptId").GetString());
+        Assert.AreEqual(2, test.GetProperty("retries").GetInt32());
+        JsonElement[] history = [.. test.GetProperty("retryAttempts").EnumerateArray()];
+        Assert.HasCount(2, history);
+        Assert.AreSequenceEqual(
+            ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
+            history.Select(attempt => attempt.GetProperty("attemptId").GetString()).ToArray());
+        Assert.IsTrue(history[0].TryGetProperty("threadId", out JsonElement nestedThread), "The nested attempt must retain its thread.");
+        Assert.AreEqual("nested-worker", nestedThread.GetString());
+        Assert.IsTrue(history[1].TryGetProperty("threadId", out JsonElement firstThread), "The earlier result must retain its thread.");
+        Assert.AreEqual("first-worker", firstThread.GetString());
+        Assert.IsTrue(results.TryGetProperty("errors", out JsonElement errors), "Run-level errors must be retained.");
+        const string expectedErrors = """[{"message":"setup"},{"message":"duplicate"},{"message":"duplicate"},{"trace":"cleanup","extra":{"stage":"teardown"}}]""";
+        Assert.AreEqual(
+            JsonNode.Parse(expectedErrors)!.ToJsonString(),
+            JsonNode.Parse(errors.GetRawText())!.ToJsonString());
     }
 
     private static void AssertCtrfReportShape(string filePath)

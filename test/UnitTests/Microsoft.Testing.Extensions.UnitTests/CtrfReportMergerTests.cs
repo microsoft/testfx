@@ -176,6 +176,59 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_Version03_PreservesRunErrorsInInputOrder(bool collapseRetries)
+    {
+        JsonObject first = JsonNode.Parse(BuildReport(specVersion: "0.3.0", testEntries: [Test("first", "passed")]))!.AsObject();
+        first["results"]!["errors"] = JsonNode.Parse("""[{"message":"setup"},{"message":"duplicate"}]""");
+        string legacy = BuildReport(specVersion: "0.2.0", testEntries: [Test("legacy", "passed")]);
+        JsonObject last = JsonNode.Parse(BuildReport(specVersion: "0.3.0", testEntries: [Test("last", "passed")]))!.AsObject();
+        last["results"]!["errors"] = JsonNode.Parse("""[{"message":"duplicate"},{"trace":"cleanup","extra":{"stage":"teardown"}}]""");
+        CtrfMergeMode mode = collapseRetries ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate;
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([first.ToJsonString(), legacy, last.ToJsonString()], mode))!;
+
+        Assert.AreEqual("0.3.0", (string?)merged["specVersion"]);
+        JsonNode results = merged["results"]!;
+        Assert.AreEqual(3, (long)results["summary"]!["tests"]!);
+        Assert.AreSequenceEqual(
+            ["first", "legacy", "last"],
+            results["tests"]!.AsArray().Select(test => (string)test!["name"]!).ToArray());
+        const string expectedErrors = """[{"message":"setup"},{"message":"duplicate"},{"message":"duplicate"},{"trace":"cleanup","extra":{"stage":"teardown"}}]""";
+        Assert.IsNotNull(results["errors"], "Run-level errors from the input reports must be retained.");
+        Assert.AreEqual(JsonNode.Parse(expectedErrors)!.ToJsonString(), results["errors"]!.ToJsonString());
+    }
+
+    [TestMethod]
+    [DataRow("0.3.0", """{"message":"setup"}""")]
+    [DataRow("0.3.0", """[{"message":"setup"},"unstructured"]""")]
+    [DataRow("0.2.0", """[null]""")]
+    public void Merge_Version03_WithMalformedRunErrors_Throws(string inputVersion, string errorsJson)
+    {
+        JsonObject invalid = JsonNode.Parse(BuildReport(specVersion: inputVersion))!.AsObject();
+        invalid["results"]!["errors"] = JsonNode.Parse(errorsJson);
+
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => CtrfReportMerger.Merge([invalid.ToJsonString(), BuildReport(specVersion: "0.3.0")]));
+
+        Assert.AreEqual("inputReports", exception.ParamName);
+        Assert.Contains("run-level errors", exception.Message);
+    }
+
+    [TestMethod]
+    public void Merge_Version02_IgnoresUnrecognizedRunErrors()
+    {
+        JsonObject report = JsonNode.Parse(BuildReport(specVersion: "0.2.0"))!.AsObject();
+        report["results"]!["errors"] = "unrecognized";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([report.ToJsonString()]))!;
+
+        Assert.AreEqual("0.2.0", (string?)merged["specVersion"]);
+        Assert.IsNull(merged["results"]!["errors"]);
+    }
+
+    [TestMethod]
     [DataRow("0.0.0")]
     [DataRow("0.0.4")]
     [DataRow("0.1.0")]
@@ -440,6 +493,19 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual(reportId, (string?)repeated["reportId"]);
         Assert.AreNotEqual(reportId, (string?)other["reportId"]);
         Assert.AreEqual("0.3.0", (string?)merged["specVersion"]);
+    }
+
+    [TestMethod]
+    [DataRow(false, "a126f25a-6f5c-addc-8911-6d9f155e6751")]
+    [DataRow(true, "275d0831-c88c-e293-786d-205761003d6b")]
+    public void Merge_Version03_ReleasedProjectionDoesNotReuseDraftReportId(bool collapseRetries, string draftReportId)
+    {
+        const string input = """{"reportFormat":"CTRF","specVersion":"0.3.0","results":{"tests":[],"errors":[{"message":"setup"}]}}""";
+        CtrfMergeMode mode = collapseRetries ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate;
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([input], mode))!;
+
+        Assert.AreNotEqual(draftReportId, (string?)merged["reportId"]);
     }
 
     [TestMethod]
@@ -1212,6 +1278,70 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
         Assert.AreEqual("first-attempt", (string?)retryAttempts[0]!["attemptId"]);
         Assert.AreEqual("second-attempt", (string?)retryAttempts[1]!["attemptId"]);
+    }
+
+    [TestMethod]
+    [DataRow("0.2.0", "0.2.0")]
+    [DataRow("0.2.0", "0.3.0")]
+    [DataRow("0.3.0", "0.2.0")]
+    [DataRow("0.3.0", "0.3.0")]
+    public void Merge_CollapseRetryAttempts_PreservesThreadIdsOnlyInVersion03(string firstVersion, string finalVersion)
+    {
+        bool supportsRetryThreadId = firstVersion == "0.3.0" || finalVersion == "0.3.0";
+        JsonObject first = Attempt("Case", "failed", uid: "case");
+        first["executionId"] = "shared-execution";
+        first["attemptId"] = "first-attempt";
+        first["threadId"] = "first-worker";
+        var expectedIds = new List<string>();
+        var expectedWorkers = new List<string?>();
+        if (firstVersion == "0.3.0")
+        {
+            first["retryAttempts"] = new JsonArray(new JsonObject
+            {
+                ["attempt"] = 1,
+                ["attemptId"] = "first-nested",
+                ["status"] = "failed",
+                ["threadId"] = "first-nested-worker",
+            });
+            expectedIds.Add("first-nested");
+            expectedWorkers.Add("first-nested-worker");
+        }
+
+        expectedIds.Add("first-attempt");
+        expectedWorkers.Add(supportsRetryThreadId ? "first-worker" : null);
+        JsonObject final = Attempt("Case", "passed", uid: "case");
+        final["executionId"] = "shared-execution";
+        final["attemptId"] = "final-attempt";
+        final["threadId"] = "final-worker";
+        if (finalVersion == "0.3.0")
+        {
+            final["retryAttempts"] = new JsonArray(new JsonObject
+            {
+                ["attempt"] = 1,
+                ["attemptId"] = "final-nested",
+                ["status"] = "failed",
+                ["threadId"] = "final-nested-worker",
+            });
+            expectedIds.Add("final-nested");
+            expectedWorkers.Add("final-nested-worker");
+        }
+
+        string[] reports =
+        [
+            BuildReport(specVersion: firstVersion, testEntries: [first]),
+            BuildReport(specVersion: finalVersion, testEntries: [final]),
+        ];
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge(reports, CtrfMergeMode.CollapseRetryAttempts))!;
+
+        Assert.AreEqual(supportsRetryThreadId ? "0.3.0" : "0.2.0", (string?)merged["specVersion"]);
+        JsonNode test = Assert.ContainsSingle(merged["results"]!["tests"]!.AsArray())!;
+        Assert.AreEqual("passed", (string?)test["status"]);
+        Assert.AreEqual("final-attempt", (string?)test["attemptId"]);
+        Assert.AreEqual("final-worker", (string?)test["threadId"]);
+        JsonArray history = test["retryAttempts"]!.AsArray();
+        Assert.HasCount(expectedIds.Count, history);
+        Assert.AreSequenceEqual(expectedIds, history.Select(attempt => (string)attempt!["attemptId"]!).ToArray());
+        Assert.AreSequenceEqual(expectedWorkers, history.Select(attempt => (string?)attempt!["threadId"]).ToArray());
     }
 
     [TestMethod]

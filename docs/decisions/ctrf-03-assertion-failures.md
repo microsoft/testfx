@@ -62,6 +62,38 @@ an ambiguous result-level pair when more than one comparison exists.
   comparison clone's origin to the real repository fixed package metadata;
   repacking succeeded. That setup failure is not red-phase evidence.
 
+2026-11-26, released specification:
+
+- The annotated [v0.3.0 tag][release] points to
+  `6cafa1ebdf4d5286f6e208124d313269aa357411`. Comparing its schema directly
+  with the reviewed snapshot, excluding descriptions, found three additional
+  optional fields: root `provenance`, `results.errors`, and retry-attempt
+  `threadId`. The assertion-failure schemas are unchanged.
+- The released specification says consumers must account for global errors and
+  recommends concatenating them when merging. The merger must retain those
+  errors and attempt-local thread IDs in 0.3.0 output; omitting the former
+  could make a run with infrastructure errors appear error-free. The 0.2.0
+  retry schema does not allow attempt-level `threadId`, so older output must
+  remain unchanged.
+- For a 0.3.0 merge, reject a run-error field that is not an array of objects
+  rather than silently dropping an unrepresentable error and producing a
+  success-shaped report. Legacy-only merges retain their existing handling.
+- Native provenance is optional. The existing producer-specific lineage remains
+  diagnostic metadata; this change does not invent IDs for foreign inputs or
+  claim standardized provenance or input completeness.
+- Before the release-alignment fix, the rebased source was
+  `d19e16fe4c1bb04919cf7aee42c26e4db5f8b5cb` with a retained regression-test
+  patch SHA-256
+  `bca57fa94f41d9a4cc279d62f099bb10f14c666e5588551621f26e4ace959293`.
+  The pinned `12.0.100-alpha.1.26570.125` SDK built the net10.0 test project.
+  The single-TFM build required `/p:NoWarn=NU1510`: without it, NuGet reports
+  pre-existing `System.Text.Json` references in CTRF, HTML, and JUnit as
+  unnecessary and treats the warning as an error.
+- The new focused unit selection executed eight cases before the fix: seven
+  failed at the intended assertions, exposing dropped run errors, dropped retry
+  thread IDs, and reuse of a draft-projection report ID. The remaining 0.2.0
+  compatibility case passed. The runner exited 2 with no skipped cases.
+
 ## Alternatives and decision
 
 Keep the current output: valid 0.2.0, but loses structured comparisons.
@@ -81,6 +113,8 @@ be mixed with a reviewed 0.2.0/0.3.0 report. Rejection preserves inputs and an
 existing destination. Legacy-only version handling and 0.2.0 report identities
 remain unchanged. The new 0.3.0 projection gets its own deterministic report-ID
 discriminator so changed retry contents cannot reuse the old merger's identity.
+The released projection uses a new discriminator from the draft projection too:
+run errors and retry thread IDs change the document even with identical inputs.
 
 ## Validation and demonstration
 
@@ -220,9 +254,10 @@ gate is required. CI execution itself remains unproven until the PR checks run.
 ## Rollout and open questions
 
 Target the next major package only; no servicing backport or 2.x default-output
-change is included. The CTRF extension owner remains responsible for final
-upstream 0.3.0 alignment before release. Multiple-assertion transport remains a
-separate enhancement. This change does not promise downstream dashboard support.
+change is included. The CTRF extension owner remains responsible for rollout
+and release-branch validation. Multiple-assertion transport remains a separate
+enhancement. This change does not promise downstream dashboard support.
 
 [reply]: https://github.com/ctrf-io/ctrf/issues/67#issuecomment-6402490127
 [proposal]: https://github.com/ctrf-io/ctrf/pull/87
+[release]: https://github.com/ctrf-io/ctrf/tree/v0.3.0
