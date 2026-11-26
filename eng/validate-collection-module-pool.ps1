@@ -77,9 +77,11 @@ try {
         [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net10.0-windows10.0.18362.0"; RelativePath = "c" },
         [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net10.0"; RelativePath = "d" },
         [pscustomobject]@{ Project = "TestFramework.UnitTests"; Framework = "net10.0-windows10.0.18362.0"; RelativePath = "e" },
-        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net11.0"; RelativePath = "f" }
+        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net11.0"; RelativePath = "f" },
+        [pscustomobject]@{ Project = "TestFramework.UnitTests"; Framework = "net11.0"; RelativePath = "g" },
+        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net12.0"; RelativePath = "h" }
     ) 6>$null)
-    if (($mappable.RelativePath -join ",") -ne "e,f") {
+    if (($mappable.RelativePath -join ",") -ne "e,g,h") {
         throw "ModulePoolSkipsOnlyOversizedMaps: only the module/TFM maps that exceed supported size limits may be skipped."
     }
     Write-PassedCheck "ModulePoolSkipsOnlyOversizedMaps"

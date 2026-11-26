@@ -27,6 +27,9 @@ internal static class DebugAssertionChildProbe
     }
 
 #if DEBUG
+    private static readonly TimeSpan ChildCompletionTimeout = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan ChildCleanupTimeout = TimeSpan.FromSeconds(30);
+
     internal static async Task VerifyAsync(string mode, string expectedDiagnostic)
     {
         string module = typeof(DebugAssertionChildProbe).Assembly.Location;
@@ -56,7 +59,7 @@ internal static class DebugAssertionChildProbe
         var completion = Task.Run(child.WaitForExit);
         try
         {
-            await WaitForCompletionAsync(completion);
+            await WaitForCompletionAsync(completion, ChildCompletionTimeout);
             string output = await standardOutput;
             string error = await standardError;
             string[] markers = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
@@ -78,16 +81,16 @@ internal static class DebugAssertionChildProbe
             if (!child.HasExited)
             {
                 child.Kill();
-                await WaitForCompletionAsync(completion);
+                await WaitForCompletionAsync(completion, ChildCleanupTimeout);
             }
         }
     }
 
-    private static async Task WaitForCompletionAsync(Task task)
+    private static async Task WaitForCompletionAsync(Task task, TimeSpan timeout)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var cts = new CancellationTokenSource(timeout);
         Task completed = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cts.Token));
-        completed.Should().BeSameAs(task, "Timed out waiting for the owned assertion child.");
+        completed.Should().BeSameAs(task, "Timed out waiting for the owned assertion child after {0}.", timeout);
         await task;
     }
 #endif

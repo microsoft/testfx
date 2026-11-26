@@ -38,10 +38,10 @@ function Get-CollectionModuleConcurrency {
 }
 
 # Oversized maps fail collection or exceed Azure DevOps artifact upload limits.
-# These specific module/TFM maps exceeded the limit in CI. Without a shard, PR selection
-# conservatively runs all of their tests. See docs/affected-test-selection.md.
+# These module/TFM maps exceeded the collector limit or had their upload rejected in CI.
+# Without a shard, PR selection conservatively runs all tests. See docs/affected-test-selection.md.
 $script:CollectionMapSizeExclusions = @(
-    [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Frameworks = @("net462", "net48", "net10.0", "net10.0-windows10.0.18362.0") }
+    [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Frameworks = @("net462", "net48", "net10.0", "net10.0-windows10.0.18362.0", "net11.0") }
 )
 
 function Get-MappableCollectionModule {
