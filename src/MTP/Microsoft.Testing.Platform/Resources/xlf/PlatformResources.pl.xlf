@@ -1424,7 +1424,7 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustUseDistinctStagesErrorMessage">
         <source>Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</source>
-        <target state="new">Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</target>
+        <target state="translated">Wielu orkiestratorów hostów testów używa tego samego '{0}' etapu: '{1}'. Dla każdego etapu można utworzyć tylko jednego orkiestratora.</target>
         <note>{0} is a TestHostExecutionOrchestratorStage value. {1} is the list of orchestrator Uids.</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">

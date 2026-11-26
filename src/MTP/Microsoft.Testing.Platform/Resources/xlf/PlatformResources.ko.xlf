@@ -1374,7 +1374,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">
         <source>The internal test host orchestrator chain value is invalid.</source>
-        <target state="new">The internal test host orchestrator chain value is invalid.</target>
+        <target state="translated">내부 테스트 호스트 오케스트레이터 체인 값이 잘못되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
@@ -1409,22 +1409,22 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
         <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
-        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <target state="translated">테스트 호스트 오케스트레이터 '{0}'은(는) 'dotnettestcli' 명명된 파이프 프로토콜에서 'Repetition' 단계와 'Recovery' 단계를 함께 구성할 수 없습니다. 반복되는 한 번의 실행에서 재시도가 발생하면 다음 반복 실행이 SDK에 더 낮은 시도 횟수를 보고할 수 있기 때문입니다.</target>
         <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
-        <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>
+        <target state="translated">테스트 호스트 오케스트레이터 '{0}'이(가) 지원되지 않는 단계 값 '{1}'을(를) 선언합니다.</target>
         <note>{0} is an orchestrator Uid. {1} is an invalid TestHostExecutionOrchestratorStage value.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustBeComposableErrorMessage">
         <source>Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</source>
-        <target state="new">Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</target>
+        <target state="translated">테스트 호스트 오케스트레이터 '{0}'를 구성할 수 없습니다. 여러 오케스트레이터를 사용하도록 설정한 경우 각각 'IComposableTestHostExecutionOrchestrator' 구현해야 합니다.</target>
         <note>{0} is the list of orchestrator Uids. {Locked="IComposableTestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustUseDistinctStagesErrorMessage">
         <source>Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</source>
-        <target state="new">Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</target>
+        <target state="translated">여러 테스트 호스트 오케스트레이터가 동일한 단계 '{0}'을(를) 사용합니다: '{1}'. 단계당 하나의 오케스트레이터만 구성할 수 있습니다.</target>
         <note>{0} is a TestHostExecutionOrchestratorStage value. {1} is the list of orchestrator Uids.</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
