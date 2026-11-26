@@ -72,7 +72,7 @@ public sealed class RetrySerializersTests
     [TestMethod]
     public void TestRunCountsRequest_RoundTripsCountsAndRecoveredUids()
     {
-        var request = new TestRunCountsRequest(7, 2, 1, ["uid-1", "uid-2"]);
+        var request = new TestRunCountsRequest(7, 2, 1, ["uid-1", "uid-2"], fixtureFailed: true);
 
         TestRunCountsRequest result = RoundTrip(new TestRunCountsRequestSerializer(), request);
 
@@ -80,16 +80,18 @@ public sealed class RetrySerializersTests
         Assert.AreEqual(request.FailedTests, result.FailedTests);
         Assert.AreEqual(request.SkippedTests, result.SkippedTests);
         Assert.AreSequenceEqual(request.RecoveredTestUids, result.RecoveredTestUids);
+        Assert.IsTrue(result.FixtureFailed);
     }
 
     [TestMethod]
     public void TestRunCountsRequest_RoundTripsEmptyRecoveredUids()
     {
-        var request = new TestRunCountsRequest(7, 2, 1, []);
+        var request = new TestRunCountsRequest(7, 2, 1, [], fixtureFailed: false);
 
         TestRunCountsRequest result = RoundTrip(new TestRunCountsRequestSerializer(), request);
 
         Assert.IsEmpty(result.RecoveredTestUids);
+        Assert.IsFalse(result.FixtureFailed);
     }
 
     [DataRow(7, 2, 1, 9, 10)]
@@ -102,7 +104,7 @@ public sealed class RetrySerializersTests
         int expectedExecuted,
         int expectedTotal)
     {
-        var request = new TestRunCountsRequest(passed, failed, skipped, []);
+        var request = new TestRunCountsRequest(passed, failed, skipped, [], fixtureFailed: false);
 
         Assert.AreEqual(expectedExecuted, request.ExecutedTests);
         Assert.AreEqual(expectedTotal, request.TotalTests);
@@ -114,7 +116,7 @@ public sealed class RetrySerializersTests
         var serializer = new TestRunCountsRequestSerializer();
         using var stream = new MemoryStream();
 
-        Serialize(serializer, new TestRunCountsRequest(7, 2, 3, ["recovered"]), stream);
+        Serialize(serializer, new TestRunCountsRequest(7, 2, 3, ["recovered"], fixtureFailed: true), stream);
         stream.Position = 0;
 
         Assert.AreEqual(7, ReadInt(stream));
@@ -122,6 +124,7 @@ public sealed class RetrySerializersTests
         Assert.AreEqual(3, ReadInt(stream));
         Assert.AreEqual(1, ReadInt(stream));
         Assert.AreEqual("recovered", ReadString(stream));
+        Assert.AreEqual(1, ReadInt(stream));
         Assert.AreEqual(stream.Length, stream.Position);
     }
 
@@ -133,6 +136,7 @@ public sealed class RetrySerializersTests
         WriteInt(stream, 1);
         WriteInt(stream, 2);
         WriteInt(stream, 3);
+        WriteInt(stream, 0);
         WriteInt(stream, 0);
         stream.Position = 0;
 

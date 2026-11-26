@@ -225,7 +225,7 @@ internal static class RetryTestHostRunner
         if (testHostProcess is TestHostHandleToProcessAdapter { IsExitCodeAuthoritative: false })
         {
             exitCode = retryFailedTestsPipeServer.CountsReported
-                ? retryFailedTestsPipeServer.FailedTestResults > 0
+                ? retryFailedTestsPipeServer.FailedTestResults > 0 || retryFailedTestsPipeServer.FixtureFailed
                     ? (int)ExitCode.AtLeastOneTestFailed
                     : (int)ExitCode.Success
                 : (int)ExitCode.GenericFailure;

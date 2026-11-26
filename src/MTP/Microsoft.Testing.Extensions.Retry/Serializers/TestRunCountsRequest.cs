@@ -29,8 +29,13 @@ namespace Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 /// attempt — so the payload can be extended without a protocol-compatibility window.
 /// </para>
 /// </remarks>
-internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string[] recoveredTestUids) : IRequest
+internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string[] recoveredTestUids, bool fixtureFailed) : IRequest
 {
+    public TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string[] recoveredTestUids)
+        : this(passedTests, failedTests, skippedTests, recoveredTestUids, fixtureFailed: false)
+    {
+    }
+
     public int PassedTests { get; } = passedTests;
 
     public int FailedTests { get; } = failedTests;
@@ -42,6 +47,8 @@ internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int
     /// which is not retrying anything.
     /// </summary>
     public string[] RecoveredTestUids { get; } = recoveredTestUids;
+
+    public bool FixtureFailed { get; } = fixtureFailed;
 
     /// <summary>
     /// Gets the number of test results that actually executed (skipped excluded), which is the denominator the
@@ -73,7 +80,8 @@ internal sealed class TestRunCountsRequestSerializer : NamedPipeSerializer<TestR
             recovered[i] = ReadString(stream);
         }
 
-        return new(passed, failed, skipped, recovered);
+        bool fixtureFailed = ReadInt(stream) != 0;
+        return new(passed, failed, skipped, recovered, fixtureFailed);
     }
 
     protected override void SerializeCore(TestRunCountsRequest objectToSerialize, Stream stream)
@@ -87,5 +95,7 @@ internal sealed class TestRunCountsRequestSerializer : NamedPipeSerializer<TestR
         {
             WriteString(stream, uid);
         }
+
+        WriteInt(stream, objectToSerialize.FixtureFailed ? 1 : 0);
     }
 }

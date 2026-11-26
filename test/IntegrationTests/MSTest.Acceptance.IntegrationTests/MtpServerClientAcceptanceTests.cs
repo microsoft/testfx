@@ -383,6 +383,63 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
     }
 
     [TestMethod]
+    [DataRow(false, DisplayName = "RetryCleanupOnly")]
+    [DataRow(true, DisplayName = "RetryCleanupWithRecoveringTest")]
+    public async Task CleanupFailure_WithRetry_PreservesFailureAndOnlyRetriesTests(bool mixed)
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = RetryCleanupAssetSources
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$FlakyTest$", mixed ? RetryCleanupFlakyTestSource : string.Empty);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("RetryCleanupAsset", source);
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(0, build.ExitCode, $"Build failed:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "retry-results");
+        string markerPath = Path.Combine(testAsset.TargetAssetPath, "executions.txt");
+        var host = TestHost.LocateFrom(testAsset.TargetAssetPath, "RetryCleanupAsset", TargetFrameworks.NetCurrent);
+        TestHostResult result = await host.ExecuteAsync(
+            $"--retry-failed-tests 1 --report-trx --results-directory \"{resultsDirectory}\"",
+            new() { ["MTP_RETRY_CLEANUP_MARKER"] = markerPath },
+            cancellationToken: cancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContains("Retry summary: Failed!");
+        string[] executions = File.ReadAllLines(markerPath);
+        Assert.AreEqual(1, executions.Count(line => line == "fixture-test"));
+        Assert.AreEqual(1, executions.Count(line => line == "fixture-cleanup"));
+        Assert.AreEqual(mixed ? 2 : 0, executions.Count(line => line == "flaky-test"));
+
+        string trxPath = Assert.ContainsSingle(Directory.GetFiles(resultsDirectory, "*.trx", SearchOption.TopDirectoryOnly));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var trx = XDocument.Load(trxPath);
+        XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
+        Assert.HasCount(mixed ? 3 : 2, results);
+        XElement cleanup = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == "[CleanupTests ClassCleanup]", results);
+        Assert.AreEqual("Failed", cleanup.Attribute("outcome")?.Value);
+        Assert.Contains(
+            "cleanup failed sentinel",
+            string.Join(" ", cleanup.Descendants(ns + "Message").Select(message => message.Value)));
+        XElement fixtureTest = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == "FixtureTest", results);
+        Assert.AreEqual("Passed", fixtureTest.Attribute("outcome")?.Value);
+        if (mixed)
+        {
+            XElement flaky = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == "FlakyTest", results);
+            Assert.AreEqual("Passed", flaky.Attribute("outcome")?.Value);
+        }
+
+        XElement counters = Assert.ContainsSingle(trx.Descendants(ns + "Counters"));
+        Assert.AreEqual(mixed ? "3" : "2", counters.Attribute("total")?.Value);
+        Assert.AreEqual(mixed ? "2" : "1", counters.Attribute("passed")?.Value);
+        Assert.AreEqual("1", counters.Attribute("failed")?.Value);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task ShutdownAsync_WhileExternalTeardownBlocks_ReturnsImmediatelyAndHidesForcedExitCode(string tfm)
     {
@@ -473,6 +530,89 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
 
         return options;
     }
+
+    private const string RetryCleanupAssetSources = """
+#file RetryCleanupAsset.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file Program.cs
+using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+internal sealed class Program
+{
+    public static async Task<int> Main(string[] args)
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+        builder.AddRetryProvider();
+        builder.AddTrxReportProvider();
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
+    }
+}
+
+#file CleanupTests.cs
+using System;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public static class Markers
+{
+    public static string Path => Environment.GetEnvironmentVariable("MTP_RETRY_CLEANUP_MARKER");
+    public static void Write(string value) => File.AppendAllText(Path, value + Environment.NewLine);
+}
+
+[TestClass]
+public sealed class CleanupTests
+{
+    [TestMethod]
+    public void FixtureTest() => Markers.Write("fixture-test");
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        Markers.Write("fixture-cleanup");
+        throw new InvalidOperationException("cleanup failed sentinel");
+    }
+}
+
+$FlakyTest$
+""";
+
+    private const string RetryCleanupFlakyTestSource = """
+[TestClass]
+public sealed class FlakyTests
+{
+    [TestMethod]
+    public void FlakyTest()
+    {
+        bool alreadyRan = File.Exists(Markers.Path) && File.ReadAllLines(Markers.Path).Contains("flaky-test");
+        Markers.Write("flaky-test");
+        if (!alreadyRan)
+        {
+            Assert.Fail("fails only on the first attempt");
+        }
+    }
+}
+""";
 
     private const string CleanupAssetSources = """
 #file MtpServerClientCleanupAsset.csproj

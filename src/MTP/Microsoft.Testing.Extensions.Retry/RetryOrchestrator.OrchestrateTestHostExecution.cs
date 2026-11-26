@@ -41,6 +41,8 @@ internal sealed partial class RetryOrchestrator
         string[]? lastListOfFailedId = null;
         string? currentTryResultFolder = null;
         bool thresholdPolicyKickedIn = false;
+        bool stoppedForFixtureFailure = false;
+        bool fixtureFailed = false;
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
         List<RetryAttemptArtifact> attemptArtifacts = [];
@@ -144,6 +146,7 @@ internal sealed partial class RetryOrchestrator
 
             exitCodes.Add(attemptResult.ExitCode);
 
+            fixtureFailed |= retryFailedTestsPipeServer.FixtureFailed;
             int failedThisAttempt = retryFailedTestsPipeServer.FailedTests.Count;
             sawSkippedResults |= retryFailedTestsPipeServer.SkippedTests > 0;
             if (attemptCount == 1)
@@ -221,6 +224,12 @@ internal sealed partial class RetryOrchestrator
                     break;
                 }
 
+                if (retryFailedTestsPipeServer.FixtureFailed && failedThisAttempt == 0)
+                {
+                    stoppedForFixtureFailure = true;
+                    break;
+                }
+
                 // Check thresholds only on the first attempt (computed against the full suite).
                 if (attemptCount == 1 && await RetryThresholdPolicy.EvaluateAsync(_commandLineOptions, this, outputDevice, retryFailedTestsPipeServer, cancellationToken).ConfigureAwait(false))
                 {
@@ -263,6 +272,11 @@ internal sealed partial class RetryOrchestrator
             }
         }
 
+        if (fixtureFailed && exitCodes[^1] == (int)ExitCode.Success)
+        {
+            exitCodes[^1] = (int)ExitCode.AtLeastOneTestFailed;
+        }
+
         orchestrationStopwatch.Stop();
 
         await ReportSummaryAsync(
@@ -277,7 +291,7 @@ internal sealed partial class RetryOrchestrator
             retriedTests.Count,
             retriedExecutions,
             flakyTestsByUid.Values,
-            (thresholdPolicyKickedIn || retryInterrupted) && attemptCount < userMaxRetryCount + 1,
+            (thresholdPolicyKickedIn || retryInterrupted || stoppedForFixtureFailure) && attemptCount < userMaxRetryCount + 1,
             orchestrationStopwatch.Elapsed,
             cancellationToken).ConfigureAwait(false);
 

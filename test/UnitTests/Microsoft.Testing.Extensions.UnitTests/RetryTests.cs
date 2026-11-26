@@ -52,6 +52,43 @@ public class RetryTests
     }
 
     [TestMethod]
+    public async Task OrchestrateTestHostExecutionAsync_FixtureFailureAloneDoesNotRelaunch()
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["1"] },
+            [
+                new(2, [RetryUpdate("passed", PassedTestNodeStateProperty.CachedInstance), RetryFixtureFailure("cleanup")]),
+                new(0, [RetryUpdate("passed", PassedTestNodeStateProperty.CachedInstance)]),
+            ]);
+
+        Assert.AreEqual(2, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.ContainsSingle(fixture.Launcher.Contexts);
+        Assert.Contains("  total: 1", fixture.Output);
+        Assert.Contains("  failed: 0", fixture.Output);
+        Assert.Contains(value => value.StartsWith("Retry summary: Failed!", StringComparison.Ordinal), fixture.Output);
+        Assert.DoesNotContain(value => value.StartsWith("Retry: attempt", StringComparison.Ordinal), fixture.Output);
+    }
+
+    [TestMethod]
+    public async Task OrchestrateTestHostExecutionAsync_FixtureFailureSurvivesSuccessfulTestRetry()
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["1"] },
+            [
+                new(2, [RetryUpdate("failed", new FailedTestNodeStateProperty("first")), RetryFixtureFailure("cleanup")]),
+                new(0, [RetryUpdate("failed", PassedTestNodeStateProperty.CachedInstance)]),
+            ]);
+
+        Assert.AreEqual(2, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.HasCount(2, fixture.Launcher.Contexts);
+        Assert.AreSequenceEqual(["failed"], fixture.Launcher.RetryFilters[1]);
+        Assert.Contains("  total: 1", fixture.Output);
+        Assert.Contains("  failed: 0", fixture.Output);
+        Assert.Contains("  flaky: 1 (passed after retry)", fixture.Output);
+        Assert.Contains(value => value.StartsWith("Retry summary: Failed!", StringComparison.Ordinal), fixture.Output);
+    }
+
+    [TestMethod]
     public async Task OrchestrateTestHostExecutionAsync_ProgressiveRecoveryCountsEachObservedExtraExecution()
     {
         using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
@@ -592,14 +629,16 @@ public class RetryTests
         fileSystem.Verify(value => value.DeleteFile(result.RecoveredArtifactManifestPath), Times.Never);
     }
 
-    [DataRow(0, 1, true, 0)]
-    [DataRow(1, 0, true, 2)]
-    [DataRow(0, 0, false, 1)]
+    [DataRow(0, 1, true, false, 0)]
+    [DataRow(1, 0, true, false, 2)]
+    [DataRow(0, 1, true, true, 2)]
+    [DataRow(0, 0, false, false, 1)]
     [TestMethod]
     public async Task RunAttemptAsync_NonAuthoritativeHandle_DerivesExitCodeFromReportedCounts(
         int failedTestResults,
         int passedTestResults,
         bool countsReported,
+        bool fixtureFailed,
         int expectedExitCode)
     {
         ServiceProvider serviceProvider = new();
@@ -632,6 +671,9 @@ public class RetryTests
                 typeof(RetryFailedTestsPipeServer)
                     .GetProperty(nameof(RetryFailedTestsPipeServer.TotalTestRan))!
                     .SetValue(server, failedTestResults + passedTestResults);
+                typeof(RetryFailedTestsPipeServer)
+                    .GetProperty(nameof(RetryFailedTestsPipeServer.FixtureFailed))!
+                    .SetValue(server, fixtureFailed);
                 typeof(RetryFailedTestsPipeServer)
                     .GetProperty(nameof(RetryFailedTestsPipeServer.CountsReported))!
                     .SetValue(server, true);
@@ -2552,6 +2594,14 @@ public class RetryTests
     private static TestNodeUpdateMessage RetryUpdate(string uid, TestNodeStateProperty state)
         => new(new SessionUid("retry-session"), new TestNode { Uid = uid, DisplayName = uid, Properties = new PropertyBag(state) });
 
+    private static TestNodeUpdateMessage RetryFixtureFailure(string uid)
+        => new(new SessionUid("retry-session"), new TestNode
+        {
+            Uid = uid,
+            DisplayName = uid,
+            Properties = new PropertyBag(new SerializableKeyValuePairStringProperty("node-type", "group"), new FailedTestNodeStateProperty("cleanup failed")),
+        });
+
     private sealed record ScriptedRetryAttempt(int ExitCode, TestNodeUpdateMessage[] Results, bool ReportCounts = true);
 
     private sealed class RetryOrchestrationFixture(
@@ -2582,6 +2632,8 @@ public class RetryTests
         private readonly List<ScriptedRetryHandle> _handles = [];
 
         public List<TestHostLaunchContext> Contexts { get; } = [];
+
+        public IReadOnlyList<string[]> RetryFilters => [.. _handles.Select(handle => handle.RetryFilter)];
 
         public string Uid => nameof(ScriptedRetryLauncher);
 
@@ -2633,6 +2685,8 @@ public class RetryTests
 
         public int ExitCode { get; }
 
+        public string[] RetryFilter { get; private set; } = [];
+
         public bool HasExited => _completion.IsCompleted;
 
         public Task WaitForExitAsync(CancellationToken cancellationToken) => _completion.WithCancellationAsync(cancellationToken);
@@ -2648,6 +2702,7 @@ public class RetryTests
             var consumer = new RetryDataConsumer(child);
             await consumer.InitializeAsync();
             await _lifecycle.BeforeRunAsync(token);
+            RetryFilter = _lifecycle.FailedTestsIDToRetry ?? [];
             var session = new Mock<ITestSessionContext>();
             session.SetupGet(value => value.SessionUid).Returns(new SessionUid("retry-session"));
             session.SetupGet(value => value.CancellationToken).Returns(token);

@@ -25,7 +25,7 @@ internal sealed partial class TrxReportEngine
     ///   <item><description><c>Counters</c> attributes are summed; <c>Times</c> use the earliest <c>creation</c>/<c>queuing</c>/<c>start</c> and latest <c>finish</c> derived from the inputs (attributes no input supplies are omitted).</description></item>
     ///   <item><description><c>RunInfos</c> (crash/exit diagnostics) and <c>CollectorDataEntries</c> (attachment references) are carried across from every input's <c>ResultSummary</c>.</description></item>
     ///   <item><description>The result summary outcome is <c>Failed</c> if any input failed, otherwise <c>Completed</c>.</description></item>
-    ///   <item><description>Attachment hrefs inside <c>CollectorDataEntries</c> are carried as-is; because they are relative to each input's deployment root, the physical attachment files are only relocated to the merged deployment root by <see cref="MergeToFileAsync"/> (which has the source paths). Callers of the in-memory <see cref="Merge"/> that need resolvable attachments should relocate them separately.</description></item>
+    ///   <item><description>Attachment hrefs inside <c>CollectorDataEntries</c> are carried as-is; because they are relative to each input's deployment root, the physical attachment files are only relocated to the merged deployment root by <see cref="MergeToFileAsync(IReadOnlyList{string}, string, Guid, string, CancellationToken)"/> (which has the source paths). Callers of the in-memory <see cref="Merge"/> that need resolvable attachments should relocate them separately.</description></item>
     /// </list>
     /// </para>
     /// </remarks>
@@ -209,12 +209,21 @@ internal sealed partial class TrxReportEngine
     /// <summary>
     /// Loads the given TRX files, merges them (see <see cref="Merge"/>) and writes the result to <paramref name="outputPath"/>.
     /// </summary>
-    internal static async Task MergeToFileAsync(
+    internal static Task MergeToFileAsync(
         IReadOnlyList<string> inputPaths,
         string outputPath,
         Guid runId,
         string runName,
         CancellationToken cancellationToken)
+        => MergeToFileAsync(inputPaths, outputPath, runId, runName, cancellationToken, retryAttempts: false);
+
+    internal static async Task MergeToFileAsync(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        Guid runId,
+        string runName,
+        CancellationToken cancellationToken,
+        bool retryAttempts)
     {
         if (inputPaths is null)
         {
@@ -262,7 +271,9 @@ internal sealed partial class TrxReportEngine
         // Best-effort and path-confined: failures never fail the merge.
         RelocateAttachments(inputPaths, reports, outputDirectory, runId, runName, cancellationToken);
 
-        XDocument merged = Merge(reports, runId, runName);
+        XDocument merged = retryAttempts
+            ? MergeRetryAttempts(reports, runId, runName)
+            : Merge(reports, runId, runName);
 
         // Write to a temporary sibling, then replace the destination ENTRY, so a symlink/hardlink output
         // alias of an input has only its link removed rather than the read-only source truncated in place.
@@ -276,5 +287,141 @@ internal sealed partial class TrxReportEngine
             await Task.CompletedTask.ConfigureAwait(false);
 #endif
         }).ConfigureAwait(false);
+    }
+
+    private static XDocument MergeRetryAttempts(IReadOnlyList<XDocument> inputReports, Guid runId, string runName)
+    {
+        XDocument merged = Merge(inputReports, runId, runName);
+        var latestAttemptByTestId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        for (int attempt = 0; attempt < inputReports.Count; attempt++)
+        {
+            if (inputReports[attempt].Root is not { } testRun || FindChild(testRun, "Results") is not { } results)
+            {
+                continue;
+            }
+
+            foreach (XElement result in results.Elements())
+            {
+                string testId = result.Attribute("testId")?.Value
+                    ?? throw new InvalidDataException("A TRX retry result is missing its testId.");
+                _ = result.Attribute("executionId")?.Value
+                    ?? throw new InvalidDataException("A TRX retry result is missing its executionId.");
+                latestAttemptByTestId[testId] = attempt;
+            }
+        }
+
+        var selectedExecutionIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (int attempt = 0; attempt < inputReports.Count; attempt++)
+        {
+            if (inputReports[attempt].Root is not { } testRun || FindChild(testRun, "Results") is not { } results)
+            {
+                continue;
+            }
+
+            foreach (XElement result in results.Elements())
+            {
+                string testId = result.Attribute("testId")!.Value;
+                if (latestAttemptByTestId[testId] == attempt)
+                {
+                    selectedExecutionIds.Add(result.Attribute("executionId")!.Value);
+                }
+            }
+        }
+
+        XElement mergedTestRun = merged.Root!;
+        XElement mergedResults = FindChild(mergedTestRun, "Results")!;
+        XElement[] selectedResults =
+        [
+            .. mergedResults.Elements()
+                .Where(result => selectedExecutionIds.Contains(result.Attribute("executionId")?.Value ?? string.Empty)),
+        ];
+        mergedResults.ReplaceNodes(selectedResults);
+
+        var selectedTestIds = new HashSet<string>(
+            selectedResults.Select(result => result.Attribute("testId")!.Value),
+            StringComparer.OrdinalIgnoreCase);
+        if (FindChild(mergedTestRun, "TestEntries") is { } testEntries)
+        {
+            testEntries.Elements()
+                .Where(entry => !selectedExecutionIds.Contains(entry.Attribute("executionId")?.Value ?? string.Empty))
+                .Remove();
+        }
+
+        if (FindChild(mergedTestRun, "TestDefinitions") is { } testDefinitions)
+        {
+            testDefinitions.Elements()
+                .Where(definition => !selectedTestIds.Contains(definition.Attribute("id")?.Value ?? string.Empty))
+                .Remove();
+        }
+
+        int passed = 0;
+        int failedResultCount = 0;
+        int explicitTimeoutCount = 0;
+        int notExecuted = 0;
+        foreach (XElement result in selectedResults)
+        {
+            switch (result.Attribute("outcome")?.Value)
+            {
+                case "Passed":
+                    passed++;
+                    break;
+                case "Failed":
+                    failedResultCount++;
+                    break;
+                case "Timeout":
+                    explicitTimeoutCount++;
+                    break;
+                case "NotExecuted":
+                case "Skipped":
+                    notExecuted++;
+                    break;
+                default:
+                    throw new InvalidDataException("A TRX retry result has an unsupported outcome.");
+            }
+        }
+
+        XElement mergedSummary = FindChild(mergedTestRun, "ResultSummary")!;
+        XElement latestSummary = FindChild(inputReports[^1].Root!, "ResultSummary")!;
+        XElement latestCounters = FindChild(latestSummary, "Counters") ?? new XElement(NamespaceUri + "Counters");
+        int latestExplicitTimeoutCount = inputReports[^1].Root is { } latestRun
+            && FindChild(latestRun, "Results") is { } latestResults
+                ? latestResults.Elements().Count(result => result.Attribute("outcome")?.Value == "Timeout")
+                : 0;
+        int latestTimeoutCount = int.TryParse(latestCounters.Attribute("timeout")?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedTimeoutCount)
+            ? parsedTimeoutCount
+            : 0;
+        int failedTimeoutCount = Math.Min(
+            failedResultCount,
+            Math.Max(0, latestTimeoutCount - latestExplicitTimeoutCount));
+        int failed = failedResultCount - failedTimeoutCount;
+        int timedOut = explicitTimeoutCount + failedTimeoutCount;
+        XElement counters = new(latestCounters);
+        counters.SetAttributeValue("total", selectedResults.Length.ToString(CultureInfo.InvariantCulture));
+        counters.SetAttributeValue("executed", (passed + failed).ToString(CultureInfo.InvariantCulture));
+        counters.SetAttributeValue("passed", passed.ToString(CultureInfo.InvariantCulture));
+        counters.SetAttributeValue("failed", failed.ToString(CultureInfo.InvariantCulture));
+        counters.SetAttributeValue("timeout", timedOut.ToString(CultureInfo.InvariantCulture));
+        counters.SetAttributeValue("notExecuted", notExecuted.ToString(CultureInfo.InvariantCulture));
+        FindChild(mergedSummary, "Counters")?.ReplaceWith(counters);
+        if (FindChild(mergedSummary, "Counters") is null)
+        {
+            mergedSummary.AddFirst(counters);
+        }
+
+        XElement? latestRunInfos = FindChild(latestSummary, "RunInfos");
+        FindChild(mergedSummary, "RunInfos")?.Remove();
+        if (latestRunInfos is not null)
+        {
+            XElement? output = FindChild(mergedSummary, "Output");
+            (output ?? counters).AddAfterSelf(new XElement(latestRunInfos));
+        }
+
+        bool latestRunFailed = latestSummary.Attribute("outcome")?.Value is { } outcome
+            && !string.Equals(outcome, "Completed", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(outcome, "Passed", StringComparison.OrdinalIgnoreCase);
+        mergedSummary.SetAttributeValue("outcome", latestRunFailed || failed > 0 || timedOut > 0 ? "Failed" : "Completed");
+
+        return merged;
     }
 }

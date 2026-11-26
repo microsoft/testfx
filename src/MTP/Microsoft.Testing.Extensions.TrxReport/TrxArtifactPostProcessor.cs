@@ -16,7 +16,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 
     private static readonly string[] SupportedArtifactKinds = [TrxReportEngine.TrxArtifactKind];
     private static readonly string[] SupportedExtensions = [".trx"];
-    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts];
 
     public string Uid => "Microsoft.Testing.Extensions.TrxReport.PostProcessor";
 
@@ -47,10 +47,9 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        InputArtifact[] orderedInputs =
-        [
-            .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false),
-        ];
+        InputArtifact[] orderedInputs = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? [.. inputs.OrderBy(input => int.TryParse(input.ExecutionId, NumberStyles.Integer, CultureInfo.InvariantCulture, out int attempt) ? attempt : int.MaxValue)]
+            : [.. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false)];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. orderedInputs.Select(input => input.ExecutionId)]);
         // Nest the merged report in its own subdirectory instead of writing it as a sibling of the inputs.
@@ -89,7 +88,8 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
             outputPath,
             runId,
             ExtensionResources.TrxMergedRunName,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken,
+            retryAttempts: context.Mode == ArtifactPostProcessingMode.RetryAttempts).ConfigureAwait(false);
 
         return new ProcessedArtifact(
             outputPath,

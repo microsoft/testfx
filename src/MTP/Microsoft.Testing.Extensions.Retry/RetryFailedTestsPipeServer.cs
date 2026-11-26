@@ -77,6 +77,8 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     /// </summary>
     public int SkippedTests { get; private set; }
 
+    public bool FixtureFailed { get; private set; }
+
     /// <summary>
     /// Gets the uids of the tests this attempt was asked to retry which genuinely passed.
     /// </summary>
@@ -117,6 +119,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
             FailedTestResults = testRunCounts.FailedTests;
             SkippedTests = testRunCounts.SkippedTests;
             RecoveredTests = testRunCounts.RecoveredTestUids;
+            FixtureFailed = testRunCounts.FixtureFailed;
             CountsReported = true;
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }

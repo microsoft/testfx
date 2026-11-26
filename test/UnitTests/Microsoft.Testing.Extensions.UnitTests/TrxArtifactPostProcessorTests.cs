@@ -17,7 +17,7 @@ public sealed class TrxArtifactPostProcessorTests
         TrxArtifactPostProcessor processor = new();
 
         Assert.AreSequenceEqual([TrxReportEngine.TrxArtifactKind], processor.SupportedKinds);
-        Assert.AreSequenceEqual([ArtifactPostProcessingMode.TestModules], processor.SupportedModes);
+        Assert.AreSequenceEqual([ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts], processor.SupportedModes);
         Assert.AreSequenceEqual([".trx"], processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
     }
@@ -73,6 +73,100 @@ public sealed class TrxArtifactPostProcessorTests
             Assert.AreSequenceEqual(
                 ["first.trx", "second.trx"],
                 Directory.GetFiles(directory, "*.trx").Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_RetryAttempts_ReplacesCompleteTestIdGroupsAndRebuildsCounters()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"trx-post-processor-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstPath = Path.Combine(directory, "attempt-1.trx");
+            string secondPath = Path.Combine(directory, "attempt-2.trx");
+            WriteRetryReport(
+                firstPath,
+                "attempt-1",
+                [
+                    ("fixture-test", "fixture-id", "FixtureTest", "Passed"),
+                    ("cleanup-failure", "cleanup-id", "[CleanupTests ClassCleanup]", "Failed"),
+                    ("retry-row-1-old", "retry-id", "ParameterizedCase", "Failed"),
+                    ("retry-row-2-old", "retry-id", "ParameterizedCase", "Passed"),
+                    ("recovered-timeout-old", "recovered-timeout-id", "RecoveredTimeout", "Timeout"),
+                ],
+                includeRunInfo: true);
+            WriteRetryReport(
+                secondPath,
+                "attempt-2",
+                [
+                    ("retry-row-1-new", "retry-id", "ParameterizedCase", "Passed"),
+                    ("retry-row-2-new", "retry-id", "ParameterizedCase", "Passed"),
+                    ("recovered-timeout-new", "recovered-timeout-id", "RecoveredTimeout", "Passed"),
+                    ("retained-timeout-new", "retained-timeout-id", "RetainedTimeout", "Timeout"),
+                ]);
+            TrxArtifactPostProcessor processor = new();
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [
+                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "2"),
+                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "1"),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(
+                    ArtifactPostProcessingTruncationReason.None,
+                    ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            var merged = XDocument.Load(output.Path);
+            XElement[] results = [.. merged.Descendants(ns + "UnitTestResult")];
+            Assert.HasCount(6, results);
+
+            XElement cleanup = Assert.ContainsSingle(result => result.Attribute("testName")?.Value == "[CleanupTests ClassCleanup]", results);
+            Assert.AreEqual("Failed", cleanup.Attribute("outcome")?.Value);
+            Assert.Contains("cleanup failure details", string.Join(" ", cleanup.Descendants(ns + "Message").Select(message => message.Value)));
+            XElement fixtureTest = Assert.ContainsSingle(result => result.Attribute("testName")?.Value == "FixtureTest", results);
+            Assert.AreEqual("Passed", fixtureTest.Attribute("outcome")?.Value);
+            XElement retainedTimeout = Assert.ContainsSingle(result => result.Attribute("testName")?.Value == "RetainedTimeout", results);
+            Assert.AreEqual("Failed", retainedTimeout.Attribute("outcome")?.Value);
+
+            XElement[] retryRows = [.. results.Where(result => result.Attribute("testId")?.Value == "retry-id")];
+            Assert.HasCount(2, retryRows);
+            Assert.AreSequenceEqual(
+                ["retry-row-1-new", "retry-row-2-new"],
+                retryRows.Select(result => result.Attribute("executionId")!.Value).OrderBy(value => value, StringComparer.Ordinal));
+            Assert.AreEqual(2, retryRows.Count(result => result.Attribute("outcome")?.Value == "Passed"));
+            XElement recoveredTimeout = Assert.ContainsSingle(result => result.Attribute("testName")?.Value == "RecoveredTimeout", results);
+            Assert.AreEqual("recovered-timeout-new", recoveredTimeout.Attribute("executionId")?.Value);
+            Assert.AreEqual("Passed", recoveredTimeout.Attribute("outcome")?.Value);
+
+            XElement[] entries = [.. merged.Descendants(ns + "TestEntry")];
+            Assert.HasCount(6, entries);
+            Assert.AreSequenceEqual(
+                results.Select(result => result.Attribute("executionId")!.Value).OrderBy(value => value, StringComparer.Ordinal),
+                entries.Select(entry => entry.Attribute("executionId")!.Value).OrderBy(value => value, StringComparer.Ordinal));
+            XElement[] definitions = [.. merged.Descendants(ns + "UnitTest")];
+            Assert.HasCount(5, definitions);
+            Assert.AreSequenceEqual(
+                results.Select(result => result.Attribute("testId")!.Value).Distinct().OrderBy(value => value, StringComparer.Ordinal),
+                definitions.Select(definition => definition.Attribute("id")!.Value).OrderBy(value => value, StringComparer.Ordinal));
+
+            XElement summary = Assert.ContainsSingle(merged.Descendants(ns + "ResultSummary"));
+            Assert.AreEqual("Failed", summary.Attribute("outcome")?.Value);
+            XElement counters = Assert.ContainsSingle(summary.Elements(ns + "Counters"));
+            Assert.AreEqual("6", counters.Attribute("total")?.Value);
+            Assert.AreEqual("5", counters.Attribute("executed")?.Value);
+            Assert.AreEqual("4", counters.Attribute("passed")?.Value);
+            Assert.AreEqual("1", counters.Attribute("failed")?.Value);
+            Assert.AreEqual("1", counters.Attribute("timeout")?.Value);
+            Assert.AreEqual("0", counters.Attribute("notExecuted")?.Value);
+            Assert.IsEmpty(summary.Elements(ns + "RunInfos"));
         }
         finally
         {
@@ -338,6 +432,76 @@ public sealed class TrxArtifactPostProcessorTests
                     ns + "ResultSummary",
                     new XAttribute("outcome", "Completed"),
                     new XElement(ns + "Counters", new XAttribute("total", 0)))))
+            .Save(path);
+    }
+
+    private static void WriteRetryReport(
+        string path,
+        string name,
+        (string ExecutionId, string TestId, string TestName, string Outcome)[] testResults,
+        bool includeRunInfo = false)
+    {
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement[] results =
+        [
+            .. testResults.Select(testResult =>
+            {
+                var result = new XElement(
+                    ns + "UnitTestResult",
+                    new XAttribute("executionId", testResult.ExecutionId),
+                    new XAttribute("testId", testResult.TestId),
+                    new XAttribute("testName", testResult.TestName),
+                    new XAttribute("outcome", testResult.Outcome == "Timeout" ? "Failed" : testResult.Outcome));
+                if (testResult.TestId == "cleanup-id")
+                {
+                    result.Add(new XElement(ns + "Output", new XElement(ns + "ErrorInfo", new XElement(ns + "Message", "cleanup failure details"))));
+                }
+
+                return result;
+            }),
+        ];
+        int passed = testResults.Count(result => result.Outcome == "Passed");
+        int failed = testResults.Count(result => result.Outcome == "Failed");
+        int timedOut = testResults.Count(result => result.Outcome == "Timeout");
+        int notExecuted = testResults.Count(result => result.Outcome == "NotExecuted");
+        XElement[] definitions =
+        [
+            .. testResults.Select(result => result.TestId).Distinct(StringComparer.Ordinal)
+                .Select(testId => new XElement(ns + "UnitTest", new XAttribute("id", testId), new XAttribute("name", testId))),
+        ];
+        XElement[] entries =
+        [
+            .. testResults.Select(result => new XElement(
+                ns + "TestEntry",
+                new XAttribute("testId", result.TestId),
+                new XAttribute("executionId", result.ExecutionId))),
+        ];
+        var summary = new XElement(
+            ns + "ResultSummary",
+            new XAttribute("outcome", failed > 0 || timedOut > 0 ? "Failed" : "Completed"),
+            new XElement(
+                ns + "Counters",
+                new XAttribute("total", testResults.Length),
+                new XAttribute("executed", passed + failed),
+                new XAttribute("passed", passed),
+                new XAttribute("failed", failed),
+                new XAttribute("timeout", timedOut),
+                new XAttribute("notExecuted", notExecuted)));
+        if (includeRunInfo)
+        {
+            summary.Add(new XElement(ns + "RunInfos", new XElement(ns + "RunInfo", new XAttribute("computerName", "machine"), new XAttribute("outcome", "Error"))));
+        }
+
+        new XDocument(
+            new XElement(
+                ns + "TestRun",
+                new XAttribute("id", Guid.NewGuid()),
+                new XAttribute("name", name),
+                new XElement(ns + "Results", results),
+                new XElement(ns + "TestDefinitions", definitions),
+                new XElement(ns + "TestEntries", entries),
+                new XElement(ns + "TestLists"),
+                summary))
             .Save(path);
     }
 
