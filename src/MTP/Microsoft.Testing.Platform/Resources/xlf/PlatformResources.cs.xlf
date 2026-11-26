@@ -669,11 +669,6 @@
         <target state="translated">Neplatné argumenty příkazového řádku:</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidShardCountOptionArgument">
-        <source>The '--shard-count' option requires a positive decimal Int32 value.</source>
-        <target state="new">The '--shard-count' option requires a positive decimal Int32 value.</target>
-        <note>{Locked="--shard-count"}{Locked="Int32"}</note>
-      </trans-unit>
       <trans-unit id="InvocationLifetimeCleanupFailedErrorMessage">
         <source>Invocation lifetime handler '{0}' failed after the tests ran: {1}</source>
         <target state="new">Invocation lifetime handler '{0}' failed after the tests ran: {1}</target>
@@ -1217,21 +1212,6 @@ Platné hodnoty jsou allow-skipped a strict. Výchozí hodnota allow-skipped zap
         <target state="translated">Instance typu ITestFramework by neměly být registrovány prostřednictvím poskytovatele služeb, ale prostřednictvím metody ITestApplicationBuilder.RegisterTestFramework.</target>
         <note>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
-      <trans-unit id="ShardCountAndPartitionAreExclusive">
-        <source>The '--shard-count' and '--partition' options cannot be used together.</source>
-        <target state="new">The '--shard-count' and '--partition' options cannot be used together.</target>
-        <note>{Locked="--shard-count"}{Locked="--partition"}</note>
-      </trans-unit>
-      <trans-unit id="ShardCountOptionDescription">
-        <source>Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</source>
-        <target state="new">Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ShardCountUnsupportedMode">
-        <source>The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</source>
-        <target state="new">The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</target>
-        <note>{Locked="--shard-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</note>
-      </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">Stále se čeká na: </target>
@@ -1394,7 +1374,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">
         <source>The internal test host orchestrator chain value is invalid.</source>
-        <target state="new">The internal test host orchestrator chain value is invalid.</target>
+        <target state="translated">Interní hodnota řetězce orchestrátorů testovacího hostitele je neplatná.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
@@ -1429,17 +1409,17 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
         <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
-        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <target state="translated">Orchestrátory testovacího hostitele „{0}“ nemohou v rámci protokolu pojmenovaných kanálů „dotnettestcli“ zkombinovat fáze „Opakování“ a „Obnovení“, protože opakování v jedné iteraci může způsobit, že další iterace nahlásí sadě SDK nižší číslo pokusu.</target>
         <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
-        <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>
+        <target state="translated">Orchestrátor testovacího hostitele „{0}“ deklaruje nepodporovanou hodnotu fáze „{1}“.</target>
         <note>{0} is an orchestrator Uid. {1} is an invalid TestHostExecutionOrchestratorStage value.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustBeComposableErrorMessage">
         <source>Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</source>
-        <target state="new">Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</target>
+        <target state="translated">Orchestrátory testovacího hostitele „{0}“ nelze zkombinovat. Pokud je povoleno více orchestrátorů, každý z nich musí implementovat „IComposableTestHostExecutionOrchestrator“.</target>
         <note>{0} is the list of orchestrator Uids. {Locked="IComposableTestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustUseDistinctStagesErrorMessage">

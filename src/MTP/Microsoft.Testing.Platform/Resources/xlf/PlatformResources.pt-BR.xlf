@@ -669,11 +669,6 @@
         <target state="translated">Argumentos de linha de comando inválidos:</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidShardCountOptionArgument">
-        <source>The '--shard-count' option requires a positive decimal Int32 value.</source>
-        <target state="new">The '--shard-count' option requires a positive decimal Int32 value.</target>
-        <note>{Locked="--shard-count"}{Locked="Int32"}</note>
-      </trans-unit>
       <trans-unit id="InvocationLifetimeCleanupFailedErrorMessage">
         <source>Invocation lifetime handler '{0}' failed after the tests ran: {1}</source>
         <target state="new">Invocation lifetime handler '{0}' failed after the tests ran: {1}</target>
@@ -1217,21 +1212,6 @@ Os valores válidos são ‘allow-skipped’ (o padrão), que conta os testes ig
         <target state="translated">Instâncias do tipo "ITestFramework" não devem ser registradas por meio do provedor de serviços, mas por meio de "ITestApplicationBuilder.RegisterTestFramework"</target>
         <note>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
-      <trans-unit id="ShardCountAndPartitionAreExclusive">
-        <source>The '--shard-count' and '--partition' options cannot be used together.</source>
-        <target state="new">The '--shard-count' and '--partition' options cannot be used together.</target>
-        <note>{Locked="--shard-count"}{Locked="--partition"}</note>
-      </trans-unit>
-      <trans-unit id="ShardCountOptionDescription">
-        <source>Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</source>
-        <target state="new">Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ShardCountUnsupportedMode">
-        <source>The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</source>
-        <target state="new">The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</target>
-        <note>{Locked="--shard-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</note>
-      </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">Ainda aguardando: </target>
@@ -1394,7 +1374,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">
         <source>The internal test host orchestrator chain value is invalid.</source>
-        <target state="new">The internal test host orchestrator chain value is invalid.</target>
+        <target state="translated">O valor da cadeia interna de orquestradores de host de teste é inválido.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
@@ -1434,17 +1414,17 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
-        <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>
+        <target state="translated">O orquestrador de host de teste '{0}' declara um valor de estágio sem suporte: '{1}'.</target>
         <note>{0} is an orchestrator Uid. {1} is an invalid TestHostExecutionOrchestratorStage value.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustBeComposableErrorMessage">
         <source>Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</source>
-        <target state="new">Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</target>
+        <target state="translated">Os orquestradores de host de teste '{0}' não podem ser compostos. Quando vários orquestradores estão habilitados, cada um deve implementar 'IComposableTestHostExecutionOrchestrator'.</target>
         <note>{0} is the list of orchestrator Uids. {Locked="IComposableTestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustUseDistinctStagesErrorMessage">
         <source>Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</source>
-        <target state="new">Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</target>
+        <target state="translated">Vários orquestradores de host de teste usam o mesmo estágio '{0}': '{1}'. Apenas um orquestrador por estágio pode ser composto.</target>
         <note>{0} is a TestHostExecutionOrchestratorStage value. {1} is the list of orchestrator Uids.</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
