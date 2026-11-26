@@ -469,3 +469,7 @@ totals tables remained horizontally scrollable. This was local Markdown
 rendering with local styling, **not** GitHub's hosted renderer. Live GitHub
 rendering and artifact transfer, mixed-version module aggregation, a real
 older SDK fallback, and CI on the eventual shipping branch remain unverified.
+
+## Follow-up: matrix workflow guidance
+
+- 2026-11-25: The published workflow example used one artifact name and a workflow-level concurrency group. Multiple matrix jobs using it could collide when uploading artifacts, and the shared group could replace a pending workflow run. Clarified that the example is single-writer and documented per-partition artifact naming and job-level concurrency. Each partition keeps separate history; suite-wide aggregation requires a deliberate single writer and merge. No live GitHub Actions run was performed.

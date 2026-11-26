@@ -194,6 +194,8 @@ When a test passes but previously failed within the configured history window, t
 
 In an aggregated multi-module run, older reporters do not provide the passing-test history details needed for this section. Upgrade each module's reporter to MTP 3 to include its passing tests with previous failures.
 
+This example assumes one history-writing job per workflow run. Do not copy its fixed artifact name unchanged into a matrix: jobs in the same run cannot upload separate artifacts under the same name. For a matrix, give each stable matrix partition its own history artifact name (for example, `mtp-test-history-${{ matrix.os }}-${{ matrix.framework }}` when those are the matrix dimensions) and use that same name in the artifact API lookup, restore, and upload. The workflow-level concurrency group shown here serializes whole workflow runs; for independent matrix histories, move concurrency to the publishing job and include the same partition key in its group so only writers for that history stream serialize. Each partition then retains its own history; this does not merge history across matrix legs. A combined suite history needs a single writer that deliberately merges the snapshots.
+
 ```yaml
 permissions:
   actions: read
