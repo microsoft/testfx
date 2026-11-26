@@ -31,7 +31,7 @@ internal sealed class TestResultConsoleReporter :
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         var testNodeUpdate = (TestNodeUpdateMessage)value;
-        string? resultMessage = testNodeUpdate.TestNode.Properties.Single<TestNodeStateProperty>() switch
+        string? resultMessage = testNodeUpdate.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() switch
         {
             PassedTestNodeStateProperty => "passed",
             FailedTestNodeStateProperty => "failed",
