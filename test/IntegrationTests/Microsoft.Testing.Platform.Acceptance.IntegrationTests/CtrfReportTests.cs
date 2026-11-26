@@ -437,9 +437,9 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
     public async Task Ctrf_MergingReleasedVersion_PreservesRunErrorsAndAttemptThreads()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, TargetFrameworks.NetCurrent);
-        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string resultDirectory = Path.Join(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(resultDirectory);
-        File.WriteAllText(Path.Combine(resultDirectory, "attempt-1.ctrf.json"), """
+        File.WriteAllText(Path.Join(resultDirectory, "attempt-1.ctrf.json"), """
             {
               "reportFormat": "CTRF",
               "specVersion": "0.3.0",
@@ -460,7 +460,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
               }
             }
             """);
-        File.WriteAllText(Path.Combine(resultDirectory, "attempt-2.ctrf.json"), """
+        File.WriteAllText(Path.Join(resultDirectory, "attempt-2.ctrf.json"), """
             {
               "reportFormat": "CTRF",
               "specVersion": "0.3.0",
@@ -478,12 +478,12 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             }
             """);
 
-        string mergedPath = Path.Combine(resultDirectory, "merged.ctrf.json");
+        string mergedPath = Path.Join(resultDirectory, "merged.ctrf.json");
         TestHostResult mergeResult = await testHost.ExecuteAsync(
             $"--merge-ctrf \"{resultDirectory}\" \"{mergedPath}\"",
             cancellationToken: TestContext.CancellationToken);
         mergeResult.AssertExitCodeIs(ExitCode.Success);
-        mergeResult.AssertOutputContains($"MERGER_LOCATION={Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Extensions.CtrfReport.dll")}");
+        mergeResult.AssertOutputContains($"MERGER_LOCATION={Path.Join(testHost.DirectoryName, "Microsoft.Testing.Extensions.CtrfReport.dll")}");
 
         using var report = JsonDocument.Parse(File.ReadAllText(mergedPath));
         Assert.AreEqual("0.3.0", report.RootElement.GetProperty("specVersion").GetString());
