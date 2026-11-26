@@ -179,7 +179,7 @@ namespace MSTestSdkTest
         using var report = JsonDocument.Parse(
             await File.ReadAllTextAsync(Path.Combine(resultsDirectory, "version.ctrf.json"), TestContext.CancellationToken));
         Assert.AreEqual($"Microsoft.Testing.Extensions.CtrfReport@{MicrosoftTestingPlatformVersion}", report.RootElement.GetProperty("generatedBy").GetString());
-        Assert.AreEqual("0.2.0", report.RootElement.GetProperty("specVersion").GetString());
+        Assert.AreEqual("0.3.0", report.RootElement.GetProperty("specVersion").GetString());
     }
 
     [TestMethod]

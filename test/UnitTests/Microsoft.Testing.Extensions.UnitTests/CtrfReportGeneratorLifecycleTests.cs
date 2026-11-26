@@ -250,6 +250,80 @@ public sealed class CtrfReportGeneratorLifecycleTests
     }
 
     [TestMethod]
+    public async Task ControllerChild_AssertionComparisonsSurviveJournalRoundTripAsync()
+    {
+        var fixture = new ReportBehaviorFixture(new() { ["report-ctrf-filename"] = ["recovered.json"] });
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, task: fixture.TaskService.Object);
+        var session = new TestSessionContextStub();
+        try
+        {
+            await context.Generator.OnTestSessionStartingAsync(session);
+            await context.Generator.ConsumeAsync(
+                null!,
+                new TestNodeUpdateMessage(session.SessionUid, new TestNode
+                {
+                    Uid = "full",
+                    DisplayName = "Recovered comparison",
+                    Properties = new(
+                        new FailedTestNodeStateProperty("Full comparison diagnostic"),
+                        new AssertionFailureProperty("journal expected", "journal actual")),
+                }),
+                CancellationToken.None);
+            await context.Generator.ConsumeAsync(
+                null!,
+                new TestNodeUpdateMessage(session.SessionUid, new TestNode
+                {
+                    Uid = "empty",
+                    DisplayName = "Recovered empty actual",
+                    Properties = new(
+                        new FailedTestNodeStateProperty("Partial comparison diagnostic"),
+                        new AssertionFailureProperty(null, string.Empty)),
+                }),
+                CancellationToken.None);
+            await fixture.FinishAsync(context.Generator, session);
+
+            Assert.ContainsSingle(context.PublishedArtifacts);
+            Assert.IsTrue(context.JournalStream.IsDisposed);
+            CapturedTestResult[] recovered =
+            [
+                .. context.JournalStream.GetUtf8Content()
+                    .Split(['\n'], StringSplitOptions.RemoveEmptyEntries)
+                    .Select(record => CtrfReportGenerator.DeserializeJournalRecord(record)!.Result)
+                    .OfType<CapturedTestResult>(),
+            ];
+            Assert.HasCount(2, recovered);
+            var engine = new CtrfReportEngine(new(
+                fixture.FileSystem.Object, fixture.Module.Object, fixture.Environment.Object, fixture.Services.GetCommandLineOptions(),
+                fixture.Configuration.Object, fixture.Clock.Object, fixture.Framework.Object, ReportBehaviorFixture.Start, 0, CancellationToken.None));
+
+            (string path, string? warning) = await engine.GenerateReportAsync(recovered);
+
+            Assert.IsNull(warning);
+            using var report = JsonDocument.Parse(fixture.WrittenFiles[path].Text);
+            JsonElement results = report.RootElement.GetProperty("results");
+            Assert.AreEqual(2, results.GetProperty("summary").GetProperty("failed").GetInt32());
+            JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+            Assert.AreSequenceEqual(["full", "empty"], tests.Select(test => test.GetProperty("testId").GetString()!).ToArray());
+            Assert.AreSequenceEqual(
+                ["Full comparison diagnostic", "Partial comparison diagnostic"],
+                tests.Select(test => test.GetProperty("message").GetString()!).ToArray());
+            Assert.IsTrue(tests[0].TryGetProperty("assertionFailures", out JsonElement fullFailures), "The journal roundtrip must retain the full comparison.");
+            JsonElement full = Assert.ContainsSingle(fullFailures.EnumerateArray());
+            Assert.AreSequenceEqual(["expected", "actual"], full.EnumerateObject().Select(property => property.Name).ToArray());
+            Assert.AreEqual("journal expected", full.GetProperty("expected").GetString());
+            Assert.AreEqual("journal actual", full.GetProperty("actual").GetString());
+            Assert.IsTrue(tests[1].TryGetProperty("assertionFailures", out JsonElement partialFailures), "The journal roundtrip must retain the empty actual side.");
+            JsonElement partial = Assert.ContainsSingle(partialFailures.EnumerateArray());
+            Assert.AreSequenceEqual(["actual"], partial.EnumerateObject().Select(property => property.Name).ToArray());
+            Assert.AreEqual(string.Empty, partial.GetProperty("actual").GetString());
+        }
+        finally
+        {
+            context.Generator.Dispose();
+        }
+    }
+
+    [TestMethod]
     public async Task ControllerChild_WhenJournalWriteFails_StillPublishesNormalArtifactAsync()
     {
         GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, journalWriteFails: true);
