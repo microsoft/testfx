@@ -55,9 +55,10 @@ public sealed partial class UseProperAssertMethodsFixer
             newArgumentList = argumentList.WithArguments(
                 argumentList.Arguments.Replace(actualArgument, SyntaxFactory.Argument(castExpression)).RemoveAt(argumentIndexToRemove));
         }
-        else if (collectionArgument?.Syntax.FirstAncestorOrSelf<ArgumentSyntax>() is { } actualArgumentToCast &&
+        else if (collectionArgument is { } nonNullCollectionArgument &&
+            nonNullCollectionArgument.Syntax.FirstAncestorOrSelf<ArgumentSyntax>() is { } actualArgumentToCast &&
             actualArgumentToCast.Expression.DescendantNodesAndSelf().Any(node => node is CollectionExpressionSyntax) &&
-            collectionArgument.Parameter is { Type: { } actualType })
+            nonNullCollectionArgument.Parameter is { Type: { } actualType })
         {
             var castExpression = (CastExpressionSyntax)editor.Generator.CastExpression(
                 actualType.WithNullableAnnotation(NullableAnnotation.NotAnnotated),
