@@ -50,7 +50,7 @@
          PackageVersion declared near the bottom of this file (the one Dependabot updates). The
          _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
          the two drift apart. -->
-    <MicrosoftPlaywrightVersion>1.65.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.65.1</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
     <!-- OpenTelemetry and OpenTelemetry.Exporter.OpenTelemetryProtocol ship in lockstep: the exporter
          requires the matching OpenTelemetry version, so bumping only one fails restore with NU1605. -->
@@ -202,6 +202,6 @@
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
     <PackageVersion Include="Aspire.Hosting.Testing" Version="13.6.5" />
-    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.65.0" />
+    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.65.1" />
   </ItemGroup>
 </Project>
