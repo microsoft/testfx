@@ -432,3 +432,53 @@ contract is the final TRX XML, whose identities, outcomes, and counters are
 asserted both by the packed consumer test and by inspection of its emitted
 reports. The PR targets `main`; no servicing branch or downstream rollout was
 selected in this local fix.
+
+### 2026-11-26 — retry TRX review follow-up
+
+The retry merger originally called the module merger before selecting results.
+Real TRX definitions carry a new `Execution` ID on each attempt, so the module
+merger treated retry definitions as collisions and reassigned their test IDs.
+The retry merger now selects the definition from the latest attempt for each
+test ID before applying module merge. Module merging retains its existing
+collision behavior.
+
+On `968b8c574f517f5fc2bfde7ece5523fbe2ce3f2c`, the existing retry postprocessor
+test was changed to include attempt-specific `Execution` elements and to assert
+the selected definition. It executed and failed before the production change
+because neither retried row retained `retry-id` (expected 2, actual 0). After
+the change, that test and the selected TRX postprocessor/merge tests passed
+(11 passed, 0 failed, 0 skipped). Both runs used Release/net11.0 and captured
+`artifacts\log\Release\retry-identity-red.binlog` and
+`artifacts\log\Release\retry-identity-green.binlog`. The green command was:
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj -c Release -f net11.0 --no-restore -p:ArtifactsTestResultsDir=artifacts\TestResults\Release\retry-identity-green '-bl:artifacts\log\Release\retry-identity-green.binlog' -- --filter 'FullyQualifiedName~TrxArtifactPostProcessorTests|FullyQualifiedName~TrxReportEngine_Merge'
+```
+
+The Release shipping pack succeeded with `.\build.cmd -pack -c Release -bl`.
+The following packed consumer run passed both `RetryCleanupOnly` and
+`RetryCleanupWithRecoveringTest` (2 passed, 0 failed, 0 skipped, exit 0):
+
+```powershell
+$env:Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup='0'
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -f net12.0 --no-restore -p:UsingDotNetTest=true '-p:ArtifactsTestResultsDir=artifacts\TestResults\Release\retry-identity-acceptance' '-bl:artifacts\log\Release\retry-identity-acceptance.binlog' -- --filter 'FullyQualifiedName~CleanupFailure_WithRetry_PreservesFailureAndOnlyRetriesTests'
+```
+
+The packaged TRX report SHA-256 was
+`F07E2DB4BB05AB360CA164EA9CEDA9CBD5F9B4DD76A0DB74EF4CF3C812AE9738`.
+Its `lib/net11.0/Microsoft.Testing.Extensions.TrxReport.dll` and both generated
+consumers' output DLLs matched at
+`44729B003FB6B9C29CD38913E668BC1BE397B58FA27C58C27CF0C13C23D900A2`.
+These acceptance cases check result names, outcomes and counts, not stable
+TRX test IDs; identity sensitivity is established by the unit regression, not
+by the packed acceptance assertions.
+
+The earlier timeout claim above covers a timeout in the last attempt only.
+It does not hold when a timed-out test is absent from a later attempt: a
+focused test with an earlier timeout and another test that passed on retry
+executed and failed because the merged `failed` counter was 1 instead of 0.
+The TRX producer serializes both a timeout and an ordinary failure as
+`outcome="Failed"`; an attempt's aggregate timeout count does not identify
+which result timed out. A reliable fix for partially retained attempts needs
+per-result timeout identity or a different fallback contract; that design and
+its compatibility with TRX consumers remain unresolved.

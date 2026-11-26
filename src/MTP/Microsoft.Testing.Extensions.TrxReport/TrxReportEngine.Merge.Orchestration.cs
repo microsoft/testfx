@@ -291,7 +291,6 @@ internal sealed partial class TrxReportEngine
 
     private static XDocument MergeRetryAttempts(IReadOnlyList<XDocument> inputReports, Guid runId, string runName)
     {
-        XDocument merged = Merge(inputReports, runId, runName);
         var latestAttemptByTestId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         for (int attempt = 0; attempt < inputReports.Count; attempt++)
@@ -329,6 +328,26 @@ internal sealed partial class TrxReportEngine
             }
         }
 
+        // Definitions for the same test differ across attempts because their Execution IDs are new.
+        // Keep only the selected definition before module merge can remap the stable test ID.
+        var reportsForMerge = new List<XDocument>(inputReports.Count);
+        for (int attempt = 0; attempt < inputReports.Count; attempt++)
+        {
+            var report = new XDocument(inputReports[attempt]);
+            if (report.Root is { } testRun && FindChild(testRun, "TestDefinitions") is { } definitions)
+            {
+                int currentAttempt = attempt;
+                definitions.Elements()
+                    .Where(definition => definition.Attribute("id") is { } id
+                        && latestAttemptByTestId.TryGetValue(id.Value, out int latestAttempt)
+                        && latestAttempt != currentAttempt)
+                    .Remove();
+            }
+
+            reportsForMerge.Add(report);
+        }
+
+        XDocument merged = Merge(reportsForMerge, runId, runName);
         XElement mergedTestRun = merged.Root!;
         XElement mergedResults = FindChild(mergedTestRun, "Results")!;
         XElement[] selectedResults =

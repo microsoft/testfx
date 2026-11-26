@@ -156,6 +156,10 @@ public sealed class TrxArtifactPostProcessorTests
             Assert.AreSequenceEqual(
                 results.Select(result => result.Attribute("testId")!.Value).Distinct().OrderBy(value => value, StringComparer.Ordinal),
                 definitions.Select(definition => definition.Attribute("id")!.Value).OrderBy(value => value, StringComparer.Ordinal));
+            XElement retryDefinition = Assert.ContainsSingle(definition => definition.Attribute("id")?.Value == "retry-id", definitions);
+            Assert.AreEqual("retry-row-1-new", retryDefinition.Element(ns + "Execution")?.Attribute("id")?.Value);
+            Assert.AreEqual("retry-id", retryRows[0].Attribute("testId")?.Value);
+            Assert.AreEqual("retry-id", retryRows[1].Attribute("testId")?.Value);
 
             XElement summary = Assert.ContainsSingle(merged.Descendants(ns + "ResultSummary"));
             Assert.AreEqual("Failed", summary.Attribute("outcome")?.Value);
@@ -466,8 +470,12 @@ public sealed class TrxArtifactPostProcessorTests
         int notExecuted = testResults.Count(result => result.Outcome == "NotExecuted");
         XElement[] definitions =
         [
-            .. testResults.Select(result => result.TestId).Distinct(StringComparer.Ordinal)
-                .Select(testId => new XElement(ns + "UnitTest", new XAttribute("id", testId), new XAttribute("name", testId))),
+            .. testResults.GroupBy(result => result.TestId, StringComparer.Ordinal)
+                .Select(group => new XElement(
+                    ns + "UnitTest",
+                    new XAttribute("id", group.Key),
+                    new XAttribute("name", group.Key),
+                    new XElement(ns + "Execution", new XAttribute("id", group.First().ExecutionId)))),
         ];
         XElement[] entries =
         [
