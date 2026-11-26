@@ -118,6 +118,116 @@ run errors and retry thread IDs change the document even with identical inputs.
 
 ## Validation and demonstration
 
+### 2026-11-26 release alignment and final rebase
+
+The released-schema changes were tested on rebased commit
+`df4a665a5f9d5054a208e939f19eab8dd839f1e8`, based on `main` at
+`88543d4bc3d066319ab059a2f99c39e6a59bbf72`. The paired red runs used the
+earlier rebase `d19e16fe4c1bb04919cf7aee42c26e4db5f8b5cb`, with the same
+regression tests retained; that rebase preceded the additional `main` commit.
+The released-schema unit-test patch has SHA-256
+`8B4570888E09196E0428F06C8616BA6F7186FA64CC1963E9CC5253EFA7B2F4AA`.
+The final unit-test patch, including the malformed-error cases, has SHA-256
+`4918E2B586D12C4C338B6ADB4A2CF6ADEB7CC22C7F65F14B72B692CDCA2E090E`.
+The red acceptance patch has SHA-256
+`02FA5D1BCF710C169F3A8A5DA6B0241149EDCCE4E2B74E68CB8A449B0D74CD55`;
+its merger test and assertions match the green test. The additional malformed
+error tests were first run against the intermediate release-aligned merger
+before its invalid-error guard was added.
+
+| Test-value evidence | Without the relevant behavior | With the behavior |
+| --- | --- | --- |
+| Run errors, retry threads and released report identity: eight net10.0 unit cases | Seven failed at the missing-error, missing-thread or reused-ID assertions; the 0.2-only compatibility case passed. Exit 2. | The same eight passed; exit 0. |
+| Malformed run errors: four net10.0 unit cases | Three failed because the expected exception was not thrown; the legacy-only case passed. Exit 2. | The same four passed; exit 0. |
+| `Ctrf_MergingReleasedVersion_PreservesRunErrorsAndAttemptThreads` | The packed consumer executed and failed its assertion for the missing nested thread; exit 2. | The same test passed with the released errors and attempt threads; exit 0. |
+
+The red unit runs used the following selectors on the Debug net10.0 host;
+the acceptance selector used the Release net12.0 host. Each results variable
+identifies a fresh, task-owned directory.
+
+```powershell
+$releaseFilter = 'FullyQualifiedName~Merge_Version03_PreservesRunErrorsInInputOrder|FullyQualifiedName~Merge_CollapseRetryAttempts_PreservesThreadIdsOnlyInVersion03|FullyQualifiedName~Merge_Version03_ReleasedProjectionDoesNotReuseDraftReportId'
+$malformedFilter = 'FullyQualifiedName~Merge_Version03_WithMalformedRunErrors_Throws|FullyQualifiedName~Merge_Version02_IgnoresUnrecognizedRunErrors'
+$mergerFilter = 'FullyQualifiedName~Ctrf_MergingReleasedVersion_PreservesRunErrorsAndAttemptThreads'
+
+.\.dotnet\dotnet.exe exec artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net10.0\Microsoft.Testing.Extensions.UnitTests.dll --filter $releaseFilter --report-trx --results-directory $redUnitResults
+.\.dotnet\dotnet.exe exec artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net10.0\Microsoft.Testing.Extensions.UnitTests.dll --filter $malformedFilter --report-trx --report-trx-filename red-malformed.trx --results-directory $redMalformedResults
+.\.dotnet\dotnet.exe exec artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter $mergerFilter --report-trx --report-trx-filename red-release.trx --results-directory $redAcceptanceResults
+```
+
+These are executed behavioral comparisons, not build, restore, launch or
+zero-test failures. A separate acceptance-only reflection harness exercised
+malformed errors with independently packed intermediate and final mergers:
+the intermediate returned zero and replaced an existing output, whereas the
+final consumer exited nonzero with the rejection message and preserved the
+existing output. This is not a claim about a standard shipping CLI exit.
+
+On Windows, the pinned SDK `12.0.100-alpha.1.26570.125` built and packed the
+rebased solution in Release. The following command passed with exit 0:
+
+```powershell
+.\eng\build.ps1 -restore -build -pack -c Release -msbuildEngine vs -verbosity quiet '/p:EnableCodeCoverage=false' '/p:FastAcceptanceTest=true' '/warnnotaserror:NU1510' '/bl:{}'
+```
+
+An initial build without restore failed because prior single-target restores
+left multi-target assets and localization imports incomplete
+(`NETSDK1005` and missing `UpdateXlf`). The full restore and pack above
+succeeded; that setup failure is not regression evidence.
+
+The following selectors and commands were run against the rebased Release
+outputs. Each results variable identifies a fresh, task-owned directory; the
+matching `--list-tests --filter` discovery ran separately before execution.
+The outer acceptance hosts target net12.0; generated consumers use the packed
+Release assets, including net11.0 and net462 where selected.
+
+```powershell
+$evidence = Join-Path $env:TEMP ("ctrf-validation-" + [Guid]::NewGuid().ToString('N'))
+$unitResults = Join-Path $evidence 'unit'
+$broadResults = Join-Path $evidence 'broad'
+$focusedResults = Join-Path $evidence 'focused'
+$cache = Join-Path $evidence 'packages'
+New-Item -ItemType Directory -Path $unitResults, $broadResults, $focusedResults, $cache | Out-Null
+[IO.File]::WriteAllText((Join-Path $cache '.testfx-collection-cache'), 'testfx-collection-cache-v1')
+$env:TESTFX_COLLECTION_NUGET_CACHE = $cache
+$env:DOTNET_ROOT = (Resolve-Path '.\.dotnet').Path
+$env:PATH = "$env:DOTNET_ROOT;$env:PATH"
+
+$unitFilter = 'FullyQualifiedName~Ctrf&FullyQualifiedName!~MergeToFileAsync_WhenOutputDiffersByCaseOnly_IsAllowedOnCaseSensitiveFilesystem'
+$mtpFilter = 'FullyQualifiedName~Microsoft.Testing.Platform.Acceptance.IntegrationTests.CtrfReportTests|FullyQualifiedName~RetryFailedTestsTests.RetryFailedTests_CtrfReports_UseLogicalRunIdentityAndRecordLineage'
+$mstestFilter = 'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.CtrfReportTests|FullyQualifiedName~MSTest.Acceptance.IntegrationTests.CtrfReportRetryAttributeTests'
+$sdkFilter = 'FullyQualifiedName~CtrfReport_UsesPlatformVersion_WhenOptedIn'
+
+.\.dotnet\dotnet.exe exec artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Release\net10.0\Microsoft.Testing.Extensions.UnitTests.dll --filter $unitFilter --report-trx --report-trx-filename broad.trx --results-directory $unitResults
+.\.dotnet\dotnet.exe exec artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter $mtpFilter --report-trx --report-trx-filename mtp.trx --results-directory $broadResults
+.\.dotnet\dotnet.exe exec artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter $mstestFilter --report-trx --report-trx-filename mstest.trx --results-directory $broadResults
+.\.dotnet\dotnet.exe exec artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter $sdkFilter --report-trx --report-trx-filename sdk.trx --results-directory $focusedResults
+```
+
+The commands executed 296 unit, 27 MTP acceptance, three MSTest acceptance and
+two SDK acceptance cases respectively; all passed with exit 0 and no skips.
+The focused packed merger case also passed independently. Discovery and fresh
+TRX identities were reconciled using the repository execution verifier. The
+Windows-inapplicable case-sensitive-filesystem unit case was excluded. The
+acceptance assembly used 32 method-level workers; existing shared-asset
+exclusions remain, and the added merger case uses a GUID-owned directory.
+
+The final `Microsoft.Testing.Extensions.CtrfReport.3.0.0-dev.nupkg` SHA-256 is
+`A44E9D47DCC09A975A1B310BD7BAF37FE22C3EA3A3E09D0CEB1F76B3C1CC489A`.
+Four generated-consumer `project.assets.json` files matched its package
+SHA-512, and four net11.0 consumer DLLs matched the packed payload SHA-256
+`DC9D88461955EEB5B178A63BAA3A02A1F28A8028DCE5BD59A9766AF1DA68CD55`.
+The two merger inputs, merged report and two SDK reports all passed validation
+with format checks against the immutable released 0.3.0 schema, SHA-256
+`D8765D80A8CF2E9E81611F5DB97497599F56949938255AE2BF4ACA84E234DD21`.
+The merger case uses an acceptance-only entry point to load the packed DLL;
+the broader retry cases exercise the actual packaged platform path.
+
+Raw logs and result files are retained locally and are not public links. This
+is a nonvisual JSON contract; no hosted dashboard rendering, cross-platform
+execution, NativeAOT execution or final-head CI result is claimed.
+
+### 2026-11-10 feature baseline (historical)
+
 The tested source is baseline
 `32a6ed6e1511ae9b61c9ce307e22ed5594b239cc` plus the production/test patch with
 SHA-256 `E1CFF3A03467ADBA174C0B269448E7B177F5F965E221019972ACD5E43FEC73EE`.
