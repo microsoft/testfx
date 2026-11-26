@@ -106,6 +106,30 @@ the root span (`test.run.total`, `test.run.failed`, `test.run.skipped`) rather t
 Span durations are reported in milliseconds under `test.case.duration_ms`, distinct from the seconds-valued
 `test.case.duration` metric.
 
+### Opt-in test host resource metrics
+
+Set `TESTINGPLATFORM_OTEL_PROCESS_METRICS=1` before the test application activates MTP diagnostics to register
+the following instruments on the same meter. A metrics listener or an OpenTelemetry metrics provider subscribed
+to `Microsoft.Testing.Platform` is required; configure an exporter to persist or send the measurements. This
+setting alone does not configure an exporter or change test scheduling.
+
+| Instrument | Type | Unit | Description |
+| --- | --- | --- | --- |
+| `test.host.process.cpu.time` | Observable counter | `s` | Cumulative CPU time consumed by the test host. |
+| `test.host.process.cpu.logical_count` | Observable gauge | `{cpu}` | Logical processor count available to the process as reported by `Environment.ProcessorCount`. |
+| `test.host.process.memory.working_set` | Observable gauge | `By` | Current process working set. |
+| `test.host.process.memory.private` | Observable gauge | `By` | Current process private memory size. |
+
+These are measurements of **this test-host process only**: child processes, other test modules, and machine-wide
+CPU or memory pressure are not included. Derive average CPU usage over a time interval from the difference
+between successive CPU-time readings divided by elapsed time; dividing again by the logical count gives a
+capacity-relative estimate. The logical count is .NET's process-available count, not a measurement of machine
+load or necessarily an exact representation of fractional CPU quotas. Memory readings are instantaneous, not
+peaks; sampling frequency and missed peaks depend on the metrics reader. Process memory semantics vary by OS.
+Short runs may produce only a final reading, which is not sufficient to calculate a CPU rate.
+Every point carries `process.pid` and `test.host.process.instance_id` dimensions. The instance ID distinguishes
+separately initialized hosts even when their other resource attributes match or an OS process ID is reused.
+
 MTP 3 no longer emits the legacy `tests.*` instruments, old test-attribute aliases,
 `Extension.*`, `SessionUid`, or `RequestType` tags. In particular, migrate
 `tests.duration` millisecond samples to `test.case.duration` seconds by dividing
@@ -122,6 +146,7 @@ for the remaining names and aggregation differences.
 | `TRACEPARENT` / `TRACESTATE` | unset | W3C trace context to nest the run under when no activity is already current in the test process. |
 | `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT` | `1` | Attach captured stdout/stderr to test spans. Set to `0` when the output can contain secrets. |
 | `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` | `8192` | Maximum characters kept for a single captured output, explanation, or exception string attribute. |
+| `TESTINGPLATFORM_OTEL_PROCESS_METRICS` | unset | Set to `1` to register current test-host process resource instruments. |
 | `OTEL_SDK_DISABLED`, `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER` | unset | Standard OpenTelemetry variables honored by `AddOpenTelemetryProviderFromEnvironment`. |
 
 `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES` is retired and ignored in MTP 3;

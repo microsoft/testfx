@@ -18,6 +18,50 @@ internal sealed class OpenTelemetryPlatformService :
     private readonly Meter _meter = new(MeterName, ExtensionVersion.DefaultSemVer);
     private readonly List<object> _observableInstruments = [];
 
+    public OpenTelemetryPlatformService()
+        : this(includeProcessMetrics: false)
+    {
+    }
+
+    internal OpenTelemetryPlatformService(bool includeProcessMetrics)
+    {
+        if (includeProcessMetrics)
+        {
+            using var process = Process.GetCurrentProcess();
+            KeyValuePair<string, object?>[] tags =
+            [
+                new("process.pid", process.Id),
+                new("test.host.process.instance_id", Guid.NewGuid().ToString("N")),
+            ];
+            _observableInstruments.Add(_meter.CreateObservableCounter(
+                "test.host.process.cpu.time",
+                () => new Measurement<double>(ReadCurrentProcess(static process => process.TotalProcessorTime.TotalSeconds), tags),
+                unit: "s",
+                description: "Cumulative CPU time of the test host process, excluding child processes."));
+            _observableInstruments.Add(_meter.CreateObservableGauge(
+                "test.host.process.memory.working_set",
+                () => new Measurement<long>(ReadCurrentProcess(static process => process.WorkingSet64), tags),
+                unit: "By",
+                description: "Current test host process working set, excluding child processes."));
+            _observableInstruments.Add(_meter.CreateObservableGauge(
+                "test.host.process.memory.private",
+                () => new Measurement<long>(ReadCurrentProcess(static process => process.PrivateMemorySize64), tags),
+                unit: "By",
+                description: "Current private memory size of the test host process, excluding child processes."));
+            _observableInstruments.Add(_meter.CreateObservableGauge(
+                "test.host.process.cpu.logical_count",
+                () => new Measurement<long>(Environment.ProcessorCount, tags),
+                unit: "{cpu}",
+                description: "Logical processor count available to the test host as reported by .NET."));
+        }
+    }
+
+    private static T ReadCurrentProcess<T>(Func<Process, T> read)
+    {
+        using var process = Process.GetCurrentProcess();
+        return read(process);
+    }
+
     public IPlatformActivity? TestFrameworkActivity { get; set; }
 
     public string? RootTraceState { get; set; }

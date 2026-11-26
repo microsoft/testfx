@@ -406,6 +406,21 @@ public sealed class OpenTelemetryProviderExtensionsTests
             });
 
     [TestMethod]
+    [DataRow("1", true)]
+    [DataRow("0", false)]
+    [DataRow("true", false)]
+    [DataRow(" 1", false)]
+    public void IsProcessMetricsEnabled_UsesExactOneValue(string? value, bool expected)
+        => Assert.AreEqual(
+            expected,
+            OpenTelemetryProviderExtensions.IsProcessMetricsEnabled(
+                Env(new() { [OpenTelemetryEnvironmentVariables.ProcessMetrics] = value })));
+
+    [TestMethod]
+    public void IsProcessMetricsEnabled_WhenUnset_ReturnsFalse()
+        => Assert.IsFalse(OpenTelemetryProviderExtensions.IsProcessMetricsEnabled(Env([])));
+
+    [TestMethod]
     [DoNotParallelize]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task AddOpenTelemetryProviderFromEnvironment_WithOtlpTracing_AddsExporterBeforeDelegate()
