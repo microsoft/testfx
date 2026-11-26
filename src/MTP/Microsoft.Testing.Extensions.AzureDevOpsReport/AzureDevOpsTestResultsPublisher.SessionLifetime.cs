@@ -45,7 +45,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 _resultIdStore = await AzureDevOpsResultIdStore.OpenAsync(
                     _fileSystem,
                     _logger,
-                    resultMapPath,
+                    GetPartitionResultMapPath(resultMapPath),
                     publishConfiguration.BuildId,
                     CurrentRunId.Value).ConfigureAwait(false);
             }
@@ -83,6 +83,23 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             CurrentRunId = null;
             await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed} {ex.Message}", testSessionContext.CancellationToken).ConfigureAwait(false);
         }
+    }
+
+    private string GetPartitionResultMapPath(string resultMapPath)
+    {
+        if (!_commandLineOptions.TryGetOptionArgumentList("partition", out string[]? arguments)
+            || arguments is not [string partition])
+        {
+            return resultMapPath;
+        }
+
+        string[] parts = partition.Split('/');
+        return parts.Length == 2
+            && int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int index)
+            && int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int count)
+            && index > 0 && count >= index
+                ? $"{resultMapPath}.partition-{index.ToString(CultureInfo.InvariantCulture)}-{count.ToString(CultureInfo.InvariantCulture)}"
+                : resultMapPath;
     }
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)

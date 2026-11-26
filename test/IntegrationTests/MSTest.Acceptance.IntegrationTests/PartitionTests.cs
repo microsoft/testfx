@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -19,6 +20,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     private const string Dependencies = "PartitionDependencies";
     private const string Rows = "PartitionRows";
     private const string RuntimeRows = "PartitionRuntimeRows";
+    private const string Cancellation = "PartitionCancellation";
     private const string Checkout = "Acme.CheckoutTests";
     private const string Cart = "Acme.CartTests";
     private const string Coffee = "Acme.Caf\u00e9Tests.Coffee";
@@ -29,6 +31,693 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     private static readonly string[] DependencyTests = [$"{Checkout}.Prepare", $"{Checkout}.Other", $"{Cart}.Buy", $"{Cart}.Other"];
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Shard count SDK modules both pass")]
+    [DataRow(true, DisplayName = "Shard count SDK modules preserve one failure")]
+    public async Task ShardCount_NativeDotnetTest_MultipleModulesPreserveResults(bool fail)
+    {
+        using var run = new TempDirectory("shard-count-modules");
+        string solution = Path.Combine(run.Path, "Partitions.slnx");
+        File.WriteAllText(solution, $"""
+            <Solution>
+              <Folder Name="/Independent/">
+                <Project Path="{AssetFixture.ProjectPath(Independent)}" />
+              </Folder>
+              <Folder Name="/Dependencies/">
+                <Project Path="{AssetFixture.ProjectPath(Dependencies)}" />
+              </Folder>
+            </Solution>
+            """);
+        string sentinel = Path.Combine(run.Path, "failure-reached");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment[ProbeVariable] = null;
+        environment[SentinelVariable] = fail ? sentinel : null;
+        string arguments = $"test --solution \"{solution}\" -c Release --no-build --max-parallel-test-modules 2"
+            + $" --shard-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-modules", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+        Assert.AreEqual(fail ? 2 : 0, result.ExitCode, result.StandardOutput + result.StandardError);
+        Assert.AreEqual(fail, File.Exists(sentinel));
+        string[] modules = Directory.GetDirectories(Path.Combine(run.Path, "Shards"));
+        Assert.HasCount(2, modules);
+        List<string> observedModules = [];
+        foreach (string module in modules)
+        {
+            string[] reports = Directory.GetFiles(module, "run.trx", SearchOption.AllDirectories);
+            Assert.HasCount(4, reports);
+            ReportResult[] results = [.. reports.SelectMany(ReadResults)];
+            bool dependencies = results.Any(test => test.FullyQualifiedName == $"{Cart}.Buy");
+            observedModules.Add(dependencies ? Dependencies : Independent);
+            string[] expected = dependencies ? DependencyTests : Baseline;
+            Assert.AreSequenceEqual(
+                expected.Select(name => name + (dependencies && fail && name == $"{Cart}.Buy" ? "|Failed" : "|Passed")),
+                results.Select(test => test.FullyQualifiedName + "|" + test.Outcome),
+                SequenceOrder.InAnyOrder);
+        }
+
+        Assert.AreSequenceEqual(new[] { Independent, Dependencies }, observedModules, SequenceOrder.InAnyOrder);
+    }
+
+    [TestMethod]
+    public async Task ShardCount_NativeDotnetTest_EmptyPartitionsKeepGitHubSummaryPassing()
+    {
+        using var run = new TempDirectory("shard-count-github-summary");
+        string summaryPath = Path.Combine(run.Path, "summary.md");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment["GITHUB_ACTIONS"] = "true";
+        environment["GITHUB_STEP_SUMMARY"] = summaryPath;
+        environment["TF_BUILD"] = "false";
+        string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build"
+            + $" --filter FullyQualifiedName=Acme.CartTests.Keep --shard-count 4 --report-gh --report-trx --report-trx-filename run.trx"
+            + $" --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-github-summary", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(4, reports);
+        Assert.AreEqual(3, reports.Count(report => ReadResults(report).Length == 0));
+        Assert.AreSequenceEqual(
+            [$"{Cart}.Keep|Passed"],
+            reports.SelectMany(ReadResults).Select(test => test.FullyQualifiedName + "|" + test.Outcome));
+
+        string summary = File.ReadAllText(summaryPath);
+        Assert.Contains("## ✅ Overall Test Run Summary", summary);
+        Assert.Contains("| 1 | 1 | 0 | 0 | 0 |", summary);
+        Assert.AreEqual(4, summary.Split("### ✅ ", StringSplitOptions.None).Length - 1);
+        Assert.DoesNotContain("### ❌", summary);
+        Assert.DoesNotContain("ZeroTests", summary);
+    }
+
+    [TestMethod]
+    public async Task ShardCount_NativeDotnetTest_EmptyModuleIsNotHiddenByPassingModule()
+    {
+        using var run = new TempDirectory("shard-count-github-mixed-modules");
+        string solution = Path.Combine(run.Path, "Partitions.slnx");
+        File.WriteAllText(solution, $"""
+            <Solution>
+              <Folder Name="/Independent/">
+                <Project Path="{AssetFixture.ProjectPath(Independent)}" />
+              </Folder>
+              <Folder Name="/Dependencies/">
+                <Project Path="{AssetFixture.ProjectPath(Dependencies)}" />
+              </Folder>
+            </Solution>
+            """);
+        string summaryPath = Path.Combine(run.Path, "summary.md");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment["GITHUB_ACTIONS"] = "true";
+        environment["GITHUB_STEP_SUMMARY"] = summaryPath;
+        environment["TF_BUILD"] = "false";
+        string arguments = $"test --solution \"{solution}\" -c Release --no-build --max-parallel-test-modules 2"
+            + $" --filter FullyQualifiedName=Acme.CartTests.Keep --shard-count 4 --report-gh --report-trx --report-trx-filename run.trx"
+            + $" --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-github-mixed-modules", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
+        Assert.Contains("Zero tests ran", result.StandardOutput);
+        Assert.Contains("Exit code: 8", result.StandardOutput);
+        string[] groups = Directory.GetDirectories(Path.Combine(run.Path, "Shards"));
+        Assert.HasCount(2, groups);
+        string summary = File.ReadAllText(summaryPath);
+        List<int> counts = [];
+        foreach (string group in groups)
+        {
+            string[] reports = Directory.GetFiles(group, "run.trx", SearchOption.AllDirectories);
+            Assert.HasCount(4, reports);
+            ReportResult[] results = [.. reports.SelectMany(ReadResults)];
+            if (results.Length > 0)
+            {
+                Assert.AreSequenceEqual([$"{Cart}.Keep|Passed"], results.Select(test => test.FullyQualifiedName + "|" + test.Outcome));
+            }
+
+            string[] fragments = Directory.GetFiles(group, "github-actions-*.json", SearchOption.AllDirectories);
+            Assert.HasCount(4, fragments);
+            foreach (string fragment in fragments)
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(fragment));
+                JsonElement module = document.RootElement.GetProperty("module");
+                Assert.AreEqual(Path.GetFileName(group), module.GetProperty("shardGroupId").GetString());
+                string session = module.GetProperty("sessionUid").GetString()!;
+                string modulePath = module.GetProperty("modulePath").GetString()!;
+                bool isEmptyProject = modulePath.StartsWith(AssetFixture.AssetPath(Dependencies), StringComparison.OrdinalIgnoreCase);
+                Assert.StartsWith(isEmptyProject ? AssetFixture.AssetPath(Dependencies) : AssetFixture.AssetPath(Independent), modulePath);
+                Assert.AreEqual(isEmptyProject ? 0 : 1, results.Length);
+                string[] sectionParts = summary.Split($"session {session})", StringSplitOptions.None);
+                Assert.HasCount(2, sectionParts);
+                string section = sectionParts[1].Split("</details>", StringSplitOptions.None)[0];
+                Assert.Contains(isEmptyProject ? "### ❌ Acme.Tests" : "### ✅ Acme.Tests", section);
+                if (isEmptyProject)
+                {
+                    Assert.Contains("ZeroTests", section);
+                }
+                else
+                {
+                    Assert.DoesNotContain("ZeroTests", section);
+                }
+            }
+
+            counts.Add(results.Length);
+        }
+
+        Assert.AreSequenceEqual([0, 1], counts, SequenceOrder.InAnyOrder);
+        Assert.Contains("## ✅ Overall Test Run Summary", summary);
+        Assert.AreEqual(4, summary.Split("### ✅ ", StringSplitOptions.None).Length - 1);
+        Assert.AreEqual(4, summary.Split("### ❌ ", StringSplitOptions.None).Length - 1);
+        Assert.AreEqual(4, summary.Split("ZeroTests", StringSplitOptions.None).Length - 1);
+    }
+
+    [TestMethod]
+    [DataRow("DOTNET_WATCH", DisplayName = "Shard count rejects dotnet watch")]
+    [DataRow("TESTINGPLATFORM_HOTRELOAD_ENABLED", DisplayName = "Shard count rejects hot reload")]
+    public async Task ShardCount_HotReload_FailsBeforeExecution(string variable)
+    {
+        using var run = new TempDirectory("shard-count-hot-reload");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, run);
+        environment[variable] = "1";
+        TestHostResult result = await AssetFixture.Host(Independent).ExecuteAsync(
+            "--shard-count 2", environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        result.AssertOutputContains("requires .NET 10 or later and local process execution");
+        Assert.IsFalse(File.Exists(ProbePath(run)));
+    }
+
+    [TestMethod]
+    public async Task ShardCount_ExecutesEveryIdentityOnceInIsolatedReports()
+    {
+        DiscoveredNode[] discovered = await DiscoverAsync(Independent, string.Empty);
+        using var run = new TempDirectory("shard-count");
+        TestHostResult result = await RunFanOutAsync(Independent, "--shard-count 4", run);
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(4, reports);
+        foreach (string report in reports)
+        {
+            int index = int.Parse(Path.GetFileName(Path.GetDirectoryName(report))!, System.Globalization.CultureInfo.InvariantCulture);
+            AssertResults(ReadResults(report), ExpectedBucket(index));
+        }
+
+        ReportResult[] results = [.. reports.SelectMany(ReadResults)];
+        AssertResults(results, Baseline);
+        AssertDiscoveryIdentities(discovered, results);
+        Assert.HasCount(Baseline.Length, results.Select(test => test.Id).Distinct(StringComparer.Ordinal));
+        Assert.IsFalse(File.Exists(Path.Combine(run.Path, "run.trx")), "Partitions must not overwrite one shared report.");
+    }
+
+    [TestMethod]
+    public async Task ShardCount_ConfiguredOptionDoesNotRecurseIntoChildren()
+    {
+        using var configuration = new TempDirectory("shard-count-config");
+        string configurationFile = Path.Combine(configuration.Path, "partition.testconfig.json");
+        await TempDirectory.WriteFileAsync(configuration.Path, Path.GetFileName(configurationFile), """
+            {
+              "commandLineOptions": {
+                "shard-count": [ "2" ]
+              }
+            }
+            """);
+
+        using var run = new TempDirectory("shard-count-configured");
+        TestHostResult result = await RunFanOutAsync(
+            Independent, $"--config-file \"{configurationFile}\"", run);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    public async Task ShardCount_FilterAndEmptySelections_PreserveAggregatePolicy()
+    {
+        foreach ((string filter, ExitCode exit, string[] expected) in new[]
+        {
+            ("FullyQualifiedName=Acme.CartTests.Keep", ExitCode.Success, new[] { $"{Cart}.Keep" }),
+            ("Name=NotAnExistingMethod", ExitCode.ZeroTests, Array.Empty<string>()),
+        })
+        {
+            using var run = new TempDirectory("shard-count-filter");
+            TestHostResult result = await RunFanOutAsync(Independent, $"--shard-count 4 --filter {filter}", run);
+            result.AssertExitCodeIs(exit);
+            string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+            Assert.HasCount(4, reports);
+            AssertResults([.. reports.SelectMany(ReadResults)], expected);
+        }
+    }
+
+    [TestMethod]
+    public async Task ShardCount_FailureAndRetry_StayInsideDependencyPartition()
+    {
+        foreach (bool retry in new[] { false, true })
+        {
+            using var run = new TempDirectory("shard-count-retry");
+            string sentinel = Path.Combine(run.Path, "retry-sentinel.txt");
+            TestHostResult result = await RunFanOutAsync(
+                Dependencies, "--shard-count 4" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
+                new Dictionary<string, string?> { [SentinelVariable] = sentinel });
+            result.AssertExitCodeIs(retry ? ExitCode.Success : ExitCode.AtLeastOneTestFailed);
+            Assert.IsTrue(File.Exists(sentinel), "The deliberate failure must execute.");
+            string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Shards")));
+            string activePartition = Path.Combine(partitionRoot, "4");
+            ReportResult[] first = ReadResults(retry
+                ? Assert.ContainsSingle(Directory.GetFiles(Path.Combine(activePartition, "Retries"), "run.trx", SearchOption.AllDirectories))
+                : Path.Combine(activePartition, "run.trx"));
+            Assert.AreSequenceEqual(
+                DependencyTests.Select(name => name + (name == $"{Cart}.Buy" ? "|Failed" : "|Passed")),
+                first.Select(test => test.FullyQualifiedName + "|" + test.Outcome),
+                SequenceOrder.InAnyOrder);
+            if (retry)
+            {
+                ReportResult[] final = ReadResults(Path.Combine(activePartition, "run.trx"));
+                AssertResults(final, [$"{Cart}.Buy"]);
+                Assert.AreEqual(first.Single(test => test.FullyQualifiedName == $"{Cart}.Buy").Id, final.Single().Id);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task ShardCount_Discovery_DoesNotFanOut()
+        => AssertDiscovery(await DiscoverAsync(Independent, "--shard-count 4"), Baseline);
+
+    [TestMethod]
+    public async Task ShardCount_LongResponseFile_PreservesSelection()
+    {
+        using var run = new TempDirectory("shard-count-response");
+        string responseFile = Path.Combine(run.Path, "original.rsp");
+        File.WriteAllText(responseFile, $"""
+            --shard-count 4
+            --filter FullyQualifiedName=Acme.CartTests.Keep|Name={new string('z', 35_000)}
+            """);
+        TestHostResult result = await RunFanOutAsync(Independent, $"@\"{responseFile}\"", run);
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(4, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], [$"{Cart}.Keep"]);
+    }
+
+    [TestMethod]
+    public async Task ShardCount_MixedCaseOptions_ExecuteAllPartitions()
+    {
+        using var run = new TempDirectory("shard-count-case");
+        TestHostResult result = await RunFanOutAsync(Independent, "--SHARD-COUNT 2", run);
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    public async Task ShardCount_LeadingHyphensInParameter_AreForwarded()
+    {
+        using var run = new TempDirectory("shard-count-hyphens");
+        TestHostResult result = await RunFanOutAsync(
+            Independent, "--test-parameter ---ansi=off --shard-count 2", run,
+            new Dictionary<string, string?> { ["PARTITION_TEST_HYPHENS"] = "1" });
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Partition middleware wraps standalone distribution once")]
+    [DataRow(true, DisplayName = "Partition middleware wraps distribution and retry once")]
+    public async Task ShardCount_UnconditionalMiddleware_WrapsOnlyTheOuterProcess(bool retry)
+    {
+        using var run = new TempDirectory("shard-count-middleware");
+        string marker = Path.Combine(run.Path, "middleware.txt");
+        TestHostResult result = await RunFanOutAsync(
+            Cancellation, "--shard-count 2" + (retry ? " --retry-failed-tests 1" : string.Empty), run,
+            new Dictionary<string, string?> { ["PARTITION_TEST_MIDDLEWARE"] = marker });
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreSequenceEqual(new[] { "middleware" }, File.ReadAllLines(marker));
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    public async Task ShardCount_ResponseFileAndMultilineArgument_PreserveParameter()
+    {
+        using var run = new TempDirectory("shard-count-multiline");
+        string responseFile = Path.Combine(run.Path, "original.rsp");
+        File.WriteAllText(responseFile, $"--shard-count 2\n--filter FullyQualifiedName~Acme|Name={new string('z', 35_000)}");
+        TestHostResult result = await RunFanOutAsync(
+            Independent, $"@\"{responseFile}\" --test-parameter \"Multiline=first\nsecond\"", run,
+            new Dictionary<string, string?> { ["PARTITION_TEST_MULTILINE"] = "1" });
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] reports = Directory.GetFiles(run.Path, "run.trx", SearchOption.AllDirectories);
+        Assert.HasCount(2, reports);
+        AssertResults([.. reports.SelectMany(ReadResults)], Baseline);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Temporary response files are removed after success")]
+    [DataRow(true, DisplayName = "Temporary response files are removed after child failure")]
+    public async Task ShardCount_ResponseFiles_ArePrivateAndRemoved(bool failChild)
+    {
+        using var run = new TempDirectory("shard-count-private-response");
+        using var input = new TempDirectory("shard-count-input-response");
+        string original = Path.Combine(input.Path, "original.rsp");
+        File.WriteAllText(original, "--shard-count 1");
+        string temp = Path.Combine(run.Path, "temp");
+        string captures = Path.Combine(run.Path, "captures");
+        Directory.CreateDirectory(temp);
+        Directory.CreateDirectory(captures);
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation);
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TESTINGPLATFORM_PIPE_DIRECTORY")))
+        {
+            environment["TESTINGPLATFORM_PIPE_DIRECTORY"] = Path.GetTempPath();
+        }
+
+        environment["TEMP"] = temp;
+        environment["TMP"] = temp;
+        environment["TMPDIR"] = temp;
+        environment["PARTITION_TEST_RESPONSE_CAPTURE"] = captures;
+        environment["PARTITION_TEST_RESPONSE_ORIGINAL"] = original;
+        environment["PARTITION_TEST_FAIL_CHILD"] = failChild ? "1" : null;
+        TestHostResult result = await AssetFixture.Host(Cancellation).ExecuteAsync(
+            $"@\"{original}\" --results-directory \"{run.Path}\"",
+            environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(failChild ? 42 : 0, result.ExitCode, result.StandardOutput + result.StandardError);
+        string capture = Assert.ContainsSingle(Directory.GetFiles(captures, "*.txt"));
+        string[] paths = File.ReadAllLines(capture);
+        Assert.IsNotEmpty(paths);
+        foreach (string path in paths)
+        {
+            Assert.StartsWith(Path.GetFullPath(temp) + Path.DirectorySeparatorChar, Path.GetFullPath(path));
+            Assert.IsFalse(File.Exists(path), $"Response file was not removed: {path}");
+        }
+
+        Assert.IsEmpty(Directory.GetFiles(Path.Combine(run.Path, "Shards"), "*.rsp", SearchOption.AllDirectories));
+    }
+
+    [TestMethod]
+    public async Task ShardCount_NativeDotnetTest_PreservesChildStartupDiagnostic()
+    {
+        using var run = new TempDirectory("shard-count-sdk-diagnostic");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation, forDotnetCli: true);
+        environment["PARTITION_TEST_CHILD_DIAGNOSTIC"] = "1";
+        string arguments = $"test --project \"{AssetFixture.ProjectPath(Cancellation)}\" -c Release --no-build"
+            + $" --shard-count 1 --results-directory \"{run.Path}\" --ansi off --progress off";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Cancellation), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        Assert.Contains("partition startup diagnostic marker", result.StandardOutput + result.StandardError);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Enabled custom launcher is rejected")]
+    [DataRow(false, DisplayName = "Disabled custom launcher permits fan out")]
+    public async Task ShardCount_CustomLauncher_RejectsOnlyEnabledLauncher(bool enabled)
+    {
+        using var run = new TempDirectory("shard-count-launcher");
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Cancellation);
+        environment["PARTITION_TEST_CUSTOM_LAUNCHER"] = enabled ? "enabled" : "disabled";
+        environment[ProbeVariable] = null;
+        TestHostResult result = await AssetFixture.Host(Cancellation).ExecuteAsync(
+            $"--shard-count 2 --results-directory \"{run.Path}\"",
+            environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(enabled ? ExitCode.InvalidCommandLine : ExitCode.Success);
+        if (enabled)
+        {
+            result.AssertOutputContains("requires .NET 10 or later and local process execution");
+            Assert.IsFalse(Directory.Exists(Path.Combine(run.Path, "Shards")));
+        }
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Cancellation stops inherited pipe readers")]
+    [DataRow(false, DisplayName = "Inherited pipe readers time out without cancellation")]
+    public async Task ShardCount_ChildExitWithInheritedPipes_StopsReaders(bool cancel)
+    {
+        using var run = new TempDirectory("shard-count-orphan");
+        ProcessStartInfo start = new(
+            AssetFixture.Host(Cancellation).FullName,
+            $"--shard-count 1 --filter FullyQualifiedName=Acme.CheckoutTests.Keep --results-directory \"{run.Path}\" --ansi off --progress off")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        start.Environment["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet");
+        start.Environment["PARTITION_TEST_HANG"] = run.Path;
+        start.Environment["PARTITION_TEST_ORPHAN"] = "1";
+        using Process parent = Process.Start(start)!;
+        Task<string> stdout = parent.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = parent.StandardError.ReadToEndAsync();
+        Process? child = null;
+        Process? grandchild = null;
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        deadline.CancelAfter(TimeSpan.FromMinutes(1));
+        try
+        {
+            string marker = Path.Combine(run.Path, "Checkout.Keep");
+            while (!File.Exists(marker))
+            {
+                await Task.Delay(25, deadline.Token);
+            }
+
+            child = Process.GetProcessById(int.Parse(await File.ReadAllTextAsync(marker, deadline.Token), System.Globalization.CultureInfo.InvariantCulture));
+            grandchild = Process.GetProcessById(int.Parse(await File.ReadAllTextAsync(marker + ".grandchild", deadline.Token), System.Globalization.CultureInfo.InvariantCulture));
+            await File.WriteAllTextAsync(Path.Combine(run.Path, "release-child"), "release", deadline.Token);
+            await child.WaitForExitAsync(deadline.Token);
+            Assert.IsFalse(grandchild.HasExited);
+            if (cancel)
+            {
+                await File.WriteAllTextAsync(Path.Combine(run.Path, "cancel"), "cancel application", deadline.Token);
+            }
+
+            Task exited = parent.WaitForExitAsync(deadline.Token);
+            Assert.AreSame(exited, await Task.WhenAny(exited, Task.Delay(TimeSpan.FromSeconds(cancel ? 15 : 45), deadline.Token)),
+                "Readers must stop even when a descendant retains inherited output handles.");
+            await exited;
+            if (cancel)
+            {
+                Assert.AreEqual((int)ExitCode.TestSessionAborted, parent.ExitCode);
+            }
+            else
+            {
+                Assert.AreNotEqual((int)ExitCode.Success, parent.ExitCode);
+                grandchild.Kill(entireProcessTree: true);
+                await grandchild.WaitForExitAsync(deadline.Token);
+                Assert.Contains("Timed out while draining shard output.", await stdout + await stderr);
+            }
+        }
+        finally
+        {
+            using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            foreach (Process? process in new[] { parent, child, grandchild })
+            {
+                if (process is not null)
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill(entireProcessTree: true);
+                    }
+
+                    await process.WaitForExitAsync(cleanup.Token);
+                }
+            }
+
+            await Task.WhenAll(stdout, stderr);
+            child?.Dispose();
+            grandchild?.Dispose();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Cancellation joins uncooperative children")]
+    [DataRow(true, DisplayName = "Cancellation removes temporary response files")]
+    public async Task ShardCount_Cancellation_JoinsUncooperativeChildren(bool useResponseFile)
+    {
+        using var run = new TempDirectory("shard-count-cancel");
+        string original = Path.Combine(run.Path, "original.rsp");
+        string captures = Path.Combine(run.Path, "captures");
+        string temp = Path.Combine(run.Path, "temp");
+        Directory.CreateDirectory(captures);
+        Directory.CreateDirectory(temp);
+        File.WriteAllText(original, "--filter FullyQualifiedName~Acme");
+        ProcessStartInfo start = new(
+            AssetFixture.Host(Cancellation).FullName,
+            $"--shard-count 2 {(useResponseFile ? $"@\"{original}\"" : string.Empty)} --results-directory \"{run.Path}\" --ansi off --progress off")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        start.Environment["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet");
+        start.Environment["PARTITION_TEST_HANG"] = run.Path;
+        if (useResponseFile)
+        {
+            start.Environment["PARTITION_TEST_RESPONSE_CAPTURE"] = captures;
+            start.Environment["PARTITION_TEST_RESPONSE_ORIGINAL"] = original;
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TESTINGPLATFORM_PIPE_DIRECTORY")))
+            {
+                start.Environment["TESTINGPLATFORM_PIPE_DIRECTORY"] = Path.GetTempPath();
+            }
+
+            start.Environment["TEMP"] = temp;
+            start.Environment["TMP"] = temp;
+            start.Environment["TMPDIR"] = temp;
+        }
+
+        using Process parent = Process.Start(start)!;
+        Task<string> stdout = parent.StandardOutput.ReadToEndAsync(TestContext.CancellationToken);
+        Task<string> stderr = parent.StandardError.ReadToEndAsync(TestContext.CancellationToken);
+        List<Process> children = [];
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        deadline.CancelAfter(TimeSpan.FromMinutes(1));
+        try
+        {
+            foreach (string identity in new[] { "Checkout.Keep", "Cart.Keep" }.Take(Math.Min(2, Environment.ProcessorCount)))
+            {
+                string marker = Path.Combine(run.Path, identity);
+                while (!File.Exists(marker))
+                {
+                    await Task.Delay(25, deadline.Token);
+                }
+
+                children.Add(Process.GetProcessById(int.Parse(
+                    await File.ReadAllTextAsync(marker, deadline.Token), System.Globalization.CultureInfo.InvariantCulture)));
+                children.Add(Process.GetProcessById(int.Parse(
+                    await File.ReadAllTextAsync(marker + ".grandchild", deadline.Token), System.Globalization.CultureInfo.InvariantCulture)));
+            }
+
+            await File.WriteAllTextAsync(Path.Combine(run.Path, "cancel"), "cancel application", deadline.Token);
+            await parent.WaitForExitAsync(deadline.Token);
+            await Task.WhenAll(children.Select(child => child.WaitForExitAsync(deadline.Token)));
+            Assert.AreEqual((int)ExitCode.TestSessionAborted, parent.ExitCode, await stdout + await stderr);
+            Assert.IsTrue(children.All(child => child.HasExited), "Returning from cancellation must join every active partition.");
+            if (useResponseFile)
+            {
+                string[] files = Directory.GetFiles(captures, "*.txt");
+                Assert.HasCount(Math.Min(2, Environment.ProcessorCount), files);
+                foreach (string path in files.SelectMany(File.ReadAllLines))
+                {
+                    Assert.IsFalse(File.Exists(path), $"Response file was not removed: {path}");
+                }
+            }
+        }
+        finally
+        {
+            using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            foreach (Process process in children.Append(parent))
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+
+                await process.WaitForExitAsync(cleanup.Token);
+            }
+
+            await Task.WhenAll(stdout, stderr);
+            foreach (Process child in children)
+            {
+                child.Dispose();
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Shard count native SDK without retry")]
+    [DataRow(true, DisplayName = "Shard count native SDK with per-shard retry")]
+    public async Task ShardCount_NativeDotnetTest_ExecutesAllPartitions(bool retry)
+    {
+        using var run = new TempDirectory("shard-count-sdk");
+        string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build -p:SkipUapTargetFramework=true"
+            + $" --shard-count 4 --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
+        if (retry)
+        {
+            arguments += " --retry-failed-tests 1";
+        }
+
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(Independent, forDotnetCli: true);
+        environment[ProbeVariable] = null;
+        environment["PARTITION_TEST_FANOUT_RETRY"] = retry ? run.Path : null;
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            arguments, workingDirectory: AssetFixture.AssetPath(Independent), environmentVariables: environment,
+            failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "shard-count-sdk", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
+        string partitionRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(run.Path, "Shards")));
+        List<ReportResult> logicalResults = [];
+        foreach (string partition in Directory.GetDirectories(partitionRoot))
+        {
+            string retries = Path.Combine(partition, "Retries");
+            IEnumerable<ReportResult> firstAttempts = Directory.Exists(retries)
+                ? Directory.GetFiles(retries, "run.trx", SearchOption.AllDirectories).SelectMany(ReadResults)
+                : [];
+            logicalResults.AddRange(firstAttempts.Concat(ReadResults(Path.Combine(partition, "run.trx")))
+                .GroupBy(test => test.Id, StringComparer.Ordinal).Select(group => group.Last()));
+        }
+
+        AssertResults([.. logicalResults], Baseline);
+        if (retry)
+        {
+            Assert.IsTrue(File.Exists(Path.Combine(run.Path, "Checkout.Keep")));
+            Assert.IsTrue(File.Exists(Path.Combine(run.Path, "Cart.Keep")));
+            Assert.IsTrue(File.Exists(Path.Combine(run.Path, "checkout-recovered")));
+        }
+    }
+
+    [TestMethod]
+    [DataRow("--shard-count", DisplayName = "Shard count rejects missing count")]
+    [DataRow("--shard-count 2 extra", DisplayName = "Shard count rejects extra count")]
+    [DataRow("--shard-count 0", DisplayName = "Shard count rejects zero")]
+    [DataRow("--shard-count=-1", DisplayName = "Shard count rejects negative")]
+    [DataRow("--shard-count 2147483648", DisplayName = "Shard count rejects overflow")]
+    [DataRow("--shard-count 1/2", DisplayName = "Shard count rejects fraction")]
+    [DataRow("--shard-count 2 --partition 1/2", DisplayName = "Shard count rejects manual partition")]
+    [DataRow("--shard-count 2 --server jsonrpc", DisplayName = "Shard count rejects JSON RPC server")]
+    public async Task ShardCount_InvalidOptions_FailBeforeExecution(string arguments)
+    {
+        using var run = new TempDirectory("shard-count-invalid");
+        TestHostResult result = await AssetFixture.Host(Independent).ExecuteAsync(
+            arguments, environmentVariables: AssetFixture.EnvironmentFor(Independent, run),
+            cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        result.AssertOutputContains("--shard-count");
+        Assert.IsFalse(File.Exists(ProbePath(run)));
+    }
+
+    private async Task<TestHostResult> RunFanOutAsync(
+        string asset, string arguments, TempDirectory run, Dictionary<string, string?>? extraEnvironment = null)
+    {
+        Dictionary<string, string?> environment = AssetFixture.EnvironmentFor(asset);
+        // The selector fixture's shared append-only body log is intentionally process-local.
+        // Fan-out asserts the independent per-partition TRX identities instead.
+        environment[ProbeVariable] = null;
+        if (extraEnvironment is not null)
+        {
+            foreach ((string key, string? value) in extraEnvironment)
+            {
+                environment[key] = value;
+            }
+        }
+
+        TestHostResult result = await AssetFixture.Host(asset).ExecuteAsync(
+            $"{arguments} --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\"",
+            environmentVariables: environment, cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(asset, MetadataMode.Reflection, "shard-count", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+        return result;
+    }
 
     [TestMethod]
     public async Task Partition_AbsentAndOneOfOne_PreserveExactBaselineIdentitiesAndOutcomes()
@@ -85,7 +774,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             DiscoveredNode[] discovered = await DiscoverAsync(Independent, $"--partition {index}/4");
             using var run = new TempDirectory("partition-dotnet-test");
             string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build -p:SkipUapTargetFramework=true --partition {index}/4"
-                + $" --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --no-ansi --progress off";
+                + $" --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --ansi off --progress off";
             DotnetMuxerResult result = await DotnetCli.RunAsync(
                 arguments,
                 workingDirectory: AssetFixture.AssetPath(Independent),
@@ -657,6 +1346,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             await GenerateAsync(Rows, RowsSource, sdkVersion, includeMetadataModes: false, cancellationToken);
             await GenerateAsync(RuntimeRows, RowsSource.Replace("TestDataSourceDiscoveryOption.DuringDiscovery", "TestDataSourceDiscoveryOption.DuringExecution", StringComparison.Ordinal),
                 sdkVersion, includeMetadataModes: false, cancellationToken);
+            await GenerateAsync(Cancellation, IndependentSource + CancellationProgram, sdkVersion, includeMetadataModes: false, cancellationToken);
         }
 
         private async Task GenerateAsync(string name, string tests, string sdkVersion, bool includeMetadataModes, CancellationToken cancellationToken)
@@ -665,8 +1355,20 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$PlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$RetryVersion$", MicrosoftTestingExtensionsRetryVersion)
+                .PatchCodeWithReplace(
+                    "$GitHubActionsReportPackageReference$",
+                    name is Independent or Dependencies
+                        ? $"<PackageReference Include=\"Microsoft.Testing.Extensions.GitHubActionsReport\" Version=\"{MicrosoftTestingExtensionsGitHubActionsReportVersion}\" />"
+                        : string.Empty)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$SdkVersion$", sdkVersion);
+            if (name == Cancellation)
+            {
+                source = source.Replace(
+                    "<EnableMSTestRunner>true</EnableMSTestRunner>",
+                    "<EnableMSTestRunner>true</EnableMSTestRunner><GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>", StringComparison.Ordinal);
+            }
+
             TestAsset asset = await TestAsset.GenerateAssetAsync(name, source);
             _assets.Add(name, asset);
             MetadataMode[] modes = includeMetadataModes
@@ -725,6 +1427,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$PlatformVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$RetryVersion$" />
+                $GitHubActionsReportPackageReference$
               </ItemGroup>
             </Project>
             #file global.json
@@ -743,8 +1446,23 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             [TestClass]
             public sealed class CheckoutTests
             {
+                public TestContext TestContext { get; set; } = null!;
+
                 [TestMethod, TestCategory("Fast")]
-                public void Keep() => Probe.Record("Checkout.Keep");
+                public void Keep()
+                {
+                    if (System.Environment.GetEnvironmentVariable("PARTITION_TEST_MULTILINE") is not null)
+                    {
+                        Assert.AreEqual("first\nsecond", TestContext.Properties["Multiline"]);
+                    }
+
+                    if (System.Environment.GetEnvironmentVariable("PARTITION_TEST_HYPHENS") is not null)
+                    {
+                        Assert.AreEqual("off", TestContext.Properties["---ansi"]);
+                    }
+
+                    Probe.Record("Checkout.Keep");
+                }
                 [TestMethod, TestCategory("Slow")]
                 public void Other() => Probe.Record("Checkout.Other");
             }
@@ -867,15 +1585,221 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
 
             """;
 
+        private const string CancellationProgram = """
+            #file Program.cs
+            #pragma warning disable TPEXP
+            using System;
+            using System.IO;
+            using System.Linq;
+            using System.Reflection;
+            using System.Security.AccessControl;
+            using System.Security.Principal;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using Microsoft.Testing.Extensions;
+            using Microsoft.Testing.Platform.Builder;
+            using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+            using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
+            using Microsoft.Testing.Platform.TestHostOrchestrator;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public static class Program
+            {
+                public static async Task<int> Main(string[] args)
+                {
+                    if (args is ["--sentinel"])
+                    {
+                        Thread.Sleep(Timeout.Infinite);
+                    }
+
+                    string? capture = Environment.GetEnvironmentVariable("PARTITION_TEST_RESPONSE_CAPTURE");
+                    if (capture is not null)
+                    {
+                        string original = Environment.GetEnvironmentVariable("PARTITION_TEST_RESPONSE_ORIGINAL")!;
+                        string[] paths = args.Where(arg => arg.StartsWith("@", StringComparison.Ordinal))
+                            .Select(arg => arg.Substring(1))
+                            .Where(path => !string.Equals(path, original, StringComparison.OrdinalIgnoreCase))
+                            .ToArray();
+                        if (paths.Length > 0)
+                        {
+                            foreach (string path in paths)
+                            {
+                                if (!File.Exists(path))
+                                {
+                                    throw new InvalidOperationException("The child response file is missing.");
+                                }
+                                if (!OperatingSystem.IsWindows()
+                                    && (File.GetUnixFileMode(path) & (UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute
+                                        | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute)) != 0)
+                                {
+                                    throw new InvalidOperationException("The child response file is not private.");
+                                }
+                                if (OperatingSystem.IsWindows())
+                                {
+                                    FileSecurity security = new FileInfo(path).GetAccessControl();
+                                    using WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                                    if (!security.AreAccessRulesProtected || security.GetAccessRules(true, true, typeof(SecurityIdentifier))
+                                        .Cast<FileSystemAccessRule>()
+                                        .Any(rule => rule.AccessControlType == AccessControlType.Allow && !rule.IdentityReference.Equals(identity.User)))
+                                    {
+                                        throw new InvalidOperationException("The child response file is not private.");
+                                    }
+                                }
+                            }
+                            File.WriteAllLines(Path.Combine(capture, Environment.ProcessId + ".txt"), paths);
+                            if (Environment.GetEnvironmentVariable("PARTITION_TEST_FAIL_CHILD") is not null)
+                            {
+                                return 42;
+                            }
+                        }
+                    }
+
+                    if (args.Contains("--partition") && Environment.GetEnvironmentVariable("PARTITION_TEST_CHILD_DIAGNOSTIC") is not null)
+                    {
+                        Console.Error.WriteLine("partition startup diagnostic marker");
+                        return 42;
+                    }
+
+                    var builder = await TestApplication.CreateBuilderAsync(args);
+                    if (args.Contains("--shard-count") && Environment.GetEnvironmentVariable("PARTITION_TEST_HANG") is not null)
+                    {
+                        builder.TestHostOrchestrator.AddTestHostExecutionOrchestratorMiddleware(services => new CancelOnMarker(services));
+                    }
+
+                    if (Environment.GetEnvironmentVariable("PARTITION_TEST_MIDDLEWARE") is string marker)
+                    {
+                        builder.TestHostOrchestrator.AddTestHostExecutionOrchestratorMiddleware(_ => new RecordMiddleware(marker));
+                    }
+
+                    if (Environment.GetEnvironmentVariable("PARTITION_TEST_CUSTOM_LAUNCHER") is string launcher)
+                    {
+                        builder.TestHostControllers.AddTestHostLauncher(_ => new CustomLauncher(launcher == "enabled"));
+                    }
+
+                    builder.AddMSTest(() => new[] { Assembly.GetExecutingAssembly() });
+                    builder.AddTrxReportProvider();
+                    builder.AddRetryProvider();
+                    using var app = await builder.BuildAsync();
+                    return await app.RunAsync();
+                }
+            }
+            internal sealed class CustomLauncher(bool enabled) : ITestHostLauncher
+            {
+                public string Uid => "CustomLauncher";
+                public string Version => "1.0.0";
+                public string DisplayName => Uid;
+                public string Description => Uid;
+                public Task<bool> IsEnabledAsync() => Task.FromResult(enabled);
+                public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken token)
+                    => throw new InvalidOperationException("The custom launcher must not be invoked.");
+            }
+            internal sealed class RecordMiddleware(string marker) : ITestHostExecutionOrchestratorMiddleware
+            {
+                public string Uid => "RecordMiddleware";
+                public string Version => "1.0.0";
+                public string DisplayName => Uid;
+                public string Description => Uid;
+                public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+                public Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken token)
+                {
+                    File.AppendAllText(marker, "middleware" + Environment.NewLine);
+                    return next(token);
+                }
+            }
+            internal sealed class CancelOnMarker(IServiceProvider services) : ITestHostExecutionOrchestratorMiddleware
+            {
+                public string Uid => "CancelOnMarker";
+                public string Version => "1.0.0";
+                public string DisplayName => Uid;
+                public string Description => Uid;
+                public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+                public async Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken token)
+                {
+                    // This test-only trigger requests genuine application cancellation without
+                    // broadcasting console signals to unrelated processes on a shared machine.
+                    Type type = typeof(TestApplication).Assembly.GetType(
+                        "Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource", throwOnError: true)!;
+                    object source = services.GetService(type)!;
+                    Task<int> execution = next(token);
+                    try
+                    {
+                        string marker = Path.Combine(Environment.GetEnvironmentVariable("PARTITION_TEST_HANG")!, "cancel");
+                        while (!File.Exists(marker) && !execution.IsCompleted)
+                        {
+                            await Task.Delay(25, token);
+                        }
+                    }
+                    finally
+                    {
+                        type.GetMethod("Cancel")!.Invoke(source, null);
+                        await execution;
+                    }
+
+                    return await execution;
+                }
+            }
+
+            """;
+
         private const string ProbeSource = """
             #file Probe.cs
             using System;
             using System.IO;
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
             namespace Acme;
             internal static class Probe
             {
                 public static void Record(string identity)
                 {
+                    string? hangDirectory = Environment.GetEnvironmentVariable("PARTITION_TEST_HANG");
+                    if (hangDirectory is not null)
+                    {
+                        string marker = Path.Combine(hangDirectory, identity);
+                        var grandchildStart = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!, "--sentinel")
+                        {
+                            UseShellExecute = false,
+                        };
+                        using var grandchild = System.Diagnostics.Process.Start(grandchildStart)!;
+                        File.WriteAllText(marker + ".grandchild", grandchild.Id.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        string temporary = marker + ".tmp";
+                        File.WriteAllText(temporary, Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        File.Move(temporary, marker);
+                        if (Environment.GetEnvironmentVariable("PARTITION_TEST_ORPHAN") is not null)
+                        {
+                            while (!File.Exists(Path.Combine(hangDirectory, "release-child")))
+                            {
+                                Thread.Sleep(25);
+                            }
+
+                            return;
+                        }
+
+                        Thread.Sleep(Timeout.Infinite);
+                    }
+
+                    string? retryDirectory = Environment.GetEnvironmentVariable("PARTITION_TEST_FANOUT_RETRY");
+                    if (retryDirectory is not null && identity is "Checkout.Keep" or "Cart.Keep")
+                    {
+                        string recovered = Path.Combine(retryDirectory, "checkout-recovered");
+                        if (identity == "Cart.Keep")
+                        {
+                            Assert.IsTrue(SpinWait.SpinUntil(() => File.Exists(recovered), TimeSpan.FromMinutes(1)),
+                                "Checkout must finish its retry before Cart starts attempt one.");
+                        }
+
+                        string sentinel = Path.Combine(retryDirectory, identity);
+                        if (!File.Exists(sentinel))
+                        {
+                            File.WriteAllText(sentinel, "first attempt reached");
+                            Assert.Fail("Deliberate partition-local first attempt failure");
+                        }
+
+                        if (identity == "Checkout.Keep")
+                        {
+                            File.WriteAllText(recovered, "checkout recovered");
+                        }
+                    }
+
                     string? path = Environment.GetEnvironmentVariable("PARTITION_TEST_PROBE");
                     if (path is not null)
                     {

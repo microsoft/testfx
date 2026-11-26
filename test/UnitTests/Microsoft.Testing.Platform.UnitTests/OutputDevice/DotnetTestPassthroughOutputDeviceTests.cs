@@ -18,6 +18,8 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
 {
     private static readonly IOutputDeviceDataProducer Producer = Mock.Of<IOutputDeviceDataProducer>();
 
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public async Task IsEnabledAsync_ReturnsFalse_LikeNopDevice()
     {
@@ -125,6 +127,49 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DisplayAsync_StalledDisplayAcknowledgementHonorsCancellation(bool cancelApplication)
+    {
+        using CancellationTokenSource application = new();
+        using CancellationTokenSource call = new();
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(application.Token);
+        fixture.Client.Respond(
+            new HandshakeMessage(new() { [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.3.0" }),
+            application.Token);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        TaskCompletionSource<bool> entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.Client.StallDisplayMessage(entered, release);
+        ServiceProvider services = new();
+        services.AddServices([fixture.Connection, fixture.Environment.Object]);
+        DotnetTestPassthroughOutputDevice device = new(services);
+        Task send = device.DisplayAsync(Producer, new SessionMessageOutputDeviceData("child diagnostic"), call.Token);
+        bool stopped;
+        try
+        {
+            await entered.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            (cancelApplication ? application : call).Cancel();
+            stopped = await Task.WhenAny(send, Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken)) == send;
+        }
+        finally
+        {
+            release.TrySetResult(true);
+        }
+
+        if (stopped)
+        {
+            await Assert.ThrowsAsync<OperationCanceledException>(() => send);
+        }
+        else
+        {
+            await send;
+        }
+
+        Assert.IsTrue(stopped, "Forwarding must stop when the caller or application cancels, even when the SDK does not acknowledge.");
+    }
+
+    [TestMethod]
     public async Task DisplayAsync_WithProgressMessage_IsSwallowedWithoutResolvingTheConnection()
     {
         var serviceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
@@ -153,7 +198,7 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
         Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
         List<DisplayMessage> displays = [];
         List<AzureDevOpsLogMessage> azure = [];
-        fixture.Client.RespondVoid<DisplayMessage>(application.Token, displays.Add);
+        fixture.Client.RespondVoid<DisplayMessage>(application.Token, displays.Add, anyToken: true);
         fixture.Client.RespondVoid<AzureDevOpsLogMessage>(application.Token, azure.Add);
         Mock<IConsole> console = new(MockBehavior.Strict);
         ServiceProvider services = new();
@@ -196,7 +241,7 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
             device.Description);
         Assert.IsTrue(fixture.Client.Mock.Invocations
             .Where(invocation => invocation.Method.Name == "RequestReplyAsync")
-            .All(invocation => (CancellationToken)invocation.Arguments[1] == application.Token));
+            .All(invocation => ((CancellationToken)invocation.Arguments[1]).CanBeCanceled));
         console.VerifyNoOtherCalls();
     }
 }

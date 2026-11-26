@@ -194,13 +194,16 @@ internal sealed partial class GitHubActionsSummaryReporter
     private static int AppendModuleMarkdown(
         StringBuilder builder,
         CiRunSummaryModule module,
+        HashSet<string> nonEmptyShardGroups,
         int headingLevel,
         GitHubActionsStepSummarySections sections,
         bool includeFailureDetails,
         SummaryBudget budget)
     {
         string heading = new('#', headingLevel);
-        bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
+        bool emptyShard = GitHubActionsSummaryReporter.IsEmptyShard(module, nonEmptyShardGroups);
+        bool runFailed = module.FailedTests > 0
+            || (GitHubActionsExitCode.IndicatesFailure(module.ExitCode) && !emptyShard);
         builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
             .Append(GitHubActionsFailureDetails.EscapeInlineCode(module.AssemblyName)).Append("\n\n");
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
@@ -223,7 +226,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         int omittedDetails = 0;
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
+            if (!emptyShard && !GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
             {
                 builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
                     .Append(GitHubActionsFailureDetails.EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");

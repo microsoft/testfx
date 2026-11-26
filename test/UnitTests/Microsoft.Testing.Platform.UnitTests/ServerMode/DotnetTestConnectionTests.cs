@@ -762,19 +762,26 @@ public sealed class DotnetTestConnectionTests
         public void Respond(HandshakeMessage response, CancellationToken token, Action<HandshakeMessage>? capture = null)
             => Configure(typeof(HandshakeMessage), typeof(HandshakeMessage), response, token, value => capture?.Invoke((HandshakeMessage)value));
 
-        public void RespondVoid<TRequest>(CancellationToken token, Action<TRequest>? capture = null)
+        public void RespondVoid<TRequest>(CancellationToken token, Action<TRequest>? capture = null, bool anyToken = false)
         {
             Type responseType = typeof(DotnetTestConnection).Assembly.GetType("Microsoft.Testing.Platform.IPC.Models.VoidResponse", throwOnError: true)!;
-            Configure(typeof(TRequest), responseType, Activator.CreateInstance(responseType)!, token, value => capture?.Invoke((TRequest)value));
+            Configure(typeof(TRequest), responseType, Activator.CreateInstance(responseType)!, token, value => capture?.Invoke((TRequest)value), anyToken);
+        }
+
+        public void StallDisplayMessage(TaskCompletionSource<bool> entered, TaskCompletionSource<bool> release)
+        {
+            Type responseType = typeof(DotnetTestConnection).Assembly.GetType("Microsoft.Testing.Platform.IPC.Models.VoidResponse", throwOnError: true)!;
+            typeof(ConnectionClient).GetMethod(nameof(ConfigureStalledDisplay), BindingFlags.NonPublic | BindingFlags.Static)!
+                .MakeGenericMethod(_type, responseType).Invoke(null, [Mock, entered, release]);
         }
 
         public void SetConnected()
             => typeof(ConnectionClient).GetMethod(nameof(ConfigureConnected), BindingFlags.NonPublic | BindingFlags.Static)!
                 .MakeGenericMethod(_type).Invoke(null, [Mock]);
 
-        private void Configure(Type request, Type response, object value, CancellationToken token, Action<object> capture)
+        private void Configure(Type request, Type response, object value, CancellationToken token, Action<object> capture, bool anyToken = false)
             => typeof(ConnectionClient).GetMethod(nameof(ConfigureResponse), BindingFlags.NonPublic | BindingFlags.Static)!
-                .MakeGenericMethod(_type, request, response).Invoke(null, [Mock, value, token, capture]);
+                .MakeGenericMethod(_type, request, response).Invoke(null, [Mock, value, token, capture, anyToken]);
 
         private static void ConfigureConnected<TClient>(Mock<TClient> mock)
             where TClient : class
@@ -783,16 +790,38 @@ public sealed class DotnetTestConnectionTests
             mock.Setup(Expression.Lambda<Func<TClient, bool>>(Expression.Property(client, "IsConnected"), client)).Returns(true);
         }
 
-        private static void ConfigureResponse<TClient, TRequest, TResponse>(Mock<TClient> mock, object response, CancellationToken token, Action<object> capture)
+        private static void ConfigureResponse<TClient, TRequest, TResponse>(Mock<TClient> mock, object response, CancellationToken token, Action<object> capture, bool anyToken)
             where TClient : class
         {
             ParameterExpression client = Expression.Parameter(typeof(TClient), "client");
             MethodInfo method = typeof(TClient).GetMethod("RequestReplyAsync")!.MakeGenericMethod(typeof(TRequest), typeof(TResponse));
             MethodInfo any = typeof(It).GetMethod(nameof(It.IsAny))!.MakeGenericMethod(typeof(TRequest));
-            MethodCallExpression call = Expression.Call(client, method, Expression.Call(any), Expression.Constant(token));
+            Expression tokenArgument = anyToken
+                ? Expression.Call(typeof(It).GetMethod(nameof(It.IsAny))!.MakeGenericMethod(typeof(CancellationToken)))
+                : Expression.Constant(token);
+            MethodCallExpression call = Expression.Call(client, method, Expression.Call(any), tokenArgument);
             mock.Setup(Expression.Lambda<Func<TClient, Task<TResponse>>>(call, client))
                 .Callback<TRequest, CancellationToken>((request, _) => capture(request!))
                 .ReturnsAsync((TResponse)response);
+        }
+
+        private static void ConfigureStalledDisplay<TClient, TResponse>(
+            Mock<TClient> mock, TaskCompletionSource<bool> entered, TaskCompletionSource<bool> release)
+            where TClient : class
+        {
+            ParameterExpression client = Expression.Parameter(typeof(TClient), "client");
+            MethodInfo method = typeof(TClient).GetMethod("RequestReplyAsync")!.MakeGenericMethod(typeof(DisplayMessage), typeof(TResponse));
+            MethodInfo any = typeof(It).GetMethod(nameof(It.IsAny))!.MakeGenericMethod(typeof(DisplayMessage));
+            MethodInfo anyToken = typeof(It).GetMethod(nameof(It.IsAny))!.MakeGenericMethod(typeof(CancellationToken));
+            MethodCallExpression call = Expression.Call(client, method, Expression.Call(any), Expression.Call(anyToken));
+            mock.Setup(Expression.Lambda<Func<TClient, Task<TResponse>>>(call, client))
+                .Returns<DisplayMessage, CancellationToken>(async (_, token) =>
+                {
+                    entered.TrySetResult(true);
+                    await Task.WhenAny(release.Task, Task.Delay(Timeout.Infinite, token));
+                    token.ThrowIfCancellationRequested();
+                    return (TResponse)Activator.CreateInstance(typeof(TResponse))!;
+                });
         }
     }
 

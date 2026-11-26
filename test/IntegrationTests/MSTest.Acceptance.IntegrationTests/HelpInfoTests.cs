@@ -114,6 +114,8 @@ Extension options:
         Run partition 'index/count' of the tests, keeping test classes and dependencies together.
     --settings
         The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.
+    --shard-count
+        Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.
     --test-parameter
         Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.
 """;
@@ -159,6 +161,20 @@ Extension options:
 """;
 
         testHostResult.AssertOutputContains(output);
+
+        // Sharding is a platform extension that is only exposed because MSTest declares ITestPartitioningCapability.
+        testHostResult.AssertOutputContains("""
+  TestSharding
+    Name: Test sharding
+""");
+        testHostResult.AssertOutputContains("""
+    Description: Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.
+    Options:
+      --shard-count
+        Arity: 1
+        Hidden: False
+        Description: Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.
+""");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
