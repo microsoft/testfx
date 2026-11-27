@@ -22,11 +22,12 @@ public sealed class InvocationLifetimeHandlerTests : ServerModeTestsBase<Invocat
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"msbuild \"{AssetFixture.TargetAssetPath}\" -p:TargetFramework={TargetFrameworks.NetCurrent} -getProperty:TestingPlatformInvocationLifetimeCoordinationSupported {propertyOverride}",
             workingDirectory: AssetFixture.TargetAssetPath,
+            environmentVariables: new() { ["DOTNET_CLI_CONTEXT_VERBOSE"] = "1" },
             warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(0);
-        Assert.AreEqual(expected, result.StandardOutput.Trim(), result.ToString());
+        Assert.AreEqual(expected, result.StandardOutput.TrimEnd().Split(Environment.NewLine)[^1], result.ToString());
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
