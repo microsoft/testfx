@@ -18,95 +18,114 @@ internal sealed partial class ServerTestHost
         AssertInitialized();
 
         CancellationToken messageHandlerStopPlusGlobalToken = _messageHandlerStopPlusGlobalTokenSource.Token;
-        while (!_messageHandlerStopPlusGlobalTokenSource.IsCancellationRequested)
+        try
         {
-            try
+            while (!_messageHandlerStopPlusGlobalTokenSource.IsCancellationRequested)
             {
-                RpcMessage? message = await _messageHandler.ReadAsync(messageHandlerStopPlusGlobalToken).ConfigureAwait(false);
-
-                // In case of issue on underneath handler we expect a null rpc message to signal that we should close
-                // because we're no more able to process things.
-                if (message is null)
+                try
                 {
-                    return;
-                }
+                    RpcMessage? message = await _messageHandler.ReadAsync(messageHandlerStopPlusGlobalToken).ConfigureAwait(false);
 
-                if (message is ErrorMessage { Id: null } uncorrelatedError)
-                {
-                    QueueLog(LogLevel.Debug, $"Received an uncorrelated JSON-RPC error (code {uncorrelatedError.ErrorCode}): {uncorrelatedError.Message}");
-                    continue;
-                }
-
-                // Signal that we have to handle this request
-                _requestCounter.AddCount();
-
-                if (message is NotificationMessage { Method: JsonRpcMethods.Exit })
-                {
-                    // Signal only one time
-                    if (!_serverClosingTokenSource.IsCancellationRequested)
+                    // In case of issue on underneath handler we expect a null rpc message to signal that we should close
+                    // because we're no more able to process things.
+                    if (message is null)
                     {
-                        await _logger.LogDebugAsync("Server requested to shutdown").ConfigureAwait(false);
-#pragma warning disable VSTHRD103 // Call async methods when in an async method
-                        _serverClosingTokenSource.Cancel();
-#pragma warning restore VSTHRD103 // Call async methods when in an async method
+                        break;
                     }
 
-                    // Signal the exit call
-                    _requestCounter.Signal();
-
-                    // If there're no in-flight request we can close the server
-                    if (_clientToServerRequests.IsEmpty)
+                    if (message is ErrorMessage { Id: null } uncorrelatedError)
                     {
-#pragma warning disable VSTHRD103 // Call async methods when in an async method
-                        _stopMessageHandler.Cancel();
-#pragma warning restore VSTHRD103 // Call async methods when in an async method
+                        QueueLog(LogLevel.Debug, $"Received an uncorrelated JSON-RPC error (code {uncorrelatedError.ErrorCode}): {uncorrelatedError.Message}");
+                        continue;
                     }
 
-                    continue;
-                }
+                    // Signal that we have to handle this request
+                    _requestCounter.AddCount();
 
-                // Note: Handle the requests and notifications asynchronously, so that
-                // we can keep reading further messages.
-                // For instance we should be able to handle a cancellation request
-                // while a discovery request is being handled.
-                switch (message)
+                    if (message is NotificationMessage { Method: JsonRpcMethods.Exit })
+                    {
+                        // Signal only one time
+                        if (!_serverClosingTokenSource.IsCancellationRequested)
+                        {
+                            await _logger.LogDebugAsync("Server requested to shutdown").ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                            _serverClosingTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+                        }
+
+                        // Signal the exit call
+                        _requestCounter.Signal();
+
+                        // If there're no in-flight request we can close the server
+                        if (_clientToServerRequests.IsEmpty)
+                        {
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                            _stopMessageHandler.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+                        }
+
+                        continue;
+                    }
+
+                    // Note: Handle the requests and notifications asynchronously, so that
+                    // we can keep reading further messages.
+                    // For instance we should be able to handle a cancellation request
+                    // while a discovery request is being handled.
+                    switch (message)
+                    {
+                        case RequestMessage request:
+                            // This task is recorded inside the _clientToServerRequests
+                            _ = HandleRequestAsync(request, _serverClosingTokenSource.Token, cancellationToken);
+                            break;
+
+                        case NotificationMessage notification:
+                            // This task is recorded inside the _clientToServerRequests
+                            // Cancellation is applied synchronously so queued requests observe it before they resume.
+                            _ = HandleNotificationAsync(notification, _serverClosingTokenSource.Token);
+                            break;
+                        case ResponseMessage response:
+                            CompleteRequest(
+                                ref _serverToClientRequests,
+                                GetRequestKey(response.Id, response.StringId),
+                                completion => completion.TrySetResult(response));
+                            break;
+
+                        case ErrorMessage { Id: { } errorId } error:
+                            RemoteInvocationException exception = new(error.ErrorCode, error.Message, error.Data);
+                            CompleteRequest(
+                                ref _serverToClientRequests,
+                                GetRequestKey(errorId, error.StringId),
+                                completion => completion.TrySetException(exception));
+                            break;
+                    }
+                }
+                catch (OperationCanceledException ex) when (ex.CancellationToken == messageHandlerStopPlusGlobalToken)
                 {
-                    case RequestMessage request:
-                        // This task is recorded inside the _clientToServerRequests
-                        _ = HandleRequestAsync(request, _serverClosingTokenSource.Token, cancellationToken);
-                        break;
-
-                    case NotificationMessage notification:
-                        // This task is recorded inside the _clientToServerRequests
-                        // Cancellation is applied synchronously so queued requests observe it before they resume.
-                        _ = HandleNotificationAsync(notification, _serverClosingTokenSource.Token);
-                        break;
-                    case ResponseMessage response:
-                        CompleteRequest(
-                            ref _serverToClientRequests,
-                            GetRequestKey(response.Id, response.StringId),
-                            completion => completion.TrySetResult(response));
-                        break;
-
-                    case ErrorMessage { Id: { } errorId } error:
-                        RemoteInvocationException exception = new(error.ErrorCode, error.Message, error.Data);
-                        CompleteRequest(
-                            ref _serverToClientRequests,
-                            GetRequestKey(errorId, error.StringId),
-                            completion => completion.TrySetException(exception));
-                        break;
+                    // We're shutting down the reader
                 }
-            }
-            catch (OperationCanceledException ex) when (ex.CancellationToken == messageHandlerStopPlusGlobalToken)
-            {
-                // We're shutting down the reader
             }
         }
+        finally
+        {
+            // Mark all queued requests before any token callback can release an active invocation's gate.
+            RpcInvocationState[] pendingRequests = _clientToServerRequests.Values
+                .Where(static state => state.TryRequestCancellation()).ToArray();
+            Task<AggregateException?>[] cancellations = pendingRequests.Select(static state => Task.Run(state.CancelRequest)).ToArray();
 
-        // subtract the default count
-        _requestCounter.Signal();
+            // subtract the default count
+            _requestCounter.Signal();
 
-        // Wait to drain all in-flight requests HandleRequestCoreAsync/CompleteRequest
-        await _requestCounter.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, CancellationToken.None).ConfigureAwait(false);
+            AggregateException?[] cancellationExceptions = await Task.WhenAll(cancellations).ConfigureAwait(false);
+            foreach (AggregateException? exception in cancellationExceptions)
+            {
+                if (exception is not null)
+                {
+                    QueueLog(LogLevel.Warning, $"Exception during connection-loss cancellation: {exception}");
+                }
+            }
+
+            // Wait to drain all in-flight requests HandleRequestCoreAsync/CompleteRequest
+            await _requestCounter.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        }
     }
 }

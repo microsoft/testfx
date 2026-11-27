@@ -89,6 +89,7 @@ internal sealed partial class ServerTestHost
 
         try
         {
+            rpcInvocationState.ThrowIfCancellationRequested();
             requestCancellationToken.ThrowIfCancellationRequested();
 
             ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();

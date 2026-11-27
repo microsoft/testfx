@@ -247,6 +247,149 @@ public sealed class ServerTestHostTests
     }
 
     [TestMethod]
+    public async Task RunAsync_EndOfStreamCancelsAndDrainsInvocationBeforeDisposingServices()
+    {
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+        await using ServerFixture fixture = new();
+        TaskCompletionSource<bool> setupStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> setupCanceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseSetup = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> cleanupStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseCleanup = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> queuedRequestReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.ReleaseBlockedExecution = () =>
+        {
+            releaseSetup.TrySetResult(true);
+            releaseCleanup.TrySetResult(true);
+        };
+
+        Mock<IInvocationLifetimeHandler> handler = new();
+        handler.SetupGet(h => h.Uid).Returns("blocked-handler");
+        handler.Setup(h => h.IsEnabledAsync()).ReturnsAsync(true);
+        handler.Setup(h => h.OnInvocationStartingAsync(It.IsAny<InvocationStartingContext>(), It.IsAny<CancellationToken>()))
+            .Returns<InvocationStartingContext, CancellationToken>(async (context, token) =>
+            {
+                using CancellationTokenRegistration registration = token.Register(() => setupCanceled.TrySetResult(true));
+                context.SetEnvironmentVariable("SERVER_HOOK_VALUE", "setup");
+                setupStarted.TrySetResult(true);
+                await releaseSetup.Task;
+            });
+        int? cleanupExitCode = null;
+        bool cleanupCanceled = false;
+        handler.Setup(h => h.OnInvocationCompletedAsync(It.IsAny<InvocationCompletedContext>(), It.IsAny<CancellationToken>()))
+            .Returns<InvocationCompletedContext, CancellationToken>(async (context, _) =>
+            {
+                cleanupExitCode = context.ExitCode;
+                cleanupCanceled = context.IsCanceled;
+                cleanupStarted.TrySetResult(true);
+                await releaseCleanup.Task;
+            });
+        Mock<IDisposable> disposal = handler.As<IDisposable>();
+        int handlersBuilt = 0;
+        fixture.InvocationLifetime.AddInvocationLifetimeHandler(_ =>
+        {
+            Interlocked.Increment(ref handlersBuilt);
+            return handler.Object;
+        });
+        int requestsReceived = 0;
+        fixture.Logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Returns<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, message, _, _) =>
+            {
+                if (message == "Received testing/runTests request" && Interlocked.Increment(ref requestsReceived) == 2)
+                {
+                    queuedRequestReceived.TrySetResult(true);
+                }
+
+                return Task.CompletedTask;
+            });
+
+        Task<int> server = fixture.StartAsync();
+        await SendRequestAsync(
+            fixture, 1, JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true)));
+        fixture.Incoming.Write(new RequestMessage(2, JsonRpcMethods.TestingRunTests, new RunRequestArgs(Guid.NewGuid(), null, null)));
+        await setupStarted.Task.WaitAsync(Limit, TestContext.CancellationToken);
+        fixture.Incoming.Write(new RequestMessage(3, JsonRpcMethods.TestingRunTests, new RunRequestArgs(Guid.NewGuid(), null, null)));
+        await queuedRequestReceived.Task.WaitAsync(Limit, TestContext.CancellationToken);
+        fixture.CaptureRequestsToDrain();
+        fixture.Incoming.Write(null);
+
+        Assert.AreSame(setupCanceled.Task, await Task.WhenAny(setupCanceled.Task, server).WaitAsync(Limit, TestContext.CancellationToken));
+        Assert.IsFalse(server.IsCompleted);
+        fixture.HandlerDisposal.Verify(d => d.Dispose(), Times.Never);
+        Assert.AreEqual("setup", fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE"));
+
+        releaseSetup.TrySetResult(true);
+        Assert.AreSame(cleanupStarted.Task, await Task.WhenAny(cleanupStarted.Task, server).WaitAsync(Limit, TestContext.CancellationToken));
+        Assert.IsFalse(server.IsCompleted);
+        fixture.HandlerDisposal.Verify(d => d.Dispose(), Times.Never);
+        releaseCleanup.TrySetResult(true);
+
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, await server.WaitAsync(Limit, TestContext.CancellationToken));
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, cleanupExitCode);
+        Assert.IsTrue(cleanupCanceled);
+        Assert.AreEqual(1, handlersBuilt);
+        Assert.AreEqual(0, fixture.FrameworkBuilds);
+        Assert.AreEqual("baseline", fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE"));
+        disposal.Verify(d => d.Dispose(), Times.Once);
+        fixture.HandlerDisposal.Verify(d => d.Dispose(), Times.Once);
+#pragma warning restore TPEXP
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_QueuedCancellationSkipsHandlerSetupBeforeTokenCallbacksRun()
+    {
+#pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
+        await using ServerFixture fixture = new();
+        int handlersBuilt = 0;
+        fixture.InvocationLifetime.AddInvocationLifetimeHandler(_ =>
+        {
+            handlersBuilt++;
+            return new RecordingServerInvocationLifetimeHandler("A", 1, _ => { });
+        });
+        Task<int> server = fixture.StartAsync();
+        await SendRequestAsync(
+            fixture, 1, JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true)));
+
+        Type stateType = typeof(ServerTestHost).GetNestedType("RpcInvocationState", BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Request state type was not found.");
+        using var state = (IDisposable)(Activator.CreateInstance(stateType, nonPublic: true)
+            ?? throw new InvalidOperationException("Request state could not be created."));
+        MethodInfo requestCancellation = stateType.GetMethod("TryRequestCancellation")
+            ?? throw new InvalidOperationException("Request cancellation method was not found.");
+        MethodInfo executeRequest = typeof(ServerTestHost).GetMethod("ExecuteRequestAsync", BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Request execution method was not found.");
+        FieldInfo gateField = typeof(ServerTestHost).GetField("_invocationLifetimeRequestGate", BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Invocation gate was not found.");
+        var gate = (SemaphoreSlim)(gateField.GetValue(fixture.Host)
+            ?? throw new InvalidOperationException("Invocation gate was not initialized."));
+        await gate.WaitAsync(TestContext.CancellationToken);
+        Task<ResponseArgsBase> request;
+        try
+        {
+            request = (Task<ResponseArgsBase>)(executeRequest.Invoke(
+                fixture.Host, [new RunRequestArgs(Guid.NewGuid(), null, null), JsonRpcMethods.TestingRunTests, state, CancellationToken.None])
+                ?? throw new InvalidOperationException("Request execution did not return a task."));
+            Assert.IsFalse(request.IsCompleted);
+            Assert.IsTrue((bool)(requestCancellation.Invoke(state, null)
+                ?? throw new InvalidOperationException("Request cancellation did not return a result.")));
+        }
+        finally
+        {
+            gate.Release();
+        }
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => request.WaitAsync(Limit, TestContext.CancellationToken));
+        Assert.AreEqual(0, handlersBuilt);
+        Assert.AreEqual(0, fixture.FrameworkBuilds);
+        Assert.AreEqual("baseline", fixture.Environment.Object.GetEnvironmentVariable("SERVER_HOOK_VALUE"));
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+        Assert.AreEqual(0, await server.WaitAsync(Limit, TestContext.CancellationToken));
+#pragma warning restore TPEXP
+    }
+
+    [TestMethod]
     public async Task RunAsync_NoInvocationHandlersPreservesRequestExecution()
     {
         await using ServerFixture fixture = new();
@@ -796,6 +939,7 @@ public sealed class ServerTestHostTests
 
         private Task<int>? _run;
         private bool _failureObserved;
+        private Task[] _requestsToDrain = [];
 
         public ServerFixture(CancellationToken token = default, bool fastFail = true, bool serverOutput = false)
         {
@@ -897,11 +1041,38 @@ public sealed class ServerTestHostTests
 
         public void MarkObservedFailure() => _failureObserved = true;
 
+        public void CaptureRequestsToDrain()
+        {
+            FieldInfo requestsField = typeof(ServerTestHost).GetField("_clientToServerRequests", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("In-flight requests were not found.");
+            var requests = (System.Collections.IDictionary)(requestsField.GetValue(Host)
+                ?? throw new InvalidOperationException("In-flight requests were not initialized."));
+            _requestsToDrain = requests.Values.Cast<object>().Select(state =>
+            {
+                PropertyInfo completionProperty = state.GetType().GetProperty("CompletionSource")
+                    ?? throw new InvalidOperationException("Request completion was not found.");
+                return ((TaskCompletionSource<object>)(completionProperty.GetValue(state)
+                    ?? throw new InvalidOperationException("Request completion was not initialized."))).Task;
+            }).ToArray();
+        }
+
         public async ValueTask DisposeAsync()
         {
             try
             {
                 ReleaseBlockedExecution?.Invoke();
+                foreach (Task request in _requestsToDrain)
+                {
+                    try
+                    {
+                        await request.TimeoutAfterAsync(Limit);
+                    }
+                    catch (OperationCanceledException) when (request.IsCanceled)
+                    {
+                        // Connection loss intentionally cancels these requests.
+                    }
+                }
+
                 if (_run is not null && !_failureObserved)
                 {
                     Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));

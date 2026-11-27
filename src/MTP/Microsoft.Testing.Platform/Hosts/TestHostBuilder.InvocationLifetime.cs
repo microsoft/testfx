@@ -46,16 +46,28 @@ internal sealed partial class TestHostBuilder
 
         HashSet<string> coordinated = [.. coordinatedUids];
         List<IInvocationLifetimeHandler> remainingHandlers = [];
-        foreach (IInvocationLifetimeHandler handler in handlers)
+        int nextHandlerToRelease = 0;
+        try
         {
-            if (coordinated.Contains(handler.Uid))
+            foreach (IInvocationLifetimeHandler handler in handlers)
             {
-                await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
+                if (coordinated.Contains(handler.Uid))
+                {
+                    // A throwing disposal must not be attempted again.
+                    nextHandlerToRelease++;
+                    await DisposeHelper.DisposeAsync(handler).ConfigureAwait(false);
+                }
+                else
+                {
+                    remainingHandlers.Add(handler);
+                    nextHandlerToRelease++;
+                }
             }
-            else
-            {
-                remainingHandlers.Add(handler);
-            }
+        }
+        catch (Exception ex) when (IsNonFatalInvocationLifetimeException(ex))
+        {
+            await ReleaseInvocationLifetimeHandlersAsync([.. remainingHandlers, .. handlers.Skip(nextHandlerToRelease)]).ConfigureAwait(false);
+            throw;
         }
 
         context.UncoordinatedInvocationLifetimeHandlerUids = [.. remainingHandlers.Select(static handler => handler.Uid)];
