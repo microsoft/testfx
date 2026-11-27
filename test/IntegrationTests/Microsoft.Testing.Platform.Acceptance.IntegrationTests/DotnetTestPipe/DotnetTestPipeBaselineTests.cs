@@ -30,7 +30,7 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
     // and dotnet/sdk#51615); 1.2.0 added AzureDevOpsLogMessage forwarding; 1.3.0 added generic DisplayMessage
     // (warning/error) forwarding; 1.4.0 added the reverse server-control channel (server-initiated cancellation).
     // This mirrors ProtocolConstants.SupportedVersions on the host side.
-    private const string HostAdvertisedProtocolVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0";
+    private const string HostAdvertisedProtocolVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0";
 
     [TestMethod]
     public async Task DotnetTestPipe_TestAppAdvertisesAllSupportedVersions_NegotiatesDownToV100WithOldSdk()

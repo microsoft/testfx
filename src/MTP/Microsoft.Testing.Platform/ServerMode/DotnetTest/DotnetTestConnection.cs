@@ -28,6 +28,7 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
 
     private NamedPipeClient? _serverControlPipeClient;
     private Task? _serverControlListenerTask;
+    private Task? _serverControlReadyTask;
     private CancellationTokenSource? _serverControlListenerCts;
     private string? _serverControlPipeName;
     private int _cancelRequested;
@@ -198,6 +199,7 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
 
         IsCoverageSummarySupported = false;
         _isTestInProgressSupported = false;
+        IsInvocationLifetimeCoordinationAccepted = false;
         HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
@@ -231,6 +233,20 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
                 && response.Properties.TryGetValue(HandshakeMessagePropertyNames.TestInProgressSupported, out string? progressSupported)
                 && bool.TryParse(progressSupported, out bool supportsProgress)
                 && supportsProgress;
+            IsInvocationLifetimeCoordinationAccepted = IsInvocationLifetimeCoordinationAcknowledged(
+                isCompatible,
+                versionParsed,
+                negotiatedVersion,
+                IsServerControlChannelSupported,
+                properties.ContainsKey(HandshakeMessagePropertyNames.InvocationLifetimeHandlers),
+                response.Properties);
+            if (IsInvocationLifetimeCoordinationAccepted && !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi()
+                && _transportClient is NamedPipeClient ownerClient)
+            {
+                // The accepted owner must get a chance to release resources if the SDK disappears.
+                ownerClient.AllowCooperativeConnectionLoss();
+            }
+
             return isCompatible;
         }
 

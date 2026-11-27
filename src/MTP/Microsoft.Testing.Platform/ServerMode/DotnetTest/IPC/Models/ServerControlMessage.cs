@@ -8,4 +8,17 @@ namespace Microsoft.Testing.Platform.IPC.Models;
 // current run cooperatively (preferring a graceful stop so trx/artifacts are still produced). Introduced with
 // protocol version 1.4.0; the SDK only creates the control pipe when it advertises ServerControlPipeName, so an
 // older SDK never sends this message.
-internal sealed record ServerControlMessage(byte Kind) : IResponse;
+// Protocol 1.5.0 adds AggregateExitCode/IsCanceled, sent only with ServerControlKinds.RunInvocationCleanup.
+internal sealed record ServerControlMessage(byte Kind) : IResponse
+{
+    public ServerControlMessage(byte kind, int? aggregateExitCode, bool? isCanceled)
+        : this(kind)
+    {
+        AggregateExitCode = aggregateExitCode;
+        IsCanceled = isCanceled;
+    }
+
+    public int? AggregateExitCode { get; }
+
+    public bool? IsCanceled { get; }
+}

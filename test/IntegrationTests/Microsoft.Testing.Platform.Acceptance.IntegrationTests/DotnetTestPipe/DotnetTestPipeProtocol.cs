@@ -72,6 +72,8 @@ internal static class DotnetTestPipeProtocol
         public const byte RequiredPostProcessingSupported = 19;
         public const byte CoverageSummaryVersion = 20;
         public const byte TargetFramework = 21;
+        public const byte InvocationLifetimeHandlers = 23;
+        public const byte InvocationLifetimeCoordinationAccepted = 24;
     }
 
     public static class ServerControlKinds

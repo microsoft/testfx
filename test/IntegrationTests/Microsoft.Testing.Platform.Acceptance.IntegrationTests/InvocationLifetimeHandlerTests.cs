@@ -1,13 +1,34 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+
+using MSTest.Acceptance.IntegrationTests.Messages.V100;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<InvocationLifetimeHandlerTests.TestAssetFixture>
+public sealed class InvocationLifetimeHandlerTests : ServerModeTestsBase<InvocationLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "InvocationLifetimeHandler";
     private const string Test = "test:{0}:value-A:value-B:no-marker:{1}";
+
+    [TestMethod]
+    [DataRow("", "true")]
+    [DataRow("-p:TestingPlatformInvocationLifetimeCoordinationSupported=false", "false")]
+    public async Task PackagedPlatform_ExposesCoordinationCapabilityAndRespectsOverride(string propertyOverride, string expected)
+    {
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{AssetFixture.TargetAssetPath}\" -p:TargetFramework={TargetFrameworks.NetCurrent} -getProperty:TestingPlatformInvocationLifetimeCoordinationSupported {propertyOverride}",
+            workingDirectory: AssetFixture.TargetAssetPath,
+            environmentVariables: new() { ["DOTNET_CLI_CONTEXT_VERBOSE"] = "1" },
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        Assert.AreEqual(expected, result.StandardOutput.TrimEnd().Split(Environment.NewLine)[^1], result.ToString());
+    }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -169,6 +190,65 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
             ],
             log,
             testHostResult.ToString());
+    }
+
+    [TestMethod]
+    public async Task ServerMode_RunRequestsUseFreshHandlersAndRestoreEnvironmentAroundEachRequest()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string logFile = GetLogFile(testHost);
+        using TestingPlatformClient client = await StartAsServerAndConnectToTheClientAsync(
+            testHost,
+            new Dictionary<string, string?>
+            {
+                ["INVOCATION_VALUE_A"] = null,
+                ["INVOCATION_VALUE_B"] = null,
+                ["LOG_FILE"] = logFile,
+                ["SERVER_MODE_TEST"] = "1",
+                [EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER] = null,
+            },
+            workingDirectory: AssetFixture.TargetAssetPath);
+
+        await client.Initialize();
+
+        TestNodeUpdateCollector firstRunUpdates = new();
+        ResponseListener firstRun = await client.RunTests(Guid.NewGuid(), firstRunUpdates.CollectNodeUpdates);
+        await firstRun.WaitCompletion();
+        Assert.AreEqual("passed", Assert.ContainsSingle(firstRunUpdates.TestNodeUpdates).Node.ExecutionState);
+
+        TestNodeUpdateCollector discoveryUpdates = new();
+        ResponseListener discovery = await client.DiscoverTests(Guid.NewGuid(), discoveryUpdates.CollectNodeUpdates);
+        await discovery.WaitCompletion();
+        Assert.AreEqual("discovered", Assert.ContainsSingle(discoveryUpdates.TestNodeUpdates).Node.ExecutionState);
+
+        TestNodeUpdateCollector secondRunUpdates = new();
+        ResponseListener secondRun = await client.RunTests(Guid.NewGuid(), secondRunUpdates.CollectNodeUpdates);
+        await secondRun.WaitCompletion();
+        Assert.AreEqual("passed", Assert.ContainsSingle(secondRunUpdates.TestNodeUpdates).Node.ExecutionState);
+
+        await client.Exit();
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        shutdown.CancelAfter(TimeSpan.FromSeconds(30));
+        Assert.AreEqual(0, await client.WaitServerProcessExit(shutdown.Token));
+
+        string[] log = ReadLog(logFile, client.ProcessOutput);
+        string serverPid = GetPid(log[0]);
+        AssertLog(
+            [
+                $"starting:A:{serverPid}:1",
+                $"starting:B:{serverPid}:2",
+                $"test:{serverPid}:value-A:value-B:no-marker:none",
+                $"completed:B:{serverPid}:0:False:2",
+                $"completed:A:{serverPid}:0:False:1",
+                $"discovery:{serverPid}:<null>:<null>",
+                $"starting:A:{serverPid}:3",
+                $"starting:B:{serverPid}:4",
+                $"test:{serverPid}:value-A:value-B:no-marker:none",
+                $"completed:B:{serverPid}:0:False:4",
+                $"completed:A:{serverPid}:0:False:3",
+            ],
+            log,
+            client.ProcessOutput);
     }
 
     [DataRow(false)]
@@ -342,6 +422,70 @@ public sealed class InvocationLifetimeHandlerTests : AcceptanceTestBase<Invocati
             result.ToString());
     }
 
+    [TestMethod]
+    public async Task DotnetTestOwner_AdvertisesItsHandlersAndRunsThemLocallyWhenCoordinationIsNotAccepted()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string logFile = GetLogFile(testHost);
+
+        DotnetTestPipe.FakeDotnetTestSdkResult result = await DotnetTestPipe.FakeDotnetTestSdk.RunAsync(
+            testHost,
+            environmentVariables: new()
+            {
+                ["LOG_FILE"] = logFile,
+                ["TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE"] = "owner",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsNotNull(result.ReceivedHandshake, result.TestHostResult.ToString());
+        Assert.IsTrue(
+            result.ReceivedHandshake.TryGetValue(DotnetTestPipe.DotnetTestPipeProtocol.HandshakeProperties.InvocationLifetimeHandlers, out string? handlers),
+            result.TestHostResult.ToString());
+        Assert.AreEqual("""["HandlerA","HandlerB"]""", handlers);
+
+        string[] log = ReadLog(logFile, result.TestHostResult.ToString());
+        string owner = GetPid(log[0]);
+        AssertLog(
+            [
+                $"starting:A:{owner}",
+                $"starting:B:{owner}",
+                string.Format(CultureInfo.InvariantCulture, Test, owner, "none"),
+                $"completed:B:{owner}:0:False",
+                $"completed:A:{owner}:0:False",
+            ],
+            log,
+            result.TestHostResult.ToString());
+    }
+
+    [TestMethod]
+    public async Task CoordinatedModule_SkipsTheHandlersAlreadyRunByTheOwnerAndKeepsTheirOutputs()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string logFile = GetLogFile(testHost);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["INVOCATION_VALUE_A"] = "value-A",
+                ["LOG_FILE"] = logFile,
+                ["TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED"] = """["HandlerA"]""",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        string[] log = ReadLog(logFile, testHostResult.ToString());
+        string owner = GetPid(log[0]);
+        AssertLog(
+            [
+                $"starting:B:{owner}",
+                string.Format(CultureInfo.InvariantCulture, Test, owner, "none"),
+                $"completed:B:{owner}:0:False",
+            ],
+            log,
+            testHostResult.ToString());
+    }
+
     private static string GetLogFile(TestInfrastructure.TestHost testHost)
         => Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.log");
 
@@ -468,6 +612,9 @@ internal static class Log
 
 internal sealed class LoggingHandler(string name) : IInvocationLifetimeHandler
 {
+    private static int _nextInstanceId;
+    private readonly int _instanceId = Interlocked.Increment(ref _nextInstanceId);
+
     public string Uid => "Handler" + name;
 
     public string Version => "1.0.0";
@@ -480,7 +627,8 @@ internal sealed class LoggingHandler(string name) : IInvocationLifetimeHandler
 
     public async Task OnInvocationStartingAsync(InvocationStartingContext context, CancellationToken cancellationToken)
     {
-        Log.Write($"starting:{name}:{Log.ProcessId}");
+        string instanceSuffix = Environment.GetEnvironmentVariable("SERVER_MODE_TEST") == "1" ? $":{_instanceId}" : string.Empty;
+        Log.Write($"starting:{name}:{Log.ProcessId}{instanceSuffix}");
         context.SetEnvironmentVariable("INVOCATION_VALUE_" + name, "value-" + name);
         if (Environment.GetEnvironmentVariable("THROW_IN_SETUP") == name)
         {
@@ -496,7 +644,8 @@ internal sealed class LoggingHandler(string name) : IInvocationLifetimeHandler
 
     public Task OnInvocationCompletedAsync(InvocationCompletedContext context, CancellationToken cancellationToken)
     {
-        Log.Write($"completed:{name}:{Log.ProcessId}:{context.ExitCode}:{context.IsCanceled}");
+        string instanceSuffix = Environment.GetEnvironmentVariable("SERVER_MODE_TEST") == "1" ? $":{_instanceId}" : string.Empty;
+        Log.Write($"completed:{name}:{Log.ProcessId}:{context.ExitCode}:{context.IsCanceled}{instanceSuffix}");
         if (Environment.GetEnvironmentVariable("THROW_IN_CLEANUP") == name)
         {
             throw new InvalidOperationException("Cleanup failure from " + name);
@@ -558,6 +707,11 @@ internal sealed class DummyTestFramework : ITestFramework, IDataProducer
     {
         if (context.Request is not RunTestExecutionRequest)
         {
+            if (Environment.GetEnvironmentVariable("SERVER_MODE_TEST") == "1")
+            {
+                Log.Write($"discovery:{Log.ProcessId}:{Environment.GetEnvironmentVariable("INVOCATION_VALUE_A") ?? "<null>"}:{Environment.GetEnvironmentVariable("INVOCATION_VALUE_B") ?? "<null>"}");
+            }
+
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
             {
                 Uid = "Test1",

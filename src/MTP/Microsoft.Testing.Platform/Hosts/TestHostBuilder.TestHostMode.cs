@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -80,6 +81,7 @@ internal sealed partial class TestHostBuilder
         TestHostControllerCancellationListener? testHostControllerCancellationListener)
     {
         IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(context.ServiceProvider);
+        context.ServiceProvider.AddService((InvocationLifetimeManager)InvocationLifetime);
         ServerTestHost serverTestHost = new(
             context.ServiceProvider,
             BuildTestFrameworkAsync,

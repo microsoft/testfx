@@ -74,6 +74,16 @@ internal static class EnvironmentVariableConstants
     // launches children, so the children run as participants and never run the hooks again.
     public const string TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER = nameof(TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER);
 
+    // Set by dotnet test (protocol 1.5.0) to "owner" on the single module it selected to own the coordinated
+    // invocation-lifetime hooks. That module's outermost process advertises its handlers during the handshake.
+    public const string TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE = nameof(TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE);
+
+    // Set by dotnet test (protocol 1.5.0) on every other module: a JSON string array of the handler UIDs the owner
+    // runs once for the whole invocation, so these modules must not run them again.
+    public const string TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED = nameof(TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED);
+
+    public const string TESTINGPLATFORM_INVOCATIONLIFETIME_ROLE_OWNER = "owner";
+
     // Carries the 1-based retry attempt number from the retry orchestrator to each launched test host, which
     // then reports it back to dotnet test through the AttemptNumber handshake property.
     public const string TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = nameof(TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);

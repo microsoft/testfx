@@ -43,6 +43,9 @@ public sealed class DotnetTestProtocolContractTests
             [DisplayMessageFieldsId.MessagesSerializerId] = nameof(DisplayMessageFieldsId),
             [WaitForServerControlRequestFieldsId.MessagesSerializerId] = nameof(WaitForServerControlRequestFieldsId),
             [ServerControlMessageFieldsId.MessagesSerializerId] = nameof(ServerControlMessageFieldsId),
+            [InvocationSetupCompletedFieldsId.MessagesSerializerId] = nameof(InvocationSetupCompletedFieldsId),
+            [ModuleTestsCompletedFieldsId.MessagesSerializerId] = nameof(ModuleTestsCompletedFieldsId),
+            [InvocationCleanupCompletedFieldsId.MessagesSerializerId] = nameof(InvocationCleanupCompletedFieldsId),
         };
 
         Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
@@ -61,6 +64,9 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(DisplayMessageFieldsId), serializerIds[12]);
         Assert.AreEqual(nameof(WaitForServerControlRequestFieldsId), serializerIds[13]);
         Assert.AreEqual(nameof(ServerControlMessageFieldsId), serializerIds[14]);
+        Assert.AreEqual(nameof(InvocationSetupCompletedFieldsId), serializerIds[16]);
+        Assert.AreEqual(nameof(ModuleTestsCompletedFieldsId), serializerIds[17]);
+        Assert.AreEqual(nameof(InvocationCleanupCompletedFieldsId), serializerIds[18]);
     }
 
     [TestMethod]
@@ -89,6 +95,8 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.RequiredPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds),
             [HandshakeMessagePropertyNames.RequiredPostProcessingSupported] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported),
             [HandshakeMessagePropertyNames.TargetFramework] = nameof(HandshakeMessagePropertyNames.TargetFramework),
+            [HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = nameof(HandshakeMessagePropertyNames.InvocationLifetimeHandlers),
+            [HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted] = nameof(HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted),
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -112,6 +120,8 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.TargetFramework), properties[21]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.InvocationLifetimeHandlers), properties[23]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted), properties[24]);
     }
 
     [TestMethod]
@@ -169,6 +179,6 @@ public sealed class DotnetTestProtocolContractTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
     }
 }

@@ -26,7 +26,7 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
     private readonly NamedPipeClientStream _namedPipeClientStream;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly IEnvironment _environment;
-    private readonly bool _exitProcessOnConnectionLoss;
+    private bool _exitProcessOnConnectionLoss;
 
     private bool _disposed;
     private bool _requestCancelled;
@@ -50,10 +50,11 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
     /// <param name="exitProcessOnConnectionLoss">
     /// When <see langword="true"/> (the default) a lost connection - the server disconnecting while we write a
     /// request or before it sends a response - terminates the process via <see cref="IEnvironment.Exit(int)"/>.
-    /// This is the right behavior for the primary data pipe: if we cannot talk to the host there is no way to
-    /// recover. Set it to <see langword="false"/> for auxiliary channels (e.g. the reverse server-control pipe)
+    /// This is the default behavior for the primary data pipe. Set it to <see langword="false"/> for auxiliary
+    /// channels (e.g. the reverse server-control pipe)
     /// where a dropped connection should surface as an exception the caller can handle cooperatively rather than
-    /// killing the whole test host.
+    /// killing the whole test host. An accepted coordinated owner also switches to cooperative handling so it can
+    /// release resources if its SDK process disappears.
     /// </param>
     public NamedPipeClient(string name, IEnvironment environment, bool exitProcessOnConnectionLoss)
     {
@@ -77,6 +78,9 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
     public string PipeName { get; }
 
     public bool IsConnected => _namedPipeClientStream.IsConnected;
+
+    internal void AllowCooperativeConnectionLoss()
+        => Volatile.Write(ref _exitProcessOnConnectionLoss, false);
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
         // Stryker disable once Boolean: continuation scheduling does not change connection completion.
@@ -109,9 +113,9 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
                 // The server disconnected while we were writing the request. Mirror the read-EOF handling
                 // below: if we cannot deliver the request there's no way to recover, so exit abnormally
                 // instead of surfacing a raw IPC error to the caller.
-                if (!_exitProcessOnConnectionLoss)
+                if (!Volatile.Read(ref _exitProcessOnConnectionLoss))
                 {
-                    // Auxiliary channel: let the caller observe the disconnect and react cooperatively.
+                    // Let the caller observe the disconnect and react cooperatively.
                     throw;
                 }
 
@@ -130,11 +134,9 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
                 // This is especially important for 'dotnet test', where the user can simply kill the dotnet.exe process themselves.
                 // In that case, we want the MTP process to also die.
                 // Exit code 1 indicates abnormal termination due to IPC connection loss.
-                if (!_exitProcessOnConnectionLoss)
+                if (!Volatile.Read(ref _exitProcessOnConnectionLoss))
                 {
-                    // Auxiliary channel (e.g. the reverse server-control pipe): a dropped connection means the
-                    // peer went away. Surface it as an exception so the caller can react (e.g. treat "host gone"
-                    // as a cooperative cancel) instead of killing the whole test host.
+                    // Surface a dropped connection so the caller can react instead of killing the test host.
                     throw new IOException($"Pipe '{PipeName}' was closed by the server before a response was received.");
                 }
 
