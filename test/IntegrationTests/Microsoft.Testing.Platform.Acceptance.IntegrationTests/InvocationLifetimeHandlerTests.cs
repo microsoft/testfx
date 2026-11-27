@@ -17,46 +17,6 @@ public sealed class InvocationLifetimeHandlerTests : ServerModeTestsBase<Invocat
     private const string Test = "test:{0}:value-A:value-B:no-marker:{1}";
 
     [TestMethod]
-    public async Task ServerMode_PreservesPinnedDotnetRootWhenInheritedKeyHasDifferentCasing()
-    {
-        using TempDirectory temp = new();
-        string root = Path.Combine(RootFinder.Find(), ".dotnet");
-        string probeFile = Path.Combine(temp.Path, "dotnet-root.txt");
-        Dictionary<string, string?> environmentVariables = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
-        {
-            ["dotnet_root"] = root,
-            [$"DOTNET_ROOT_{System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}"] = root,
-            ["TESTFX_SERVER_DOTNET_ROOT_PROBE"] = probeFile,
-        };
-        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-        {
-            string key = (string)entry.Key;
-            if (!key.Equals("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
-            {
-                environmentVariables.TryAdd(key, (string?)entry.Value);
-            }
-        }
-
-        using DotnetMuxer dotnet = new(environmentVariables, mergeEnvironmentVariables: false);
-        string testName = nameof(ServerMode_RunRequestsUseFreshHandlersAndRestoreEnvironmentAroundEachRequest);
-        int exitCode = await dotnet.ExecuteAsync(
-            $"exec \"{typeof(InvocationLifetimeHandlerTests).Assembly.Location}\" --filter \"FullyQualifiedName~{testName}\" --report-trx --report-trx-filename nested.trx --results-directory \"{temp.Path}\" --ansi off --progress off",
-            cancellationToken: TestContext.CancellationToken);
-
-        string output = $"{dotnet.StandardOutput}{Environment.NewLine}{dotnet.StandardError}";
-        Assert.AreEqual(0, exitCode, output);
-        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
-        XElement[] results = [.. XDocument.Load(Path.Combine(temp.Path, "nested.trx")).Descendants(ns + "UnitTestResult")];
-        XElement result = Assert.ContainsSingle(results);
-        Assert.AreEqual(testName, (string?)result.Attribute("testName"));
-        Assert.AreEqual("Passed", (string?)result.Attribute("outcome"));
-        Assert.IsTrue(File.Exists(probeFile), output);
-        string actualRoot = File.ReadAllText(probeFile);
-        Assert.AreNotEqual("<null>", actualRoot);
-        Assert.AreEqual(Path.GetFullPath(root), Path.GetFullPath(actualRoot));
-    }
-
-    [TestMethod]
     [DataRow("", "true")]
     [DataRow("-p:TestingPlatformInvocationLifetimeCoordinationSupported=false", "false")]
     public async Task PackagedPlatform_ExposesCoordinationCapabilityAndRespectsOverride(string propertyOverride, string expected)
@@ -291,6 +251,46 @@ public sealed class InvocationLifetimeHandlerTests : ServerModeTestsBase<Invocat
             ],
             log,
             client.ProcessOutput);
+    }
+
+    [TestMethod]
+    public async Task ServerMode_PreservesPinnedDotnetRootWhenInheritedKeyHasDifferentCasing()
+    {
+        using TempDirectory temp = new();
+        string root = Path.Combine(RootFinder.Find(), ".dotnet");
+        string probeFile = Path.Combine(temp.Path, "dotnet-root.txt");
+        Dictionary<string, string?> environmentVariables = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
+        {
+            ["dotnet_root"] = root,
+            [$"DOTNET_ROOT_{System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}"] = root,
+            ["TESTFX_SERVER_DOTNET_ROOT_PROBE"] = probeFile,
+        };
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            string key = (string)entry.Key;
+            if (!key.Equals("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
+            {
+                environmentVariables.TryAdd(key, (string?)entry.Value);
+            }
+        }
+
+        using DotnetMuxer dotnet = new(environmentVariables, mergeEnvironmentVariables: false);
+        string testName = nameof(ServerMode_RunRequestsUseFreshHandlersAndRestoreEnvironmentAroundEachRequest);
+        int exitCode = await dotnet.ExecuteAsync(
+            $"exec \"{typeof(InvocationLifetimeHandlerTests).Assembly.Location}\" --filter \"FullyQualifiedName~{testName}\" --report-trx --report-trx-filename nested.trx --results-directory \"{temp.Path}\" --ansi off --progress off",
+            cancellationToken: TestContext.CancellationToken);
+
+        string output = $"{dotnet.StandardOutput}{Environment.NewLine}{dotnet.StandardError}";
+        Assert.AreEqual(0, exitCode, output);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement[] results = [.. XDocument.Load(Path.Combine(temp.Path, "nested.trx")).Descendants(ns + "UnitTestResult")];
+        XElement result = Assert.ContainsSingle(results);
+        Assert.AreEqual(testName, (string?)result.Attribute("testName"));
+        Assert.AreEqual("Passed", (string?)result.Attribute("outcome"));
+        Assert.IsTrue(File.Exists(probeFile), output);
+        string actualRoot = File.ReadAllText(probeFile);
+        Assert.AreNotEqual("<null>", actualRoot);
+        Assert.AreEqual(Path.GetFullPath(root), Path.GetFullPath(actualRoot));
     }
 
     [DataRow(false)]
