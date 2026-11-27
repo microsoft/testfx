@@ -31,7 +31,9 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
         string? additionalArguments = null,
         string? workingDirectory = null)
     {
-        var environmentVariables = new Dictionary<string, string?>(DefaultEnvironmentVariables);
+        var environmentVariables = new Dictionary<string, string?>(
+            DefaultEnvironmentVariables,
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.
