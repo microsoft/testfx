@@ -388,7 +388,7 @@ public sealed class RetrySummaryBehaviorTests
                 orchestrator,
                 [
                     fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object, artifacts,
-                    2, true, 2, 0, 1, false, TimeSpan.Zero, 2, attempt, fixture.Root, CancellationToken.None,
+                    2, false, true, 2, 0, 1, false, TimeSpan.Zero, 2, attempt, fixture.Root, CancellationToken.None,
                 ])!);
 
             Assert.AreSame(original, exception);
