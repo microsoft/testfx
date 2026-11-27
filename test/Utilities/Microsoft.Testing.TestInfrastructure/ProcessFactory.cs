@@ -39,6 +39,7 @@ public static class ProcessFactory
             {
                 if (value is null)
                 {
+                    processStartInfo.EnvironmentVariables.Remove(key);
                     continue;
                 }
 

@@ -38,6 +38,8 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
             string? key = entry.Key.ToString();
             if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
+                // The server inherits this process environment, so a null value is needed to remove the variable.
+                environmentVariables.TryAdd(key!, null);
                 continue;
             }
 
