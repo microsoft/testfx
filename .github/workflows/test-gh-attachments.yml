@@ -106,19 +106,49 @@ jobs:
           & ([scriptblock]::Create($script))
           Copy-Item -LiteralPath $env:GITHUB_STEP_SUMMARY -Destination "${{ runner.temp }}/mtp-attachment-smoke/linked.summary.md"
       - name: Download the real uploaded archive
+        id: download-1
         if: success() && steps.attachments.outputs.artifact-id != ''
+        continue-on-error: true
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           artifact-ids: ${{ steps.attachments.outputs.artifact-id }}
-          path: ${{ runner.temp }}/mtp-attachment-download
+          path: ${{ runner.temp }}/mtp-attachment-download-1
           merge-multiple: true
           # Use the REST API because the internal ID-filtered lookup failed for this artifact.
+          github-token: ${{ github.token }}
+      # Newly uploaded artifacts can briefly disappear between listing and download.
+      # https://github.com/actions/download-artifact/issues/505
+      - name: Wait before retrying the archive download
+        if: steps.download-1.outcome == 'failure'
+        run: sleep 5
+      - name: Retry the archive download
+        id: download-2
+        if: steps.download-1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ steps.attachments.outputs.artifact-id }}
+          path: ${{ runner.temp }}/mtp-attachment-download-2
+          merge-multiple: true
+          github-token: ${{ github.token }}
+      - name: Wait before the final archive download
+        if: steps.download-2.outcome == 'failure'
+        run: sleep 15
+      - name: Download the archive one last time
+        id: download-3
+        if: steps.download-2.outcome == 'failure'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ steps.attachments.outputs.artifact-id }}
+          path: ${{ runner.temp }}/mtp-attachment-download-3
+          merge-multiple: true
           github-token: ${{ github.token }}
       - name: Verify the downloaded bytes and associations
         shell: pwsh
         env:
           ATTACHMENT_URL: ${{ steps.attachments.outputs.artifact-url }}
-        run: ./.github/scripts/test-gh-attachments.ps1 -Mode Verify -WorkDirectory "${{ runner.temp }}/mtp-attachment-smoke" -DownloadDirectory "${{ runner.temp }}/mtp-attachment-download"
+          DOWNLOAD_DIRECTORY: ${{ steps.download-1.outputs.download-path || steps.download-2.outputs.download-path || steps.download-3.outputs.download-path }}
+        run: ./.github/scripts/test-gh-attachments.ps1 -Mode Verify -WorkDirectory "${{ runner.temp }}/mtp-attachment-smoke" -DownloadDirectory "$env:DOWNLOAD_DIRECTORY"
       - name: Preserve reproducible evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
