@@ -39,6 +39,7 @@ internal partial class TestExecutionManager
     /// once per run in <see cref="ExecuteTestsAsync"/> before any source is processed.
     /// </summary>
     private ITestResultRecorder _testResultRecorder = null!;
+    private bool _isMtp;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestExecutionManager"/> class.
@@ -113,6 +114,7 @@ internal partial class TestExecutionManager
         DebugEx.Assert(messageLogger is not null, "messageLogger");
         DebugEx.Assert(runCancellationToken is not null, "runCancellationToken");
 
+        _isMtp = false;
         _testRunCancellationToken = runCancellationToken;
         _unpartitionedTests = null;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
@@ -133,6 +135,7 @@ internal partial class TestExecutionManager
 
     internal async Task RunTestsAsync(IEnumerable<string> sources, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, ITestSourceHandler testSourceHandler, bool isMTP, TestRunCancellationToken cancellationToken)
     {
+        _isMtp = isMTP;
         _testRunCancellationToken = cancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
         _unpartitionedTests = Partition is null ? null : [];

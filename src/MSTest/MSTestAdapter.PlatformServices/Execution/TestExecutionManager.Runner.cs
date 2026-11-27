@@ -143,7 +143,7 @@ internal partial class TestExecutionManager
                 PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executed test {0}", unitTestElement.TestMethod.Name);
             }
 
-            dependencyCoordinator?.RecordOutcome(currentTest, AllPassed(unitTestResult));
+            dependencyCoordinator?.RecordOutcome(currentTest, AllPassed(unitTestResult, _isMtp));
 
             await SendTestResultsAsync(currentTest, unitTestResult, startTime, endTime, _testResultRecorder).ConfigureAwait(false);
         }
@@ -153,29 +153,33 @@ internal partial class TestExecutionManager
     /// Determines whether a test counts as having passed for the purpose of gating its dependents. A test
     /// that produced no result at all (which the recorder reports as an error) does not qualify, and a
     /// data-driven test qualifies only when every one of its rows passed. Superseded in-process retry attempts
-    /// are ignored: only the final attempt decides the test's outcome.
+    /// are ignored: only the final attempt decides the test's outcome. Native MTP reports fixture cleanup
+    /// separately, so a cleanup failure does not change the prerequisite test's outcome.
     /// </summary>
-    private static bool AllPassed(TestTools.UnitTesting.TestResult[] results)
+    private static bool AllPassed(TestTools.UnitTesting.TestResult[] results, bool isMtp)
     {
         if (results.Length == 0)
         {
             return false;
         }
 
+        bool hasFinalTestResult = false;
         foreach (TestTools.UnitTesting.TestResult result in results)
         {
-            if (result.IsSupersededRetryAttempt)
+            if (result.IsSupersededRetryAttempt
+                || (isMtp && result.CleanupKind != TestTools.UnitTesting.TestResultCleanupKind.None))
             {
                 continue;
             }
 
+            hasFinalTestResult = true;
             if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
             {
                 return false;
             }
         }
 
-        return true;
+        return !isMtp || hasFinalTestResult;
     }
 
     /// <summary>

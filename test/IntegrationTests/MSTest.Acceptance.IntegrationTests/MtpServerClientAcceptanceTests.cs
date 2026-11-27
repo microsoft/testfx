@@ -329,6 +329,66 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
     }
 
     [TestMethod]
+    public async Task ClassCleanupFailure_DoesNotSkipDependentOfPassedTest()
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = (CleanupAssetSources + """
+
+#file DependentTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class DependentTests
+{
+    [TestMethod]
+    [DependsOn(typeof(CleanupTests), nameof(CleanupTests.TestMethod1))]
+    public void DependentTest() { }
+}
+""")
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(CleanupAssetName, source);
+
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(0, build.ExitCode, $"Build output:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, CleanupAssetName, TargetFrameworks.NetCurrent);
+        TestHostResult execution = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename cleanup.trx --results-directory \"{resultsDirectory}\"",
+            new() { ["MTP_FAIL_CLASS_CLEANUP"] = "1" },
+            cancellationToken: cancellationToken);
+        execution.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        var trx = XDocument.Load(Path.Combine(resultsDirectory, "cleanup.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
+        Assert.HasCount(3, results);
+        Assert.HasCount(3, results.Select(result => result.Attribute("testId")!.Value).Distinct(StringComparer.Ordinal));
+        Assert.HasCount(3, results.Select(result => result.Attribute("executionId")!.Value).Distinct(StringComparer.Ordinal));
+        foreach ((string name, string outcome) in new[]
+        {
+            (ExpectedTestDisplayName, "Passed"),
+            ("DependentTest", "Passed"),
+            ("[CleanupTests ClassCleanup]", "Failed"),
+        })
+        {
+            XElement result = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == name, results);
+            Assert.AreEqual(outcome, result.Attribute("outcome")?.Value, name);
+        }
+
+        XElement counters = Assert.ContainsSingle(trx.Descendants(ns + "Counters"));
+        Assert.AreEqual("3", counters.Attribute("total")?.Value);
+        Assert.AreEqual("2", counters.Attribute("passed")?.Value);
+        Assert.AreEqual("1", counters.Attribute("failed")?.Value);
+    }
+
+    [TestMethod]
     public async Task AssemblyCleanupFailure_ProducesSeparateFailedTrxResult()
     {
         CancellationToken cancellationToken = TestContext.CancellationToken;

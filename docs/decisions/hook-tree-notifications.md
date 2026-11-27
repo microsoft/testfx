@@ -480,5 +480,119 @@ executed and failed because the merged `failed` counter was 1 instead of 0.
 The TRX producer serializes both a timeout and an ordinary failure as
 `outcome="Failed"`; an attempt's aggregate timeout count does not identify
 which result timed out. A reliable fix for partially retained attempts needs
-per-result timeout identity or a different fallback contract; that design and
-its compatibility with TRX consumers remain unresolved.
+per-result timeout identity or a different fallback contract.
+
+The local, uncommitted experiment records a versioned per-result timeout
+discriminator in TRX's `ExtensionResult`, while leaving the result outcome as `Failed`. The
+merger checks it against the attempt's timeout counter. For legacy inputs with
+an ambiguous mix of unmarked failures and timeouts, or incompatible metadata,
+it rejects aggregation instead of guessing; retry logs a warning and falls back
+to the final attempt, so earlier results are not present in the fallback
+artifact. This tradeoff and compatibility with actual downstream TRX consumers
+remain unverified. It does not resolve duplicate publication of physical and
+consolidated reports.
+
+On `e01001142b22aae8c04ebd58005fa974848bbb4b`, with the new tests retained,
+the Release/net11.0 timeout comparison executed seven cases: the pre-fix
+producer/merger failed six and passed one (exit 2); the rebuilt fix passed all
+seven (exit 0). A related selection passed 66 cases. The focused selector was:
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj -c Release -f net11.0 --no-restore '-bl:artifacts\retry-timeout-evidence\green-v2-rebuild.binlog' -- --filter "FullyQualifiedName~TrxReportEngine_RetryMerge_RetainsMixedEarlierTimeoutAndFailure|FullyQualifiedName~ProcessAsync_RetryAttempts_RetainsUnambiguousEarlierTimeout|FullyQualifiedName~ProcessAsync_RetryAttempts_RejectsAmbiguousOrIncompatibleInputs"
+```
+
+The comparison used an isolated worktree; the tested patch SHA-256 was
+`45BDC2769529419E3117984BE977876261CCA7C098B94C89AE77EBD30B3445DA`.
+Schema validation against a third-party TRX schema replica succeeded, but does
+not demonstrate compatibility with real TRX readers or shipping packages.
+The initial discriminator implementation also rejected some unambiguous legacy
+selections. `RetryMerge_AllLegacyFailuresRetained` and
+`RetryMerge_AllLegacyFailuresSuperseded` both failed with an ambiguity error
+(exit 2) before the selection-aware correction. Afterward the related Release
+suite passed 68 cases with no failures or skips (exit 0):
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj -c Release -f net11.0 --no-restore '-bl:artifacts\retry-timeout-evidence\legacy-selection-green.binlog' -- --filter 'FullyQualifiedName~TrxTests|FullyQualifiedName~TrxArtifactPostProcessorTests|FullyQualifiedName~TrxReportEngine_Merge|FullyQualifiedName~TrxInProcessProtocolBehaviorTests'
+```
+
+After the Release pack, the existing
+`RetryFailedTests_TrxReports_ArePublishedOncePerAttempt` acceptance selection
+still failed the recovery and persistent-failure cases: recursive collection
+found three reports instead of the two physical attempts. Five cases passed,
+two failed, none were skipped (exit 2). The duplicate-publication contract is
+therefore still unresolved; this result is not a timeout-classification failure.
+The three packed cleanup acceptance cases (`RetryCleanupOnly`,
+`RetryCleanupWithRecoveringTest`, and
+`ClassCleanupFailure_ProducesSeparateFailedTrxResult`) passed, but they do not
+assert the recursive physical-report contract and cannot resolve that conflict.
+
+The new timeout tests initially used a path beneath the test assembly output;
+four cases failed on net472 because the nested temporary report path exceeded
+legacy path limits. They now use unique temporary directories, which also
+avoids interference from current-directory writers. The focused selection,
+including the existing legacy current-directory tests, passed 22 cases on
+net472 and 20 on net11.0, with no failures or skips.
+
+### 2026-11-26 — dependency verdict follow-up
+
+The native MTP recorder reports fixture-cleanup failures separately from the
+test that happened to trigger cleanup. The dependency coordinator still
+includes those fixture results in that test's prerequisite verdict, so it can
+skip a dependent even though the prerequisite itself is reported as passed.
+Preserve the existing VSTest behavior; for native MTP, base the dependency
+verdict on test results while still reporting fixture failures and failing the
+overall run. A missing test result must not count as a passing prerequisite.
+
+The packed-consumer regression will run a passing prerequisite with failing
+class cleanup and a dependent in another class. It must observe both tests as
+passed, the distinct failed cleanup result, and a failing process exit. The
+adapter unit regression will also cover failed test rows, empty/fixture-only
+results, superseded attempts, and the unchanged legacy-host verdict.
+
+The targeted pre-fix comparison retained the new host-mode parameter but left
+the old verdict unchanged. On the source based on
+`e01001142b22aae8c04ebd58005fa974848bbb4b`,
+`NativeMtpDependencyVerdictIgnoresFixtureCleanupFailures` executed once and
+failed because the passing test plus failed class cleanup returned false.
+The Release/net11.0 command exited 2 with 1 failed, 0 passed, 0 skipped:
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\MSTestAdapter.PlatformServices.UnitTests.csproj -c Release -f net11.0 --no-restore '-bl:artifacts\log\Release\dependency-cleanup-red.binlog' -- --filter-uid 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerRunnerResultsMutationTests.NativeMtpDependencyVerdictIgnoresFixtureCleanupFailures'
+```
+
+With the MTP-specific verdict in place, the same case passed once with no
+failures or skips (exit 0); the command was identical except for
+`dependency-cleanup-green.binlog`.
+
+The Release package build completed with zero warnings and errors. The
+`ClassCleanupFailure_DoesNotSkipDependentOfPassedTest` acceptance case passed
+once on the net12.0 outer host and a generated net11.0 consumer, with child exit
+2 and the expected two passed tests and one failed cleanup. The consumer's
+resolved `MSTest.TestAdapter` and `MSTest.TestFramework` were `5.0.0-dev`;
+`Microsoft.Testing.Platform` and `Microsoft.Testing.Extensions.TrxReport` were
+`3.0.0-dev`. The deployed adapter, platform services, framework, platform, and
+TRX DLL hashes each matched the corresponding `lib/net11.0` entry in the
+freshly packed shipping package. The outer TRX execution gate confirmed one
+selected and executed test, one passed, and zero failed or skipped.
+
+The acceptance sensitivity comparison without the production fix has not been
+run; the executed red comparison above covers the dependency-verdict unit
+boundary, not the packed consumer.
+
+The packed acceptance command for the dependency case was:
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -f net12.0 --no-build -p:UsingDotNetTest=true '-p:ArtifactsTestResultsDir=artifacts\retry-timeout-evidence\dependency-acceptance' '-bl:artifacts\retry-timeout-evidence\dependency-acceptance-net12.binlog' -- --filter 'FullyQualifiedName~MtpServerClientAcceptanceTests.ClassCleanupFailure_DoesNotSkipDependentOfPassedTest' --show-test-results all
+```
+
+### 2026-11-27 — rebase validation
+
+The four PR commits were rebased unchanged onto
+`ea3238ea465ae2e1e72a04a023ffdf127bcd9a00` and published as
+`91afead7215f2d88a17fb927cdec69e756b93bd7`. The local dependency and timeout
+experiments were reapplied without changes. A Release pack succeeded; the
+dependency verdict unit case passed once on each of `net11.0` and `net462`,
+and `ClassCleanupFailure_DoesNotSkipDependentOfPassedTest` passed once on the
+`net12.0` outer host. The latter was run against the fresh pack with both
+experiments present; its consumer binary provenance was not recaptured.
+The existing timeout and retry-publication limitations remain unresolved.
