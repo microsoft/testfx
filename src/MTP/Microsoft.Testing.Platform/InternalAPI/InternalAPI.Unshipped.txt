@@ -225,6 +225,121 @@ Microsoft.Testing.Platform.Hosts.CommonHost.RunInvocationCleanupAsync(Microsoft.
 Microsoft.Testing.Platform.Hosts.CommonHost.RunInvocationSetupAsync(Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner! invocationLifetimeRunner, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int?>!
 Microsoft.Testing.Platform.Hosts.ITestHostBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!
 Microsoft.Testing.Platform.Hosts.TestHostBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!
+Microsoft.Testing.Platform.DotnetTestConnection.IsInvocationLifetimeCoordinationAccepted.get -> bool
+Microsoft.Testing.Platform.DotnetTestConnection.SendInvocationCleanupCompletedAsync(bool succeeded, string? errorMessage) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.DotnetTestConnection.SendInvocationSetupCompletedAsync(bool succeeded, string? errorMessage, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput!>! outputs) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.DotnetTestConnection.SendModuleTestsCompletedAsync(int exitCode) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.DotnetTestConnection.WaitForInvocationCleanupRequestAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest?>!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeJson
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.EnableCoordination(Microsoft.Testing.Platform.ServerMode.IInvocationLifetimeCoordinationChannel! coordinationChannel) -> void
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.GetHandlersHandshakeValue() -> string!
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.InvocationLifetimeRunner(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler!>! handlers, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger, bool setOwnerMarker, bool restoreEnvironment, System.TimeSpan? setupTimeout = null, bool isCoordinatedOwnerCandidate = false, System.Collections.Generic.IReadOnlyList<string!>? uncoordinatedHandlerUids = null) -> void
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.IsCoordinated.get -> bool
+Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeRunner.IsCoordinatedOwnerCandidate.get -> bool
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted!
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.Deconstruct(out string? ExecutionId, out string? InstanceId, out bool Succeeded, out string? ErrorMessage) -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.Equals(Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.ErrorMessage.get -> string?
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.ErrorMessage.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.ExecutionId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.ExecutionId.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.InstanceId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.InstanceId.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.InvocationCleanupCompleted(string? ExecutionId, string? InstanceId, bool Succeeded, string? ErrorMessage) -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.Succeeded.get -> bool
+Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.Succeeded.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput!
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.Deconstruct(out string! Name, out bool HasValue, out string? Value) -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.Equals(Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.HasValue.get -> bool
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.HasValue.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.InvocationLifetimeOutput(string! Name, bool HasValue, string? Value) -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.Name.get -> string!
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.Name.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.Value.get -> string?
+Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.Value.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted!
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.Deconstruct(out string? ExecutionId, out string? InstanceId, out bool Succeeded, out string? ErrorMessage, out Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput![]! Outputs) -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.Equals(Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.ErrorMessage.get -> string?
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.ErrorMessage.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.ExecutionId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.ExecutionId.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.InstanceId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.InstanceId.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.InvocationSetupCompleted(string? ExecutionId, string? InstanceId, bool Succeeded, string? ErrorMessage, Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput![]! Outputs) -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.Outputs.get -> Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput![]!
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.Outputs.init -> void
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.Succeeded.get -> bool
+Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.Succeeded.init -> void
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted!
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.Deconstruct(out string? ExecutionId, out string? InstanceId, out int ExitCode) -> void
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.Equals(Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.ExecutionId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.ExecutionId.init -> void
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.ExitCode.get -> int
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.ExitCode.init -> void
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.InstanceId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.InstanceId.init -> void
+Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.ModuleTestsCompleted(string? ExecutionId, string? InstanceId, int ExitCode) -> void
+Microsoft.Testing.Platform.IPC.Models.ServerControlMessage.AggregateExitCode.get -> int?
+Microsoft.Testing.Platform.IPC.Models.ServerControlMessage.IsCanceled.get -> bool?
+Microsoft.Testing.Platform.IPC.Models.ServerControlMessage.ServerControlMessage(byte kind, int? aggregateExitCode, bool? isCanceled) -> void
+Microsoft.Testing.Platform.IPC.Serializers.InvocationCleanupCompletedSerializer
+Microsoft.Testing.Platform.IPC.Serializers.InvocationCleanupCompletedSerializer.InvocationCleanupCompletedSerializer() -> void
+Microsoft.Testing.Platform.IPC.Serializers.InvocationSetupCompletedSerializer
+Microsoft.Testing.Platform.IPC.Serializers.InvocationSetupCompletedSerializer.InvocationSetupCompletedSerializer() -> void
+Microsoft.Testing.Platform.IPC.Serializers.ModuleTestsCompletedSerializer
+Microsoft.Testing.Platform.IPC.Serializers.ModuleTestsCompletedSerializer.ModuleTestsCompletedSerializer() -> void
+Microsoft.Testing.Platform.ServerMode.IInvocationLifetimeCoordinationChannel
+Microsoft.Testing.Platform.ServerMode.IInvocationLifetimeCoordinationChannel.IsInvocationLifetimeCoordinationAccepted.get -> bool
+Microsoft.Testing.Platform.ServerMode.IInvocationLifetimeCoordinationChannel.SendInvocationCleanupCompletedAsync(bool succeeded, string? errorMessage) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.ServerMode.IInvocationLifetimeCoordinationChannel.SendInvocationSetupCompletedAsync(bool succeeded, string? errorMessage, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput!>! outputs) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.ServerMode.IInvocationLifetimeCoordinationChannel.SendModuleTestsCompletedAsync(int exitCode) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.ServerMode.IInvocationLifetimeCoordinationChannel.WaitForInvocationCleanupRequestAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest?>!
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest!
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.AggregateExitCode.get -> int
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.AggregateExitCode.init -> void
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.Deconstruct(out int AggregateExitCode, out bool IsCanceled) -> void
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.Equals(Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? other) -> bool
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.InvocationCleanupRequest(int AggregateExitCode, bool IsCanceled) -> void
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.IsCanceled.get -> bool
+Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.IsCanceled.init -> void
+override Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Serializers.InvocationCleanupCompletedSerializer.Id.get -> int
+override Microsoft.Testing.Platform.IPC.Serializers.InvocationSetupCompletedSerializer.Id.get -> int
+override Microsoft.Testing.Platform.IPC.Serializers.ModuleTestsCompletedSerializer.Id.get -> int
+override Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.GetHashCode() -> int
+override Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.ToString() -> string!
+static Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeJson.AppendString(System.Text.StringBuilder! builder, string! value) -> void
+static Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationLifetimeJson.TryParseStringArray(string? json) -> System.Collections.Generic.List<string!>?
+static Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.operator !=(Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted? left, Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted.operator ==(Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted? left, Microsoft.Testing.Platform.IPC.Models.InvocationCleanupCompleted? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.operator !=(Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput? left, Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput.operator ==(Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput? left, Microsoft.Testing.Platform.IPC.Models.InvocationLifetimeOutput? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.operator !=(Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted? left, Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted.operator ==(Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted? left, Microsoft.Testing.Platform.IPC.Models.InvocationSetupCompleted? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.operator !=(Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted? left, Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.operator ==(Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted? left, Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted? right) -> bool
+static Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.operator !=(Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? left, Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? right) -> bool
+static Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.operator ==(Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? left, Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? right) -> bool
 Microsoft.Testing.Platform.CommandLine.CommandLineHandler.RemoveExtensionsCommandLineOptionsProviders(System.Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!, bool>! predicate) -> void
 Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension
 Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Description.get -> string!

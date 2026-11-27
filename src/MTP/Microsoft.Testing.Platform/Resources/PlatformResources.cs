@@ -37,6 +37,10 @@ internal static partial class PlatformResources
     internal static string @NamedPipeDirectoryNotWritableErrorMessage => GetResourceString("NamedPipeDirectoryNotWritableErrorMessage");
 
 #if IS_MTP_UNIT_TESTS
+    internal static string @InvocationLifetimeServerRequestCleanupFailedErrorMessage => GetResourceString("InvocationLifetimeServerRequestCleanupFailedErrorMessage");
+
+    internal static string @InvocationLifetimeServerRequestSetupFailedErrorMessage => GetResourceString("InvocationLifetimeServerRequestSetupFailedErrorMessage");
+
     internal static string @PlatformCommandLineCoverageThresholdInvalid => GetResourceString("PlatformCommandLineCoverageThresholdInvalid");
 
     internal static string @PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests => GetResourceString("PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests");

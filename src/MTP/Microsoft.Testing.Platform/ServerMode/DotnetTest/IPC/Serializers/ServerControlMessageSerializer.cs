@@ -11,6 +11,10 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---Kind Id---| (2 bytes)
     |---Kind Size---| (4 bytes)
     |---Kind Value---| (1 byte)
+
+    Protocol 1.5.0 (RunInvocationCleanup only), each omitted when null:
+    |---AggregateExitCode Id---| (2 bytes) |---Size---| (4 bytes) |---Value---| (4 bytes)
+    |---IsCanceled Id---| (2 bytes) |---Size---| (4 bytes) |---Value---| (1 byte)
 */
 
 internal sealed class ServerControlMessageSerializer : NamedPipeSerializer<ServerControlMessage>, INamedPipeSerializer
@@ -20,8 +24,10 @@ internal sealed class ServerControlMessageSerializer : NamedPipeSerializer<Serve
     protected override ServerControlMessage DeserializeCore(Stream stream)
     {
         byte kind = 0;
+        int? aggregateExitCode = null;
+        bool? isCanceled = null;
 
-        ReadFields(stream, (fieldId, _) =>
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
             switch (fieldId)
             {
@@ -29,12 +35,20 @@ internal sealed class ServerControlMessageSerializer : NamedPipeSerializer<Serve
                     kind = ReadByte(stream);
                     return true;
 
+                case ServerControlMessageFieldsId.AggregateExitCode:
+                    aggregateExitCode = ReadFieldPayload(stream, fieldSize, ReadInt);
+                    return true;
+
+                case ServerControlMessageFieldsId.IsCanceled:
+                    isCanceled = ReadFieldPayload(stream, fieldSize, ReadBool);
+                    return true;
+
                 default:
                     return false;
             }
         });
 
-        return new(kind);
+        return new(kind, aggregateExitCode, isCanceled);
     }
 
     protected override void SerializeCore(ServerControlMessage objectToSerialize, Stream stream)
@@ -42,7 +56,11 @@ internal sealed class ServerControlMessageSerializer : NamedPipeSerializer<Serve
         DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         // Kind is always written (it is a non-nullable byte).
-        WriteUShort(stream, 1);
+        WriteUShort(stream, (ushort)(1
+            + (objectToSerialize.AggregateExitCode is null ? 0 : 1)
+            + (objectToSerialize.IsCanceled is null ? 0 : 1)));
         WriteField(stream, ServerControlMessageFieldsId.Kind, objectToSerialize.Kind);
+        WriteField(stream, ServerControlMessageFieldsId.AggregateExitCode, objectToSerialize.AggregateExitCode);
+        WriteField(stream, ServerControlMessageFieldsId.IsCanceled, objectToSerialize.IsCanceled);
     }
 }

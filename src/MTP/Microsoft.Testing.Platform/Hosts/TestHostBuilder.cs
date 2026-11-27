@@ -236,5 +236,9 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
         // Null when the current process does not own the invocation lifetime hooks.
         public IReadOnlyList<IInvocationLifetimeHandler>? InvocationLifetimeHandlers { get; set; }
+
+        public bool IsInvocationLifetimeOwnerRole { get; set; }
+
+        public IReadOnlyList<string>? UncoordinatedInvocationLifetimeHandlerUids { get; set; }
     }
 }

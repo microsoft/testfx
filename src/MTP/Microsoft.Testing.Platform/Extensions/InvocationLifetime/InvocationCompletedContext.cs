@@ -26,6 +26,10 @@ public sealed class InvocationCompletedContext
     /// <summary>
     /// Gets the exit code of the invocation before cleanup.
     /// </summary>
+    /// <remarks>
+    /// In server mode this describes the request, not the individual test results: a completed request has exit
+    /// code 0 even when tests failed. Test failures are reported through test node updates.
+    /// </remarks>
     public int ExitCode { get; }
 
     /// <summary>

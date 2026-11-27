@@ -346,6 +346,70 @@ public sealed class TestHostBuilderTests
 
 #pragma warning disable TPEXP // Invocation lifetime handlers are experimental.
     [TestMethod]
+    [DataRow(1)]
+    [DataRow(3)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task BuilderFilteringFailure_DisposesEveryHandlerOnceAndPreservesOriginalException(int failingIndex)
+    {
+        const string ownerVariable = EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER;
+        const string coordinatedVariable = EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_COORDINATED;
+        string? originalOwner = Environment.GetEnvironmentVariable(ownerVariable);
+        string? originalCoordinated = Environment.GetEnvironmentVariable(coordinatedVariable);
+        try
+        {
+            Environment.SetEnvironmentVariable(ownerVariable, null);
+            Environment.SetEnvironmentVariable(coordinatedVariable, """["handler-1","handler-3"]""");
+            var builder = new TestApplicationBuilder(
+                new ApplicationLoggingState(LogLevel.None, new CommandLineParseResult(null, [], [])),
+                DateTimeOffset.UtcNow,
+                new TestApplicationOptions(),
+                Mock.Of<IUnhandledExceptionsHandler>(),
+                ["--no-banner"]);
+            builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => Mock.Of<ITestFramework>());
+            InvalidOperationException expected = new("Suppressed handler disposal failed.");
+            List<Mock<IInvocationLifetimeHandler>> handlers = [];
+            List<Mock<IDisposable>> disposals = [];
+            for (int i = 0; i < 5; i++)
+            {
+                Mock<IInvocationLifetimeHandler> handler = new();
+                handler.SetupGet(h => h.Uid).Returns($"handler-{i}");
+                handler.Setup(h => h.IsEnabledAsync()).ReturnsAsync(true);
+                Mock<IDisposable> disposal = handler.As<IDisposable>();
+                if (i == failingIndex)
+                {
+                    disposal.Setup(d => d.Dispose()).Throws(expected);
+                }
+                else if (i == 4)
+                {
+                    disposal.Setup(d => d.Dispose()).Throws(new IOException("Subsequent disposal failed."));
+                }
+
+                handlers.Add(handler);
+                disposals.Add(disposal);
+                builder.InvocationLifetime.AddInvocationLifetimeHandler(_ => handler.Object);
+            }
+
+            InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => builder.BuildAsync());
+            Assert.AreSame(expected, exception);
+            foreach (Mock<IDisposable> disposal in disposals)
+            {
+                disposal.Verify(d => d.Dispose(), Times.Once);
+            }
+
+            foreach (Mock<IInvocationLifetimeHandler> handler in handlers)
+            {
+                handler.Verify(h => h.OnInvocationStartingAsync(It.IsAny<InvocationStartingContext>(), It.IsAny<CancellationToken>()), Times.Never);
+                handler.Verify(h => h.OnInvocationCompletedAsync(It.IsAny<InvocationCompletedContext>(), It.IsAny<CancellationToken>()), Times.Never);
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(ownerVariable, originalOwner);
+            Environment.SetEnvironmentVariable(coordinatedVariable, originalCoordinated);
+        }
+    }
+
+    [TestMethod]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task BuilderHostConstructionFailure_DisposesInvocationLifetimeHandlersWithoutCompletion()
     {

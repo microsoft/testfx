@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project>
+  <PropertyGroup>
+    <TestingPlatformInvocationLifetimeCoordinationSupported Condition="'$(TestingPlatformInvocationLifetimeCoordinationSupported)' == ''">true</TestingPlatformInvocationLifetimeCoordinationSupported>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- For VS Test Explorer -->
     <ProjectCapability Include="TestingPlatformServer.ExitOnProcessExitCapability">

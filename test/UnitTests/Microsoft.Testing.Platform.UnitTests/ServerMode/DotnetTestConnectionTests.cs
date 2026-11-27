@@ -225,7 +225,7 @@ public sealed class DotnetTestConnectionTests
         Assert.IsNotNull(sent);
         Assert.IsNotNull(sent.Properties);
         Assert.AreEqual("1", sent.Properties[20]);
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", sent.Properties[4]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", sent.Properties[4]);
         Assert.AreEqual(coverageEnabled, fixture.Connection.IsCoverageSummarySupported);
         Assert.IsFalse(fixture.Connection.IsServerControlChannelSupported);
     }
@@ -606,6 +606,260 @@ public sealed class DotnetTestConnectionTests
     }
 
     [TestMethod]
+    [DataRow("1.5.0", true, true, "true", true, DisplayName = "AcceptedOwner")]
+    [DataRow("1.5.0", true, true, "TRUE", true, DisplayName = "AcceptedOwnerCaseInsensitive")]
+    [DataRow("1.4.0", true, true, "true", false, DisplayName = "OldProtocolVersion")]
+    [DataRow("1.5.0", false, true, "true", false, DisplayName = "NoControlPipe")]
+    [DataRow("1.5.0", true, false, "true", false, DisplayName = "HandlersNotAdvertised")]
+    [DataRow("1.5.0", true, true, null, false, DisplayName = "SdkDidNotAccept")]
+    [DataRow("1.5.0", true, true, "false", false, DisplayName = "SdkRejected")]
+    [DataRow("1.5.0", true, true, "yes", false, DisplayName = "MalformedAcceptance")]
+    public async Task IsCompatibleProtocolAsync_InvocationLifetimeCoordinationRequiresEveryCondition(
+        string version, bool controlPipe, bool advertiseHandlers, string? accepted, bool expected)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        Dictionary<byte, string> reply = new() { [HandshakeMessagePropertyNames.SupportedProtocolVersions] = version };
+        if (controlPipe)
+        {
+            reply[HandshakeMessagePropertyNames.ServerControlPipeName] = "server-control";
+        }
+
+        if (accepted is not null)
+        {
+            reply[HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted] = accepted;
+        }
+
+        HandshakeMessage? sent = null;
+        fixture.Client.Respond(new HandshakeMessage(reply), TestContext.CancellationToken, message => sent = message);
+        Dictionary<byte, string>? additional = advertiseHandlers
+            ? new() { [HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = """["handler"]""" }
+            : null;
+
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost, additional));
+
+        Assert.AreEqual(expected, fixture.Connection.IsInvocationLifetimeCoordinationAccepted);
+        Assert.IsNotNull(sent?.Properties);
+        Assert.AreEqual(advertiseHandlers, sent.Properties.ContainsKey(HandshakeMessagePropertyNames.InvocationLifetimeHandlers));
+    }
+
+    [TestMethod]
+    public async Task IsCompatibleProtocolAsync_InvocationLifetimeRenegotiationClearsAcceptance()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        Dictionary<byte, string> handlers = new() { [HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = """["handler"]""" };
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.5.0",
+                [HandshakeMessagePropertyNames.ServerControlPipeName] = "server-control",
+                [HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted] = "true",
+            }),
+            TestContext.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost, handlers));
+        Assert.IsTrue(fixture.Connection.IsInvocationLifetimeCoordinationAccepted);
+
+        fixture.Client.Respond(new HandshakeMessage(new() { [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "2.0.0" }), TestContext.CancellationToken);
+        Assert.IsFalse(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost, handlers));
+
+        Assert.IsFalse(fixture.Connection.IsInvocationLifetimeCoordinationAccepted);
+    }
+
+    [TestMethod]
+    public async Task WaitForInvocationCleanupRequestAsync_ReturnsNullWithoutAcceptedCoordination()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        await NegotiateServerControlChannelAsync(fixture, TestContext.CancellationToken);
+
+        Assert.IsNull(await fixture.Connection.WaitForInvocationCleanupRequestAsync(TestContext.CancellationToken));
+    }
+
+    [TestMethod]
+    public async Task InvocationLifetimeMessages_AreSentWithIdentityAndWithoutApplicationToken()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        fixture.Client.SetConnected();
+        List<object> sent = [];
+        fixture.Client.RespondVoid<InvocationSetupCompleted>(CancellationToken.None, sent.Add);
+        fixture.Client.RespondVoid<ModuleTestsCompleted>(CancellationToken.None, sent.Add);
+        fixture.Client.RespondVoid<InvocationCleanupCompleted>(CancellationToken.None, sent.Add);
+        IInvocationLifetimeCoordinationChannel channel = fixture.Connection;
+
+        await channel.SendInvocationSetupCompletedAsync(true, null, [new InvocationLifetimeOutput("NAME", true, "value")]);
+        await channel.SendModuleTestsCompletedAsync(2);
+        await channel.SendInvocationCleanupCompletedAsync(false, "cleanup failed");
+
+        Assert.HasCount(3, sent);
+        var setup = (InvocationSetupCompleted)sent[0];
+        Assert.AreEqual("execution", setup.ExecutionId);
+        Assert.AreEqual(DotnetTestConnection.InstanceId, setup.InstanceId);
+        Assert.IsTrue(setup.Succeeded);
+        Assert.AreSequenceEqual([new InvocationLifetimeOutput("NAME", true, "value")], setup.Outputs);
+        Assert.AreEqual(new ModuleTestsCompleted("execution", DotnetTestConnection.InstanceId, 2), sent[1]);
+        Assert.AreEqual(new InvocationCleanupCompleted("execution", DotnetTestConnection.InstanceId, false, "cleanup failed"), sent[2]);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+    [UnsupportedOSPlatform("wasi")]
+#endif
+    public async Task AcceptedOwner_KeepsListeningAfterCancelAndReceivesRunInvocationCleanup(bool callbackThrows)
+    {
+        int waits = 0;
+        using CancellationTokenSource application = new();
+        using OwnedProtocolServerPeer control = new(
+            (id, _) =>
+            {
+                Assert.AreEqual(WaitForServerControlRequestFieldsId.MessagesSerializerId, id);
+                ServerControlMessage reply = Interlocked.Increment(ref waits) == 1
+                    ? new ServerControlMessage(ServerControlKinds.CancelSession)
+                    : new ServerControlMessage(ServerControlKinds.RunInvocationCleanup, aggregateExitCode: 3, isCanceled: true);
+                return (ServerControlMessageFieldsId.MessagesSerializerId, OwnedProtocolServerPeer.Serialize(new ServerControlMessageSerializer(), reply));
+            });
+        using ConnectionFixture fixture = CreateConnection(application.Token);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.5.0",
+                [HandshakeMessagePropertyNames.ServerControlPipeName] = control.PipeName,
+                [HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted] = "true",
+            }),
+            application.Token);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(
+            HandshakeMessageHostTypes.TestHost,
+            new Dictionary<byte, string> { [HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = """["handler"]""" }));
+        int cancellations = 0;
+        await fixture.Connection.StartServerControlChannelAsync(_ =>
+        {
+            Interlocked.Increment(ref cancellations);
+            application.Cancel();
+            return callbackThrows ? Task.FromException(new IOException("stop failed")) : Task.CompletedTask;
+        });
+
+        using var limit = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        limit.CancelAfter(TimeSpan.FromSeconds(30));
+        InvocationCleanupRequest? request = await fixture.Connection.WaitForInvocationCleanupRequestAsync(limit.Token);
+
+        Assert.AreEqual(new InvocationCleanupRequest(3, true), request);
+        Assert.AreEqual(1, cancellations);
+        Assert.AreEqual(2, waits);
+        await fixture.Connection.OnExitAsync();
+    }
+
+    [TestMethod]
+    [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+    [UnsupportedOSPlatform("wasi")]
+#endif
+    public async Task AcceptedOwner_ControlConnectionFailurePreventsStartingSetup()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.5.0",
+                [HandshakeMessagePropertyNames.ServerControlPipeName] = "missing-" + Guid.NewGuid().ToString("N"),
+                [HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted] = "true",
+            }),
+            TestContext.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(
+            HandshakeMessageHostTypes.TestHost,
+            new Dictionary<byte, string> { [HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = """["handler"]""" }));
+
+        Task start = fixture.Connection.StartServerControlChannelAsync(_ => Task.CompletedTask);
+        try
+        {
+            ((CancellationTokenSource)GetField(fixture.Connection, "_serverControlListenerCts")!).Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(() => start);
+        }
+        finally
+        {
+            await fixture.Connection.OnExitAsync();
+        }
+    }
+
+    [TestMethod]
+    [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+    [UnsupportedOSPlatform("wasi")]
+#endif
+    public async Task AcceptedOwner_ControlChannelFailureAndThrowingStopCallbackCancelApplication()
+    {
+        using CTRLPlusCCancellationTokenSource application = new();
+        using OwnedProtocolServerPeer control = new((_, _) => (255, []));
+        using ConnectionFixture fixture = CreateConnection(application.CancellationToken, cancellationSource: application);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.5.0",
+                [HandshakeMessagePropertyNames.ServerControlPipeName] = control.PipeName,
+                [HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted] = "true",
+            }),
+            application.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(
+            HandshakeMessageHostTypes.TestHost,
+            new Dictionary<byte, string> { [HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = """["handler"]""" }));
+
+        await fixture.Connection.StartServerControlChannelAsync(_ => Task.FromException(new IOException("stop failed")));
+        using CancellationTokenSource limit = new(TimeSpan.FromSeconds(30));
+        Assert.IsNull(await fixture.Connection.WaitForInvocationCleanupRequestAsync(limit.Token));
+        Assert.IsTrue(application.CancellationToken.IsCancellationRequested);
+        await fixture.Connection.OnExitAsync();
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+    [UnsupportedOSPlatform("wasi")]
+#endif
+    public async Task DataPipeDisconnect_ExitsUnlessOwnerCoordinationWasAccepted(bool accepted)
+    {
+        using OwnedProtocolServerPeer primary = new((id, _) =>
+        {
+            Assert.AreEqual(9, id);
+            return (9, OwnedProtocolServerPeer.Serialize(new HandshakeMessageSerializer(), new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.5.0",
+                [HandshakeMessagePropertyNames.ServerControlPipeName] = "control",
+                [HandshakeMessagePropertyNames.InvocationLifetimeCoordinationAccepted] = accepted ? "true" : "false",
+            })));
+        });
+        Mock<IEnvironment> environment = new();
+        environment.SetupGet(e => e.ProcessId).Returns(123);
+        Mock<ITestApplicationModuleInfo> module = new();
+        module.Setup(m => m.GetCurrentTestApplicationFullPath()).Returns("test-module.dll");
+        CommandLineHandler handler = new(
+            CommandLineParser.Parse(["--server", "dotnettestcli", "--dotnet-test-pipe", primary.PipeName], environment.Object),
+            [], [new PlatformCommandLineProvider()], module.Object, Mock.Of<IRuntimeFeature>());
+        Mock<ITestApplicationCancellationTokenSource> cancellation = new();
+        cancellation.SetupGet(c => c.CancellationToken).Returns(TestContext.CancellationToken);
+        using DotnetTestConnection connection = new(handler, environment.Object, module.Object, cancellation.Object);
+        await connection.AfterCommonServiceSetupAsync();
+        Assert.IsTrue(await connection.IsCompatibleProtocolAsync(
+            HandshakeMessageHostTypes.TestHost,
+            new Dictionary<byte, string> { [HandshakeMessagePropertyNames.InvocationLifetimeHandlers] = """["handler"]""" }));
+        Assert.AreEqual(accepted, connection.IsInvocationLifetimeCoordinationAccepted);
+
+        await primary.DisposeAsync();
+        Exception exception = await Assert.ThrowsAsync<Exception>(() => connection.SendInvocationSetupCompletedAsync(true, null, []));
+        if (accepted)
+        {
+            Assert.IsInstanceOfType<IOException>(exception);
+        }
+
+        environment.Verify(e => e.Exit(It.IsAny<int>()), accepted ? Times.Never() : Times.Once());
+    }
+
+    [TestMethod]
     public async Task SendMessageAsync_DispatchesEachTypedRequestWithApplicationToken()
     {
         using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
@@ -688,7 +942,7 @@ public sealed class DotnetTestConnectionTests
         Assert.AreEqual(expected, actual);
     }
 
-    internal static ConnectionFixture CreateConnection(CancellationToken token, CommandLineParseOption[]? options = null, string? tool = null, ICommandLineOptionsProvider[]? providers = null, ILogger? logger = null)
+    internal static ConnectionFixture CreateConnection(CancellationToken token, CommandLineParseOption[]? options = null, string? tool = null, ICommandLineOptionsProvider[]? providers = null, ILogger? logger = null, ITestApplicationCancellationTokenSource? cancellationSource = null)
     {
         var environment = new Mock<IEnvironment>();
         environment.SetupGet(value => value.ProcessId).Returns(123);
@@ -701,8 +955,8 @@ public sealed class DotnetTestConnectionTests
         cancellation.SetupGet(value => value.CancellationToken).Returns(token);
         ConnectionClient client = new();
         DotnetTestConnection connection = logger is null
-            ? new DotnetTestConnection(handler, environment.Object, module.Object, cancellation.Object)
-            : new DotnetTestConnection(handler, environment.Object, module.Object, cancellation.Object, logger);
+            ? new DotnetTestConnection(handler, environment.Object, module.Object, cancellationSource ?? cancellation.Object)
+            : new DotnetTestConnection(handler, environment.Object, module.Object, cancellationSource ?? cancellation.Object, logger);
         SetField(connection, "_transportClient", client.Object);
         return new ConnectionFixture(connection, client, environment);
     }
