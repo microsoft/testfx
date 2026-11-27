@@ -165,6 +165,7 @@ internal sealed partial class RetryOrchestrator
         ILogger logger,
         List<RetryAttemptArtifact> attemptArtifacts,
         int attemptCount,
+        bool fixtureFailed,
         bool suiteCountsKnown,
         int suiteTotalTests,
         int suiteSkippedTests,
@@ -204,7 +205,9 @@ internal sealed partial class RetryOrchestrator
                 this,
                 outputDevice,
                 logger,
-                attemptArtifacts,
+                // Ordinary retries keep their physical TRX reports and final-attempt selection.
+                // Aggregation is needed only to preserve fixture failures from earlier attempts.
+                [.. attemptArtifacts.Where(artifact => fixtureFailed || artifact.Kind != "microsoft.testing.trx")],
                 attemptCount,
                 artifactRunSummary,
                 postProcessingDirectory,

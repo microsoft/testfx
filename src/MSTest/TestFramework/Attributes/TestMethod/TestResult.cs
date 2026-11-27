@@ -7,6 +7,13 @@ using System.Runtime.Serialization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+internal enum TestResultCleanupKind : byte
+{
+    None,
+    ClassCleanup,
+    AssemblyCleanup,
+}
+
 /// <summary>
 /// TestResult object to be returned to adapter.
 /// </summary>
@@ -15,6 +22,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 public class TestResult
 {
+    /// <summary>
+    /// Gets or sets the fixture scope for a cleanup failure.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: OptionalField]
+#endif
+    internal TestResultCleanupKind CleanupKind { get; set; }
+
     /// <summary>
     /// Number of assertion failures carrying comparison values (an expected and/or actual text) observed across
     /// all <see cref="TestFailureException"/> assignments, capped at 2. A single comparison can always be

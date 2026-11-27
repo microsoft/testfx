@@ -77,6 +77,8 @@ internal static partial class SerializerUtilities
                 properties["traits"] = null;
 
                 int attachmentIndex = 0;
+                bool hasExplicitNodeType = n.Properties.OfType<SerializableKeyValuePairStringProperty>()
+                    .Any(property => property.Key == "node-type");
 #if NETCOREAPP
                 List<KeyValuePair<string, string>>? traits = null;
 #else
@@ -146,14 +148,22 @@ internal static partial class SerializerUtilities
                     {
                         // The server protocol has no outcome-less terminal state. Return the action to discovered
                         // so clients clear in-progress state without recording a test outcome.
-                        properties["node-type"] = "action";
+                        if (!hasExplicitNodeType)
+                        {
+                            properties["node-type"] = "action";
+                        }
+
                         properties["execution-state"] = "discovered";
                         continue;
                     }
 
                     if (property is TestNodeStateProperty testNodeStateProperty)
                     {
-                        properties["node-type"] = "action";
+                        if (!hasExplicitNodeType)
+                        {
+                            properties["node-type"] = "action";
+                        }
+
                         switch (property)
                         {
                             case DiscoveredTestNodeStateProperty:

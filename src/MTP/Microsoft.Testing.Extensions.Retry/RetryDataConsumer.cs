@@ -37,6 +37,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     private int _passedTests;
     private int _failedTests;
     private int _skippedTests;
+    private bool _fixtureFailed;
 
     public RetryDataConsumer(IServiceProvider serviceProvider)
     {
@@ -78,6 +79,13 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 
         var testNodeUpdateMessage = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (testNodeUpdateMessage.TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Any(property => property.Key == "node-type" && property.Value == "group"))
+        {
+            _fixtureFailed |= nodeState is not null && IsNonPassingState(nodeState);
+            return;
+        }
+
         // Stryker disable once all: without a state none of the mutually exclusive outcome branches below can run.
         if (nodeState is null)
         {
@@ -219,7 +227,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
         // Stryker disable once Boolean: continuation scheduling does not change the reported counts.
         await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TestRunCountsRequest, VoidResponse>(
-            new TestRunCountsRequest(_passedTests, _failedTests, _skippedTests, [.. _recoveredTests]),
+            new TestRunCountsRequest(_passedTests, _failedTests, _skippedTests, [.. _recoveredTests], _fixtureFailed),
             testSessionContext.CancellationToken).ConfigureAwait(false);
     }
 

@@ -24,6 +24,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private int _totalRanTests;
     private int _skippedTestsCount;
     private bool _testAdapterTestSessionFailure;
+    private int _failedFixtureNodesCount;
 
     public TestApplicationResult(
         IOutputDevice outputService,
@@ -105,6 +106,16 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             return Task.CompletedTask;
         }
 
+        if (IsFixtureGroup(message.TestNode))
+        {
+            if (executionState is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty)
+            {
+                _failedFixtureNodesCount++;
+            }
+
+            return Task.CompletedTask;
+        }
+
         // A test framework that retries a test in-process (MSTest's [Retry], ...) can report every attempt under
         // the same test node uid. In-progress updates still need to start their attempt span, and superseded
         // terminal updates need to complete it, but only the final attempt contributes to aggregate metrics and
@@ -179,7 +190,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         ExitCode exitCode = ExitCode.Success;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsMaxFailedTestsTriggered ? ExitCode.TestExecutionStoppedForMaxFailedTests : exitCode;
         exitCode = exitCode == ExitCode.Success && _testAdapterTestSessionFailure ? ExitCode.TestAdapterTestSessionFailure : exitCode;
-        exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
+        exitCode = exitCode == ExitCode.Success && (_failedTestsCount > 0 || _failedFixtureNodesCount > 0) ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
 
         // A deadline-driven graceful stop (see AbortAtDeadlineExtension) truncates the run before the CI
@@ -232,6 +243,10 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
+
+    private static bool IsFixtureGroup(TestNode testNode)
+        => testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Any(property => property.Key == "node-type" && property.Value == "group");
 
     /// <summary>
     /// Emits the run-level OpenTelemetry metrics and tags the root span with the run counts.

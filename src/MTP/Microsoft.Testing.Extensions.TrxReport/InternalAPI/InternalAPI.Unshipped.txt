@@ -18,3 +18,4 @@ static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResu
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.RunErrors.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.RunErrors.set -> void
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.GetTestDefinitionIdentity(string! uid, string! displayName, string? explicitTestDefinitionName) -> (string! Id, string! TestDefinitionName, bool IsExplicitlyProvided)
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Guid runId, string! runName, System.Threading.CancellationToken cancellationToken, bool retryAttempts) -> System.Threading.Tasks.Task!

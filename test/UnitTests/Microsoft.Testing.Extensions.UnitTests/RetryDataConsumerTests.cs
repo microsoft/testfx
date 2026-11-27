@@ -149,6 +149,51 @@ public sealed class RetryDataConsumerTests
         Assert.IsEmpty(fixture.Server.FailedTests);
     }
 
+    [TestMethod]
+    public async Task ConsumeAsync_FailedFixtureGroup_IsIgnoredByRetryTracking()
+    {
+        using ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync(["uid"], TestContext.CancellationToken);
+
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate(
+                "class-cleanup",
+                new SerializableKeyValuePairStringProperty("node-type", "group"),
+                new FailedTestNodeStateProperty()),
+            TestContext.CancellationToken);
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate("uid", new FailedTestNodeStateProperty()),
+            TestContext.CancellationToken);
+        await fixture.FinishAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(fixture.Server.FixtureFailed);
+        Assert.AreEqual(1, fixture.Server.TotalTestRan);
+        Assert.AreEqual(1, fixture.Server.FailedTestResults);
+        Assert.HasCount(1, fixture.Server.FailedTests);
+        Assert.IsTrue(fixture.Server.FailedTests.ContainsKey("uid"));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_GroupWithoutFailureDoesNotFailFixture()
+    {
+        using ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync([], TestContext.CancellationToken);
+
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate("group", new SerializableKeyValuePairStringProperty("node-type", "group")),
+            TestContext.CancellationToken);
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate("group", new SerializableKeyValuePairStringProperty("node-type", "group"), PassedTestNodeStateProperty.CachedInstance),
+            TestContext.CancellationToken);
+        await fixture.FinishAsync(TestContext.CancellationToken);
+
+        Assert.IsFalse(fixture.Server.FixtureFailed);
+        Assert.AreEqual(0, fixture.Server.TotalTestRan);
+        Assert.IsEmpty(fixture.Server.FailedTests);
+    }
+
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]

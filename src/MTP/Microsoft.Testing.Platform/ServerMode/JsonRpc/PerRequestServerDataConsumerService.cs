@@ -16,8 +16,18 @@ namespace Microsoft.Testing.Platform.ServerMode;
 /// <summary>
 /// This class converts the events send to the message bus and sends these back to the client.
 /// </summary>
-internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvider, IServerTestHost serverTestHost, Guid runId, ITask task) : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
+internal sealed class PerRequestServerDataConsumer(
+    IServiceProvider serviceProvider,
+    IServerTestHost serverTestHost,
+    Guid runId,
+    ITask task,
+    bool supportsTestNodeHierarchy) : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
 {
+    public PerRequestServerDataConsumer(IServiceProvider serviceProvider, IServerTestHost serverTestHost, Guid runId, ITask task)
+        : this(serviceProvider, serverTestHost, runId, task, supportsTestNodeHierarchy: false)
+    {
+    }
+
     private const int TestNodeUpdateDelayInMs = 200;
     private const string FileType = "file";
 
@@ -29,6 +39,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     private readonly TaskCompletionSource<bool> _testSessionEnd = new();
     private readonly IServerTestHost _serverTestHost = serverTestHost;
     private readonly ITask _task = task;
+    private readonly bool _supportsTestNodeHierarchy = supportsTestNodeHierarchy;
     private Task? _idleUpdateTask;
     private TestNodeStateChangeAggregator _nodeUpdatesAggregator = new(runId);
     private bool _isDisposed;
@@ -189,7 +200,12 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         switch (value)
         {
             case TestNodeUpdateMessage update:
-                await ProcessTestNodeUpdateAsync(update, cancellationToken).ConfigureAwait(false);
+                TestNodeUpdateMessage? projectedUpdate = ProjectForClient(update);
+                if (projectedUpdate is not null)
+                {
+                    await ProcessTestNodeUpdateAsync(projectedUpdate, cancellationToken).ConfigureAwait(false);
+                }
+
                 PopulateTestNodeStatistics(update);
                 break;
 
@@ -205,6 +221,11 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
     internal void PopulateTestNodeStatistics(TestNodeUpdateMessage message)
     {
+        if (IsGroupNode(message.TestNode))
+        {
+            return;
+        }
+
         if (message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not { } state)
         {
             return;
@@ -231,6 +252,49 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
                 break;
         }
     }
+
+    internal TestNodeUpdateMessage? ProjectForClient(TestNodeUpdateMessage update)
+    {
+        if (_supportsTestNodeHierarchy)
+        {
+            return update;
+        }
+
+        bool isGroupNode = IsGroupNode(update.TestNode);
+        if (isGroupNode && update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is null)
+        {
+            return null;
+        }
+
+        if (!isGroupNode && update.ParentTestNodeUid is null)
+        {
+            return update;
+        }
+
+        PropertyBag properties = new();
+        foreach (IProperty property in update.TestNode.Properties)
+        {
+            if (isGroupNode
+                && property is SerializableKeyValuePairStringProperty { Key: "node-type", Value: "group" })
+            {
+                continue;
+            }
+
+            properties.Add(property);
+        }
+
+        var projectedNode = new TestNode
+        {
+            Uid = update.TestNode.Uid,
+            DisplayName = update.TestNode.DisplayName,
+            Properties = properties,
+        };
+        return new TestNodeUpdateMessage(update.SessionUid, projectedNode);
+    }
+
+    private static bool IsGroupNode(TestNode testNode)
+        => testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+            .Any(property => property.Key == "node-type" && property.Value == "group");
 
     private void AddOrUpdateTestNodeStateStatistics(TestNodeUid testNodeUid, bool hasPassed)
     {

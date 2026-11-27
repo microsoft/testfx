@@ -4,8 +4,11 @@
 extern alias serverclient;
 
 using System.Diagnostics;
+using System.Xml.Linq;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 using serverclient::Microsoft.Testing.Platform.ServerMode.Client;
 
@@ -24,6 +27,7 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
 {
     private const string AssetName = "MtpServerClientAsset";
     private const string ExpectedTestDisplayName = "TestMethod1";
+    private const string CleanupAssetName = "MtpServerClientCleanupAsset";
 
     public TestContext TestContext { get; set; } = null!;
 
@@ -106,6 +110,396 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
     }
 
     [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ClassCleanupFailure_PreservesTestOutcomeAndProjectsForClientCapability(bool? supportsTestNodeHierarchy)
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = CleanupAssetSources
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(CleanupAssetName, source);
+
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(
+            0,
+            build.ExitCode,
+            $"The cleanup test app failed to build. Build output:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string app = TestHost.LocateFrom(testAsset.TargetAssetPath, CleanupAssetName, TargetFrameworks.NetCurrent).FullName;
+        MtpServerClientOptions options = CreateOptions(supportsTestNodeHierarchy);
+        options.EnvironmentVariables["MTP_FAIL_CLASS_CLEANUP"] = "1";
+        List<MtpTestNodeUpdate> updates = [];
+        object gate = new();
+
+        using var client = MtpServerClient.Launch(app, options);
+        client.TestNodesUpdated += (_, e) =>
+        {
+            lock (gate)
+            {
+                updates.AddRange(e.Changes);
+            }
+        };
+
+        _ = await client.InitializeAsync(cancellationToken);
+        _ = await client.RunTestsAsync(cancellationToken);
+
+        List<MtpTestNodeUpdate> snapshot;
+        lock (gate)
+        {
+            snapshot = [.. updates];
+        }
+
+        MtpTestNodeUpdate testResult = Assert.ContainsSingle(
+            node => node.NodeType == "action"
+                && node.DisplayName == ExpectedTestDisplayName
+                && node.ExecutionState == "passed",
+            snapshot);
+        MtpTestNodeUpdate cleanupFailure = Assert.ContainsSingle(
+            node => node.ExecutionState == "failed"
+                && node.ErrorMessage?.Contains("class cleanup failed sentinel", StringComparison.Ordinal) == true,
+            snapshot);
+        Assert.AreNotEqual(testResult.Uid, cleanupFailure.Uid, "The fixture failure must have an identity distinct from the test result.");
+
+        if (supportsTestNodeHierarchy == true)
+        {
+            Assert.AreEqual("group", cleanupFailure.NodeType);
+            MtpTestNodeUpdate assemblyNode = Assert.ContainsSingle(
+                node => node.NodeType == "group"
+                    && node.ParentUid is null
+                    && node.Uid!.StartsWith("mstest-assembly:", StringComparison.Ordinal),
+                snapshot);
+            Assert.AreEqual(assemblyNode.Uid, cleanupFailure.ParentUid);
+        }
+        else
+        {
+            Assert.AreEqual("action", cleanupFailure.NodeType);
+            Assert.IsNull(cleanupFailure.ParentUid);
+            Assert.DoesNotContain(node => node.NodeType == "group", snapshot);
+        }
+
+        await client.ExitAsync(cancellationToken);
+        await WaitForServerExitAsync(client, cancellationToken);
+        await client.ShutdownAsync();
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            client.ServerExitCode,
+            "The server process exits successfully after orderly shutdown; the cleanup failure is reported through the test-node update.");
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task AssemblyCleanupFailure_PreservesTestOutcomeAndProjectsForClientCapability(bool? supportsTestNodeHierarchy)
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = CleanupAssetSources
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(CleanupAssetName, source);
+
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(
+            0,
+            build.ExitCode,
+            $"The cleanup test app failed to build. Build output:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string app = TestHost.LocateFrom(testAsset.TargetAssetPath, CleanupAssetName, TargetFrameworks.NetCurrent).FullName;
+        MtpServerClientOptions options = CreateOptions(supportsTestNodeHierarchy);
+        options.EnvironmentVariables["MTP_FAIL_ASSEMBLY_CLEANUP"] = "1";
+        List<MtpTestNodeUpdate> updates = [];
+        object gate = new();
+
+        using var client = MtpServerClient.Launch(app, options);
+        client.TestNodesUpdated += (_, e) =>
+        {
+            lock (gate)
+            {
+                updates.AddRange(e.Changes);
+            }
+        };
+
+        _ = await client.InitializeAsync(cancellationToken);
+        _ = await client.RunTestsAsync(cancellationToken);
+
+        List<MtpTestNodeUpdate> snapshot;
+        lock (gate)
+        {
+            snapshot = [.. updates];
+        }
+
+        MtpTestNodeUpdate testResult = Assert.ContainsSingle(
+            node => node.NodeType == "action"
+                && node.DisplayName == ExpectedTestDisplayName
+                && node.ExecutionState == "passed",
+            snapshot);
+        MtpTestNodeUpdate cleanupFailure = Assert.ContainsSingle(
+            node => node.ExecutionState == "failed"
+                && node.ErrorMessage?.Contains("assembly cleanup failed sentinel", StringComparison.Ordinal) == true,
+            snapshot);
+        Assert.AreNotEqual(testResult.Uid, cleanupFailure.Uid, "The fixture failure must have an identity distinct from the test result.");
+        Assert.AreEqual($"{CleanupAssetName} AssemblyCleanup", cleanupFailure.DisplayName);
+
+        if (supportsTestNodeHierarchy == true)
+        {
+            Assert.AreEqual("group", cleanupFailure.NodeType);
+            Assert.IsTrue(cleanupFailure.Uid!.StartsWith("mstest-assembly:", StringComparison.Ordinal));
+            Assert.IsNull(cleanupFailure.ParentUid);
+            MtpTestNodeUpdate classNode = Assert.ContainsSingle(
+                node => node.NodeType == "group"
+                    && node.DisplayName == "CleanupTests"
+                    && node.ParentUid == cleanupFailure.Uid,
+                snapshot);
+            Assert.AreEqual(classNode.Uid, testResult.ParentUid);
+        }
+        else
+        {
+            Assert.AreEqual("action", cleanupFailure.NodeType);
+            Assert.IsNull(cleanupFailure.ParentUid);
+            Assert.IsNull(testResult.ParentUid);
+            Assert.DoesNotContain(node => node.NodeType == "group", snapshot);
+        }
+
+        await client.ExitAsync(cancellationToken);
+        await WaitForServerExitAsync(client, cancellationToken);
+        await client.ShutdownAsync();
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            client.ServerExitCode,
+            "The server process exits successfully after orderly shutdown; the cleanup failure is reported through the test-node update.");
+    }
+
+    [TestMethod]
+    public async Task ClassCleanupFailure_ProducesSeparateFailedTrxResult()
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = CleanupAssetSources
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(CleanupAssetName, source);
+
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(
+            0,
+            build.ExitCode,
+            $"The cleanup test app failed to build. Build output:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, CleanupAssetName, TargetFrameworks.NetCurrent);
+        TestHostResult execution = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename cleanup.trx --results-directory \"{resultsDirectory}\"",
+            new() { ["MTP_FAIL_CLASS_CLEANUP"] = "1" },
+            cancellationToken: cancellationToken);
+        execution.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        string trxFile = Path.Combine(resultsDirectory, "cleanup.trx");
+        Assert.IsTrue(File.Exists(trxFile), $"The child run did not produce its TRX report.\n{execution}");
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var trx = XDocument.Load(trxFile);
+        XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
+        Assert.HasCount(2, results);
+
+        XElement testResult = Assert.ContainsSingle(
+            result => result.Attribute("testName")?.Value == ExpectedTestDisplayName,
+            results);
+        Assert.AreEqual("Passed", testResult.Attribute("outcome")?.Value);
+
+        XElement cleanupResult = Assert.ContainsSingle(
+            result => result.Attribute("testName")?.Value == "[CleanupTests ClassCleanup]",
+            results);
+        Assert.AreEqual("Failed", cleanupResult.Attribute("outcome")?.Value);
+        Assert.Contains(
+            "class cleanup failed sentinel",
+            string.Join(" ", cleanupResult.Descendants(ns + "Message").Select(message => message.Value)));
+    }
+
+    [TestMethod]
+    public async Task ClassCleanupFailure_DoesNotSkipDependentOfPassedTest()
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = (CleanupAssetSources + """
+
+#file DependentTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class DependentTests
+{
+    [TestMethod]
+    [DependsOn(typeof(CleanupTests), nameof(CleanupTests.TestMethod1))]
+    public void DependentTest() { }
+}
+""")
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(CleanupAssetName, source);
+
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(0, build.ExitCode, $"Build output:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, CleanupAssetName, TargetFrameworks.NetCurrent);
+        TestHostResult execution = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename cleanup.trx --results-directory \"{resultsDirectory}\"",
+            new() { ["MTP_FAIL_CLASS_CLEANUP"] = "1" },
+            cancellationToken: cancellationToken);
+        execution.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        var trx = XDocument.Load(Path.Combine(resultsDirectory, "cleanup.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
+        Assert.HasCount(3, results);
+        Assert.HasCount(3, results.Select(result => result.Attribute("testId")!.Value).Distinct(StringComparer.Ordinal));
+        Assert.HasCount(3, results.Select(result => result.Attribute("executionId")!.Value).Distinct(StringComparer.Ordinal));
+        foreach ((string name, string outcome) in new[]
+        {
+            (ExpectedTestDisplayName, "Passed"),
+            ("DependentTest", "Passed"),
+            ("[CleanupTests ClassCleanup]", "Failed"),
+        })
+        {
+            XElement result = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == name, results);
+            Assert.AreEqual(outcome, result.Attribute("outcome")?.Value, name);
+        }
+
+        XElement counters = Assert.ContainsSingle(trx.Descendants(ns + "Counters"));
+        Assert.AreEqual("3", counters.Attribute("total")?.Value);
+        Assert.AreEqual("2", counters.Attribute("passed")?.Value);
+        Assert.AreEqual("1", counters.Attribute("failed")?.Value);
+    }
+
+    [TestMethod]
+    public async Task AssemblyCleanupFailure_ProducesSeparateFailedTrxResult()
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = CleanupAssetSources
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(CleanupAssetName, source);
+
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(
+            0,
+            build.ExitCode,
+            $"The cleanup test app failed to build. Build output:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, CleanupAssetName, TargetFrameworks.NetCurrent);
+        TestHostResult execution = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename cleanup.trx --results-directory \"{resultsDirectory}\"",
+            new() { ["MTP_FAIL_ASSEMBLY_CLEANUP"] = "1" },
+            cancellationToken: cancellationToken);
+        execution.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        string trxFile = Path.Combine(resultsDirectory, "cleanup.trx");
+        Assert.IsTrue(File.Exists(trxFile), $"The child run did not produce its TRX report.\n{execution}");
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var trx = XDocument.Load(trxFile);
+        XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
+        Assert.HasCount(2, results);
+
+        XElement testResult = Assert.ContainsSingle(
+            result => result.Attribute("testName")?.Value == ExpectedTestDisplayName,
+            results);
+        Assert.AreEqual("Passed", testResult.Attribute("outcome")?.Value);
+
+        XElement cleanupResult = Assert.ContainsSingle(
+            result => result.Attribute("testName")?.Value == $"{CleanupAssetName} AssemblyCleanup",
+            results);
+        Assert.AreEqual("Failed", cleanupResult.Attribute("outcome")?.Value);
+        Assert.Contains(
+            "assembly cleanup failed sentinel",
+            string.Join(" ", cleanupResult.Descendants(ns + "Message").Select(message => message.Value)));
+
+        XElement counters = Assert.ContainsSingle(trx.Descendants(ns + "Counters"));
+        Assert.AreEqual("2", counters.Attribute("total")?.Value);
+        Assert.AreEqual("1", counters.Attribute("passed")?.Value);
+        Assert.AreEqual("1", counters.Attribute("failed")?.Value);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "RetryCleanupOnly")]
+    [DataRow(true, DisplayName = "RetryCleanupWithRecoveringTest")]
+    public async Task CleanupFailure_WithRetry_PreservesFailureAndOnlyRetriesTests(bool mixed)
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = RetryCleanupAssetSources
+            .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$FlakyTest$", mixed ? RetryCleanupFlakyTestSource : string.Empty);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("RetryCleanupAsset", source);
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(0, build.ExitCode, $"Build failed:\n{build.StandardOutput}\n{build.StandardError}");
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "retry-results");
+        string markerPath = Path.Combine(testAsset.TargetAssetPath, "executions.txt");
+        var host = TestHost.LocateFrom(testAsset.TargetAssetPath, "RetryCleanupAsset", TargetFrameworks.NetCurrent);
+        TestHostResult result = await host.ExecuteAsync(
+            $"--retry-failed-tests 1 --report-trx --results-directory \"{resultsDirectory}\"",
+            new() { ["MTP_RETRY_CLEANUP_MARKER"] = markerPath },
+            cancellationToken: cancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContains("Retry summary: Failed!");
+        string[] executions = File.ReadAllLines(markerPath);
+        Assert.AreEqual(1, executions.Count(line => line == "fixture-test"));
+        Assert.AreEqual(1, executions.Count(line => line == "fixture-cleanup"));
+        Assert.AreEqual(mixed ? 2 : 0, executions.Count(line => line == "flaky-test"));
+
+        string trxPath = Assert.ContainsSingle(Directory.GetFiles(resultsDirectory, "*.trx", SearchOption.TopDirectoryOnly));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var trx = XDocument.Load(trxPath);
+        XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
+        Assert.HasCount(mixed ? 3 : 2, results);
+        XElement cleanup = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == "[CleanupTests ClassCleanup]", results);
+        Assert.AreEqual("Failed", cleanup.Attribute("outcome")?.Value);
+        Assert.Contains(
+            "cleanup failed sentinel",
+            string.Join(" ", cleanup.Descendants(ns + "Message").Select(message => message.Value)));
+        XElement fixtureTest = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == "FixtureTest", results);
+        Assert.AreEqual("Passed", fixtureTest.Attribute("outcome")?.Value);
+        if (mixed)
+        {
+            XElement flaky = Assert.ContainsSingle(item => item.Attribute("testName")?.Value == "FlakyTest", results);
+            Assert.AreEqual("Passed", flaky.Attribute("outcome")?.Value);
+        }
+
+        XElement counters = Assert.ContainsSingle(trx.Descendants(ns + "Counters"));
+        Assert.AreEqual(mixed ? "3" : "2", counters.Attribute("total")?.Value);
+        Assert.AreEqual(mixed ? "2" : "1", counters.Attribute("passed")?.Value);
+        Assert.AreEqual("1", counters.Attribute("failed")?.Value);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task ShutdownAsync_WhileExternalTeardownBlocks_ReturnsImmediatelyAndHidesForcedExitCode(string tfm)
     {
@@ -168,9 +562,12 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
             ? "<none>"
             : string.Join(", ", nodes.Select(n => $"[uid={n.Uid}, name={n.DisplayName}, type={n.NodeType}, state={n.ExecutionState}]"));
 
-    private static MtpServerClientOptions CreateOptions()
+    private static MtpServerClientOptions CreateOptions(bool? supportsTestNodeHierarchy = null)
     {
-        MtpServerClientOptions options = new();
+        MtpServerClientOptions options = new()
+        {
+            SupportsTestNodeHierarchy = supportsTestNodeHierarchy,
+        };
 
         // Neutralize inherited environment that would otherwise change the child host's behavior (dump
         // generation, telemetry opt-out, banners, ambient LLM/agent detection, ...). The client only adds to
@@ -193,6 +590,159 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
 
         return options;
     }
+
+    private const string RetryCleanupAssetSources = """
+#file RetryCleanupAsset.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file Program.cs
+using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+internal sealed class Program
+{
+    public static async Task<int> Main(string[] args)
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+        builder.AddRetryProvider();
+        builder.AddTrxReportProvider();
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
+    }
+}
+
+#file CleanupTests.cs
+using System;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public static class Markers
+{
+    public static string Path => Environment.GetEnvironmentVariable("MTP_RETRY_CLEANUP_MARKER");
+    public static void Write(string value) => File.AppendAllText(Path, value + Environment.NewLine);
+}
+
+[TestClass]
+public sealed class CleanupTests
+{
+    [TestMethod]
+    public void FixtureTest() => Markers.Write("fixture-test");
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        Markers.Write("fixture-cleanup");
+        throw new InvalidOperationException("cleanup failed sentinel");
+    }
+}
+
+$FlakyTest$
+""";
+
+    private const string RetryCleanupFlakyTestSource = """
+[TestClass]
+public sealed class FlakyTests
+{
+    [TestMethod]
+    public void FlakyTest()
+    {
+        bool alreadyRan = File.Exists(Markers.Path) && File.ReadAllLines(Markers.Path).Contains("flaky-test");
+        Markers.Write("flaky-test");
+        if (!alreadyRan)
+        {
+            Assert.Fail("fails only on the first attempt");
+        }
+    }
+}
+""";
+
+    private const string CleanupAssetSources = """
+#file MtpServerClientCleanupAsset.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file Program.cs
+using System.Reflection;
+using System.Threading.Tasks;
+
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+internal sealed class Program
+{
+    public static async Task<int> Main(string[] args)
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+        builder.AddTrxReportProvider();
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
+    }
+}
+
+#file CleanupTests.cs
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class CleanupTests
+{
+    [TestMethod]
+    public void TestMethod1()
+    {
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        if (Environment.GetEnvironmentVariable("MTP_FAIL_CLASS_CLEANUP") == "1")
+        {
+            throw new InvalidOperationException("class cleanup failed sentinel");
+        }
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
+    {
+        if (Environment.GetEnvironmentVariable("MTP_FAIL_ASSEMBLY_CLEANUP") == "1")
+        {
+            throw new InvalidOperationException("assembly cleanup failed sentinel");
+        }
+    }
+}
+""";
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {

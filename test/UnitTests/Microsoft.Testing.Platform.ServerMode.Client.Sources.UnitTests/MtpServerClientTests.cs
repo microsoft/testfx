@@ -634,6 +634,31 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task InitializeAsync_TestNodeHierarchy_PreservesRequestCapability(bool? requested)
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportsTestNodeHierarchy = requested,
+        });
+
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        InitializeRequestArgs request = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.AreEqual(requested, request.Capabilities.SupportsTestNodeHierarchy);
+        IDictionary<string, object?> serialized = SerializerUtilities.Serialize(request.Capabilities);
+        var testing = (IDictionary<string, object?>)serialized[JsonRpcStrings.Testing]!;
+        Assert.AreEqual(requested.HasValue, testing.ContainsKey(JsonRpcStrings.SupportsTestNodeHierarchy));
+        if (requested.HasValue)
+        {
+            Assert.AreEqual(requested.Value, testing[JsonRpcStrings.SupportsTestNodeHierarchy]);
+        }
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task InitializeAsync_ShowMessageTopLevelFieldDoesNotAcknowledgeRouting(bool nestedFalse)

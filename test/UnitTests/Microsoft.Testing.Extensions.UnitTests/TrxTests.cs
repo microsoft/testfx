@@ -135,6 +135,9 @@ public class TrxTests
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Failed");
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement result = Assert.ContainsSingle(xml.Descendants(ns + "UnitTestResult"));
+        Assert.AreEqual("Failed", result.Attribute("outcome")?.Value);
         string trxContent = xml.ToString();
         Assert.Contains(@"timeout=""1""", trxContent);
     }

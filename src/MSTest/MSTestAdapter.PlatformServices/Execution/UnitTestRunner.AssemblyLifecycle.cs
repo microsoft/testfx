@@ -55,6 +55,7 @@ internal sealed partial class UnitTestRunner
                 {
                     Outcome = UnitTestOutcome.Failed,
                     TestFailureException = ex,
+                    CleanupKind = TestResultCleanupKind.AssemblyCleanup,
                 };
                 failedResult.SetOutputAndTraces(testContextImpl, testContext);
                 return failedResult;

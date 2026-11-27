@@ -85,6 +85,21 @@ public sealed class TestExecutionManagerRunnerResultsMutationTests : TestContain
         AllPassed(Failed(isSupersededRetryAttempt: true), Failed()).Should().BeFalse();
     }
 
+    public void NativeMtpDependencyVerdictIgnoresFixtureCleanupFailures()
+    {
+        TestResult classCleanup = new() { Outcome = UnitTestOutcome.Failed, CleanupKind = TestResultCleanupKind.ClassCleanup };
+        TestResult assemblyCleanup = new() { Outcome = UnitTestOutcome.Failed, CleanupKind = TestResultCleanupKind.AssemblyCleanup };
+
+        AllPassedForMtp(Passed(), classCleanup).Should().BeTrue();
+        AllPassedForMtp(Passed(), assemblyCleanup).Should().BeTrue();
+        AllPassedForMtp(Failed(), classCleanup).Should().BeFalse();
+        AllPassedForMtp(classCleanup).Should().BeFalse();
+        AllPassedForMtp().Should().BeFalse();
+        AllPassedForMtp(Failed(isSupersededRetryAttempt: true), Passed(), classCleanup).Should().BeTrue();
+        AllPassedForMtp(Failed(isSupersededRetryAttempt: true), classCleanup).Should().BeFalse();
+        AllPassed(Passed(), classCleanup).Should().BeFalse();
+    }
+
     private static TestResult Passed() => new() { Outcome = UnitTestOutcome.Passed };
 
     private static TestResult Failed(bool isSupersededRetryAttempt = false)
@@ -96,7 +111,12 @@ public sealed class TestExecutionManagerRunnerResultsMutationTests : TestContain
     private static bool AllPassed(params TestResult[] results)
         => (bool)typeof(TestExecutionManager)
             .GetMethod("AllPassed", BindingFlags.NonPublic | BindingFlags.Static)!
-            .Invoke(null, [results])!;
+            .Invoke(null, [results, false])!;
+
+    private static bool AllPassedForMtp(params TestResult[] results)
+        => (bool)typeof(TestExecutionManager)
+            .GetMethod("AllPassed", BindingFlags.NonPublic | BindingFlags.Static)!
+            .Invoke(null, [results, true])!;
 
     private sealed class RecordingRecorder : ITestResultRecorder
     {

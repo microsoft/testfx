@@ -1,4 +1,7 @@
 #nullable enable
+Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.FixtureFailed.get -> bool
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.FixtureFailed.get -> bool
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string![]! recoveredTestUids, bool fixtureFailed) -> void
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
 Microsoft.Testing.Extensions.Policy.RetryOrchestrator.Stage.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
 *REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!

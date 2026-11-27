@@ -142,11 +142,16 @@ Microsoft.Testing.Platform.Services.TestCoverageResult.ConfigureThresholds(Micro
 Microsoft.Testing.Platform.Services.TestCoverageResult.GetThresholdErrors() -> System.Collections.Generic.IReadOnlyList<string!>!
 static Microsoft.Testing.Platform.Services.CoverageThresholdPolicy.Evaluate(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>! scopes, Microsoft.Testing.Platform.TestHost.SessionUid? sessionUid) -> (System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>! Thresholds, System.Collections.Generic.IReadOnlyList<string!>! Errors)
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ShowMessage = "showMessage" -> string!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.SupportsTestNodeHierarchy = "supportsTestNodeHierarchy" -> string!
 const Microsoft.Testing.Platform.ServerMode.JsonRpcMethods.ClientShowMessage = "client/showMessage" -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.get -> bool?
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.init -> void
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.SupportsTestNodeHierarchy.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.SupportsTestNodeHierarchy.init -> void
 Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.get -> bool?
 Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.init -> void
+Microsoft.Testing.Platform.ServerMode.PerRequestServerDataConsumer.PerRequestServerDataConsumer(System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Hosts.IServerTestHost! serverTestHost, System.Guid runId, Microsoft.Testing.Platform.Helpers.ITask! task, bool supportsTestNodeHierarchy) -> void
+Microsoft.Testing.Platform.ServerMode.PerRequestServerDataConsumer.ProjectForClient(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage?
 Microsoft.Testing.Platform.DotnetTestConnection.IsCoverageSummarySupported.get -> bool
 Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol.IsCoverageSummarySupported.get -> bool
 *REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid, out string? Kind, out string![]? InputArtifactPaths) -> void

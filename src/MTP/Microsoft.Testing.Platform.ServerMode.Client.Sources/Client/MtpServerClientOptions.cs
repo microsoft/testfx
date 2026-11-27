@@ -59,6 +59,13 @@ internal sealed class MtpServerClientOptions
     public bool? ShowMessage { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the client can consume hierarchical test-node updates
+    /// (<c>capabilities.testing.supportsTestNodeHierarchy</c>). A null value omits the capability and receives
+    /// the legacy flat projection.
+    /// </summary>
+    public bool? SupportsTestNodeHierarchy { get; set; }
+
+    /// <summary>
     /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback
     /// listener. Overridable by callers per the <c>VSTEST_CONNECTION_TIMEOUT</c> convention (seconds).
     /// Defaults to 90 seconds.

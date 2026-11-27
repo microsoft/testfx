@@ -144,6 +144,95 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void ProjectForClient_LegacyClient_DropsStatelessGroupUpdates()
+    {
+        TestNodeUpdateMessage update = new(
+            new SessionUid("1"),
+            new TestNode
+            {
+                Uid = new TestNodeUid("class"),
+                DisplayName = "Class",
+                Properties = new PropertyBag(new SerializableKeyValuePairStringProperty("node-type", "group")),
+            });
+
+        Assert.IsNull(_service.ProjectForClient(update));
+    }
+
+    [TestMethod]
+    public void ProjectForClient_LegacyClient_FlattensStatefulGroupAndPreservesFailure()
+    {
+        TestNodeUpdateMessage update = new(
+            new SessionUid("1"),
+            new TestNode
+            {
+                Uid = new TestNodeUid("class"),
+                DisplayName = "Class cleanup",
+                Properties = new PropertyBag(
+                    new SerializableKeyValuePairStringProperty("node-type", "group"),
+                    new FailedTestNodeStateProperty("cleanup failed")),
+            },
+            new TestNodeUid("assembly"));
+
+        TestNodeUpdateMessage? projected = _service.ProjectForClient(update);
+
+        Assert.IsNotNull(projected);
+        Assert.AreEqual(update.TestNode.Uid, projected.TestNode.Uid);
+        Assert.AreEqual(update.TestNode.DisplayName, projected.TestNode.DisplayName);
+        Assert.IsNull(projected.ParentTestNodeUid);
+        Assert.IsTrue(projected.TestNode.Properties.Any<FailedTestNodeStateProperty>());
+        Assert.AreEqual(
+            0,
+            projected.TestNode.Properties.OfType<SerializableKeyValuePairStringProperty>()
+                .Count(property => property.Key == "node-type" && property.Value == "group"));
+    }
+
+    [TestMethod]
+    public void ProjectForClient_HierarchyClient_PreservesGroupAndParent()
+    {
+        using var hierarchyService = new PerRequestServerDataConsumer(
+            _serviceProvider,
+            _serverTestHost.Object,
+            _runId,
+            _task.Object,
+            supportsTestNodeHierarchy: true);
+        TestNodeUpdateMessage update = new(
+            new SessionUid("1"),
+            new TestNode
+            {
+                Uid = new TestNodeUid("class"),
+                DisplayName = "Class",
+                Properties = new PropertyBag(
+                    new SerializableKeyValuePairStringProperty("node-type", "group"),
+                    new FailedTestNodeStateProperty("cleanup failed")),
+            },
+            new TestNodeUid("assembly"));
+
+        Assert.AreSame(update, hierarchyService.ProjectForClient(update));
+    }
+
+    [TestMethod]
+    public void PopulateTestNodeStatistics_FixtureGroup_DoesNotCountAsTest()
+    {
+        TestNodeUpdateMessage update = new(
+            new SessionUid("1"),
+            new TestNode
+            {
+                Uid = new TestNodeUid("class"),
+                DisplayName = "Class cleanup",
+                Properties = new PropertyBag(
+                    new SerializableKeyValuePairStringProperty("node-type", "group"),
+                    new FailedTestNodeStateProperty("cleanup failed")),
+            });
+
+        _service.PopulateTestNodeStatistics(update);
+
+        TestNodeStatistics statistics = _service.GetTestNodeStatistics();
+        Assert.AreEqual(0, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+        Assert.AreEqual(0, statistics.TotalPassedTests);
+    }
+
+    [TestMethod]
     public void PopulateTestNodeStatistics_WithDuplicateDiscoveredEvents()
     {
         PropertyBag properties = new(
