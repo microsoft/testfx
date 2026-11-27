@@ -320,6 +320,70 @@ public sealed class InvocationLifetimeHandlerTests : ServerModeTestsBase<Invocat
             client.ProcessOutput);
     }
 
+    [TestMethod]
+    public async Task ServerMode_PreservesPinnedDotnetRootWhenInheritedKeyHasDifferentCasing()
+    {
+        using TempDirectory temp = new();
+        string root = Path.Combine(RootFinder.Find(), ".dotnet");
+        string probeFile = Path.Combine(temp.Path, "dotnet-root.txt");
+        Dictionary<string, string?> environmentVariables = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
+        {
+            ["dotnet_root"] = root,
+            [$"DOTNET_ROOT_{System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}"] = root,
+            ["TESTFX_SERVER_DOTNET_ROOT_PROBE"] = probeFile,
+        };
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            string key = (string)entry.Key;
+            if (!WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            {
+                environmentVariables.TryAdd(key, (string?)entry.Value);
+            }
+        }
+
+        using DotnetMuxer dotnet = new(environmentVariables, mergeEnvironmentVariables: false);
+        string testName = nameof(ServerMode_RunRequestsUseFreshHandlersAndRestoreEnvironmentAroundEachRequest);
+        int exitCode = await dotnet.ExecuteAsync(
+            $"exec \"{typeof(InvocationLifetimeHandlerTests).Assembly.Location}\" --filter \"FullyQualifiedName~{testName}\" --report-trx --report-trx-filename nested.trx --results-directory \"{temp.Path}\" --ansi off --progress off",
+            cancellationToken: TestContext.CancellationToken);
+
+        string output = $"{dotnet.StandardOutput}{Environment.NewLine}{dotnet.StandardError}";
+        Assert.AreEqual(0, exitCode, output);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement[] results = [.. XDocument.Load(Path.Combine(temp.Path, "nested.trx")).Descendants(ns + "UnitTestResult")];
+        XElement result = Assert.ContainsSingle(results);
+        Assert.AreEqual(testName, (string?)result.Attribute("testName"));
+        Assert.AreEqual("Passed", (string?)result.Attribute("outcome"));
+        Assert.IsTrue(File.Exists(probeFile), output);
+        string actualRoot = File.ReadAllText(probeFile);
+        Assert.AreNotEqual("<null>", actualRoot);
+        Assert.AreEqual(Path.GetFullPath(root), Path.GetFullPath(actualRoot));
+    }
+
+    [TestMethod]
+    public async Task ServerMode_CasingRegressionDoesNotRegisterNestedReportWithOuterRetryManifest()
+    {
+        using TempDirectory temp = new();
+        string manifest = Path.Combine(temp.Path, "retry-manifest.txt");
+        string outerReport = Path.Combine(temp.Path, "outer.trx");
+        string testName = nameof(ServerMode_PreservesPinnedDotnetRootWhenInheritedKeyHasDifferentCasing);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"exec \"{typeof(InvocationLifetimeHandlerTests).Assembly.Location}\" --filter \"FullyQualifiedName~{testName}\" --report-trx --report-trx-filename outer.trx --results-directory \"{temp.Path}\" --ansi off --progress off",
+            environmentVariables: new() { ["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] = manifest },
+            warnAsError: false,
+            suppressPreviewDotNetMessage: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement[] results = [.. XDocument.Load(outerReport).Descendants(ns + "UnitTestResult")];
+        XElement testResult = Assert.ContainsSingle(results);
+        Assert.AreEqual(testName, (string?)testResult.Attribute("testName"));
+        Assert.AreEqual("Passed", (string?)testResult.Attribute("outcome"));
+        string[] paths = [.. File.ReadAllLines(manifest).Select(line => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(line.Split('\t')[0])))];
+        Assert.AreSequenceEqual([outerReport], paths);
+    }
+
     [DataRow(false)]
     [DataRow(true)]
     [TestMethod]
@@ -644,6 +708,11 @@ public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        if (Environment.GetEnvironmentVariable("TESTFX_SERVER_DOTNET_ROOT_PROBE") is string rootProbe)
+        {
+            File.WriteAllText(rootProbe, Environment.GetEnvironmentVariable("DOTNET_ROOT") ?? "<null>");
+        }
+
         // AUMID activation preserves the retry arguments, but not the owner's process environment.
         if (Environment.GetEnvironmentVariable("DROP_RETRY_OWNER_ENVIRONMENT") == "1"
             && Array.IndexOf(args, "--internal-retry-pipename") >= 0)

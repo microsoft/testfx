@@ -101,6 +101,11 @@ public static class WellKnownEnvironmentVariables
         "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER",
         "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY",
 
+        // Per-attempt state injected by the retry orchestrator of the outer repository test run
+        // (--retry-failed-tests). Nested test applications must not observe the outer attempt.
+        "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER",
+        "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST",
+
         // Affected-test selection and its per-module exit-code normalization are scoped to the outer repository
         // test invocation. Acceptance tests launch nested test applications that must run the selected scenarios
         // with their own filtering and exit-code policies.

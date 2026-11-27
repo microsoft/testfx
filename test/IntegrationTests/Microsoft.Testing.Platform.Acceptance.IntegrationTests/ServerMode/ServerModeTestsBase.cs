@@ -31,13 +31,17 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
         string? additionalArguments = null,
         string? workingDirectory = null)
     {
-        var environmentVariables = new Dictionary<string, string?>(DefaultEnvironmentVariables);
+        var environmentVariables = new Dictionary<string, string?>(
+            DefaultEnvironmentVariables,
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.
             string? key = entry.Key.ToString();
             if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
+                // The server inherits this process environment, so a null value is needed to remove the variable.
+                environmentVariables.TryAdd(key!, null);
                 continue;
             }
 
