@@ -97,6 +97,8 @@ public static class WellKnownEnvironmentVariables
 
         // dotnet test
         "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
+        // The retry attempt belongs to the outer test host, not independently launched test applications.
+        "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER",
         "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY",
 
         // Affected-test selection and its per-module exit-code normalization are scoped to the outer repository

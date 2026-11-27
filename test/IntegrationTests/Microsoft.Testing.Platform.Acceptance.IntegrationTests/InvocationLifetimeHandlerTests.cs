@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Xml.Linq;
+
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
@@ -13,6 +15,73 @@ public sealed class InvocationLifetimeHandlerTests : ServerModeTestsBase<Invocat
 {
     private const string AssetName = "InvocationLifetimeHandler";
     private const string Test = "test:{0}:value-A:value-B:no-marker:{1}";
+
+    [TestMethod]
+    public async Task NestedAcceptanceHosts_DoNotInheritOuterRetryAttempt()
+    {
+        using TempDirectory results = new();
+        string assembly = typeof(InvocationLifetimeHandlerTests).Assembly.Location;
+        string filter = $"FullyQualifiedName~{nameof(FailedTests_AreReportedToTheCleanup)}"
+            + $"|FullyQualifiedName~{nameof(DotnetCommands_RunTheHandlersOnce)}"
+            + $"|FullyQualifiedName~{nameof(Retry_RunsTheHandlersOnceAroundAllTheAttempts)}"
+            + $"|FullyQualifiedName~{nameof(ServerMode_RunRequestsUseFreshHandlersAndRestoreEnvironmentAroundEachRequest)}";
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"exec \"{assembly}\" --filter \"{filter}\" --report-trx --report-trx-filename nested.trx --results-directory \"{results.Path}\" --ansi off --progress off",
+            environmentVariables: new() { ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "4" },
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            suppressPreviewDotNetMessage: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        var report = XDocument.Load(Path.Combine(results.Path, "nested.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement[] testResults = [.. report.Descendants(ns + "UnitTestResult")];
+        string[] names = [.. testResults.Select(element => element.Attribute("testName")!.Value).OrderBy(name => name, StringComparer.Ordinal)];
+        Assert.AreSequenceEqual(
+            [
+                """DotnetCommands_RunTheHandlersOnce ("exec")""",
+                """DotnetCommands_RunTheHandlersOnce ("run")""",
+                """DotnetCommands_RunTheHandlersOnce ("test")""",
+                "FailedTests_AreReportedToTheCleanup",
+                "Retry_RunsTheHandlersOnceAroundAllTheAttempts (False,False)",
+                "Retry_RunsTheHandlersOnceAroundAllTheAttempts (False,True)",
+                "Retry_RunsTheHandlersOnceAroundAllTheAttempts (True,False)",
+                "ServerMode_RunRequestsUseFreshHandlersAndRestoreEnvironmentAroundEachRequest",
+            ],
+            names,
+            result.ToString());
+        Assert.IsTrue(testResults.All(element => (string?)element.Attribute("outcome") == "Passed"), result.ToString());
+    }
+
+    [TestMethod]
+    public async Task TestHost_ExplicitRetryAttemptIsPreserved()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string logFile = GetLogFile(testHost);
+        TestHostResult result = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LOG_FILE"] = logFile,
+                ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "4",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        string[] log = ReadLog(logFile, result.ToString());
+        string owner = GetPid(log[0]);
+        AssertLog(
+            [
+                $"starting:A:{owner}",
+                $"starting:B:{owner}",
+                string.Format(CultureInfo.InvariantCulture, Test, owner, "4"),
+                $"completed:B:{owner}:0:False",
+                $"completed:A:{owner}:0:False",
+            ],
+            log,
+            result.ToString());
+    }
 
     [TestMethod]
     [DataRow("", "true")]

@@ -115,6 +115,8 @@ public sealed class ShardingOrchestratorTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
+    [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task ShardCountOption_IsRejectedWhenFrameworkDoesNotSupportPartitioning(bool declareUnsupportedCapability)
     {
         string[] args = ["--shard-count", "2", "--no-banner"];
@@ -128,9 +130,19 @@ public sealed class ShardingOrchestratorTests
             _ => declareUnsupportedCapability ? new TestFrameworkCapabilities(new PartitioningCapability(isSupported: false)) : new TestFrameworkCapabilities(),
             (_, _) => CreateEmptyFramework());
 
-        using ITestApplication application = await builder.BuildAsync();
+        // The rejected option is expected and must not become an Azure DevOps error annotation.
+        string? originalAzdoOutput = Environment.GetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT");
+        try
+        {
+            Environment.SetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT", "off");
+            using ITestApplication application = await builder.BuildAsync();
 
-        Assert.AreEqual((int)ExitCode.InvalidCommandLine, await application.RunAsync());
+            Assert.AreEqual((int)ExitCode.InvalidCommandLine, await application.RunAsync());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT", originalAzdoOutput);
+        }
     }
 
     [TestMethod]
