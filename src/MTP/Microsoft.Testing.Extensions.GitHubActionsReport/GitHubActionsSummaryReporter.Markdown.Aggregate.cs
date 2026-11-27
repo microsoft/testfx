@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
+using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
@@ -14,9 +16,13 @@ internal sealed partial class GitHubActionsSummaryReporter
         long alreadyWrittenBytes = 0)
     {
         GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules);
+        HashSet<string> nonEmptyShardGroups = GetNonEmptyShardGroups(aggregate.Modules);
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
-            : aggregate.FailedTests > 0;
+            : aggregate.FailedTests > 0
+                || aggregate.Modules.Any(module =>
+                    GitHubActionsExitCode.IndicatesFailure(module.ExitCode)
+                    && !IsEmptyShard(module, nonEmptyShardGroups));
         string statusIcon = failed
             ? "❌"
             : aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary
@@ -115,7 +121,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             // full — so past this point a module reports only its verdict, exactly as the per-project path does.
             if (stage == SummaryStage.Condensed)
             {
-                AppendCondensedModuleLine(builder, module);
+                AppendCondensedModuleLine(builder, module, nonEmptyShardGroups);
                 condensedModules++;
                 listedModules++;
                 continue;
@@ -141,7 +147,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             // Hand this module its share, keeping whatever earlier modules left unspent.
             budget.GrantModuleShare(moduleCount - listedModules);
-            if (AppendModuleMarkdown(builder, module, headingLevel: 3, sections, includeFailureDetails, budget) > 0)
+            if (AppendModuleMarkdown(builder, module, nonEmptyShardGroups, headingLevel: 3, sections, includeFailureDetails, budget) > 0)
             {
                 modulesWithOmittedDetails++;
             }
@@ -182,11 +188,23 @@ internal sealed partial class GitHubActionsSummaryReporter
             skipped.ToString(CultureInfo.InvariantCulture),
             GitHubActionsResources.SummaryCondensed);
 
+    internal static HashSet<string> GetNonEmptyShardGroups(IReadOnlyList<CiRunSummaryModule> modules)
+        => new(
+            modules.Where(static module => module.TotalTests > 0 && !RoslynString.IsNullOrWhiteSpace(module.ShardGroupId))
+                .Select(static module => module.ShardGroupId!),
+            StringComparer.Ordinal);
+
+    internal static bool IsEmptyShard(CiRunSummaryModule module, HashSet<string> nonEmptyShardGroups)
+        => module.ShardGroupId is { } shardGroupId
+            && nonEmptyShardGroups.Contains(shardGroupId)
+            && module.TotalTests == 0
+            && module.ExitCode == (int)ExitCode.ZeroTests;
+
     /// <summary>
     /// Renders one module as a single-line verdict, for when the combined summary has grown too large to give it
     /// a section of its own.
     /// </summary>
-    private static void AppendCondensedModuleLine(StringBuilder builder, CiRunSummaryModule module)
+    private static void AppendCondensedModuleLine(StringBuilder builder, CiRunSummaryModule module, HashSet<string> nonEmptyShardGroups)
         => builder.Append(BuildCondensedLine(
             module.AssemblyName,
             module.TargetFramework,
@@ -194,5 +212,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             module.PassedTests,
             module.FailedTests,
             module.SkippedTests,
-            module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
+            module.FailedTests > 0
+                || (GitHubActionsExitCode.IndicatesFailure(module.ExitCode)
+                    && !IsEmptyShard(module, nonEmptyShardGroups))));
 }

@@ -65,6 +65,29 @@ public sealed class GitHubActionsHistoryBehaviorTests
     }
 
     [TestMethod]
+    public async Task Start_LimitsStatsToConfiguredRunAttempts()
+    {
+        using var fixture = new CiReporterFixture();
+        string path = Path.Combine(fixture.CreateRealDirectory(), "history.json");
+        GitHubActionsHistorySample oldest = Sample("oldest", 1, "failed");
+        oldest.TimestampUtc = CiReporterFixture.Epoch.AddDays(-3);
+        GitHubActionsHistorySample recent = Sample("recent", 1, "passed");
+        recent.TimestampUtc = CiReporterFixture.Epoch.AddDays(-2);
+        GitHubActionsHistorySample newest = Sample("newest", 1, "failed");
+        newest.TimestampUtc = CiReporterFixture.Epoch.AddDays(-1);
+        WriteSnapshot(path, oldest, recent, newest);
+        fixture.Options[GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns] = ["2"];
+        GitHubActionsHistoryService service = Service(fixture, path);
+
+        await service.OnTestSessionStartingAsync(new CiReporterFixture.Session());
+
+        Assert.AreEqual(2, service.HistoryWindowInRuns);
+        Assert.IsTrue(service.TryGetStats("row", "Tests.Flaky", "Flaky row", out GitHubActionsHistoryStats stats));
+        Assert.AreEqual(1, stats.PassCount);
+        Assert.AreEqual(1, stats.FailCount);
+    }
+
+    [TestMethod]
     public async Task Start_CanceledExistingSnapshotDoesNotReplacePublishedStats()
     {
         using var fixture = new CiReporterFixture();

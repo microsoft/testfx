@@ -669,6 +669,11 @@
         <target state="translated">Argumentos de línea de comandos no válidos:</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidShardCountOptionArgument">
+        <source>The '--shard-count' option requires a positive decimal Int32 value.</source>
+        <target state="new">The '--shard-count' option requires a positive decimal Int32 value.</target>
+        <note>{Locked="--shard-count"}{Locked="Int32"}</note>
+      </trans-unit>
       <trans-unit id="InvocationLifetimeCleanupFailedErrorMessage">
         <source>Invocation lifetime handler '{0}' failed after the tests ran: {1}</source>
         <target state="new">Invocation lifetime handler '{0}' failed after the tests ran: {1}</target>
@@ -896,8 +901,8 @@ Tenga en cuenta que esto ralentiza la ejecución de pruebas.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
+        <target state="translated">Habilite el registro de diagnóstico. El nivel de registro predeterminado es "Trace".
+El archivo se escribirá en el directorio de salida con el nombre log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -925,8 +930,8 @@ Si no se especifica, el archivo se generará dentro del directorio predeterminad
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
-        <target state="new">Define the level of the verbosity for the --diagnostic.
-The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
+        <target state="translated">Defina el nivel de detalle de --diagnostic.
+Los valores disponibles son 'Trace', 'Debug', 'Information', 'Warning', 'Error' y 'Critical'.</target>
         <note>{Locked="--diagnostic"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
@@ -1047,9 +1052,9 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="translated">No informe de un valor de salida no correcto para los códigos de salida especificados.
+Por ejemplo, '--ignore-exit-code 8;9' omite los códigos de salida 8 y 9 y devuelve 0 en esos casos.
+Para obtener más información sobre los códigos de salida, consulte https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -1237,6 +1242,21 @@ Los valores válidos son "allow-skipped" (valor predeterminado) que cuenta las p
         <target state="translated">Las instancias de tipo "ITestFramework" no deben registrarse mediante el proveedor de servicios, sino mediante "ITestApplicationBuilder.RegisterTestFramework".</target>
         <note>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
+      <trans-unit id="ShardCountAndPartitionAreExclusive">
+        <source>The '--shard-count' and '--partition' options cannot be used together.</source>
+        <target state="new">The '--shard-count' and '--partition' options cannot be used together.</target>
+        <note>{Locked="--shard-count"}{Locked="--partition"}</note>
+      </trans-unit>
+      <trans-unit id="ShardCountOptionDescription">
+        <source>Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</source>
+        <target state="new">Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ShardCountUnsupportedMode">
+        <source>The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</source>
+        <target state="new">The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</target>
+        <note>{Locked="--shard-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</note>
+      </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">Aún a la espera de: </target>
@@ -1394,12 +1414,12 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       </trans-unit>
       <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
         <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
-        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <target state="translated">El administrador de controladores de host de prueba de tipo "{0}" no admite el registro de consumidores de datos de controlador. Implemente "ITestHostControllerDataConsumerManager" en el tipo de administrador para admitirlo.</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">
         <source>The internal test host orchestrator chain value is invalid.</source>
-        <target state="new">The internal test host orchestrator chain value is invalid.</target>
+        <target state="translated">El valor de la cadena interna de orquestadores del host de pruebas no es válido.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
@@ -1434,22 +1454,22 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
         <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
-        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <target state="translated">Los orquestadores del host de pruebas "{0}" no pueden combinar las fases "Repetición" y "Recuperación" con el protocolo de canalización con nombre "dotnettestcli", porque un reintento en una iteración repetida puede hacer que la siguiente iteración notifique al SDK un número de intento inferior.</target>
         <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
-        <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>
+        <target state="translated">El orquestador del host de pruebas "{0}" declara el valor de fase no admitido "{1}".</target>
         <note>{0} is an orchestrator Uid. {1} is an invalid TestHostExecutionOrchestratorStage value.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustBeComposableErrorMessage">
         <source>Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</source>
-        <target state="new">Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</target>
+        <target state="translated">Los orquestadores del host de pruebas "{0}" no se pueden combinar. Cuando hay varios orquestadores habilitados, cada uno debe implementar "IComposableTestHostExecutionOrchestrator".</target>
         <note>{0} is the list of orchestrator Uids. {Locked="IComposableTestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustUseDistinctStagesErrorMessage">
         <source>Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</source>
-        <target state="new">Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</target>
+        <target state="translated">Varios orquestadores host de prueba usan el mismo '{0}' de fase: '{1}'. Solo se puede componer un orquestador por fase.</target>
         <note>{0} is a TestHostExecutionOrchestratorStage value. {1} is the list of orchestrator Uids.</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">

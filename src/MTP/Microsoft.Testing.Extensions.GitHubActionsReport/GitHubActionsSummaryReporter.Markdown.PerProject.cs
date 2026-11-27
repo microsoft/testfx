@@ -7,8 +7,11 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 internal sealed partial class GitHubActionsSummaryReporter
 {
+    private const int MaxSummaryTestLabelLength = 512;
+
     private static string BuildMarkdownCore(
         IReadOnlyList<TestRecord> records,
+        IReadOnlyList<CiRunSummaryHistoryTest> historyTests,
         string assemblyName,
         string targetFrameworkMoniker,
         int exitCode,
@@ -103,7 +106,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     "###",
                     [
                         .. failures.Select(static failure => new GitHubActionsFailureEntry(
-                        TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName),
+                        ShortenSummaryTestLabel(TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName)),
                         failure.Duration,
                         failure.Failure?.Message,
                         failure.Failure?.ExceptionType,
@@ -118,6 +121,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             }
 
             AppendFlakyTests(builder, flakyTests.Select(static test => TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName)), flaky);
+            AppendPreviousFailures(builder, historyTests);
         }
 
         if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0)
@@ -136,7 +140,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     slowestEmitted = true;
                 }
 
-                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(record.FullyQualifiedName, record.DisplayName))).Append("` — ").Append(GitHubActionsFailureDetails.FormatDuration(record.Duration)).Append('\n');
+                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(ShortenSummaryTestLabel(TestNodeIdentity.GetDisplayLabel(record.FullyQualifiedName, record.DisplayName)))).Append("` — ").Append(GitHubActionsFailureDetails.FormatDuration(record.Duration)).Append('\n');
             }
 
             if (slowestEmitted)
@@ -190,13 +194,16 @@ internal sealed partial class GitHubActionsSummaryReporter
     private static int AppendModuleMarkdown(
         StringBuilder builder,
         CiRunSummaryModule module,
+        HashSet<string> nonEmptyShardGroups,
         int headingLevel,
         GitHubActionsStepSummarySections sections,
         bool includeFailureDetails,
         SummaryBudget budget)
     {
         string heading = new('#', headingLevel);
-        bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
+        bool emptyShard = GitHubActionsSummaryReporter.IsEmptyShard(module, nonEmptyShardGroups);
+        bool runFailed = module.FailedTests > 0
+            || (GitHubActionsExitCode.IndicatesFailure(module.ExitCode) && !emptyShard);
         builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
             .Append(GitHubActionsFailureDetails.EscapeInlineCode(module.AssemblyName)).Append("\n\n");
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
@@ -219,7 +226,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         int omittedDetails = 0;
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
+            if (!emptyShard && !GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
             {
                 builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
                     .Append(GitHubActionsFailureDetails.EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
@@ -232,7 +239,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     heading + "#",
                     [
                         .. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
-                        TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName),
+                        ShortenSummaryTestLabel(TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName)),
                         TimeSpan.FromTicks(failure.DurationTicks),
                         failure.ErrorMessage,
                         failure.ErrorType,
@@ -251,6 +258,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 module.FlakyTests.Select(static test => TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName)),
                 module.FlakyTests.Length,
                 headingLevel + 1);
+            AppendPreviousFailures(builder, module.HistoryTests, headingLevel + 1);
         }
 
         if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0
@@ -259,7 +267,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)
             {
-                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName))).Append("` — ")
+                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(ShortenSummaryTestLabel(TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName)))).Append("` — ")
                     .Append(GitHubActionsFailureDetails.FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
             }
 
@@ -284,7 +292,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             .Append(count.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
         foreach (string testName in testNames.Take(MaxListedFlakyTests))
         {
-            builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(testName)).Append("`\n");
+            builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(ShortenSummaryTestLabel(testName))).Append("`\n");
         }
 
         if (count > MaxListedFlakyTests)
@@ -295,5 +303,78 @@ internal sealed partial class GitHubActionsSummaryReporter
         }
 
         builder.Append('\n');
+    }
+
+    private static void AppendPreviousFailures(
+        StringBuilder builder,
+        IReadOnlyList<CiRunSummaryHistoryTest> historyTests,
+        int headingLevel = 3)
+    {
+        CiRunSummaryHistoryTest[] passingTests =
+        [
+            .. historyTests
+                .Where(static test => test.Outcome == GitHubActionsHistoryOutcome.Passed && test.HistoricalFailCount > 0)
+                .OrderBy(static test => test.FullyQualifiedName, StringComparer.Ordinal)
+                .ThenBy(static test => test.DisplayName, StringComparer.Ordinal)
+                .ThenBy(static test => test.TestId, StringComparer.Ordinal),
+        ];
+        if (passingTests.Length == 0)
+        {
+            return;
+        }
+
+        builder.Append(new string('#', headingLevel)).Append(" Passing tests with previous failures (")
+            .Append(passingTests.Length.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
+        foreach (CiRunSummaryHistoryTest test in passingTests.Take(MaxListedFlakyTests))
+        {
+            string label = ShortenSummaryTestLabel(TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName));
+            builder.Append("- `")
+                .Append(GitHubActionsFailureDetails.EscapeInlineCode(label))
+                .Append("` — prior attempts: ")
+                .Append(test.HistoricalPassCount.ToString(CultureInfo.InvariantCulture))
+                .Append(" passed, ")
+                .Append(test.HistoricalFailCount.ToString(CultureInfo.InvariantCulture))
+                .Append(" failed\n");
+        }
+
+        if (passingTests.Length > MaxListedFlakyTests)
+        {
+            builder.Append("- … and ")
+                .Append((passingTests.Length - MaxListedFlakyTests).ToString(CultureInfo.InvariantCulture))
+                .Append(" more\n");
+        }
+
+        builder.Append('\n');
+    }
+
+    private static string ShortenSummaryTestLabel(string label)
+    {
+        if (label.Length <= MaxSummaryTestLabelLength)
+        {
+            return label;
+        }
+
+        // Distinguish labels that differ only in the omitted middle.
+        const ulong fnvPrime = 1099511628211UL;
+        ulong fingerprint = 14695981039346656037UL;
+        foreach (char character in label)
+        {
+            fingerprint = unchecked((fingerprint ^ character) * fnvPrime);
+        }
+
+        string omission = $"…{fingerprint.ToString("x16", CultureInfo.InvariantCulture)}…";
+        int prefixLength = (MaxSummaryTestLabelLength - omission.Length) / 2;
+        int suffixStart = label.Length - (MaxSummaryTestLabelLength - omission.Length - prefixLength);
+        if (char.IsHighSurrogate(label[prefixLength - 1]) && char.IsLowSurrogate(label[prefixLength]))
+        {
+            prefixLength--;
+        }
+
+        if (char.IsHighSurrogate(label[suffixStart - 1]) && char.IsLowSurrogate(label[suffixStart]))
+        {
+            suffixStart++;
+        }
+
+        return label.Substring(0, prefixLength) + omission + label.Substring(suffixStart);
     }
 }

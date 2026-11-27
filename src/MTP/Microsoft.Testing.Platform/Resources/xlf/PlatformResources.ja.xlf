@@ -669,6 +669,11 @@
         <target state="translated">コマンド ラインの引数が無効です:</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidShardCountOptionArgument">
+        <source>The '--shard-count' option requires a positive decimal Int32 value.</source>
+        <target state="new">The '--shard-count' option requires a positive decimal Int32 value.</target>
+        <note>{Locked="--shard-count"}{Locked="Int32"}</note>
+      </trans-unit>
       <trans-unit id="InvocationLifetimeCleanupFailedErrorMessage">
         <source>Invocation lifetime handler '{0}' failed after the tests ran: {1}</source>
         <target state="new">Invocation lifetime handler '{0}' failed after the tests ran: {1}</target>
@@ -1237,6 +1242,21 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
         <target state="translated">'ITestFramework' 型のインスタンスは、サービス プロバイダーを介して登録することはできません。'ITestApplicationBuilder.RegisterTestFramework' を介して登録する必要があります</target>
         <note>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
+      <trans-unit id="ShardCountAndPartitionAreExclusive">
+        <source>The '--shard-count' and '--partition' options cannot be used together.</source>
+        <target state="new">The '--shard-count' and '--partition' options cannot be used together.</target>
+        <note>{Locked="--shard-count"}{Locked="--partition"}</note>
+      </trans-unit>
+      <trans-unit id="ShardCountOptionDescription">
+        <source>Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</source>
+        <target state="new">Split the tests into the specified number of shards and run each shard in a separate local process, keeping test classes and dependencies together.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ShardCountUnsupportedMode">
+        <source>The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</source>
+        <target state="new">The '--shard-count' option requires .NET 10 or later and local process execution without hot reload, a custom test-host launcher, JSON-RPC server mode, WebAssembly, iOS, or tvOS.</target>
+        <note>{Locked="--shard-count"}{Locked="JSON-RPC"}{Locked="WebAssembly"}</note>
+      </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">まだ次の完了を待機中:</target>
@@ -1394,12 +1414,12 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
         <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
-        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <target state="translated">種類 '{0}' のテスト ホスト コントローラー マネージャーは、コントローラー データ コンシューマー登録をサポートしていません。マネージャーの種類に 'ITestHostControllerDataConsumerManager' を実装してサポートします。</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorChainIsInvalidErrorMessage">
         <source>The internal test host orchestrator chain value is invalid.</source>
-        <target state="new">The internal test host orchestrator chain value is invalid.</target>
+        <target state="translated">内部テスト ホスト オーケストレーター チェーンの値が無効です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
@@ -1434,22 +1454,22 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorRepetitionAndRecoveryUnsupportedOnDotnetTestPipeErrorMessage">
         <source>Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</source>
-        <target state="new">Test host orchestrators '{0}' cannot compose the 'Repetition' and 'Recovery' stages under the 'dotnettestcli' named-pipe protocol because a retry in one repeated iteration can make the next iteration report a lower attempt number to the SDK.</target>
+        <target state="translated">テスト ホスト オーケストレーター '{0}' では、'dotnettestcli' 名前付きパイプ プロトコルで '繰り返し' ステージと '回復' ステージを構成することはできません。繰り返された 1 回の反復で再試行があると、次の反復で SDK に報告される試行回数が少なくなる可能性があるためです。</target>
         <note>{0} is the list of orchestrator Uids. {Locked="dotnettestcli"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorStageIsInvalidErrorMessage">
         <source>Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</source>
-        <target state="new">Test host orchestrator '{0}' declares an unsupported stage value '{1}'.</target>
+        <target state="translated">テスト ホスト オーケストレーター '{0}' は、サポートされていないステージ値 '{1}' を宣言しています。</target>
         <note>{0} is an orchestrator Uid. {1} is an invalid TestHostExecutionOrchestratorStage value.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustBeComposableErrorMessage">
         <source>Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</source>
-        <target state="new">Test host orchestrator(s) '{0}' cannot be composed. When multiple orchestrators are enabled, each must implement 'IComposableTestHostExecutionOrchestrator'.</target>
+        <target state="translated">テスト ホスト オーケストレーター '{0}' を構成できません。複数のオーケストレーターを有効にする場合は、それぞれが 'IComposableTestHostExecutionOrchestrator' を実装する必要があります。</target>
         <note>{0} is the list of orchestrator Uids. {Locked="IComposableTestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorsMustUseDistinctStagesErrorMessage">
         <source>Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</source>
-        <target state="new">Multiple test host orchestrators use the same stage '{0}': '{1}'. Only one orchestrator per stage can be composed.</target>
+        <target state="translated">複数のテスト ホスト オーケストレーターが同じステージ '{0}' を使用しています: '{1}'。1 つのステージにつき 1 つのオーケストレーターのみを構成できます。</target>
         <note>{0} is a TestHostExecutionOrchestratorStage value. {1} is the list of orchestrator Uids.</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">

@@ -39,15 +39,19 @@ public sealed class CommandLineHandlerTests
 
         await handler.PrintInfoAsync(device, null, TestContext.CancellationToken);
 
+        Assert.AreSequenceEqual(
+            [
+                "Built-in command line providers:",
+                "  There are no built-in command line providers.",
+                "Registered command line providers:",
+                "  There are no registered command line providers.",
+                "Registered tools:",
+                "  There are no registered tools.",
+            ],
+            output.Skip(output.IndexOf("Built-in command line providers:")).Where(text => text.Length > 0));
         Assert.AreEqual("Microsoft Testing Platform:", output[0]);
         Assert.Contains("  Dynamic Code Supported: False", output);
         Assert.Contains("  Test module: sample-module", output);
-        Assert.Contains("Built-in command line providers:", output);
-        Assert.Contains("  There are no built-in command line providers.", output);
-        Assert.Contains("Registered command line providers:", output);
-        Assert.Contains("  There are no registered command line providers.", output);
-        Assert.Contains("Registered tools:", output);
-        Assert.Contains("  There are no registered tools.", output);
         Assert.IsFalse(await handler.IsEnabledAsync());
         Assert.AreEqual(string.Empty, handler.DisplayName);
         Assert.AreEqual(string.Empty, handler.Description);
@@ -99,13 +103,15 @@ public sealed class CommandLineHandlerTests
         Assert.Contains("    Version: 1.2.3", output);
         Assert.Contains("    Description: provider description", output);
         Assert.AreSequenceEqual(
-            ["      --A-first", "      --z-hidden", "      --middle"],
-            output.Where(text => text.StartsWith("      --", StringComparison.Ordinal)));
-        Assert.Contains("        Arity: 0..N", output);
-        Assert.Contains("        Arity: 1", output);
-        Assert.Contains("        Arity: 1..2", output);
-        Assert.Contains("        Hidden: True", output);
-        Assert.Contains("        Description: hidden description", output);
+            [
+                "      --A-first", "        Arity: 0..N", "        Hidden: False", "        Description: first description",
+                "      --z-hidden", "        Arity: 1", "        Hidden: True", "        Description: hidden description",
+                "      --middle", "        Arity: 1..2", "        Hidden: False", "        Description: middle description",
+            ],
+            output.Where(text => text.StartsWith("      --", StringComparison.Ordinal)
+                || text.StartsWith("        Arity:", StringComparison.Ordinal)
+                || text.StartsWith("        Hidden:", StringComparison.Ordinal)
+                || text.StartsWith("        Description:", StringComparison.Ordinal)));
     }
 
     [TestMethod]

@@ -56,7 +56,7 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         });
     }
 
-    private static bool IsOrHasTypeParameter(ITypeSymbol type, ITypeParameterSymbol typeParameter)
+    internal static bool IsOrHasTypeParameter(ITypeSymbol type, ITypeParameterSymbol typeParameter)
     {
         if (SymbolEqualityComparer.Default.Equals(type, typeParameter))
         {
@@ -86,7 +86,7 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testMethodAttributeSymbol)))
+        if (!methodSymbol.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testMethodAttributeSymbol)))
         {
             return;
         }

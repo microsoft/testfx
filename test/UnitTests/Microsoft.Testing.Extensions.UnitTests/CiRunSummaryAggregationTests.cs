@@ -1112,7 +1112,9 @@ public sealed class CiRunSummaryAggregationTests
             context: new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
 
         Assert.IsNotNull(summary);
-        Assert.Contains("⚠️ Overall Test Run Summary", summary);
+        Assert.Contains("❌ Overall Test Run Summary", summary);
+        Assert.Contains("### ❌ Tests", summary);
+        Assert.Contains("`8` (ZeroTests)", summary);
     }
 
     [TestMethod]

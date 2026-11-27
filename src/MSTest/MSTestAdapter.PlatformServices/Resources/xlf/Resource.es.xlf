@@ -123,7 +123,7 @@ pero recibió {4} argumento(s), con tipos '{5}'.</target>
       </trans-unit>
       <trans-unit id="DependencyConfigurationNodeWithoutTest">
         <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
-        <target state="new">The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</target>
+        <target state="translated">El nodo de dependencia en el índice {0} de la sección de configuración "mstest:execution:dependencies:nodes" no tiene ningún valor 'test' y se omite.</target>
         <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">
@@ -352,6 +352,16 @@ pero recibió {4} argumento(s), con tipos '{5}'.</target>
         <source>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</source>
         <target state="translated">Hay una versión anterior del paquete MSTestV2 cargada en el ensamblado. Es posible que la detección de pruebas no detecte todas las pruebas de datos si dependen del archivo ".runsettings".</target>
         <note>{Locked="MSTestV2"}{Locked=".runsettings"}</note>
+      </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesNotSupported">
+        <source>'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</source>
+        <target state="new">'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</target>
+        <note>{Locked="PreloadReferencedAssemblies"}</note>
+      </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesSummary">
+        <source>Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</source>
+        <target state="new">Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</target>
+        <note>{0} is the number of assemblies that were loaded. {1} is the number of referenced assemblies that could not be loaded.</note>
       </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>

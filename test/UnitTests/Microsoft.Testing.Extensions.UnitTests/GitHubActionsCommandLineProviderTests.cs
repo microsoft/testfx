@@ -23,6 +23,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsFailureDetails)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistory)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAttachments, DisplayName = "Attachments require report-gh")]
@@ -196,6 +197,34 @@ public sealed class GitHubActionsCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenHistoryRunWindowHasNoHistoryPathAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            [GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns] = ["7"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(GitHubActionsResources.HistoryWindowRunsRequiresHistory, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenHistoryRunWindowHasHistoryPathAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            [GitHubActionsCommandLineOptions.GitHubActionsHistory] = ["history.json"],
+            [GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns] = ["7"],
+        })).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("0")]
     [DataRow("91")]
     [DataRow("1.5")]
@@ -257,6 +286,37 @@ public sealed class GitHubActionsCommandLineProviderTests
     {
         GitHubActionsCommandLineProvider provider = new();
         CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("1001")]
+    [DataRow("1.5")]
+    [DataRow("-1")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenHistoryRunWindowIsOutOfRangeAsync(string value)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(
+            item => item.Name == GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidHistoryWindowRuns, value),
+            validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("1000")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_WhenHistoryRunWindowIsInRangeAsync(string value)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(
+            item => item.Name == GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns);
         ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
 
         Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);

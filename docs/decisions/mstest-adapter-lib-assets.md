@@ -1327,7 +1327,7 @@ Assumptions, not confirmed by the maintainer:
 | Package | Ordinary assets | UI payload (not in `lib`) | Selected by |
 | --- | --- | --- | --- |
 | `MSTest.TestFramework` | `lib/{net462,netstandard2.0,net10.0,net11.0,uap10.0.16299}` | `buildTransitive/net10.0/{uwp,winui}/` (`MSTest.Uwp.dll`, `MSTest.WinUI.dll` with xml, pri and WinUI satellites) | Modern UI projects get compile and runtime assets according to the resolved core framework assets. For classic UWP, NuGet selects `lib/uap10.0.16299` directly. |
-| `MSTest.TestAdapter` | `lib/{net462,net10.0,net11.0}` | `buildTransitive/net10.0/ui/` (UI adapter and platform services); `buildTransitive/uap10.0/` (classic UWP adapter, platform services and `_localization` satellites) | `_MSTestComputeUIAdapterSelection` decides; `_MSTestSelectUIAdapterAssets` then swaps the resolved `lib/net10.0` adapter DLLs for the `ui/` build in place after `ResolvePackageAssets` (and the publish equivalent); classic UWP references the `uap10.0` payload directly |
+| `MSTest.TestAdapter` | `lib/{net462,net10.0,net11.0,uap10.0.16299}` | `buildTransitive/net10.0/` (UI adapter and platform services) | `_MSTestComputeUIAdapterSelection` decides; `_MSTestSelectUIAdapterAssets` then swaps the resolved `lib/net10.0` adapter DLLs for the `buildTransitive/net10.0` build in place after `ResolvePackageAssets` (and the publish equivalent); for classic UWP, NuGet selects `lib/uap10.0.16299` directly (see [classic UWP lib layout](#classic-uwp-adapter-in-lib-and-flat-ui-payload)) |
 
 Classic UWP has a distinct TFM. Its `lib` group includes `MSTest.Uwp` alongside
 the same core framework, type forwarders and satellites as `lib/netstandard2.0`:
@@ -1648,3 +1648,156 @@ the relevant demonstration. Explicit French was tested through packed
 build/publish probes, not an additional native activation case. Linux/Bazel
 packs and unrelated application-model cases were not rerun. These local
 results do not replace fresh blocking CI checks on the published head.
+
+## Classic UWP adapter in lib and flat UI payload
+
+Date: 2026-11-24
+
+### Request
+
+The maintainer asked to drop the `ui` subfolder from the net10 Windows UI
+adapter payload, and to ship the classic UWP adapter directly from `lib`
+because `uap10.0` is a real NuGet TFM.
+
+### Decision
+
+- The Windows-specific UWP/WinUI adapter build moves from
+  `buildTransitive/net10.0/ui/` to `buildTransitive/net10.0/`. The
+  portable net10 adapter stays in `lib/net10.0`, so these two builds do not
+  collide. `buildTransitive/common/MSTest.TestAdapter.targets` selects the
+  flat path through `_MSTestUIAdapterRoot`.
+- The classic UWP adapter DLLs and satellites move from the
+  `buildTransitive/uap10.0` payload to `lib/uap10.0.16299/`, matching
+  `MSTest.TestFramework`. Only the props, targets and `Parallelize.targets`
+  remain under `buildTransitive/uap10.0/`.
+- The UWP targets drop their explicit `Reference`/`HintPath` items. The
+  `_AddMSTestUwpRuntimeDependencies` AppX `Content` items still deploy the
+  adapter DLLs, because SDK-style classic UWP projects do not copy NuGet
+  runtime assets into the AppX layout. Satellite globs read
+  `lib/uap10.0.16299/<culture>/`, so the existing culture policy is
+  unchanged.
+
+### Consequences
+
+- NuGet now produces a `uap10.0.16299` `<references>` group with
+  `MSTest.TestAdapter.dll` and `MSTestAdapter.PlatformServices.dll`. Classic
+  UWP projects therefore get a compile reference to the adapter, as net462
+  and net10 consumers already do. Adapter types are mostly internal, so this
+  was accepted for consistency. Previously the adapter used a
+  `Private=false` reference with no compile surface.
+- Alternative considered: keep the classic UWP DLLs in a `buildTransitive`
+  payload or keep satellites under `_localization`. It was rejected because
+  it keeps a parallel, nonstandard asset location for a TFM that NuGet
+  already understands.
+
+### Validation
+
+- `.\build.cmd -pack` and `.\eng\verify-nupkgs.ps1 -configuration Debug
+  -updateBaselines`: only `eng/package-shapes/MSTest.TestAdapter.txt`
+  changed.
+- MSTest acceptance tests run with `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1`:
+  `WindowsApplicationModelPackageTests`, `CoreFrameworkAssemblyTests`,
+  `ClassicUwpTests` and `SdkTests` (including the classic UWP, Modern UWP
+  and WinUI composition and satellite cases): 191 passed, 0 failed, including
+  end-to-end classic UWP MTP runs for the `MSTest`, `MSTest.Sdk` and
+  `MSTest.TestAdapter` consumers and classic UWP satellite filtering.
+- MTP `PackagedWinUITests` built the WinUI consumers against the flat
+  payload but could not run locally: the native cases need
+  `TESTFX_DOTNET_10_PATH`, and the controller cases failed to load
+  `Microsoft.CodeCoverage.Instrumentation.Core` from the unchanged
+  `Microsoft.Testing.Extensions.PackagedApp.MSBuild` controller layout.
+  CI must cover them.
+
+### Gap
+
+Non-SDK (`packages.config`) classic UWP projects were not exercised. They
+may receive adapter satellites from both NuGet and the culture-policy
+`Content` items.
+
+### Non-SDK review follow-up
+
+A non-SDK MSBuild probe using the packed UWP adapter confirmed that
+`IsTestApplication=false` leaves both adapter DLLs in
+`ReferenceCopyLocalPaths`. The classic UWP targets did not import the existing
+non-SDK asset policy. The proposed correction shares that policy with classic
+UWP and avoids adding adapter `Content` for non-SDK projects, which already
+copy resolved references. It also retains the old explicit-reference behavior
+for upgraded `packages.config` projects, which do not automatically acquire
+new `lib` references. A synthetic probe is not proof of an AppX layout; real
+non-SDK UWP packaging and satellite behavior still require verification.
+
+The four `ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets` cases were
+independently discovered with `--list-tests` and then run with
+`--filter 'FullyQualifiedName~ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets'
+--report-trx`. The current package passed all four; the identical acceptance
+host and tests against an isolated **reconstructed** pre-fix package failed all
+four at the asset assertions (no skips). The failures included unfiltered
+satellites, adapter content duplicated with copy-local items, and missing
+adapter references for the simulated upgrade. The tested shipping package's
+SHA-256 was
+`C4AECB8312D3D9A8D366D943A3574D3D0B4C6CEDE78D18D0E8427D4F08B930C0`;
+the reconstructed control's was
+`E8B0224E4504B1695CD3FA4088A8DE3AA49753CBB4038ADD9250E490B68B18B0`.
+The broader focused acceptance run passed 32 tests with no skips.
+
+```powershell
+# Green: from the repository root, with the repo-local SDK on PATH.
+artifacts\bin\MSTest.Acceptance.IntegrationTests\Debug\net12.0\MSTest.Acceptance.IntegrationTests.exe `
+  --filter 'FullyQualifiedName~ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets' `
+  --report-trx --results-directory artifacts\TestResults\uwp-policy-green3
+# Exit 0: 4 passed, 0 failed, 0 skipped.
+
+# Red: $red is the isolated session files\uwp-policy-red directory.
+& "$red\artifacts\bin\MSTest.Acceptance.IntegrationTests\Debug\net12.0\MSTest.Acceptance.IntegrationTests.exe" `
+  --filter 'FullyQualifiedName~ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets' `
+  --report-trx --results-directory "$red\results3"
+# Exit 2: 0 passed, 4 failed at asset assertions, 0 skipped.
+```
+
+A separate non-SDK UWP `PackageReference` app restored that exact shipping
+package into an isolated cache and successfully produced an unsigned native
+x64 MSIX with Visual Studio MSBuild and `SatelliteResourceLanguages=fr`.
+Its real resolved copy-local items contained both adapter DLLs and only their
+two French satellites, with no adapter `Content` items. Separate
+`PrepareForBuild;ResolveReferences` runs confirmed that disabling resource
+copy leaves only the two main adapter DLLs, and `IsTestApplication=false`
+leaves no adapter items. These are build and item-policy checks, not a test
+run inside the packaged app. The generated native MSIX contains the compiled
+app rather than standalone adapter DLLs; it does not prove runtime satellite
+loading. A non-native packaging attempt stopped at the Windows SDK's
+framework-injection check. A real `packages.config` AppX upgrade and its
+VSTest satellite-duplication behavior remain unverified.
+
+```powershell
+# $probe is the session files\uwp-nonsdk-appx directory;
+# $msbuild is the Visual Studio 18 Insiders MSBuild.exe.
+& $msbuild "$probe\PolicyApp.csproj" /restore /p:Configuration=Debug `
+  /p:Platform=x64 /p:PlatformTarget=x64 /p:UseDotNetNativeToolchain=true `
+  /p:SatelliteResourceLanguages=fr /p:GenerateAppxPackageOnBuild=true `
+  /bl:"$probe\build6.binlog" /v:minimal
+# Exit 0; native compilation emitted missing-assembly and runtime-directives warnings.
+```
+
+### Native Bazel package follow-up
+
+The shared non-SDK policy introduced a required import in the portable
+`buildTransitive` targets. The experimental native Bazel package has its own
+file mapping and must ship the same helper beside those targets for each
+portable TFM. Leaving it out breaks consumer evaluation; making the import
+optional would silently omit the policy. The native package validator checks
+the helper in each package framework alongside the existing target files.
+
+At source revision `b590f31afcd74a184aa95bac7f2c7cd69f6cf43d`, with only
+the new validator assertion applied,
+`pwsh -NoLogo -NoProfile -File .\eng\bazel\validate-mstest-packages.ps1
+-OutputRoot artifacts\bazel-mstest-review-red` built the native package
+closure but exited 1 on the intended missing
+`buildTransitive/net10.0/MSTest.TestAdapter.AssetPolicy.targets` entry.
+With the file mapping added, the identical validator using
+`-OutputRoot artifacts\bazel-mstest-review-green` exited 0. It verified the
+helper for net10.0 and net11.0, then published and ran both real package
+consumers: each passed all three named cases, exercised the intended failure
+and empty-result exits, and the net11 MSBuild driver passed the same three
+cases and its intentional failure check. The green native adapter package
+SHA-256 was
+`58B210FD0D79002CA74CBB3176D7F6F96D5DF509569A872F8F05ED351E599C80`.

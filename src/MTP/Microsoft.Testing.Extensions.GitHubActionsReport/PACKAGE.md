@@ -57,6 +57,7 @@ The extension activates when the test run is on GitHub Actions (`GITHUB_ACTIONS=
 | `--report-gh-failure-details on\|off` | Expand each failed test in the job summary into a collapsible section carrying its failure message, exception type, source location and stack trace | on |
 | `--report-gh-history <path>` | Read and update the test history snapshot at the specified local path | off |
 | `--report-gh-history-window <days>` | Retain and use 1–90 days of history | 30 |
+| `--report-gh-history-window-runs <count>` | Limit flaky-test context to the most recent 1–1,000 run attempts within the day-based history window | all retained attempts |
 | `--report-gh-slow-test-notices on\|off` | Slow-test notices | on |
 | `--report-gh-slow-test-threshold <duration>` | Time before a slow-test notice is emitted; accepts a bare number of seconds or a unit suffix such as `90s`, `2m`, `1.5h` | 60s |
 
@@ -187,7 +188,13 @@ a complete manifest.
 
 The extension intentionally reads and writes only a local snapshot. The workflow owns GitHub authentication and artifact transfer. This keeps `GITHUB_TOKEN` out of the test process and allows pull request runs to consume history without granting them write access. Snapshots retain at most 1,000 samples per test and the latest 10,000 samples overall, in addition to the configured age window.
 
-The following steps restore the newest default-branch snapshot, run tests, and publish the updated snapshot only from the default branch:
+The following steps restore the newest default-branch snapshot, run tests, and publish the updated snapshot only from the default branch. The cumulative snapshot makes a separate artifact lookup for each historical run unnecessary. Set `--report-gh-history-window-runs <count>` to limit context to the latest run attempts for each test while retaining the day window as an age bound. A GitHub Actions rerun attempt is counted separately.
+
+When a test passes but previously failed within the configured history window, the `test-results` job-summary section lists it with its prior passed and failed attempt counts. Skipped attempts are excluded from those counts. This historical context does not change the test result or the retry-recovered flaky count; a fixed test can also have previous failures. No history is available before snapshots were first retained. Existing schema-1 snapshots, including those written by version 2.5.3, can be reused.
+
+In an aggregated multi-module run, older reporters do not provide the passing-test history details needed for this section. Upgrade each module's reporter to MTP 3 to include its passing tests with previous failures.
+
+This example assumes one history-writing job per workflow run. Do not copy its fixed artifact name unchanged into a matrix: jobs in the same run cannot upload separate artifacts under the same name. For a matrix, give each stable matrix partition its own history artifact name (for example, `mtp-test-history-${{ matrix.os }}-${{ matrix.framework }}` when those are the matrix dimensions) and use that same name in the artifact API lookup, restore, and upload. The workflow-level concurrency group shown here serializes whole workflow runs; for independent matrix histories, move concurrency to the publishing job and include the same partition key in its group so only writers for that history stream serialize. Each partition then retains its own history; this does not merge history across matrix legs. A combined suite history needs a single writer that deliberately merges the snapshots.
 
 ```yaml
 permissions:

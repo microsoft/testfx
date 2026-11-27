@@ -19,6 +19,8 @@ internal interface IGitHubActionsHistoryService
 
     int HistoryWindowInDays { get; }
 
+    int? HistoryWindowInRuns { get; }
+
     bool TryGetStats(
         string testId,
         string fullyQualifiedName,
@@ -37,6 +39,8 @@ internal sealed class DisabledGitHubActionsHistoryService : IGitHubActionsHistor
     public string? HistoryPath => null;
 
     public int HistoryWindowInDays => 0;
+
+    public int? HistoryWindowInRuns => null;
 
     public bool TryGetStats(
         string testId,
@@ -89,6 +93,7 @@ internal sealed class GitHubActionsHistoryService :
             && hasHistoryPath;
         HistoryPath = IsEnabled ? Path.GetFullPath(pathArguments![0]) : null;
         HistoryWindowInDays = GetHistoryWindowInDays(commandLine);
+        HistoryWindowInRuns = GetHistoryWindowInRuns(commandLine);
     }
 
     public bool IsEnabled { get; }
@@ -96,6 +101,8 @@ internal sealed class GitHubActionsHistoryService :
     public string? HistoryPath { get; }
 
     public int HistoryWindowInDays { get; }
+
+    public int? HistoryWindowInRuns { get; }
 
     public string Uid => nameof(GitHubActionsHistoryService);
 
@@ -132,7 +139,7 @@ internal sealed class GitHubActionsHistoryService :
                 ];
             }
 
-            Volatile.Write(ref _statsByTest, GitHubActionsHistoryStore.AggregateStats(snapshot, _scope));
+            Volatile.Write(ref _statsByTest, GitHubActionsHistoryStore.AggregateStats(snapshot, _scope, HistoryWindowInRuns));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -251,4 +258,13 @@ internal sealed class GitHubActionsHistoryService :
             && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int windowInDays)
                 ? windowInDays
                 : GitHubActionsCommandLineOptions.HistoryWindowDefaultDays;
+
+    private static int? GetHistoryWindowInRuns(ICommandLineOptions commandLine)
+        => commandLine.TryGetOptionArgumentList(
+                GitHubActionsCommandLineOptions.GitHubActionsHistoryWindowRuns,
+                out string[]? arguments)
+            && arguments is [string value]
+            && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int windowInRuns)
+                ? windowInRuns
+                : null;
 }

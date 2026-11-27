@@ -528,6 +528,183 @@ public sealed class IPCTests
         environment.Verify(e => e.Exit(1), primary ? Times.Once() : Times.Never());
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public async Task Client_CancelledWaitingRequestDoesNotPreventLaterRequests()
+    {
+        PipeNameDescription name = NamedPipeServer.GetPipeName("queued-request-" + Guid.NewGuid().ToString("N"));
+        TaskCompletionSource<bool> received = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        List<int> values = [];
+        NamedPipeServer server = new(
+            name,
+            async request =>
+            {
+                int value = ((IntMessage)request).Integer;
+                values.Add(value);
+                if (value == 42)
+                {
+                    received.TrySetResult(true);
+                    await release.Task;
+                }
+
+                return VoidResponse.CachedInstance;
+            },
+            new SystemEnvironment(),
+            Mock.Of<ILogger>(),
+            new SystemTask(),
+            _testContext.CancellationToken);
+        server.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        using NamedPipeClient client = new(name.Name, Mock.Of<IEnvironment>(), exitProcessOnConnectionLoss: false);
+        client.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        using CancellationTokenSource queuedCancellation = new();
+        Task<VoidResponse>? first = null;
+        try
+        {
+            Task accepted = server.WaitConnectionAsync(_testContext.CancellationToken);
+            await client.ConnectAsync(_testContext.CancellationToken);
+            await accepted;
+            first = client.RequestReplyAsync<IntMessage, VoidResponse>(new(42), _testContext.CancellationToken);
+            await received.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            Task<VoidResponse> queued = client.RequestReplyAsync<IntMessage, VoidResponse>(new(43), queuedCancellation.Token);
+            queuedCancellation.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(() => queued.TimeoutAfterAsync(TimeSpan.FromSeconds(5)));
+            release.TrySetResult(true);
+            await first.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            await client.RequestReplyAsync<IntMessage, VoidResponse>(new(44), _testContext.CancellationToken)
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            Assert.AreSequenceEqual(new[] { 42, 44 }, values);
+        }
+        finally
+        {
+            release.TrySetResult(true);
+            try
+            {
+                if (first is not null)
+                {
+                    await first.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                }
+            }
+            finally
+            {
+                client.Dispose();
+                await server.DisposeAsync();
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task Client_CancelledInFlightRequestDoesNotReusePipeForAnotherRequest()
+    {
+        string name = NamedPipeServer.GetPipeName("cancelled-request-" + Guid.NewGuid().ToString("N")).Name;
+        using System.IO.Pipes.NamedPipeServerStream peer = new(
+            name, System.IO.Pipes.PipeDirection.InOut, 1, System.IO.Pipes.PipeTransmissionMode.Byte, System.IO.Pipes.PipeOptions.Asynchronous);
+        using NamedPipeClient client = new(name, Mock.Of<IEnvironment>(), exitProcessOnConnectionLoss: false);
+        client.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        VoidResponseSerializer responseSerializer = new();
+        client.RegisterSerializer(responseSerializer, typeof(VoidResponse));
+        using CancellationTokenSource requestCancellation = new();
+        Task accepted = peer.WaitForConnectionAsync(_testContext.CancellationToken);
+        await client.ConnectAsync(_testContext.CancellationToken);
+        await accepted;
+        Task<VoidResponse> first = Task.Run(
+            () => client.RequestReplyAsync<IntMessage, VoidResponse>(new(42), requestCancellation.Token),
+            CancellationToken.None);
+        Task<VoidResponse>? second = null;
+        Task? lateReplyWrite = null;
+        using CancellationTokenSource replyCancellation = new();
+        try
+        {
+            byte[] frame = new byte[12];
+            int offset = 0;
+            while (offset < frame.Length)
+            {
+                int read = await peer.ReadAsync(frame, offset, frame.Length - offset, _testContext.CancellationToken);
+                Assert.IsGreaterThan(0, read);
+                offset += read;
+            }
+
+            byte[] expectedFrame = [.. BitConverter.GetBytes(8), .. BitConverter.GetBytes(3), .. BitConverter.GetBytes(42)];
+            Assert.AreSequenceEqual(expectedFrame, frame);
+            requestCancellation.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(() => first.TimeoutAfterAsync(TimeSpan.FromSeconds(5)));
+            byte[] lateReply = [.. BitConverter.GetBytes(sizeof(int)), .. BitConverter.GetBytes(responseSerializer.Id)];
+            lateReplyWrite = Task.Run(() => peer.WriteAsync(lateReply, 0, lateReply.Length, replyCancellation.Token), CancellationToken.None);
+            second = Task.Run(
+                () => client.RequestReplyAsync<IntMessage, VoidResponse>(new(43), _testContext.CancellationToken),
+                CancellationToken.None);
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => second.TimeoutAfterAsync(TimeSpan.FromSeconds(5)));
+        }
+        finally
+        {
+            requestCancellation.Cancel();
+            replyCancellation.Cancel();
+            peer.Dispose();
+            if (lateReplyWrite is not null)
+            {
+                try
+                {
+                    await lateReplyWrite.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                }
+                catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException)
+                {
+                }
+            }
+
+            if (second is not null)
+            {
+                try
+                {
+                    await second.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                }
+                catch (Exception ex) when (ex is IOException or InvalidOperationException or OperationCanceledException)
+                {
+                }
+            }
+
+            if (!first.IsCompleted)
+            {
+                await Assert.ThrowsAsync<Exception>(() => first.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout));
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task Client_CancellationDoesNotWaitForPeerToDrainRequest()
+    {
+        string name = NamedPipeServer.GetPipeName("undrained-request-" + Guid.NewGuid().ToString("N")).Name;
+        using System.IO.Pipes.NamedPipeServerStream peer = new(
+            name, System.IO.Pipes.PipeDirection.InOut, 1, System.IO.Pipes.PipeTransmissionMode.Byte, System.IO.Pipes.PipeOptions.Asynchronous);
+        using NamedPipeClient client = new(name, Mock.Of<IEnvironment>(), exitProcessOnConnectionLoss: false);
+        client.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        using CancellationTokenSource requestCancellation = new();
+        Task accepted = peer.WaitForConnectionAsync(_testContext.CancellationToken);
+        await client.ConnectAsync(_testContext.CancellationToken);
+        await accepted;
+        Task<VoidResponse> request = Task.Run(
+            () => client.RequestReplyAsync<IntMessage, VoidResponse>(new(42), requestCancellation.Token),
+            CancellationToken.None);
+        try
+        {
+            byte[] firstByte = new byte[1];
+            Assert.AreEqual(1, await peer.ReadAsync(firstByte, 0, 1, _testContext.CancellationToken));
+            requestCancellation.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(() => request.TimeoutAfterAsync(TimeSpan.FromSeconds(5)));
+        }
+        finally
+        {
+            requestCancellation.Cancel();
+            peer.Dispose();
+            if (!request.IsCompleted)
+            {
+                await Assert.ThrowsAsync<Exception>(() => request.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout));
+            }
+        }
+    }
+#endif
+
     [TestMethod]
     [DataRow("primary")]
     [DataRow("auxiliary")]

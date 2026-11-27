@@ -66,7 +66,7 @@ public class CtrfReportEngineTests
         JsonElement root = document.RootElement;
 
         Assert.AreEqual("CTRF", root.GetProperty("reportFormat").GetString());
-        Assert.AreEqual("0.2.0", root.GetProperty("specVersion").GetString());
+        Assert.AreEqual("0.3.0", root.GetProperty("specVersion").GetString());
         Assert.IsGreaterThan(0, root.GetProperty("reportId").GetString()!.Length);
         Assert.IsGreaterThan(0, root.GetProperty("timestamp").GetString()!.Length);
         Assert.IsTrue(root.GetProperty("generatedBy").GetString()!.StartsWith("Microsoft.Testing.Extensions.CtrfReport", StringComparison.Ordinal));
@@ -130,6 +130,278 @@ public class CtrfReportEngineTests
 
         Assert.AreEqual(expectedStatus, result.Status);
         Assert.IsNull(result.RawStatus, "Pure CTRF outcomes should not carry rawStatus.");
+    }
+
+    [TestMethod]
+    [DataRow("left", "right", DisplayName = "ExplicitComparison_BothSides")]
+    [DataRow("left", null, DisplayName = "ExplicitComparison_ExpectedOnly")]
+    [DataRow(null, "right", DisplayName = "ExplicitComparison_ActualOnly")]
+    [DataRow("", "right", DisplayName = "ExplicitComparison_EmptyExpected")]
+    [DataRow("left", "", DisplayName = "ExplicitComparison_EmptyActual")]
+    [DataRow("", "", DisplayName = "ExplicitComparison_BothEmpty")]
+    public async Task TestResultCapture_ExplicitComparison_RoundTripsOnlyKnownSides(string? expected, string? actual)
+    {
+        TestNode node = new()
+        {
+            Uid = "comparison",
+            DisplayName = "Comparison failure",
+            Properties = new(
+                new FailedTestNodeStateProperty("Overall failure explanation"),
+                new AssertionFailureProperty(expected, actual)),
+        };
+        using var stream = new MemoryFileStream();
+
+        await CreateEngine(stream).GenerateReportAsync([TestResultCapture.TryCapture(node)!]);
+
+        using var document = JsonDocument.Parse(stream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("comparison", test.GetProperty("testId").GetString());
+        Assert.AreEqual("Comparison failure", test.GetProperty("name").GetString());
+        Assert.AreEqual("failed", test.GetProperty("status").GetString());
+        Assert.AreEqual("Overall failure explanation", test.GetProperty("message").GetString());
+        Assert.IsFalse(test.TryGetProperty("trace", out _));
+        AssertComparison(test, expected, actual);
+    }
+
+    [TestMethod]
+    [DataRow("explicit expected", "explicit actual", DisplayName = "ComparisonPrecedence_BothSides")]
+    [DataRow(null, "", DisplayName = "ComparisonPrecedence_MissingExpectedEmptyActual")]
+    [DataRow("", null, DisplayName = "ComparisonPrecedence_EmptyExpectedMissingActual")]
+    public async Task TestResultCapture_ExplicitComparison_TakesPrecedenceOverLegacyData(string? expected, string? actual)
+    {
+        var exception = new InvalidOperationException("Outer diagnostic", new ArgumentException("Inner diagnostic"));
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+        TestNode node = new()
+        {
+            Uid = "precedence",
+            DisplayName = "Explicit comparison",
+            Properties = new(
+                new FailedTestNodeStateProperty(exception, "Overall diagnostics"),
+                new AssertionFailureProperty(expected, actual)),
+        };
+        using var stream = new MemoryFileStream();
+
+        await CreateEngine(stream).GenerateReportAsync([TestResultCapture.TryCapture(node)!]);
+
+        using var document = JsonDocument.Parse(stream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("Overall diagnostics", test.GetProperty("message").GetString());
+        Assert.AreEqual(exception.ToString(), test.GetProperty("trace").GetString());
+        AssertComparison(test, expected, actual);
+    }
+
+    [TestMethod]
+    [DataRow("legacy expected", "legacy actual", "legacy expected", "legacy actual", DisplayName = "LegacyComparison_StringPair")]
+    [DataRow(null, null, null, null, DisplayName = "LegacyComparison_NoDataDoesNotParseMessage")]
+    [DataRow("", 12, "", null, DisplayName = "LegacyComparison_EmptyExpectedNonStringActual")]
+    [DataRow(12, "", null, "", DisplayName = "LegacyComparison_NonStringExpectedEmptyActual")]
+    [DataRow(1, 2, null, null, DisplayName = "LegacyComparison_NonStringPair")]
+    public async Task TestResultCapture_LegacyComparison_UsesOnlyStringValues(
+        object? expectedData, object? actualData, string? expected, string? actual)
+    {
+        var exception = new InvalidOperationException("Expected 1 but got 2");
+        if (expectedData is not null)
+        {
+            exception.Data["assert.expected"] = expectedData;
+        }
+
+        if (actualData is not null)
+        {
+            exception.Data["assert.actual"] = actualData;
+        }
+
+        TestNode node = new()
+        {
+            Uid = "legacy",
+            DisplayName = "Legacy comparison",
+            Properties = new(new FailedTestNodeStateProperty(exception)),
+        };
+        using var stream = new MemoryFileStream();
+
+        await CreateEngine(stream).GenerateReportAsync([TestResultCapture.TryCapture(node)!]);
+
+        using var document = JsonDocument.Parse(stream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("Expected 1 but got 2", test.GetProperty("message").GetString());
+        AssertComparison(test, expected, actual);
+    }
+
+    [TestMethod]
+    [DataRow("passed")]
+    [DataRow("skipped")]
+    [DataRow("errored")]
+    [DataRow("timedOut")]
+    public async Task TestResultCapture_NonFailedStates_OmitComparisonMetadata(string stateName)
+    {
+        var exception = new InvalidOperationException("Not a comparison failure");
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+        TestNodeStateProperty state = stateName switch
+        {
+            "passed" => PassedTestNodeStateProperty.CachedInstance,
+            "skipped" => SkippedTestNodeStateProperty.CachedInstance,
+            "errored" => new ErrorTestNodeStateProperty(exception),
+            "timedOut" => new TimeoutTestNodeStateProperty(exception),
+            _ => throw new InvalidOperationException(),
+        };
+        TestNode node = new()
+        {
+            Uid = "non-comparison",
+            DisplayName = stateName,
+            Properties = new(state, new AssertionFailureProperty("explicit expected", "explicit actual")),
+        };
+        using var stream = new MemoryFileStream();
+
+        await CreateEngine(stream).GenerateReportAsync([TestResultCapture.TryCapture(node)!]);
+
+        using var document = JsonDocument.Parse(stream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.AreEqual(stateName is "errored" or "timedOut" ? "failed" : stateName, test.GetProperty("status").GetString());
+        AssertComparison(test, null, null);
+    }
+
+    [TestMethod]
+    public async Task TestResultCapture_ComparisonText_PreservesEscapedMultilineValues()
+    {
+        const string expected = """
+            first "quoted" line
+            C:\expected\path <tag> café
+            last line
+            """;
+        const string actual = """
+            actual "quoted" line
+            C:\actual\path </tag> 🙂
+            different last line
+            """;
+        TestNode node = new()
+        {
+            Uid = "escaped",
+            DisplayName = "Escaped comparison",
+            Properties = new(
+                new FailedTestNodeStateProperty("Multiline comparison"),
+                new AssertionFailureProperty(expected + "\t\0", actual + "\t\0")),
+        };
+        using var stream = new MemoryFileStream();
+
+        await CreateEngine(stream).GenerateReportAsync([TestResultCapture.TryCapture(node)!]);
+
+        using var document = JsonDocument.Parse(stream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        AssertComparison(test, expected + "\t\0", actual + "\t\0");
+    }
+
+    [TestMethod]
+    [DataRow(-1, false, false, DisplayName = "ComparisonLimit_Explicit_ExpectedBelowActualAbove")]
+    [DataRow(0, false, false, DisplayName = "ComparisonLimit_Explicit_At")]
+    [DataRow(1, false, false, DisplayName = "ComparisonLimit_Explicit_ExpectedAboveActualBelow")]
+    [DataRow(1, true, false, DisplayName = "ComparisonLimit_Explicit_SurrogateBoundary")]
+    [DataRow(-1, false, true, DisplayName = "ComparisonLimit_Legacy_ExpectedBelowActualAbove")]
+    [DataRow(0, false, true, DisplayName = "ComparisonLimit_Legacy_At")]
+    [DataRow(1, false, true, DisplayName = "ComparisonLimit_Legacy_ExpectedAboveActualBelow")]
+    [DataRow(1, true, true, DisplayName = "ComparisonLimit_Legacy_SurrogateBoundary")]
+    public async Task TestResultCapture_ComparisonLimits_PreserveBoundaryAndSurrogates(int boundaryOffset, bool crossesSurrogatePair, bool useLegacy)
+    {
+        int expectedPrefixLength = crossesSurrogatePair ? MaxMessageLength - 1 : MaxMessageLength + boundaryOffset;
+        int actualPrefixLength = crossesSurrogatePair ? MaxMessageLength - 1 : MaxMessageLength - boundaryOffset;
+        string expected = new string('e', expectedPrefixLength) + (crossesSurrogatePair ? "\U0001F642e" : string.Empty);
+        string actual = new string('a', actualPrefixLength) + (crossesSurrogatePair ? "\U0001F642a" : string.Empty);
+        var exception = new InvalidOperationException("Bounded comparison");
+        exception.Data["assert.expected"] = expected;
+        exception.Data["assert.actual"] = actual;
+        var properties = new PropertyBag(new FailedTestNodeStateProperty(exception));
+        if (!useLegacy)
+        {
+            properties.Add(new AssertionFailureProperty(expected, actual));
+        }
+
+        TestNode node = new() { Uid = "bounded", DisplayName = "Bounded comparison", Properties = properties };
+        using var stream = new MemoryFileStream();
+
+        await CreateEngine(stream).GenerateReportAsync([TestResultCapture.TryCapture(node)!]);
+
+        using var document = JsonDocument.Parse(stream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        int expectedRetainedLength = crossesSurrogatePair ? MaxMessageLength - 1 : Math.Min(expectedPrefixLength, MaxMessageLength);
+        int actualRetainedLength = crossesSurrogatePair ? MaxMessageLength - 1 : Math.Min(actualPrefixLength, MaxMessageLength);
+        string expectedSuffix = expected.Length > MaxMessageLength
+            ? $"\n…[truncated, original length: {expected.Length.ToString(CultureInfo.InvariantCulture)}]"
+            : string.Empty;
+        string actualSuffix = actual.Length > MaxMessageLength
+            ? $"\n…[truncated, original length: {actual.Length.ToString(CultureInfo.InvariantCulture)}]"
+            : string.Empty;
+        AssertComparison(test, new string('e', expectedRetainedLength) + expectedSuffix, new string('a', actualRetainedLength) + actualSuffix);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "ComparisonRetries_FinalFailure")]
+    [DataRow(true, DisplayName = "ComparisonRetries_FinalPass")]
+    public async Task TestResultCapture_InProcessRetries_KeepComparisonsWithOwningAttempt(bool finalPass)
+    {
+        CapturedTestResult[] attempts =
+        [
+            CaptureAttempt(1, true, new FailedTestNodeStateProperty("first diagnostic"), "first expected", "first actual"),
+            CaptureAttempt(2, true, new FailedTestNodeStateProperty("second diagnostic"), null, string.Empty),
+            CaptureAttempt(
+                3, false,
+                finalPass ? PassedTestNodeStateProperty.CachedInstance : new FailedTestNodeStateProperty("final diagnostic"),
+                "final expected", "final actual"),
+        ];
+        using var stream = new MemoryFileStream();
+
+        await CreateEngine(stream).GenerateReportAsync(attempts);
+
+        using var document = JsonDocument.Parse(stream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(finalPass ? 1 : 0, results.GetProperty("summary").GetProperty("passed").GetInt32());
+        Assert.AreEqual(finalPass ? 0 : 1, results.GetProperty("summary").GetProperty("failed").GetInt32());
+        JsonElement final = Assert.ContainsSingle(results.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("retry", final.GetProperty("testId").GetString());
+        Assert.AreEqual(finalPass ? "passed" : "failed", final.GetProperty("status").GetString());
+        Assert.AreEqual(2, final.GetProperty("retries").GetInt32());
+        AssertComparison(final, finalPass ? null : "final expected", finalPass ? null : "final actual");
+        JsonElement[] previous = [.. final.GetProperty("retryAttempts").EnumerateArray()];
+        Assert.HasCount(2, previous);
+        Assert.AreSequenceEqual([1, 2], previous.Select(attempt => attempt.GetProperty("attempt").GetInt32()).ToArray());
+        Assert.AreSequenceEqual(["first diagnostic", "second diagnostic"], previous.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
+        AssertComparison(previous[0], "first expected", "first actual");
+        AssertComparison(previous[1], null, string.Empty);
+        if (!finalPass)
+        {
+            Assert.AreEqual("final diagnostic", final.GetProperty("message").GetString());
+        }
+
+        static CapturedTestResult CaptureAttempt(int number, bool isSuperseded, TestNodeStateProperty state, string? expected, string? actual)
+            => TestResultCapture.TryCapture(new TestNode
+            {
+                Uid = "retry",
+                DisplayName = "Comparison retry",
+                Properties = new(state, new RetryAttemptProperty(number, isSuperseded), new AssertionFailureProperty(expected, actual)),
+            })!;
+    }
+
+    private static void AssertComparison(JsonElement test, string? expected, string? expectedActual)
+    {
+        if (expected is null && expectedActual is null)
+        {
+            Assert.IsFalse(test.TryGetProperty("assertionFailures", out _));
+            return;
+        }
+
+        Assert.IsTrue(test.TryGetProperty("assertionFailures", out JsonElement failures), "The failed comparison must retain assertionFailures.");
+        JsonElement failure = Assert.ContainsSingle(failures.EnumerateArray());
+        string[] fields = expected is null ? ["actual"] : expectedActual is null ? ["expected"] : ["expected", "actual"];
+        Assert.AreSequenceEqual(fields, failure.EnumerateObject().Select(property => property.Name).ToArray());
+        if (expected is not null)
+        {
+            Assert.AreEqual(expected, failure.GetProperty("expected").GetString());
+        }
+
+        if (expectedActual is not null)
+        {
+            Assert.AreEqual(expectedActual, failure.GetProperty("actual").GetString());
+        }
     }
 
     [TestMethod]
@@ -783,6 +1055,7 @@ public class CtrfReportEngineTests
         JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
         Assert.AreEqual("expected 1 got 2", test.GetProperty("message").GetString());
         Assert.AreEqual("at MyAssembly.MyType.MyMethod()", test.GetProperty("trace").GetString());
+        AssertComparison(test, null, null);
     }
 
     [TestMethod]

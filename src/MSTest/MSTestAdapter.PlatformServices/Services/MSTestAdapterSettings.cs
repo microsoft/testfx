@@ -24,6 +24,7 @@ internal class MSTestAdapterSettings
     {
         DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
         DeploymentEnabled = true;
+        CreateDeploymentDirectoriesWithoutDeploymentItems = true;
         DeployTestSourceDependencies = true;
         SearchDirectories = [];
         Configuration = null;
@@ -38,6 +39,11 @@ internal class MSTestAdapterSettings
     /// Gets a value indicating whether deployment directory has to be deleted after test run.
     /// </summary>
     public bool DeleteDeploymentDirectoryAfterTestRunIsComplete { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether deployment directories are created when there are no deployment items.
+    /// </summary>
+    public bool CreateDeploymentDirectoriesWithoutDeploymentItems { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether the test source references are to deployed.
@@ -67,6 +73,7 @@ internal class MSTestAdapterSettings
         //
         // <MSTestV2>
         //     <DeploymentEnabled>true</DeploymentEnabled>
+        //     <CreateDeploymentDirectoriesWithoutDeploymentItems>true</CreateDeploymentDirectoriesWithoutDeploymentItems>
         //     <DeployTestSourceDependencies>true</DeployTestSourceDependencies>
         //     <DeleteDeploymentDirectoryAfterTestRunIsComplete>true</DeleteDeploymentDirectoryAfterTestRunIsComplete>
         //     <AssemblyResolution>
@@ -123,6 +130,16 @@ internal class MSTestAdapterSettings
                             break;
                         }
 
+                    case "CREATEDEPLOYMENTDIRECTORIESWITHOUTDEPLOYMENTITEMS":
+                        {
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.CreateDeploymentDirectoriesWithoutDeploymentItems = result;
+                            }
+
+                            break;
+                        }
+
                     default:
                         {
                             reader.Skip();
@@ -155,6 +172,7 @@ internal class MSTestAdapterSettings
         // "mstest" : {
         //  "deployment" : {
         //       "enabled": true / false,
+        //       "createDirectoriesWithoutDeploymentItems": true / false,
         //       "deployTestSourceDependencies": true / false,
         //       "deleteDeploymentDirectoryAfterTestRunIsComplete": true / false
         //  },
@@ -163,6 +181,7 @@ internal class MSTestAdapterSettings
         MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
         Configuration = configuration;
         ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
+        ParseBooleanSetting(configuration, "deployment:createDirectoriesWithoutDeploymentItems", value => settings.CreateDeploymentDirectoriesWithoutDeploymentItems = value);
         ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);
         ParseBooleanSetting(configuration, "deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", value => settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = value);
 

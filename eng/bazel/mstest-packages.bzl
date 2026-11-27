@@ -210,6 +210,7 @@ def native_mstest_packages():
             filename = "MSTest.TestAdapter." + extension
             _asset(adapter_files, "adapter_build_" + suffix + "_" + extension, adapter_project + "/build/" + framework + "/" + filename, "build/" + framework + "/" + filename)
             _asset(adapter_files, "adapter_transitive_" + suffix + "_" + extension, adapter_project + "/buildTransitive/common/" + filename, "buildTransitive/" + framework + "/" + filename)
+        _asset(adapter_files, "adapter_asset_policy_" + suffix, adapter_project + "/buildTransitive/MSTest.TestAdapter.AssetPolicy.targets", "buildTransitive/" + framework + "/MSTest.TestAdapter.AssetPolicy.targets")
         _asset(adapter_files, "adapter_parallelize_" + suffix, adapter_project + "/buildTransitive/Parallelize.targets", "buildTransitive/" + framework + "/Parallelize.targets")
 
     _package(

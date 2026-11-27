@@ -30,9 +30,9 @@ Supported platforms:
 UWP and WinUI applications use the same `MSTest.TestAdapter` and `MSTest.TestFramework`
 packages. For modern UWP and WinUI projects (`UseUwp`/`UseUwpTools` or `UseWinUI` on a
 .NET Windows target), the package build targets replace the ordinary `lib/net10.0`
-adapter with the Windows-specific build shipped under `buildTransitive/net10.0/ui`.
-Classic UWP (`uap10.0`) projects reference the adapter shipped under
-`buildTransitive/uap10.0`. Shared test libraries only need `MSTest.TestFramework`;
+adapter with the Windows-specific build shipped under `buildTransitive/net10.0`.
+Classic UWP (`uap10.0`) projects reference the adapter shipped as a standard
+`lib/uap10.0.16299` asset. Shared test libraries only need `MSTest.TestFramework`;
 reference `MSTest.TestAdapter` from the test application.
 
 ## Package assets

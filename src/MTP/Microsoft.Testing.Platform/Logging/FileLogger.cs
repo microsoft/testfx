@@ -132,23 +132,34 @@ internal sealed class FileLogger : IDisposable
             AutoFlush = true,
         };
 
-        // Start the consumer loop only after _writer is fully initialized. The loop dereferences _writer, so starting
-        // it earlier could race with the rest of the constructor and hit a null _writer (Task.Run may schedule the
-        // loop on another thread immediately).
+        // Start the consumer loop only after _writer is fully initialized because it may run immediately.
         if (!_options.SyncFlush)
         {
 #if NETCOREAPP
             _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
 #else
-            // On .NET Framework (the netstandard2.0 build) the FileLogger is disposed synchronously because there is
-            // no IAsyncDisposable / StreamWriter.DisposeAsync available at runtime, so Dispose blocks on this loop's
-            // task via _logLoop.Wait(). We therefore run a fully synchronous drain loop: passing a synchronous
-            // delegate to Task.Run means the whole loop runs to completion on a single worker thread and blocks on the
-            // channel without ever scheduling a continuation. This makes shutdown immune to thread-pool starvation
-            // (e.g. many test processes running concurrently on a CI / Helix agent), which could otherwise delay the
-            // async continuation past the flush timeout and crash the test host on an otherwise successful run.
-            // See https://github.com/dotnet/sdk/issues/55215.
-            _logLoop = task.Run(WriteLogToFile);
+            // Dispose waits synchronously for this loop, so it must be able to start and finish even when
+            // thread-pool workers are blocked. See https://github.com/dotnet/sdk/issues/55215.
+            // RunLongRunning rethrows delegate exceptions on its thread; retain Task.Run's faulted-task behavior.
+            var completion = new TaskCompletionSource<bool>();
+            Task? thread = task.RunLongRunning(
+                () =>
+                {
+                    try
+                    {
+                        WriteLogToFile();
+                        completion.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        completion.SetException(ex);
+                    }
+
+                    return Task.CompletedTask;
+                },
+                nameof(FileLogger),
+                CancellationToken.None);
+            _logLoop = thread is null ? null : completion.Task;
 #endif
         }
     }
@@ -357,9 +368,7 @@ internal sealed class FileLogger : IDisposable
 
         try
         {
-            // We don't need a cancellation token because the loop stops when the channel is completed thanks to the
-            // call to Complete() inside the Dispose method. The wait and the writes are fully synchronous, so this
-            // loop never yields back to the thread pool and cannot be starved during shutdown.
+            // The loop stops when Dispose completes the channel; its dedicated thread does not use the thread pool.
             while (channel.WaitToRead())
             {
                 while (channel.TryRead(out string message))

@@ -19,7 +19,7 @@ namespace MSTest.Analyzers;
 public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.TestClassShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.TestClassShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.TestClassShouldBeValidDescription_WithOpenGeneric), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestClassShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     /// <inheritdoc cref="Resources.TestClassShouldBeValidTitle" />
@@ -32,9 +32,12 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor OpenGenericTestClassRule = TestClassShouldBeValidRule.WithMessage(
+        new(nameof(Resources.TestClassShouldBeValidMessageFormat_OpenGeneric), Resources.ResourceManager, typeof(Resources)));
+
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = [TestClassShouldBeValidRule];
+        = [TestClassShouldBeValidRule, OpenGenericTestClassRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -66,7 +69,7 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
         if (namedTypeSymbol.TypeKind != TypeKind.Class
-            || !namedTypeSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testClassAttributeSymbol)))
+            || !namedTypeSymbol.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testClassAttributeSymbol)))
         {
             return;
         }
@@ -82,6 +85,12 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
                 context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
                 return;
             }
+        }
+
+        if (!namedTypeSymbol.IsAbstract && IsOpenGeneric(namedTypeSymbol))
+        {
+            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(OpenGenericTestClassRule, DiagnosticDescriptorHelper.CannotFixProperties, namedTypeSymbol.Name));
+            return;
         }
 
         if (namedTypeSymbol.IsStatic)
@@ -115,5 +124,18 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
                 }
             }
         }
+    }
+
+    private static bool IsOpenGeneric(INamedTypeSymbol type)
+    {
+        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.Arity > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

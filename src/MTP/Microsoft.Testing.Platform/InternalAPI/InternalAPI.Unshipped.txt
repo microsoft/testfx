@@ -1,8 +1,28 @@
 #nullable enable
+Microsoft.Testing.Platform.DotnetTestConnection.SendDisplayMessageAsync(Microsoft.Testing.Platform.IPC.Models.DisplayMessage! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ShardingCommandLineOptionsProvider() -> void
+const Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ShardCountOptionName = "shard-count" -> string!
+const Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.PartitionOptionName = "partition" -> string!
+override Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingCommandLineOptionsProvider.IsSupportedBy(Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities? capabilities) -> bool
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.ShardingOrchestrator(System.IServiceProvider! serviceProvider) -> void
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Description.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.DisplayName.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.OrchestrateTestHostExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Stage.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Uid.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.Version.get -> string!
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.AggregateExitCode(int current, int next) -> int
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingOrchestrator.RemoveOwnedArguments(string![]! arguments) -> string![]!
 Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.get -> string?
 Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.OrchestratorChain.set -> void
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManager.BuildAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider, string? orchestratorChain) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration!>!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_SHARD_GROUP_ID = "TESTINGPLATFORM_SHARD_GROUP_ID" -> string!
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.ConsumedOrchestratorUids.get -> string![]!
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.IsCompositionActive.get -> bool
 Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.IsOutermostProcess.get -> bool
@@ -320,3 +340,11 @@ static Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.operator !=(Mi
 static Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted.operator ==(Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted? left, Microsoft.Testing.Platform.IPC.Models.ModuleTestsCompleted? right) -> bool
 static Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.operator !=(Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? left, Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? right) -> bool
 static Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest.operator ==(Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? left, Microsoft.Testing.Platform.ServerMode.InvocationCleanupRequest? right) -> bool
+Microsoft.Testing.Platform.CommandLine.CommandLineHandler.RemoveExtensionsCommandLineOptionsProviders(System.Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!, bool>! predicate) -> void
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Description.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.DisplayName.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Uid.get -> string!
+Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Version.get -> string!
+static Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension.Instance.get -> Microsoft.Testing.Platform.TestHostOrchestrator.ShardingExtension!

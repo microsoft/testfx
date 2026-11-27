@@ -218,6 +218,8 @@ Extension options:
         Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.
     --report-gh-history-window
         Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.
+    --report-gh-history-window-runs
+        Limit flaky-test context to the most recent 1-1000 run attempts within the day-based history window. By default, use all retained attempts. Requires '--report-gh-history'.
     --report-gh-slow-test-notices
         Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-slow-test-threshold
@@ -649,6 +651,10 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.
+      --report-gh-history-window-runs
+        Arity: 1
+        Hidden: False
+        Description: Limit flaky-test context to the most recent 1-1000 run attempts within the day-based history window. By default, use all retained attempts. Requires '--report-gh-history'.
       --report-gh-slow-test-notices
         Arity: 1
         Hidden: False

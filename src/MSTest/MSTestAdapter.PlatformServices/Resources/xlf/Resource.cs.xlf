@@ -353,6 +353,16 @@ ale obdržel {4} argumentů s typy '{5}'.</target>
         <target state="translated">V sestavení je načtena starší verze balíčku MSTestV2. Zjišťování testů může selhat při zjišťování všech testů dat, pokud jsou závislé na souboru .runsettings.</target>
         <note>{Locked="MSTestV2"}{Locked=".runsettings"}</note>
       </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesNotSupported">
+        <source>'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</source>
+        <target state="new">'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</target>
+        <note>{Locked="PreloadReferencedAssemblies"}</note>
+      </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesSummary">
+        <source>Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</source>
+        <target state="new">Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</target>
+        <note>{0} is the number of assemblies that were loaded. {1} is the number of referenced assemblies that could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
         <target state="translated">Jsou nastaveny hodnoty RandomizeTestOrder i OrderTestsByNameInClass. OrderTestsByNameInClass se bude ignorovat.</target>

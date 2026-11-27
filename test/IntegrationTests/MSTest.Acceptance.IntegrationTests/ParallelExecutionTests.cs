@@ -144,9 +144,20 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
                     .PatchTargetFrameworks(TargetFrameworks.All)
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
                 TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, patched, _tempDirectory);
-                await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", callerMemberName: projectName, cancellationToken: cancellationToken);
                 _assets.Add(projectName, asset);
             }
+
+            const string SolutionFileName = "ParallelExecution.slnx";
+            await TempDirectory.WriteFileAsync(_tempDirectory.Path, SolutionFileName, $"""
+<Solution>
+  <Project Path="{MethodParallelProjectName}/{MethodParallelProjectName}.csproj" />
+  <Project Path="{ClassParallelProjectName}/{ClassParallelProjectName}.csproj" />
+  <Project Path="{DoNotParallelizeProjectName}/{DoNotParallelizeProjectName}.csproj" />
+  <Project Path="{DoNotParallelizeOrderingProjectName}/{DoNotParallelizeOrderingProjectName}.csproj" />
+</Solution>
+""");
+            string solutionPath = Path.Combine(_tempDirectory.Path, SolutionFileName);
+            await DotnetCli.RunAsync($"build \"{solutionPath}\" -c Release", callerMemberName: nameof(ParallelExecutionTests), cancellationToken: cancellationToken);
         }
 
         public void Dispose()

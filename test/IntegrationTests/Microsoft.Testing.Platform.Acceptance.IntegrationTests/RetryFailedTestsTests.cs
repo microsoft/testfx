@@ -92,15 +92,21 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
             Assert.HasCount(2, trxFiles);
-            string[] trxContents = [.. trxFiles.Select(File.ReadAllText)];
-            Assert.HasCount(2, trxContents.Distinct(StringComparer.Ordinal));
-            string[] ids =
-            [
-                .. trxContents
-                    .Select(contents => Regex.Match(contents, "<TestRun id=\"(.+?)\"").Groups[1].Value)
-                    .Distinct(StringComparer.Ordinal),
-            ];
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            XDocument[] reports = [.. trxFiles.Select(XDocument.Load)];
+            string[] ids = [.. reports.Select(report => report.Root!.Attribute("id")!.Value).Distinct(StringComparer.Ordinal)];
             Assert.HasCount(1, ids);
+            Assert.AreNotEqual(string.Empty, ids[0]);
+            (string Name, string Outcome)[] results =
+            [
+                .. reports.SelectMany(report => report.Descendants(ns + "UnitTestResult"))
+                    .Select(result => (result.Attribute("testName")!.Value, result.Attribute("outcome")!.Value))
+                    .OrderBy(result => result.Item1, StringComparer.Ordinal)
+                    .ThenBy(result => result.Item2, StringComparer.Ordinal),
+            ];
+            Assert.AreSequenceEqual(
+                [("TestMethod1", "Failed"), ("TestMethod1", "Passed"), ("TestMethod2", "Passed"), ("TestMethod3", "Passed")],
+                results);
         }
         else
         {
@@ -877,6 +883,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
             { "METHOD1", "1" },
             { "RESULTDIR", resultDirectory },
+            { "CTRF_ASSERTION_FAILURE", "1" },
         };
 
         // Only an explicitly supplied logical-run id correlates modules. A module execution id must not
@@ -909,7 +916,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         foreach (string file in ctrfFiles)
         {
             using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
-            Assert.AreEqual("0.2.0", report.RootElement.GetProperty("specVersion").GetString());
+            Assert.AreEqual("0.3.0", report.RootElement.GetProperty("specVersion").GetString());
             if (seededVariable == EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)
             {
                 Assert.IsFalse(report.RootElement.TryGetProperty("runId", out _));
@@ -971,6 +978,17 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 attemptTest.GetProperty("executionId").GetString()!,
                 attemptTest.GetProperty("attemptId").GetString()!));
             Assert.IsFalse(attemptTest.GetProperty("extra").TryGetProperty("mtpAttemptId", out _));
+            if (attemptTest.GetProperty("status").GetString() == "failed")
+            {
+                Assert.IsTrue(attemptTest.TryGetProperty("assertionFailures", out System.Text.Json.JsonElement failures), "The physical failed attempt must retain its comparison.");
+                System.Text.Json.JsonElement comparison = Assert.ContainsSingle(failures.EnumerateArray());
+                Assert.AreEqual("retry expected", comparison.GetProperty("expected").GetString());
+                Assert.AreEqual("retry actual", comparison.GetProperty("actual").GetString());
+            }
+            else
+            {
+                Assert.IsFalse(attemptTest.TryGetProperty("assertionFailures", out _));
+            }
         }
 
         Assert.HasCount(2, physicalExecutions);
@@ -984,6 +1002,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             results.GetProperty("tests").EnumerateArray().Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
 
         Assert.AreEqual("passed", flakyTest.GetProperty("status").GetString());
+        Assert.IsFalse(flakyTest.TryGetProperty("assertionFailures", out _));
         Assert.AreEqual(physicalExecutions[0].TestId, flakyTest.GetProperty("testId").GetString());
         Assert.AreEqual(
             physicalExecutions.Single(execution => execution.Status == "passed").ExecutionId,
@@ -992,8 +1011,13 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             physicalExecutions.Single(execution => execution.Status == "passed").AttemptId,
             flakyTest.GetProperty("attemptId").GetString());
         Assert.AreEqual(1, flakyTest.GetProperty("retries").GetInt32());
-        System.Text.Json.JsonElement retryAttempt = flakyTest.GetProperty("retryAttempts")[0];
+        System.Text.Json.JsonElement retryAttempt = Assert.ContainsSingle(flakyTest.GetProperty("retryAttempts").EnumerateArray());
         Assert.AreEqual("failed", retryAttempt.GetProperty("status").GetString());
+        Assert.IsTrue(retryAttempt.TryGetProperty("assertionFailures", out System.Text.Json.JsonElement priorFailures), "Retry consolidation must retain the previous attempt's comparison.");
+        System.Text.Json.JsonElement priorComparison = Assert.ContainsSingle(priorFailures.EnumerateArray());
+        Assert.AreSequenceEqual(["expected", "actual"], priorComparison.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.AreEqual("retry expected", priorComparison.GetProperty("expected").GetString());
+        Assert.AreEqual("retry actual", priorComparison.GetProperty("actual").GetString());
         Assert.AreEqual(
             physicalExecutions.Single(execution => execution.Status == "failed").AttemptId,
             retryAttempt.GetProperty("attemptId").GetString());
@@ -1366,6 +1390,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             else
             {
                 properties = new(new FailedTestNodeStateProperty(), testMethod1Identifier);
+                if (Environment.GetEnvironmentVariable("CTRF_ASSERTION_FAILURE") == "1")
+                {
+                    properties.Add(new AssertionFailureProperty("retry expected", "retry actual"));
+                }
             }
 
             if (Environment.GetEnvironmentVariable("TRX_ATTACHMENTS") == "1")

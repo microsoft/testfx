@@ -426,4 +426,568 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
                 .WithArguments("Directory.SetCurrentDirectory"),
             code);
     }
+
+    [TestMethod]
+    public async Task WhenDirectoryMutationHasReadOnlyMethodLock_DiagnosticAndExclusiveFix()
+    {
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public void Check()
+                {
+                    {|#0:Directory.SetCurrentDirectory("fixture")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void Check()
+                {
+                    Directory.SetCurrentDirectory("fixture");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryAssignmentsHaveClassReadLock_Diagnostics()
+    {
+        const string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    {|#0:Environment.CurrentDirectory = "fixture"|};
+                    {|#1:Environment.CurrentDirectory += "child"|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule).WithLocation(0).WithArguments("Environment.CurrentDirectory"),
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule).WithLocation(1).WithArguments("Environment.CurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenFixtureHasClassReadAndMethodWriteLock_Diagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [TestInitialize]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void Initialize() => {|#0:Directory.SetCurrentDirectory("fixture")|};
+
+                [TestMethod]
+                public void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryReadAndWriteLocksShareKey_StrongestModeIsExclusive()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class ClassReadMethodWrite
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory)]
+            public class ClassWriteMethodRead
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+
+            [TestClass]
+            public class DuplicateMethodLocks
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void ReadThenWrite() => Directory.SetCurrentDirectory("fixture");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public void WriteThenRead() => Directory.SetCurrentDirectory("fixture");
+            }
+
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenClassAndMethodBothHaveCurrentDirectoryReadLocks_Diagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public void Check() => {|#0:Directory.SetCurrentDirectory("fixture")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryWriteLockHasDifferentKey_ReadLockIsNotUpgraded()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                [ResourceLock("system.Environment.CurrentDirectory")]
+                public void DifferentCase() => {|#0:Directory.SetCurrentDirectory("fixture")|};
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void DifferentResource() => {|#1:Directory.SetCurrentDirectory("fixture")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule).WithLocation(0).WithArguments("Directory.SetCurrentDirectory"),
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule).WithLocation(1).WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryModeIsDefaultExplicitOrUnknown_NoDiagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void Default() => Directory.SetCurrentDirectory("fixture");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.ReadWrite)]
+                public void Explicit() => Directory.SetCurrentDirectory("fixture");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = default)]
+                public void ExplicitDefault() => Directory.SetCurrentDirectory("fixture");
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = (ResourceAccessMode)42)]
+                public void Unknown() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenEquivalentConstantCurrentDirectoryKeyHasExclusiveLock_NoDiagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock("System.Environment." + "CurrentDirectory")]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedCurrentDirectoryClassLocksIncludeWrite_NoDiagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class ReadClassBase { }
+
+            [ResourceLock(WellKnownResources.CurrentDirectory)]
+            public class WriteClassBase { }
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory)]
+            public class DerivedClassWrite : ReadClassBase
+            {
+                [TestMethod]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class InheritedClassWrite : WriteClassBase
+            {
+                [TestMethod]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedCurrentDirectoryMethodLocksIncludeWrite_NoDiagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            public class ReadMethodBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public virtual void Check() { }
+            }
+
+            public class WriteMethodBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public virtual void Check() { }
+            }
+
+            [TestClass]
+            public class DerivedMethodWrite : ReadMethodBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public override void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+
+            [TestClass]
+            public class InheritedMethodWrite : WriteMethodBase
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public override void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryOverrideWithoutTestAttributeHasInheritedReadLock_NoDiagnostic()
+    {
+        // TestMethodAttribute is not inherited, unlike ResourceLockAttribute.
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            public class Base
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public virtual void Check() { }
+            }
+
+            [TestClass]
+            public class Tests : Base
+            {
+                public override void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryReadLockIsInheritedFromBaseClass_Diagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Base { }
+
+            [TestClass]
+            public class Tests : Base
+            {
+                [TestMethod]
+                public void Check() => {|#0:Directory.SetCurrentDirectory("fixture")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryReadLockIsInheritedFromOverriddenMethod_Diagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            public class Base
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public virtual void Check() { }
+            }
+
+            [TestClass]
+            public class Tests : Base
+            {
+                [TestMethod]
+                public override void Check() => {|#0:Directory.SetCurrentDirectory("fixture")|};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestMethodHasReadLockedDeclaringClass_Diagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Base
+            {
+                [TestMethod]
+                public void Check() => {|#0:Directory.SetCurrentDirectory("fixture")|};
+            }
+
+            [TestClass]
+            public class Tests : Base { }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenSiblingMethodHasCurrentDirectoryWriteLock_ReadLockedMethodStillReports()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public void Mutate() => {|#0:Directory.SetCurrentDirectory("fixture")|};
+
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void Other() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentDirectoryReadLockIsCombinedWithParallelizationOptOut_NoDiagnostic()
+    {
+        const string classAndMethodOptOut = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [DoNotParallelize]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class OptedOut
+            {
+                [TestMethod]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+
+            [TestClass]
+            public class MethodOptOut
+            {
+                [TestMethod]
+                [DoNotParallelize]
+                [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        const string assemblyOptOut = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [assembly: DoNotParallelize]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(classAndMethodOptOut);
+        await VerifyCS.VerifyAnalyzerAsync(assemblyOptOut);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyFixtureHasCurrentDirectoryReadLock_NoDiagnostic()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [AssemblyInitialize]
+                public static void Initialize(TestContext context) => Directory.SetCurrentDirectory("fixture");
+
+                [AssemblyCleanup]
+                public static void Cleanup() => Directory.SetCurrentDirectory("fixture");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGlobalFixtureHasCurrentDirectoryReadClassLock_DiagnosticWithoutFix()
+    {
+        const string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
+            public class Tests
+            {
+                [GlobalTestInitialize]
+                public static void Initialize(TestContext context)
+                {
+                    {|#0:Directory.SetCurrentDirectory("fixture")|};
+                }
+
+                [TestMethod]
+                public void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"),
+            code);
+    }
 }

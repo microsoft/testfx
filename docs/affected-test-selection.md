@@ -687,10 +687,68 @@ deleted. `pwsh -NoLogo -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfT
 condition. The actual Azure DevOps upload and the remaining module collections require a hosted run and are not
 validated by these local tests.
 
+## CI fixes for build 1698498 (2026-11-24)
+
+In [build 1698498](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1698498), the previously
+unmeasured `MSTestAdapter.PlatformServices.UnitTests` `net10.0` map also exceeded 128 MiB. The following
+[build 1698822](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1698822), with collector
+`18.14.0-preview.26574.4`, failed uploading the same module with HTTP 413. Windows collection therefore excludes
+that exact module/TFM too. When the selected baseline has no shard, affected-test selection is expected to run the
+whole module. Cache seeding or the provider can still select an older eligible shard even if a newer collection
+omits it. At that point `net11.0` remained enabled because neither run established that
+its map was oversized. The later [build 1700413](#ci-fixes-for-build-1700413-2026-11-25) also excludes `net11.0`.
+The new exclusion and fallback have not been validated together with the current collector in a hosted run.
+
+## CI fixes for build 1700413 (2026-11-25)
+
+In [build 1700413](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1700413), the
+[Windows affected-test job](https://dev.azure.com/dnceng-public/public/_apis/build/builds/1700413/logs/244)
+failed with HTTP 413 while uploading the `MSTestAdapter.PlatformServices.UnitTests` `net11.0` map. Collection
+now excludes that exact module/TFM as well. The response identifies a size rejection but does not report the
+map's actual size. If no eligible shard exists, selection runs the entire module; the provider may still select
+an older eligible shard even when a newer collection omits it. The failed collection reported 33 of 44
+modules and one cancellation, so it did not establish that the remaining modules would collect successfully.
+
+The [Windows Debug job](https://dev.azure.com/dnceng-public/public/_apis/build/builds/1700413/logs/134) also
+timed out after 30 seconds waiting for the `net48` assertion child in
+`DefaultSchemaMalformedVersionsAndCommandFailuresReturnNull`; the `net462` module passed all 2,328 tests on
+the same runtime. The probe now allows two minutes for completion, then still kills and joins a stuck child
+with a separate 30-second cleanup bound. The CI log did not establish why the child was delayed, so the
+longer bound is a mitigation, not a confirmed root-cause fix.
+
+**Test-value evidence:** base `03ae017029766b520d0be3fae45c05005dac2ef7`; the source/test patch has SHA-256
+`D6E39D7C2A1E83EE2C0F97F1AF098E7966D3F27F30082AB51F28F58E26776C7B`. This is the byte output of
+`git diff --binary --no-ext-diff --full-index <base> -- eng\collection-module-pool.ps1
+eng\validate-collection-module-pool.ps1
+test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Helpers\DebugAssertionChildProbe.cs`, excluding this
+evidence-only documentation.
+
+| Contract | Executed comparison and outcome |
+| --- | --- |
+| Only the failing map is excluded. | The unchanged updated `ModulePoolSkipsOnlyOversizedMaps` validator, run against the original pool script (Git blob `fecd6d147e8d08cf74e87e4baf0d6f164b2e7ede`) in an isolated fixture, failed at that assertion, exit 1. `pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1` passed all 58 checks with the fix, exit 0. Another project's `net11.0` and this project's `net12.0` remain eligible. |
+| A delayed assertion child may complete, but a stuck child still fails and is cleaned up. | A controlled 35-second suspension of the owned `net48` child made the original probe fail at 30 seconds, exit 2; the changed probe passed the same test, exit 0. A 125-second suspension made the changed probe fail at two minutes, exit 2, and both owned processes exited. This synthetic delay does not explain the CI delay. |
+| Missing map selection is conservative. | The pinned SDK and `18.14.0-preview.26574.4` AffectedTests and Azure storage binaries ran an isolated `net11.0` two-test host against a loopback Azure API. The newest artifact existed but its shard returned 404; the older eligible artifact also returned 404. The provider requested both, reported fallback, and executed `First` and `Second` once each, both passed, exit 0. A local-storage missing-shard run produced the same two results. |
+
+The Debug adapter project built successfully with
+`.\build.cmd -projects test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\MSTestAdapter.PlatformServices.UnitTests.csproj
+-c Debug -bl /p:SkipUapTargetFramework=true`. Six related probe tests passed on each of `net48` and `net462`;
+the same six also passed on both frameworks with the process-only `TF_BUILD=true` setting. The shared
+`PdbValidationRejectsNonBinariesMissingAndInvalidSymbolSources` and
+`DirectInvokerPreservesFrameworkFailuresAndReportsMalformedReflectionFailures` probes passed on each of
+`net10.0`, `net11.0`, and `net10.0-windows10.0.18362.0`.
+The loopback provider DLLs matched the resolved package assets: AffectedTests SHA-256
+`92A7AD80043DF24B72B21ABD09510126F5FA6824E8E310A3852C5A274D7C4661`, Azure storage SHA-256
+`459CA80C90C58C51EB4E4FE25D6DD5510E018D6F87EEA50E879864477D18D502`.
+The hosted Azure upload, hosted selection and a pipeline rerun remain unverified.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
-  storage for the public `microsoft.testfx` pipeline.
+  storage for the public `microsoft.testfx` pipeline. Selection ignores shipped and unshipped `PublicAPI` and
+  `InternalAPI` text baselines; build-time API checks still run. Six public baselines are test inputs:
+  [`AssertSourceCompatibilityTests`](../test/IntegrationTests/MSTest.Acceptance.IntegrationTests/AssertSourceCompatibilityTests.cs)
+  reads the shipped and unshipped files in `src/MSTest/TestFramework/PublicAPI` and its `net` and `net10.0` subdirectories.
+  Their exact paths therefore use `forceAllTests`, which takes precedence over `ignore`.
 - The trusted main-branch Windows Release entry runs full tests and publishes coverage. When affected tests are enabled,
   a separate `WindowsAffectedTests` job runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
   collection owns its instrumentation and launches discovery children with `--list-tests`. A collection failure
@@ -703,10 +761,10 @@ validated by these local tests.
   writes to `TestFx_AffectedTestsMaps`; see [CTS comparison activation](#cts-comparison-activation-2026-11-19).
 - With the rollout enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
-  package's `netstandard2.0` assets. The exceptions are MSTestAdapter.PlatformServices.UnitTests on net462, net48,
-  and net10.0-windows10.0.18362.0:
-  their maps exceed the collector's 128-MiB limit, so they are not collected and selection runs all of their tests
-  ([CI fixes for build 1691751](#ci-fixes-for-build-1691751-2026-11-20)). The build restores the collector's required x64 native files beneath
+  package's `netstandard2.0` assets. The exceptions are `MSTestAdapter.PlatformServices.UnitTests` on `net462`,
+  `net48`, `net10.0`, `net10.0-windows10.0.18362.0`, and `net11.0`: their maps exceeded the collector limit or
+  had their uploads rejected in CI. They are not collected, and selection runs all their tests when no eligible
+  shard is available. The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
   outputs, including the WinUI test-framework unit host.
   The native symbol reader (`msdia140.dll`) must accompany the profiler; otherwise collection can succeed with

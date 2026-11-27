@@ -434,6 +434,14 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</value>
     <comment>{0} is the random test order seed. {Locked="Seed"}{Locked="RandomTestOrderSeed"}</comment>
   </data>
+  <data name="PreloadReferencedAssembliesSummary" xml:space="preserve">
+    <value>Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</value>
+    <comment>{0} is the number of assemblies that were loaded. {1} is the number of referenced assemblies that could not be loaded.</comment>
+  </data>
+  <data name="PreloadReferencedAssembliesNotSupported" xml:space="preserve">
+    <value>'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</value>
+    <comment>{Locked="PreloadReferencedAssemblies"}</comment>
+  </data>
   <data name="RandomTestOrderAndOrderTestsByNameInClassConflict" xml:space="preserve">
     <value>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</value>
     <comment>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</comment>

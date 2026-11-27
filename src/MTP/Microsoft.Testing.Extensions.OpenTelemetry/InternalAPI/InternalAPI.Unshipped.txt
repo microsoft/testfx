@@ -1,2 +1,5 @@
 #nullable enable
 Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.W3CContext.get -> System.Diagnostics.ActivityContext?
+const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables.ProcessMetrics = "TESTINGPLATFORM_OTEL_PROCESS_METRICS" -> string!
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.OpenTelemetryPlatformService(bool includeProcessMetrics) -> void
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.IsProcessMetricsEnabled(System.Func<string!, string?>! getEnvironmentVariable) -> bool

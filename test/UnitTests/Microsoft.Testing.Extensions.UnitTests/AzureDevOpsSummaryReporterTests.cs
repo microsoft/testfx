@@ -595,12 +595,11 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         Assert.Contains("⚠ **1 flaky**", markdown);
         Assert.Contains("### Flakiness history", markdown);
-        Assert.Contains("30.0% (14d)", markdown);
+        Assert.Contains("| Tests.Suite.Unstable | passed | 10 | 7 | 3 | 30.0% (14d) |", markdown);
         Assert.Contains("### Duration history", markdown);
-        Assert.Contains("2.00×", markdown);
+        Assert.Contains("| Tests.Suite.Unstable | 1.00s | 500ms | 750ms | 10 | 2.00× |", markdown);
         Assert.Contains("### Test dependencies", markdown);
-        Assert.Contains("Tests.Suite.Setup", markdown);
-        Assert.Contains("| Continue |", markdown);
+        Assert.Contains("| Tests.Suite.Dependent | Tests.Suite.Setup | Continue |", markdown);
         Assert.Contains("#### Failure details", markdown);
         Assert.Contains("System.InvalidOperationException", markdown);
         Assert.Contains("Expected &lt;safe&gt;, got \\|unsafe\\|", markdown);

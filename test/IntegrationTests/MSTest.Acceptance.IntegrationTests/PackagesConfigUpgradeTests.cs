@@ -31,6 +31,81 @@ public sealed class PackagesConfigUpgradeTests : AcceptanceTestBase<NopAssetFixt
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow("FrenchOnly", true, true, true, "fr", "fr")]
+    [DataRow("ResourcesDisabled", true, true, false, "fr", "")]
+    [DataRow("NotTestApplication", true, false, true, "fr", "")]
+    [DataRow("UpgradedPackagesConfig", false, true, true, "fr", "fr")]
+    public async Task ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets(
+        string scenario,
+        bool includeAdapterReferences,
+        bool isTestApplication,
+        bool copyResources,
+        string satelliteLanguages,
+        string expectedCulture)
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string? vsInstallPath = await TryFindVsInstallWithMSBuildAsync(cancellationToken);
+        string? msbuildExe = vsInstallPath is null ? null : CppCliTestSupport.TryGetMSBuildPathFromVsInstall(vsInstallPath);
+        if (msbuildExe is null)
+        {
+            Assert.Inconclusive("Skipping: Visual Studio MSBuild is required for non-SDK reference resolution.");
+            return;
+        }
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            $"ClassicUwpNonSdkPolicy{scenario}",
+            ClassicUwpPolicySource.PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        await DotnetCli.RunAsync(
+            $"restore \"{Path.Combine(testAsset.TargetAssetPath, "restore", "Restore.csproj")}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: cancellationToken);
+
+        using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(testAsset.TargetAssetPath, "restore", "obj", "project.assets.json")));
+        JsonElement root = assets.RootElement;
+        string packagesRoot = root.GetProperty("packageFolders").EnumerateObject().First().Name;
+        JsonProperty adapter = root.GetProperty("libraries").EnumerateObject()
+            .Single(library => library.Name.StartsWith("MSTest.TestAdapter/", StringComparison.OrdinalIgnoreCase));
+        string packageDirectory = Path.GetFullPath(Path.Combine(packagesRoot, adapter.Value.GetProperty("path").GetString()!));
+        string projectPath = Path.Combine(testAsset.TargetAssetPath, "Policy.proj");
+        string reportPath = Path.Combine(testAsset.TargetAssetPath, "assets.txt");
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, "policy.binlog");
+
+        using var build = new CommandLine();
+        int exitCode = await build.RunAsyncAndReturnExitCodeAsync(
+            $"\"{msbuildExe}\" \"{projectPath}\" /t:ReportAssets /p:AdapterPackageRoot=\"{packageDirectory}\" " +
+            $"/p:IncludeAdapterReferences={includeAdapterReferences} " +
+            $"/p:IsTestApplication={isTestApplication} /p:EnableMSTestV2CopyResources={copyResources} " +
+            $"/p:SatelliteResourceLanguages={satelliteLanguages} /bl:\"{binlogPath}\"",
+            CppCliTestSupport.BuildEnvironmentWithoutCodeCoverage(),
+            workingDirectory: testAsset.TargetAssetPath,
+            cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+            cancellationToken: cancellationToken);
+        Assert.AreEqual(0, exitCode, $"{build.StandardOutput}{Environment.NewLine}{build.ErrorOutput}");
+
+        string adapterLib = Path.Combine(packageDirectory, "lib", "uap10.0.16299") + Path.DirectorySeparatorChar;
+        string[] actual = File.ReadAllLines(reportPath)
+            .Select(line => line.Split('|'))
+            .Where(parts => parts.Length == 3 && parts[1].StartsWith(adapterLib, StringComparison.OrdinalIgnoreCase))
+            .Select(parts => $"{parts[0]}|{Path.GetFileName(parts[1])}|{parts[2]}")
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        List<string> expected = [];
+        if (isTestApplication)
+        {
+            expected.Add("Copy|MSTest.TestAdapter.dll|");
+            expected.Add("Copy|MSTestAdapter.PlatformServices.dll|");
+        }
+
+        if (expectedCulture.Length > 0)
+        {
+            expected.Add($"Copy|MSTest.TestAdapter.resources.dll|{expectedCulture}\\");
+            expected.Add($"Satellite|MSTest.TestAdapter.resources.dll|{expectedCulture}\\");
+        }
+
+        Assert.AreSequenceEqual(expected.Order(StringComparer.Ordinal).ToArray(), actual);
+    }
+
+    [TestMethod]
     public async Task UpgradedProjectWithoutAdapterReferences_CopiesAdapterAndRunsTests()
     {
         CancellationToken cancellationToken = TestContext.CancellationToken;
@@ -257,5 +332,56 @@ namespace PcTests
         }
     }
 }
+""";
+
+    private const string ClassicUwpPolicySource = """
+#file restore/Restore.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file Policy.proj
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <AssemblyName>PolicyProbe</AssemblyName>
+    <OutputPath>$(MSBuildThisFileDirectory)bin\</OutputPath>
+    <IntermediateOutputPath>$(MSBuildThisFileDirectory)obj-policy\</IntermediateOutputPath>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+  </PropertyGroup>
+  <Import Project="$(AdapterPackageRoot)\build\uap10.0\MSTest.TestAdapter.props" />
+  <ItemGroup Condition="'$(IncludeAdapterReferences)' == 'true'">
+    <Reference Include="MSTest.TestAdapter">
+      <HintPath>$(AdapterPackageRoot)\lib\uap10.0.16299\MSTest.TestAdapter.dll</HintPath>
+    </Reference>
+    <Reference Include="MSTestAdapter.PlatformServices">
+      <HintPath>$(AdapterPackageRoot)\lib\uap10.0.16299\MSTestAdapter.PlatformServices.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <Import Project="$(AdapterPackageRoot)\build\uap10.0\MSTest.TestAdapter.targets" />
+  <!-- Exercise the policy on the same satellite item shapes produced by non-SDK reference resolution. -->
+  <Target Name="InjectSatelliteItems" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Include="$(AdapterPackageRoot)\lib\uap10.0.16299\fr\MSTest.TestAdapter.resources.dll">
+        <DestinationSubDirectory>fr\</DestinationSubDirectory>
+      </ReferenceCopyLocalPaths>
+      <ReferenceCopyLocalPaths Include="$(AdapterPackageRoot)\lib\uap10.0.16299\ja\MSTest.TestAdapter.resources.dll">
+        <DestinationSubDirectory>ja\</DestinationSubDirectory>
+      </ReferenceCopyLocalPaths>
+      <ReferenceSatellitePaths Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.DestinationSubDirectory)' != ''" />
+    </ItemGroup>
+  </Target>
+  <Target Name="ReportAssets" DependsOnTargets="ResolveReferences">
+    <WriteLinesToFile File="$(MSBuildThisFileDirectory)assets.txt" Overwrite="true"
+                      Lines="@(ReferenceCopyLocalPaths->'Copy|%(FullPath)|%(DestinationSubDirectory)');@(ReferenceSatellitePaths->'Satellite|%(FullPath)|%(DestinationSubDirectory)');@(Content->'Content|%(FullPath)|%(Link)')" />
+  </Target>
+</Project>
 """;
 }

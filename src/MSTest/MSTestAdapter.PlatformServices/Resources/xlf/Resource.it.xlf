@@ -353,6 +353,16 @@ ma ha ricevuto {4} argomento/i, con tipi '{5}'.</target>
         <target state="translated">Nell'assembly è caricata una versione precedente del pacchetto MSTestV2. L'individuazione dei test potrebbe non riuscire a individuare tutti i test dei dati se dipendono dal file '.runsettings'.</target>
         <note>{Locked="MSTestV2"}{Locked=".runsettings"}</note>
       </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesNotSupported">
+        <source>'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</source>
+        <target state="new">'PreloadReferencedAssemblies' is not supported on this runtime (for example Native AOT or UWP) and is ignored.</target>
+        <note>{Locked="PreloadReferencedAssemblies"}</note>
+      </trans-unit>
+      <trans-unit id="PreloadReferencedAssembliesSummary">
+        <source>Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</source>
+        <target state="new">Preloaded {0} referenced assemblies before running tests. {1} could not be loaded.</target>
+        <note>{0} is the number of assemblies that were loaded. {1} is the number of referenced assemblies that could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
         <target state="translated">Sono impostati sia 'RandomizeTestOrder' che 'OrderTestsByNameInClass'. 'OrderTestsByNameInClass' verrà ignorato.</target>

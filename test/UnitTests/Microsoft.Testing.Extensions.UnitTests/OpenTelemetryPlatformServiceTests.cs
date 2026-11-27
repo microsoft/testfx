@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Telemetry;
@@ -450,6 +451,96 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Activity stopped = Single();
         Assert.AreEqual(startTime.UtcDateTime, stopped.StartTimeUtc);
         Assert.AreEqual(TimeSpan.FromMilliseconds(125), stopped.Duration);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ProcessMetrics_AreOptInAndObserveTheCurrentProcess(bool enabled)
+    {
+        using var service = new OpenTelemetryPlatformService(enabled);
+        FieldInfo? meterField = typeof(OpenTelemetryPlatformService).GetField("_meter", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(meterField, "The service meter is required to isolate instrumentation from concurrent test instances.");
+        var meter = (Meter)meterField!.GetValue(service)!;
+        string[] names =
+        [
+            "test.host.process.cpu.logical_count",
+            "test.host.process.cpu.time",
+            "test.host.process.memory.private",
+            "test.host.process.memory.working_set",
+        ];
+        Dictionary<string, Instrument> instruments = [];
+        Dictionary<string, double> measurements = [];
+        Dictionary<string, KeyValuePair<string, object?>[]> measurementTags = [];
+        using MeterListener listener = new()
+        {
+            InstrumentPublished = (instrument, listener) =>
+            {
+                if (ReferenceEquals(instrument.Meter, meter))
+                {
+                    instruments.Add(instrument.Name, instrument);
+                    listener.EnableMeasurementEvents(instrument);
+                }
+            },
+        };
+        listener.SetMeasurementEventCallback<long>((instrument, value, tags, _) =>
+        {
+            measurements[instrument.Name] = value;
+            measurementTags[instrument.Name] = tags.ToArray();
+        });
+        listener.SetMeasurementEventCallback<double>((instrument, value, tags, _) =>
+        {
+            measurements[instrument.Name] = value;
+            measurementTags[instrument.Name] = tags.ToArray();
+        });
+        listener.Start();
+        listener.RecordObservableInstruments();
+
+        if (!enabled)
+        {
+            Assert.IsEmpty(instruments);
+            Assert.IsEmpty(measurements);
+            return;
+        }
+
+        Assert.AreSequenceEqual(names, instruments.Keys.OrderBy(name => name, StringComparer.Ordinal).ToArray());
+        Assert.AreSequenceEqual(names, measurements.Keys.OrderBy(name => name, StringComparer.Ordinal).ToArray());
+        Assert.IsInstanceOfType<ObservableCounter<double>>(instruments["test.host.process.cpu.time"]);
+        Assert.IsInstanceOfType<ObservableGauge<long>>(instruments["test.host.process.memory.working_set"]);
+        Assert.IsInstanceOfType<ObservableGauge<long>>(instruments["test.host.process.memory.private"]);
+        Assert.IsInstanceOfType<ObservableGauge<long>>(instruments["test.host.process.cpu.logical_count"]);
+        Assert.AreEqual("s", instruments["test.host.process.cpu.time"].Unit);
+        Assert.AreEqual("By", instruments["test.host.process.memory.working_set"].Unit);
+        Assert.AreEqual("By", instruments["test.host.process.memory.private"].Unit);
+        Assert.AreEqual("{cpu}", instruments["test.host.process.cpu.logical_count"].Unit);
+        Assert.AreEqual(Environment.ProcessorCount, measurements["test.host.process.cpu.logical_count"]);
+        Assert.IsGreaterThanOrEqualTo(0, measurements["test.host.process.cpu.time"]);
+        Assert.IsGreaterThan(0, measurements["test.host.process.memory.working_set"]);
+        Assert.IsGreaterThanOrEqualTo(0, measurements["test.host.process.memory.private"]);
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Assert.IsGreaterThan(0, measurements["test.host.process.memory.private"]);
+        }
+
+        using var currentProcess = Process.GetCurrentProcess();
+        string? instanceId = null;
+        foreach (string name in names)
+        {
+            Dictionary<string, object?> tags = measurementTags[name].ToDictionary(tag => tag.Key, tag => tag.Value, StringComparer.Ordinal);
+            Assert.HasCount(2, tags);
+            Assert.AreEqual(currentProcess.Id, tags["process.pid"]);
+            string id = Assert.IsInstanceOfType<string>(tags["test.host.process.instance_id"]);
+            Assert.IsTrue(Guid.TryParseExact(id, "N", out _), $"Expected process instance ID '{id}' to be a GUID in N format.");
+            instanceId ??= id;
+            Assert.AreEqual(instanceId, id);
+        }
+
+        double previousCpuTime = measurements["test.host.process.cpu.time"];
+        service.Dispose();
+        measurements.Clear();
+        listener.RecordObservableInstruments();
+        Assert.HasCount(4, measurements);
+        Assert.IsGreaterThanOrEqualTo(previousCpuTime, measurements["test.host.process.cpu.time"]);
     }
 
     [TestMethod]

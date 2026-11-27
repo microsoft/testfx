@@ -91,6 +91,9 @@ internal static class EnvironmentVariableConstants
     // Carries orchestrator Uids already consumed by outer processes in a composed orchestration run.
     public const string TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = nameof(TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN);
 
+    // Identifies the sibling child hosts launched by one sharding invocation.
+    public const string TESTINGPLATFORM_SHARD_GROUP_ID = nameof(TESTINGPLATFORM_SHARD_GROUP_ID);
+
     public const string DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = nameof(DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
 
     // Unhandled Exception

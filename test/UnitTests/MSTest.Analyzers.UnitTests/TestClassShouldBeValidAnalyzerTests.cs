@@ -158,18 +158,95 @@ public sealed class TestClassShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenClassIsGeneric_NoDiagnostic()
+    public async Task WhenClassIsOpenGeneric_DiagnosticWithoutFix()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
-            public class MyTestClass<T>
+            public class {|#0:MyTestClass|}<T>
             {
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule).WithLocation(0).WithMessage("Test class 'MyTestClass' cannot be an open generic type"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenNestedClassHasOpenGenericContainer_DiagnosticWithoutFix()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Container<T>
+            {
+                [TestClass]
+                public class {|#0:MyTestClass|}
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule).WithLocation(0).WithMessage("Test class 'MyTestClass' cannot be an open generic type"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenGenericTestBaseIsAbstractAndDerivedClassIsClosed_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class TestBase<T>
+            {
+            }
+
+            [TestClass]
+            public class ClosedTestClass : TestBase<int>
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedTestClassAttributeIsAppliedToInternalClass_DiagnosticAndFix()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestClassAttribute : TestClassAttribute { }
+
+            [CustomTestClass]
+            internal class {|#0:MyTestClass|}
+            {
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestClassAttribute : TestClassAttribute { }
+
+            [CustomTestClass]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            fixedCode);
     }
 
     [TestMethod]

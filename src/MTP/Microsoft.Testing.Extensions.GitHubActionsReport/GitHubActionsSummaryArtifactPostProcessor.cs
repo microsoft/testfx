@@ -73,7 +73,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         if (context.Mode == ArtifactPostProcessingMode.RetryAttempts && context.RunSummary is null)
         {
-            CiRunSummaryAggregate historyAggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
+            CiRunSummaryAggregate historyAggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context, prioritizeHistoricalFailures: true);
             await _historyService.WriteAsync(
                 [CreateRetryHistoryModule(historyAggregate.Modules)],
                 cancellationToken).ConfigureAwait(false);
@@ -84,7 +84,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             return null;
         }
 
-        CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
+        CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context, prioritizeHistoricalFailures: true);
         bool downstreamPostProcessingWillPublishSummary =
             context.Mode == ArtifactPostProcessingMode.RetryAttempts
             && downstreamRequiredPostProcessingSupported();
@@ -119,11 +119,14 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         // the run actually passed.
         bool writeOnFailureOnly = aggregate.Modules.Count > 0
             && aggregate.Modules.All(static module => module.WriteOnFailureOnly);
+        HashSet<string> nonEmptyShardGroups = GitHubActionsSummaryReporter.GetNonEmptyShardGroups(aggregate.Modules);
         bool runFailed = aggregate.IsPartial
             || aggregate.FailedTests > 0
             || (aggregate.ExitCode is int exitCode
                 ? GitHubActionsExitCode.IndicatesFailure(exitCode)
-                : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
+                : aggregate.Modules.Any(module =>
+                    GitHubActionsExitCode.IndicatesFailure(module.ExitCode)
+                    && !GitHubActionsSummaryReporter.IsEmptyShard(module, nonEmptyShardGroups)));
         StepSummaryWriter? writer = downstreamPostProcessingWillPublishSummary
             || RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
             || (writeOnFailureOnly && !runFailed)
@@ -249,6 +252,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             Architecture = first.Architecture,
             ExecutionId = first.ExecutionId,
             SessionUid = last.SessionUid,
+            ShardGroupId = aggregate.Modules.All(module => string.Equals(module.ShardGroupId, first.ShardGroupId, StringComparison.Ordinal))
+                ? first.ShardGroupId
+                : null,
             RequestedOutputPath = first.RequestedOutputPath,
             WriteOnFailureOnly = aggregate.Modules.All(static module => module.WriteOnFailureOnly),
             GitHubActionsStepSummaryEnabled = aggregate.Modules.Any(static module => module.GitHubActionsStepSummaryEnabled is not false),
@@ -342,6 +348,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                     Outcome = test.Outcome,
                     DurationTicks = test.DurationTicks,
                     IsFlaky = test.IsFlaky || recovered,
+                    HistoricalPassCount = test.HistoricalPassCount,
+                    HistoricalFailCount = test.HistoricalFailCount,
+                    HistoryWindowInDays = test.HistoryWindowInDays,
                 };
 
                 if (test.Outcome == GitHubActionsHistoryOutcome.Failed)
