@@ -301,6 +301,7 @@ internal sealed partial class RetryOrchestrator
             logger,
             attemptArtifacts,
             attemptCount,
+            fixtureFailed,
             suiteCountsKnown,
             suiteTotalTests,
             suiteSkippedTests,

@@ -596,3 +596,83 @@ and `ClassCleanupFailure_DoesNotSkipDependentOfPassedTest` passed once on the
 `net12.0` outer host. The latter was run against the fresh pack with both
 experiments present; its consumer binary provenance was not recaptured.
 The existing timeout and retry-publication limitations remain unresolved.
+
+### 2026-11-27 — preserve ordinary retry TRX publication
+
+The `ShardCount_FailureAndRetry_StayInsideDependencyPartition` failure in
+Azure build 1702189 is caused by running TRX retry aggregation even when no
+fixture failed. This retains the final physical report beneath `Retries` and
+publishes an additional consolidated copy. It also changes the final report
+from the final attempt's selected test to the union of earlier results.
+
+Limit the fixture-preservation experiment to runs that actually reported a
+fixture failure. Ordinary retry runs must retain their existing physical-attempt
+TRX publication and final-attempt selection. Pass the already tracked fixture
+failure state into artifact processing and exclude TRX inputs from aggregation
+when that state is false; other artifact post-processors remain unchanged.
+This is a bounded compatibility fix, not a decision to replace the general
+retry-report contract. Fixture-run duplication and legacy-timeout compatibility
+remain separate limitations.
+
+Validation will use the existing partition retry case and the per-attempt TRX
+acceptance cases against fresh shipping packages. Keep their assertions unchanged.
+The cleanup/recovering-test acceptance case must also remain green. These checks
+exercise generated packaged hosts and parse their reports; they do not establish
+VS/VS Code or live Azure DevOps rendering.
+
+The four `Unknown option '--shard-count'` annotations are expected output from
+`ShardCountOption_IsRejectedWhenFrameworkDoesNotSupportPartitioning` on its two
+data rows and framework variants. The test deliberately registers a framework
+with absent or unsupported partitioning capability and requires exit 5. Both
+rows passed locally on `net11.0`; no option registration or assertion was changed.
+
+The partition regression reproduced before the fix: 1 executed, 1 failed,
+0 skipped, exit 2, with two `run.trx` files below `Retries` instead of one.
+After a successful Release pack (exit 0, no warnings/errors), the unchanged
+partition assertion passed. The three selected MSTest acceptance cases and
+eleven selected MTP acceptance cases all executed and passed, with no skips
+and exit 0. Discovery independently selected the same 3 and 11 names, and the
+outer TRX execution verifier confirmed their execution.
+
+```powershell
+# Before the fix: exit 2, one intended partition assertion failure.
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -f net12.0 --no-build -p:UsingDotNetTest=true '-p:ArtifactsTestResultsDir=artifacts\retry-partition-fix\red' '-bl:artifacts\retry-partition-fix\red.binlog' -- --filter 'FullyQualifiedName~PartitionTests.ShardCount_FailureAndRetry_StayInsideDependencyPartition' --show-test-results all
+
+# After the fix: pack exit 0.
+.\build.cmd -pack -c Release -bl
+
+# After the fix: exit 0, three passed, no skipped.
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -f net12.0 --no-build -p:UsingDotNetTest=true '-p:ArtifactsTestResultsDir=artifacts\retry-partition-fix\green-mstest' '-bl:artifacts\retry-partition-fix\green-mstest\execution.binlog' -- --filter 'FullyQualifiedName~PartitionTests.ShardCount_FailureAndRetry_StayInsideDependencyPartition|FullyQualifiedName~MtpServerClientAcceptanceTests.CleanupFailure_WithRetry_PreservesFailureAndOnlyRetriesTests' --show-test-results all
+
+# After the fix: exit 0, eleven passed, no skipped.
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release -f net12.0 --no-build -p:UsingDotNetTest=true '-p:ArtifactsTestResultsDir=artifacts\retry-partition-fix\green-mtp' '-bl:artifacts\retry-partition-fix\green-mtp\execution.binlog' -- --filter 'FullyQualifiedName~RetryFailedTests_TrxReports_ArePublishedOncePerAttempt|FullyQualifiedName~RetryFailedTests_CtrfPreservesTrxNamedAttachments|FullyQualifiedName~RetryFailedTests_NativeSdkPublishesExistingTrxPaths' --show-test-results all
+
+# Expected unknown-option output: exit 0, two passed, no skipped.
+.\.dotnet\dotnet.exe test --project test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Release -f net11.0 --no-build -p:UsingDotNetTest=true '-p:ArtifactsTestResultsDir=artifacts\retry-partition-fix\unknown-option' '-bl:artifacts\retry-partition-fix\unknown-option\tests.binlog' -- --filter 'FullyQualifiedName~ShardCountOption_IsRejectedWhenFrameworkDoesNotSupportPartitioning' --show-test-results all
+```
+
+`RetryTrx_Recovery` and `RetryTrx_PersistentFailure` now preserve physical
+attempt cardinality, unique execution identities, and correct attachment paths.
+The native SDK cases and CTRF-with-TRX-named-attachment cases also passed.
+`RetryCleanupOnly` and `RetryCleanupWithRecoveringTest` still preserve the
+fixture failure and failing child exit; this does not prove fixture-run
+recursive publication is free of duplicates.
+
+The generated partition consumer used `net11.0`, SDK
+`12.0.100-alpha.1.26570.125`, and its isolated `.nuget-packages` cache.
+Its deployed and cached Retry DLL SHA-256 both matched the shipping
+`Microsoft.Testing.Extensions.Retry.3.0.0-dev.nupkg` payload:
+`4F59F6603B7CCC5A9C18AF6FD3D69F6B281E0467F196CE84B86D979DCF179B14`.
+The package SHA-256 was
+`58BD60BB2277EDE66B170DEDECA62F6940915BC43A30C805C462BBF100923459`.
+The local logs, outer reports, and consumer manifest are retained under
+`artifacts/retry-partition-fix`; they are not published artifacts. The red run's
+consumer directory was cleaned before provenance capture. Both runs included
+the unchanged, uncommitted timeout experiment; only the ordinary-retry routing
+changed between the runs.
+
+Scheduling is unchanged: the partition class retains `[DoNotParallelize]`,
+generated consumers have isolated caches and result directories, and the
+fixture-failure state remains scoped to one orchestration. No shared-state
+lock or assembly scheduling change was needed. Linux CI and real Windows
+app-model activation were not executed locally.
